@@ -1,3 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 TrixiShallowWater = "804cb1fc-5b08-4398-a671-a789bfe091b3"
+
+[compat]
+Documenter = "0.27"
