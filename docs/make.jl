@@ -5,7 +5,7 @@ DocMeta.setdocmeta!(TrixiShallowWater, :DocTestSetup, :(using TrixiShallowWater)
 
 makedocs(;
     modules=[TrixiShallowWater],
-    authors="Michael Schlottke-Lakemper <michael@sloede.com> and contributors",
+    authors="Andrew R. Winters <andrew.ross.winters@liu.se>, Michael Schlottke-Lakemper <michael@sloede.com>",
     repo="https://github.com/trixi-framework/TrixiShallowWater.jl/blob/{commit}{path}#{line}",
     sitename="TrixiShallowWater.jl",
     format=Documenter.HTML(;

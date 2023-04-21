@@ -1,6 +1,6 @@
 name = "TrixiShallowWater"
 uuid = "804cb1fc-5b08-4398-a671-a789bfe091b3"
-authors = ["Michael Schlottke-Lakemper <michael@sloede.com> and contributors"]
+authors = ["Andrew R. Winters <andrew.ross.winters@liu.se>", "Michael Schlottke-Lakemper <michael@sloede.com>"]
 version = "0.1.0-pre"
 
 [compat]
