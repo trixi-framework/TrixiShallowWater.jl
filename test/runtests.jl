@@ -2,6 +2,6 @@ using TrixiShallowWater
 using Test
 
 @testset "TrixiShallowWater.jl" begin
-  @test foo() == true
-  @test bar() == false
+  @test TrixiShallowWater.foo() == true
+  @test TrixiShallowWater.bar() == false
 end
