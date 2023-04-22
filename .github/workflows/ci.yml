@@ -5,7 +5,23 @@ on:
     branches:
       - main
     tags: ['*']
+    paths-ignore:
+      - 'LICENSE.md'
+      - 'README.md'
+      - '.zenodo.json'
+      - '.github/workflows/CompatHelper.yml'
+      - '.github/workflows/TagBot.yml'
+      - 'docs/**'
   pull_request:
+    paths-ignore:
+      - 'LICENSE.md'
+      - 'README.md'
+      - '.zenodo.json'
+      - '.github/workflows/CompatHelper.yml'
+      - '.github/workflows/TagBot.yml'
+      - 'docs/**'
+  workflow_dispatch:
+
 concurrency:
   # Skip intermediate builds: always.
   # Cancel intermediate builds: only if it is a pull request build.
