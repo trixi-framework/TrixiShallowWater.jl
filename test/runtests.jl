@@ -10,7 +10,7 @@ const TRIXI_MPI_NPROCS = clamp(Sys.CPU_THREADS, 2, 3)
 const TRIXI_NTHREADS = clamp(Sys.CPU_THREADS, 2, 3)
 
 @time @testset "TrixiShallowWater.jl tests" begin
-    @time if TRIXI_TEST == "all"
+    @time if TRIXI_TEST == "all" || TRIXI_TEST == "tree_part1"
         include("test_tree_1d_shallowwater_wet_dry.jl")
     end
 
