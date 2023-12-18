@@ -269,52 +269,53 @@ Further details on the hydrostatic reconstruction and its motivation can be foun
                                                                                  eps()))
 end
 
-"""
-    flux_nonconservative_chen_noelle(u_ll, u_rr,
-                                     orientation::Integer,
-                                     equations::ShallowWaterEquationsWetDry1D)
+# TODO: This function is currently exported by Trixi.jl. Needs to be uncommented when removed from Trixi.jl
+# """
+#     flux_nonconservative_chen_noelle(u_ll, u_rr,
+#                                      orientation::Integer,
+#                                      equations::ShallowWaterEquationsWetDry1D)
 
-Non-symmetric two-point surface flux that discretizes the nonconservative (source) term.
-The discretization uses the `hydrostatic_reconstruction_chen_noelle` on the conservative
-variables.
+# Non-symmetric two-point surface flux that discretizes the nonconservative (source) term.
+# The discretization uses the `hydrostatic_reconstruction_chen_noelle` on the conservative
+# variables.
 
-Should be used together with [`FluxHydrostaticReconstruction`](@ref) and
-[`hydrostatic_reconstruction_chen_noelle`](@ref) in the surface flux to ensure consistency.
+# Should be used together with [`FluxHydrostaticReconstruction`](@ref) and
+# [`hydrostatic_reconstruction_chen_noelle`](@ref) in the surface flux to ensure consistency.
 
-Further details on the hydrostatic reconstruction and its motivation can be found in
-- Guoxian Chen and Sebastian Noelle (2017)
-  A new hydrostatic reconstruction scheme based on subcell reconstructions
-  [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
-"""
-@inline function flux_nonconservative_chen_noelle(u_ll, u_rr,
-                                                  orientation::Integer,
-                                                  equations::ShallowWaterEquationsWetDry1D)
+# Further details on the hydrostatic reconstruction and its motivation can be found in
+# - Guoxian Chen and Sebastian Noelle (2017)
+#   A new hydrostatic reconstruction scheme based on subcell reconstructions
+#   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
+# """
+# @inline function flux_nonconservative_chen_noelle(u_ll, u_rr,
+#                                                   orientation::Integer,
+#                                                   equations::ShallowWaterEquationsWetDry1D)
 
-    # Pull the water height and bottom topography on the left
-    h_ll, _, b_ll = u_ll
-    h_rr, _, b_rr = u_rr
+#     # Pull the water height and bottom topography on the left
+#     h_ll, _, b_ll = u_ll
+#     h_rr, _, b_rr = u_rr
 
-    H_ll = h_ll + b_ll
-    H_rr = h_rr + b_rr
+#     H_ll = h_ll + b_ll
+#     H_rr = h_rr + b_rr
 
-    b_star = min(max(b_ll, b_rr), min(H_ll, H_rr))
+#     b_star = min(max(b_ll, b_rr), min(H_ll, H_rr))
 
-    # Create the hydrostatic reconstruction for the left solution state
-    u_ll_star, _ = hydrostatic_reconstruction_chen_noelle(u_ll, u_rr, equations)
+#     # Create the hydrostatic reconstruction for the left solution state
+#     u_ll_star, _ = hydrostatic_reconstruction_chen_noelle(u_ll, u_rr, equations)
 
-    # Copy the reconstructed water height for easier to read code
-    h_ll_star = u_ll_star[1]
+#     # Copy the reconstructed water height for easier to read code
+#     h_ll_star = u_ll_star[1]
 
-    z = zero(eltype(u_ll))
-    # Includes two parts:
-    #   (i)  Diagonal (consistent) term from the volume flux that uses `b_ll` to avoid
-    #        cross-averaging across a discontinuous bottom topography
-    #   (ii) True surface part that uses `h_ll` and `h_ll_star` to handle discontinuous bathymetry
-    return SVector(z,
-                   equations.gravity * h_ll * b_ll -
-                   equations.gravity * (h_ll_star + h_ll) * (b_ll - b_star),
-                   z)
-end
+#     z = zero(eltype(u_ll))
+#     # Includes two parts:
+#     #   (i)  Diagonal (consistent) term from the volume flux that uses `b_ll` to avoid
+#     #        cross-averaging across a discontinuous bottom topography
+#     #   (ii) True surface part that uses `h_ll` and `h_ll_star` to handle discontinuous bathymetry
+#     return SVector(z,
+#                    equations.gravity * h_ll * b_ll -
+#                    equations.gravity * (h_ll_star + h_ll) * (b_ll - b_star),
+#                    z)
+# end
 
 """
     flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
@@ -412,65 +413,66 @@ Further details on this hydrostatic reconstruction and its motivation can be fou
                                                                                        eps()))
 end
 
-"""
-    hydrostatic_reconstruction_chen_noelle(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry1D)
+# TODO: This function is currently exported by Trixi.jl. Needs to be uncommented when removed from Trixi.jl
+# """
+#     hydrostatic_reconstruction_chen_noelle(u_ll, u_rr, orientation::Integer,
+#                                            equations::ShallowWaterEquationsWetDry1D)
 
-A particular type of hydrostatic reconstruction of the water height to guarantee well-balancedness
-for a general bottom topography of the [`ShallowWaterEquationsWetDry1D`](@ref). The reconstructed solution states
-`u_ll_star` and `u_rr_star` variables are used to evaluate the surface numerical flux at the interface.
-The key idea is a linear reconstruction of the bottom and water height at the interfaces using subcells.
-Use in combination with the generic numerical flux routine [`FluxHydrostaticReconstruction`](@ref).
+# A particular type of hydrostatic reconstruction of the water height to guarantee well-balancedness
+# for a general bottom topography of the [`ShallowWaterEquationsWetDry1D`](@ref). The reconstructed solution states
+# `u_ll_star` and `u_rr_star` variables are used to evaluate the surface numerical flux at the interface.
+# The key idea is a linear reconstruction of the bottom and water height at the interfaces using subcells.
+# Use in combination with the generic numerical flux routine [`FluxHydrostaticReconstruction`](@ref).
 
-Further details on this hydrostatic reconstruction and its motivation can be found in
-- Guoxian Chen and Sebastian Noelle (2017)
-  A new hydrostatic reconstruction scheme based on subcell reconstructions
-  [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
-"""
-@inline function hydrostatic_reconstruction_chen_noelle(u_ll, u_rr,
-                                                        equations::ShallowWaterEquationsWetDry1D)
-    # Unpack left and right water heights and bottom topographies
-    h_ll, _, b_ll = u_ll
-    h_rr, _, b_rr = u_rr
+# Further details on this hydrostatic reconstruction and its motivation can be found in
+# - Guoxian Chen and Sebastian Noelle (2017)
+#   A new hydrostatic reconstruction scheme based on subcell reconstructions
+#   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
+# """
+# @inline function hydrostatic_reconstruction_chen_noelle(u_ll, u_rr,
+#                                                         equations::ShallowWaterEquationsWetDry1D)
+#     # Unpack left and right water heights and bottom topographies
+#     h_ll, _, b_ll = u_ll
+#     h_rr, _, b_rr = u_rr
 
-    # Get the velocities on either side
-    v_ll = velocity(u_ll, equations)
-    v_rr = velocity(u_rr, equations)
+#     # Get the velocities on either side
+#     v_ll = velocity(u_ll, equations)
+#     v_rr = velocity(u_rr, equations)
 
-    H_ll = b_ll + h_ll
-    H_rr = b_rr + h_rr
+#     H_ll = b_ll + h_ll
+#     H_rr = b_rr + h_rr
 
-    b_star = min(max(b_ll, b_rr), min(H_ll, H_rr))
+#     b_star = min(max(b_ll, b_rr), min(H_ll, H_rr))
 
-    # Compute the reconstructed water heights
-    h_ll_star = min(H_ll - b_star, h_ll)
-    h_rr_star = min(H_rr - b_star, h_rr)
+#     # Compute the reconstructed water heights
+#     h_ll_star = min(H_ll - b_star, h_ll)
+#     h_rr_star = min(H_rr - b_star, h_rr)
 
-    # Set the water height to be at least the value stored in the variable threshold after
-    # the hydrostatic reconstruction is applied and before the numerical flux is calculated
-    # to avoid numerical problem with arbitrary small values. Interfaces with a water height
-    # lower or equal to the threshold can be declared as dry.
-    # The default value for `threshold_wet` is ≈ 5*eps(), or 1e-15 in double precision, is set
-    # in the `ShallowWaterEquationsWetDry1D` struct. This threshold value can be changed in the constructor
-    # call of this equation struct in an elixir.
-    threshold = equations.threshold_wet
+#     # Set the water height to be at least the value stored in the variable threshold after
+#     # the hydrostatic reconstruction is applied and before the numerical flux is calculated
+#     # to avoid numerical problem with arbitrary small values. Interfaces with a water height
+#     # lower or equal to the threshold can be declared as dry.
+#     # The default value for `threshold_wet` is ≈ 5*eps(), or 1e-15 in double precision, is set
+#     # in the `ShallowWaterEquationsWetDry1D` struct. This threshold value can be changed in the constructor
+#     # call of this equation struct in an elixir.
+#     threshold = equations.threshold_wet
 
-    if (h_ll_star <= threshold)
-        h_ll_star = threshold
-        v_ll = zero(v_ll)
-    end
+#     if (h_ll_star <= threshold)
+#         h_ll_star = threshold
+#         v_ll = zero(v_ll)
+#     end
 
-    if (h_rr_star <= threshold)
-        h_rr_star = threshold
-        v_rr = zero(v_rr)
-    end
+#     if (h_rr_star <= threshold)
+#         h_rr_star = threshold
+#         v_rr = zero(v_rr)
+#     end
 
-    # Create the conservative variables using the reconstruted water heights
-    u_ll_star = SVector(h_ll_star, h_ll_star * v_ll, b_ll)
-    u_rr_star = SVector(h_rr_star, h_rr_star * v_rr, b_rr)
+#     # Create the conservative variables using the reconstruted water heights
+#     u_ll_star = SVector(h_ll_star, h_ll_star * v_ll, b_ll)
+#     u_rr_star = SVector(h_rr_star, h_rr_star * v_rr, b_rr)
 
-    return u_ll_star, u_rr_star
-end
+#     return u_ll_star, u_rr_star
+# end
 
 # Calculate maximum wave speed for local Lax-Friedrichs-type dissipation as the
 # maximum velocity magnitude plus the maximum speed of sound
@@ -512,37 +514,38 @@ end
                                                                    eps()))
 end
 
-"""
-    min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
-                              equations::ShallowWaterEquationsWetDry1D)
+# TODO: This function is currently exported by Trixi.jl. Needs to be uncommented when removed from Trixi.jl
+# """
+#     min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
+#                               equations::ShallowWaterEquationsWetDry1D)
 
-The approximated speeds for the HLL type numerical flux used by Chen and Noelle for their
-hydrostatic reconstruction. As they state in the paper, these speeds are chosen for the numerical
-flux to ensure positivity and to satisfy an entropy inequality.
+# The approximated speeds for the HLL type numerical flux used by Chen and Noelle for their
+# hydrostatic reconstruction. As they state in the paper, these speeds are chosen for the numerical
+# flux to ensure positivity and to satisfy an entropy inequality.
 
-Further details on this hydrostatic reconstruction and its motivation can be found in
-- Guoxian Chen and Sebastian Noelle (2017)
-  A new hydrostatic reconstruction scheme based on subcell reconstructions
-  [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
-"""
-@inline function min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry1D)
-    # Get the velocity quantities
-    v_ll = velocity(u_ll, equations)
-    v_rr = velocity(u_rr, equations)
+# Further details on this hydrostatic reconstruction and its motivation can be found in
+# - Guoxian Chen and Sebastian Noelle (2017)
+#   A new hydrostatic reconstruction scheme based on subcell reconstructions
+#   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
+# """
+# @inline function min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
+#                                            equations::ShallowWaterEquationsWetDry1D)
+#     # Get the velocity quantities
+#     v_ll = velocity(u_ll, equations)
+#     v_rr = velocity(u_rr, equations)
 
-    # Calculate the wave celerity on the left and right
-    h_ll = waterheight(u_ll, equations)
-    h_rr = waterheight(u_rr, equations)
+#     # Calculate the wave celerity on the left and right
+#     h_ll = waterheight(u_ll, equations)
+#     h_rr = waterheight(u_rr, equations)
 
-    a_ll = sqrt(equations.gravity * h_ll)
-    a_rr = sqrt(equations.gravity * h_rr)
+#     a_ll = sqrt(equations.gravity * h_ll)
+#     a_rr = sqrt(equations.gravity * h_rr)
 
-    λ_min = min(v_ll - a_ll, v_rr - a_rr, zero(eltype(u_ll)))
-    λ_max = max(v_ll + a_ll, v_rr + a_rr, zero(eltype(u_ll)))
+#     λ_min = min(v_ll - a_ll, v_rr - a_rr, zero(eltype(u_ll)))
+#     λ_max = max(v_ll + a_ll, v_rr + a_rr, zero(eltype(u_ll)))
 
-    return λ_min, λ_max
-end
+#     return λ_min, λ_max
+# end
 
 # More refined estimates for minimum and maximum wave speeds for HLL-type fluxes
 @inline function Trixi.min_max_speed_davis(u_ll, u_rr, orientation::Integer,

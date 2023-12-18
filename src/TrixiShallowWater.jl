@@ -9,6 +9,7 @@ include("equations/equations.jl")
 
 # export types/functions that define the public API of TrixiShallowWater.jl
 export ShallowWaterEquationsWetDry1D
-export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle
+# TODO: These function are currently exported by Trixi.jl. Needs to be uncommented when removed from Trixi.jl
+#export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle, min_max_speed_chen_noelle
 
 end
