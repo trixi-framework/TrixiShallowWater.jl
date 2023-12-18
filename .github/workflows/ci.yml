@@ -31,19 +31,21 @@ concurrency:
 jobs:
   test:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: ${{ matrix.trixi_test }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         version:
-          - '1.8'
+          - '1.9'
         os:
           - ubuntu-latest
           - macOS-latest
           - windows-latest
         arch:
           - x64
+        trixi_test:
+          - tree_part1
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v1
@@ -53,7 +55,21 @@ jobs:
       - run: julia -e 'using InteractiveUtils; versioninfo(verbose=true)'
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
+      #- uses: julia-actions/julia-runtest@v1
+      - name: Run tests without coverage
+        uses: julia-actions/julia-runtest@v1
+        with:
+          coverage: false
+        env:
+          PYTHON: ""
+          TRIXI_TEST: ${{ matrix.trixi_test }}
+      - name: Run tests with coverage
+        uses: julia-actions/julia-runtest@v1
+        with:
+          coverage: true
+        env:
+          PYTHON: ""
+          TRIXI_TEST: ${{ matrix.trixi_test }}
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v3
         with:
