@@ -11,9 +11,7 @@ const TRIXI_NTHREADS = clamp(Sys.CPU_THREADS, 2, 3)
 
 @time @testset "TrixiShallowWater.jl tests" begin
     @time if TRIXI_TEST == "all"
-        @test TrixiShallowWater.foo() == true
-        @test TrixiShallowWater.bar() == false
-        @test TrixiShallowWater.baz() isa String
+        include("test_tree_1d_shallowwater_wet_dry.jl")
     end
 
     @time if TRIXI_TEST == "all" || TRIXI_TEST == "upstream"
