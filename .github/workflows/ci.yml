@@ -45,7 +45,7 @@ jobs:
         arch:
           - x64
         trixi_test:
-          - tree_part1
+          - all
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v1

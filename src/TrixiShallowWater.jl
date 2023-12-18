@@ -7,8 +7,6 @@ using Static: True, False
 
 include("equations/equations.jl")
 
-baz() = Trixi.examples_dir()
-
 # export types/functions that define the public API of TrixiShallowWater.jl
 export ShallowWaterEquationsWetDry1D
 # TODO: These function are currently exported by Trixi.jl. Needs to be uncommented when removed from Trixi.jl
