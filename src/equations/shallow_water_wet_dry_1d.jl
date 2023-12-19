@@ -474,15 +474,17 @@ end
 #     return u_ll_star, u_rr_star
 # end
 
-# Calculate maximum wave speed for local Lax-Friedrichs-type dissipation as the
-# maximum velocity magnitude plus the maximum speed of sound
-@inline function Trixi.max_abs_speed_naive(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry1D)
-    return Trixi.max_abs_speed_naive(u_ll, u_rr, orientation,
-                                     Trixi.ShallowWaterEquations1D(equations.gravity,
-                                                                   equations.H0, eps(),
-                                                                   eps()))
-end
+# TODO: Probably can be removed. Since we dispatch to ShallowWaterEquations1D we don't need 
+#       equation specific wave speed estimates.
+# # Calculate maximum wave speed for local Lax-Friedrichs-type dissipation as the
+# # maximum velocity magnitude plus the maximum speed of sound
+# @inline function Trixi.max_abs_speed_naive(u_ll, u_rr, orientation::Integer,
+#                                            equations::ShallowWaterEquationsWetDry1D)
+#     return Trixi.max_abs_speed_naive(u_ll, u_rr, orientation,
+#                                      Trixi.ShallowWaterEquations1D(equations.gravity,
+#                                                                    equations.H0, eps(),
+#                                                                    eps()))
+# end
 
 # Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom topography
 @inline function (dissipation::Trixi.DissipationLocalLaxFriedrichs)(u_ll, u_rr,
@@ -505,14 +507,16 @@ end
                                                                   eps()))
 end
 
-# Calculate estimate for minimum and maximum wave speeds for HLL-type fluxes
-@inline function Trixi.min_max_speed_naive(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry1D)
-    return Trixi.min_max_speed_naive(u_ll, u_rr, orientation,
-                                     Trixi.ShallowWaterEquations1D(equations.gravity,
-                                                                   equations.H0, eps(),
-                                                                   eps()))
-end
+# TODO: Probably can be removed. Since we dispatch to ShallowWaterEquations1D we don't need 
+#       equation specific wave speed estimates.
+# # Calculate estimate for minimum and maximum wave speeds for HLL-type fluxes
+# @inline function Trixi.min_max_speed_naive(u_ll, u_rr, orientation::Integer,
+#                                            equations::ShallowWaterEquationsWetDry1D)
+#     return Trixi.min_max_speed_naive(u_ll, u_rr, orientation,
+#                                      Trixi.ShallowWaterEquations1D(equations.gravity,
+#                                                                    equations.H0, eps(),
+#                                                                    eps()))
+# end
 
 # TODO: This function is currently exported by Trixi.jl. Needs to be uncommented when removed from Trixi.jl
 # """
@@ -547,22 +551,26 @@ end
 #     return λ_min, λ_max
 # end
 
+# TODO: Probably can be removed. Since we dispatch to ShallowWaterEquations1D we don't need 
+#       equation specific wave speed estimates.
 # More refined estimates for minimum and maximum wave speeds for HLL-type fluxes
-@inline function Trixi.min_max_speed_davis(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry1D)
-    return Trixi.min_max_speed_davis(u_ll, u_rr, orientation,
-                                     Trixi.ShallowWaterEquations1D(equations.gravity,
-                                                                   equations.H0, eps(),
-                                                                   eps()))
-end
+# @inline function Trixi.min_max_speed_davis(u_ll, u_rr, orientation::Integer,
+#                                            equations::ShallowWaterEquationsWetDry1D)
+#     return Trixi.min_max_speed_davis(u_ll, u_rr, orientation,
+#                                      Trixi.ShallowWaterEquations1D(equations.gravity,
+#                                                                    equations.H0, eps(),
+#                                                                    eps()))
+# end
 
-@inline function Trixi.min_max_speed_einfeldt(u_ll, u_rr, orientation::Integer,
-                                              equations::ShallowWaterEquationsWetDry1D)
-    return Trixi.min_max_speed_einfeldt(u_ll, u_rr, orientation,
-                                        Trixi.ShallowWaterEquations1D(equations.gravity,
-                                                                      equations.H0,
-                                                                      eps(), eps()))
-end
+# TODO: Probably can be removed. Since we dispatch to ShallowWaterEquations1D we don't need 
+#       equation specific wave speed estimates.
+# @inline function Trixi.min_max_speed_einfeldt(u_ll, u_rr, orientation::Integer,
+#                                               equations::ShallowWaterEquationsWetDry1D)
+#     return Trixi.min_max_speed_einfeldt(u_ll, u_rr, orientation,
+#                                         Trixi.ShallowWaterEquations1D(equations.gravity,
+#                                                                       equations.H0,
+#                                                                       eps(), eps()))
+# end
 
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterEquationsWetDry1D)
     return Trixi.max_abs_speeds(u,
