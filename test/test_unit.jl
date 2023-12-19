@@ -24,7 +24,9 @@ isdir(outdir) && rm(outdir, recursive = true)
 
         total_energy = Trixi.energy_total(cons_vars, equations)
         @test total_energy ≈ Trixi.entropy(cons_vars, equations)
-
+        @test total_energy ≈
+              Trixi.energy_internal(cons_vars, equations) +
+              energy_kinetic(cons_vars, equations)
         # test tuple args
         cons_vars = Trixi.prim2cons((H, v, b), equations)
         entropy_vars = Trixi.cons2entropy(cons_vars, equations)
