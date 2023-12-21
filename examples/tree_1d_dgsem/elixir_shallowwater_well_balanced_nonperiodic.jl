@@ -4,7 +4,7 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the shallow water equations
+# Semidiscretization of the shallow water equations for a fully wet configuration
 
 equations = ShallowWaterEquationsWetDry1D(gravity_constant = 1.0, H0 = 3.0)
 
@@ -31,7 +31,7 @@ solver = DGSEM(polydeg = 4, surface_flux = (flux_hll, flux_nonconservative_fjord
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 ###############################################################################
-# Get the TreeMesh and setup a periodic mesh
+# Get the TreeMesh and setup a non-periodic mesh
 
 coordinates_min = 0.0
 coordinates_max = sqrt(2.0)

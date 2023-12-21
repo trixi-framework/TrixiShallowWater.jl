@@ -5,7 +5,7 @@ using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the shallow water equations with a discontinuous
-# bottom topography function
+# bottom topography function for a fully wet configuration
 
 equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.81)
 

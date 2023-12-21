@@ -93,6 +93,13 @@ function Trixi.varnames(::typeof(Trixi.cons2prim), ::ShallowWaterEquationsWetDry
     ("H", "v", "b")
 end
 
+# TODO: Remove thresholds from ShallowWaterEquations1D after they have been moved 
+
+# This equation set extends the basic ShallowWaterEquations1D from Trixi.jl with additional functionality
+# for wet/dry transitions. Since many functions correspond to the fully wet case, we make use of the
+# exisiting functionality and introduce a number of wrapper functions, that dispatch to the 
+# ShallowWaterEquations1D. 
+
 # Set initial conditions at physical location `x` for time `t`
 """
     initial_condition_convergence_test(x, t, equations::ShallowWaterEquationsWetDry1D)
@@ -320,9 +327,6 @@ end
 """
     flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
                                      equations::ShallowWaterEquationsWetDry1D)
-
-!!! warning "Experimental code"
-    This numerical flux is experimental and may change in any future release.
 
 Non-symmetric path-conservative two-point volume flux discretizing the nonconservative (source) term
 that contains the gradient of the bottom topography [`ShallowWaterEquationsWetDry1D`](@ref).
