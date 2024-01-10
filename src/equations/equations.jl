@@ -7,7 +7,6 @@
 
 ####################################################################################################
 # Include files with actual implementations for different systems of equations. 
-# Numerical flux formulations that are independent of the specific system of equations
 
 include("shallow_water_wet_dry_1d.jl")
 end # @muladd

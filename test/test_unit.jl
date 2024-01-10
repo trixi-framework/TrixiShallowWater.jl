@@ -33,25 +33,6 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test cons_vars ≈ Trixi.entropy2cons(entropy_vars, equations)
     end
 end
-
-# TODO: Probably can be removed. Since we dispatch to ShallowWaterEquations1D we don't need 
-#       equation specific wave speed estimates.
-# @timed_testset "Connectivity with Trixi.jl" begin
-#     u = SVector(SVector(1, 0.5, 0.0))
-#     orientation = 1
-#     equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.81)
-#     equations_trixi = ShallowWaterEquations1D(gravity_constant = 9.81)
-
-#     # We only need to check equivalence between the equation systems. The functionality is tested in
-#     # Trixi.jl. We choose these specific ones to improve code coverage, as they are not tested in
-#     # any elixirs.
-#     @test min_max_speed_einfeldt(u, u, orientation, equations) ==
-#           min_max_speed_einfeldt(u, u, orientation, equations_trixi)
-#     @test min_max_speed_davis(u, u, orientation, equations) ==
-#           min_max_speed_davis(u, u, orientation, equations_trixi)
-#     @test max_abs_speed_naive(u, u, orientation, equations) ==
-#           max_abs_speed_naive(u, u, orientation, equations_trixi)
-# end
 end
 
 end # module
