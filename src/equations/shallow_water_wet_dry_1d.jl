@@ -539,12 +539,12 @@ end
                                                               eps()))
 end
 
-# Helper function to extract the velocity vector from the conservative variables
-@inline function Trixi.velocity(u, equations::ShallowWaterEquationsWetDry1D)
-    return Trixi.velocity(u,
-                          Trixi.ShallowWaterEquations1D(equations.gravity, equations.H0,
-                                                        eps(), eps()))
-end
+# # Helper function to extract the velocity vector from the conservative variables
+# @inline function Trixi.velocity(u, equations::ShallowWaterEquationsWetDry1D)
+#     return Trixi.velocity(u,
+#                           Trixi.ShallowWaterEquations1D(equations.gravity, equations.H0,
+#                                                         eps(), eps()))
+# end
 
 # Convert conservative variables to primitive
 @inline function Trixi.cons2prim(u, equations::ShallowWaterEquationsWetDry1D)
@@ -576,24 +576,24 @@ end
                                                          equations.H0, eps(), eps()))
 end
 
-@inline function Trixi.waterheight(u, equations::ShallowWaterEquationsWetDry1D)
-    return Trixi.waterheight(u,
-                             Trixi.ShallowWaterEquations1D(equations.gravity,
-                                                           equations.H0, eps(), eps()))
-end
+# @inline function Trixi.waterheight(u, equations::ShallowWaterEquationsWetDry1D)
+#     return Trixi.waterheight(u,
+#                              Trixi.ShallowWaterEquations1D(equations.gravity,
+#                                                            equations.H0, eps(), eps()))
+# end
 
-@inline function Trixi.pressure(u, equations::ShallowWaterEquationsWetDry1D)
-    return Trixi.pressure(u,
-                          Trixi.ShallowWaterEquations1D(equations.gravity, equations.H0,
-                                                        eps(), eps()))
-end
+# @inline function Trixi.pressure(u, equations::ShallowWaterEquationsWetDry1D)
+#     return Trixi.pressure(u,
+#                           Trixi.ShallowWaterEquations1D(equations.gravity, equations.H0,
+#                                                         eps(), eps()))
+# end
 
-@inline function Trixi.waterheight_pressure(u, equations::ShallowWaterEquationsWetDry1D)
-    return Trixi.waterheight_pressure(u,
-                                      Trixi.ShallowWaterEquations1D(equations.gravity,
-                                                                    equations.H0, eps(),
-                                                                    eps()))
-end
+# @inline function Trixi.waterheight_pressure(u, equations::ShallowWaterEquationsWetDry1D)
+#     return Trixi.waterheight_pressure(u,
+#                                       Trixi.ShallowWaterEquations1D(equations.gravity,
+#                                                                     equations.H0, eps(),
+#                                                                     eps()))
+# end
 
 # Entropy function for the shallow water equations is the total energy
 @inline function Trixi.entropy(cons, equations::ShallowWaterEquationsWetDry1D)
