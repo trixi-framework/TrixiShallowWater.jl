@@ -1,3 +1,4 @@
+using Trixi
 using TrixiShallowWater
 using Test
 
@@ -11,14 +12,16 @@ const TRIXI_NTHREADS = clamp(Sys.CPU_THREADS, 2, 3)
 
 @time @testset "TrixiShallowWater.jl tests" begin
     @time if TRIXI_TEST == "all"
-        @test TrixiShallowWater.foo() == true
-        @test TrixiShallowWater.bar() == false
-        @test TrixiShallowWater.baz() isa String
+        include("test_tree_1d_shallowwater_wet_dry.jl")
+        include("test_unit.jl")
     end
 
     @time if TRIXI_TEST == "all" || TRIXI_TEST == "upstream"
-        @testset "baz()" begin
-            @test TrixiShallowWater.baz() isa String
+        @testset "Namespace conflicts" begin
+            # Test for namespace conflicts between TrixiShallowWater.jl and Trixi.jl
+            for name in names(Trixi)
+                @test !(name in names(TrixiShallowWater))
+            end
         end
     end
 end
