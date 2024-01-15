@@ -616,11 +616,11 @@ end
                                                          equations.H0, eps(), eps()))
 end
 
-# @inline function Trixi.waterheight(u, equations::ShallowWaterEquationsWetDry1D)
-#     return Trixi.waterheight(u,
-#                              Trixi.ShallowWaterEquations1D(equations.gravity,
-#                                                            equations.H0, eps(), eps()))
-# end
+@inline function Trixi.waterheight(u, equations::ShallowWaterEquationsWetDry1D)
+    return Trixi.waterheight(u,
+                             Trixi.ShallowWaterEquations1D(equations.gravity,
+                                                           equations.H0, eps(), eps()))
+end
 
 # @inline function Trixi.pressure(u, equations::ShallowWaterEquationsWetDry1D)
 #     return Trixi.pressure(u,
