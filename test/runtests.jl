@@ -23,5 +23,8 @@ const TRIXI_NTHREADS = clamp(Sys.CPU_THREADS, 2, 3)
                 @test !(name in names(TrixiShallowWater))
             end
         end
+        
+        # Run upstream tests for each mesh and dimension to test compatibility with Trixi.jl
+        include("test_upstream.jl")       
     end
 end
