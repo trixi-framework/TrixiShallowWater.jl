@@ -6,5 +6,6 @@ using Trixi: Trixi
 foo() = true
 bar() = false
 baz() = Trixi.examples_dir()
+foo2() = true
 
 end
