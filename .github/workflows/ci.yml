@@ -65,6 +65,8 @@ jobs:
       - uses: codecov/codecov-action@v3
         with:
           files: lcov.info
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
       - uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
