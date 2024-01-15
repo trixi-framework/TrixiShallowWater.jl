@@ -1,0 +1,21 @@
+# https://docs.codecov.io/docs/codecovyml-reference
+
+# We have
+#   1 * [number of basic OS] + 1 * [number of additional OS]
+# with
+# [number of basic OS] = 1 (Linux)
+# [number of additional OS] = 2 (Windows, MacOS)
+codecov:
+  branch: main
+  notify:
+    after_n_builds: 3
+comment:
+  after_n_builds: 3
+
+coverage:
+  range: 80..95 # set 95% and above as solid green, everything below 80% as red
+  round: nearest
+  precision: 2
+
+github_checks:
+  annotations: false
