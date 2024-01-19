@@ -1,13 +1,9 @@
 module TestExamples1DShallowWaterWetDry
 
-# TODO: TrixiShallowWater: move any wet/dry tests to new package
-
 using Test
 using Trixi
 using TrixiShallowWater
 
-# TODO: Right now this is a local copy of the file from Trixi.jl. How can I use @trixi_testset & 
-#       @test_trixi_include from Trixi.jl?
 include("test_trixi.jl")
 
 EXAMPLES_DIR = pkgdir(TrixiShallowWater, "examples", "tree_1d_dgsem")
