@@ -1,6 +1,19 @@
 [deps]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Trixi = "a7f1ee26-1774-49b1-8366-f1abc58fbfcb"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 
 [compat]
+Test = "1"
 Trixi = "0.5, 0.6"
+OrdinaryDiffEq = "6.49.1"
+
+[preferences.OrdinaryDiffEq]
+PrecompileAutoSpecialize = false
+PrecompileAutoSwitch = false
+PrecompileDefaultSpecialize = false
+PrecompileFunctionWrapperSpecialize = false
+PrecompileLowStorage = false
+PrecompileNoSpecialize = false
+PrecompileNonStiff = false
+PrecompileStiff = false

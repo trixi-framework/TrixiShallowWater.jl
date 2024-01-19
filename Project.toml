@@ -4,8 +4,14 @@ authors = ["Andrew R. Winters <andrew.ross.winters@liu.se>", "Michael Schlottke-
 version = "0.1.0-pre"
 
 [deps]
+MuladdMacro = "46d2c3a1-f734-5fdb-9937-b9b9aeba4221"
+Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Trixi = "a7f1ee26-1774-49b1-8366-f1abc58fbfcb"
 
 [compat]
+MuladdMacro = "0.2.2"
+Static = "0.3, 0.4, 0.5, 0.6, 0.7, 0.8"
+StaticArrays = "1"
 Trixi = "0.5.17, 0.6"
 julia = "1.8"
