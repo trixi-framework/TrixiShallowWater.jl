@@ -1,6 +1,7 @@
 module TestExamplesTree1D
 
 using Test
+using Trixi
 using TrixiShallowWater
 
 include("test_trixi.jl")

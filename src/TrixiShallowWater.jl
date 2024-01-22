@@ -2,7 +2,7 @@ module TrixiShallowWater
 # We decided to import only Trixi.jl and qualify symbols explicitly with e.g. `Trixi.function_name`.
 # For more information, see 
 # https://github.com/trixi-framework/TrixiShallowWater.jl/pull/10#discussion_r1433720559
-using Trixi: Trixi
+using Trixi
 using MuladdMacro: @muladd
 using StaticArrays: SVector
 using Static: True, False
