@@ -13,6 +13,9 @@ const TRIXI_NTHREADS = clamp(Sys.CPU_THREADS, 2, 3)
 @time @testset "TrixiShallowWater.jl tests" begin
     @time if TRIXI_TEST == "all"
         include("test_tree_1d_shallowwater_wet_dry.jl")
+        include("test_tree_2d_shallowwater_wet_dry.jl")
+        include("test_unstructured_2d.jl")
+        include("test_structured_2d.jl")
         include("test_unit.jl")
     end
 
@@ -23,8 +26,8 @@ const TRIXI_NTHREADS = clamp(Sys.CPU_THREADS, 2, 3)
                 @test !(name in names(TrixiShallowWater))
             end
         end
-        
+
         # Run upstream tests for each mesh and dimension to test compatibility with Trixi.jl
-        include("test_upstream.jl")       
+        include("test_upstream.jl")
     end
 end
