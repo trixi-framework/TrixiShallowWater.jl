@@ -94,6 +94,11 @@ Trixi.varnames(::typeof(cons2cons), ::ShallowWaterEquationsWetDry2D) = ("h", "h_
 Trixi.varnames(::typeof(cons2prim), ::ShallowWaterEquationsWetDry2D) = ("H", "v1", "v2",
                                                                         "b")
 
+# This equation set extends the basic ShallowWaterEquations2D from Trixi.jl with additional 
+# functionality for wet/dry transitions. Since many functions correspond to the fully wet case, we 
+# make use of the exisiting functionality and introduce a number of wrapper functions, that dispatch
+# to the ShallowWaterEquations2D. 
+
 # Set initial conditions at physical location `x` for time `t`
 """
     initial_condition_convergence_test(x, t, equations::ShallowWaterEquationsWetDry2D)

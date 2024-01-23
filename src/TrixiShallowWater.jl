@@ -1,6 +1,7 @@
 module TrixiShallowWater
 # TODO: rewrite this
-# We decided to import only Trixi.jl and qualify symbols explicitly with e.g. `Trixi.function_name`.
+# While we do using Trixi.jl to extend a method from Trixi.jl symbols need to be qualified explicitly 
+# e.g. `Trixi.function_name`.
 # For more information, see 
 # https://github.com/trixi-framework/TrixiShallowWater.jl/pull/10#discussion_r1433720559
 using Trixi
