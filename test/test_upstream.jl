@@ -20,7 +20,7 @@ isdir(outdir) && rm(outdir, recursive = true)
     # Shallow water wet/dry 1D
     @trixi_testset "1D-Test: elixir_shallowwater_well_balanced_nonperiodic.jl with wall boundary" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR, "tree_1d_dgsem",
-                                    "elixir_shallowwater_well_balanced_nonperiodic.jl"),
+                                     "elixir_shallowwater_well_balanced_nonperiodic.jl"),
                             l2=[
                                 1.7259643614361866e-8,
                                 3.5519018243195145e-16,
