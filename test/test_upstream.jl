@@ -47,7 +47,8 @@ isdir(outdir) && rm(outdir, recursive = true)
     # Shallow water wet/dry 2D
     # TreeMesh2D
     @trixi_testset "TreeMesh2D: elixir_shallowwater_conical_island.jl" begin
-        @test_trixi_include(joinpath(EXAMPLES_DIR, "elixir_shallowwater_conical_island.jl"),
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_conical_island.jl"),
                             l2=[
                                 0.0459315416430658,
                                 0.1644534881916991,
@@ -98,7 +99,8 @@ isdir(outdir) && rm(outdir, recursive = true)
     end
     # Structured2D
     @trixi_testset "Structured2D: elixir_shallowwater_conical_island.jl" begin
-        @test_trixi_include(joinpath(EXAMPLES_DIR, "elixir_shallowwater_conical_island.jl"),
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_conical_island.jl"),
                             l2=[
                                 0.04593154164306353,
                                 0.1644534881916908,
