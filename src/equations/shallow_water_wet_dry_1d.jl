@@ -95,7 +95,7 @@ end
 
 # This equation set extends the basic ShallowWaterEquations1D from Trixi.jl with additional functionality
 # for wet/dry transitions. Since many functions correspond to the fully wet case, we make use of the
-# exisiting functionality and introduce a number of wrapper functions, that dispatch to the 
+# existing functionality and introduce a number of wrapper functions, that dispatch to the 
 # ShallowWaterEquations1D. 
 
 # Set initial conditions at physical location `x` for time `t`
