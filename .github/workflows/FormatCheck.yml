@@ -25,12 +25,9 @@ jobs:
         # This will use the latest version by default but you can set the version like so:
         #
         # julia  -e 'using Pkg; Pkg.add(PackageSpec(name = "JuliaFormatter", version = "0.13.0"))'
-        #
-        # TODO: Change the call below to
-        #       format(".")
         run: |
           julia  -e 'using Pkg; Pkg.add(PackageSpec(name = "JuliaFormatter"))'
-          julia  -e 'using JuliaFormatter; format(["examples", "src", "test"])'
+          julia  -e 'using JuliaFormatter; format(".")'
       - name: Format check
         run: |
           julia -e '
