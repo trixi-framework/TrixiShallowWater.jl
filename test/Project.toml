@@ -6,7 +6,7 @@ Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 
 [compat]
 Test = "1"
-Trixi = "0.5, 0.6"
+Trixi = "0.7"
 OrdinaryDiffEq = "6.49.1"
 Downloads = "1"
 
