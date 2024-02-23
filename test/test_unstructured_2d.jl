@@ -161,7 +161,7 @@ end
                             0.17625472321992852,
                             2.6407324614341476e-5,
                         ],
-                        surface_flux=(FluxHydrostaticReconstruction(flux_hll,
+                        surface_flux=(FluxHydrostaticReconstruction(FluxHLL(min_max_speed_naive),
                                                                     hydrostatic_reconstruction_audusse_etal),
                                       flux_nonconservative_audusse_etal),
                         tspan=(0.0, 0.025))
@@ -218,7 +218,8 @@ end
                             0.17625472321993918,
                             2.6407324614341476e-5,
                         ],
-                        surface_flux=(flux_hll, flux_nonconservative_fjordholm_etal),
+                        surface_flux=(FluxHLL(min_max_speed_naive),
+                                      flux_nonconservative_fjordholm_etal),
                         tspan=(0.0, 0.025))
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
@@ -244,7 +245,9 @@ end
                             1.1146619484429974e-10,
                             8.394063879602065e-5,
                         ],
-                        tspan=(0.0, 2.0))
+                        tspan=(0.0, 2.0),
+                        surface_flux=(FluxHLL(min_max_speed_naive),
+                                      flux_nonconservative_fjordholm_etal))
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
     let
@@ -270,7 +273,10 @@ end
                             2.4807635459119757,
                             3.982097158683473e-7,
                         ],
-                        tspan=(0.0, 0.05))
+                        tspan=(0.0, 0.05),
+                        surface_flux=(FluxHydrostaticReconstruction(FluxHLL(min_max_speed_naive),
+                                                                    hydrostatic_reconstruction_audusse_etal),
+                                      flux_nonconservative_audusse_etal))
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
     let

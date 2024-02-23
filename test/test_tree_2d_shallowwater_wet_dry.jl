@@ -236,7 +236,8 @@ end
                             0.0001819675955490041,
                         ],
                         tspan=(0.0, 0.025),
-                        surface_flux=(flux_hll, flux_nonconservative_fjordholm_etal))
+                        surface_flux=(FluxHLL(min_max_speed_naive),
+                                      flux_nonconservative_fjordholm_etal))
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
     let

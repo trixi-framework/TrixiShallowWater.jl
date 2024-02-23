@@ -47,7 +47,7 @@ isdir(outdir) && rm(outdir, recursive = true)
     # Shallow water wet/dry 2D
     # TreeMesh2D
     @trixi_testset "TreeMesh2D: elixir_shallowwater_conical_island.jl" begin
-        @test_trixi_include(joinpath(EXAMPLES_DIR,
+        @test_trixi_include(joinpath(EXAMPLES_DIR, "tree_2d_dgsem",
                                      "elixir_shallowwater_conical_island.jl"),
                             l2=[
                                 0.0459315416430658,
@@ -73,7 +73,7 @@ isdir(outdir) && rm(outdir, recursive = true)
     end
     # Unstructured2D
     @trixi_testset "Unstructured2D: elixir_shallowwater_wall_bc_shockcapturing.jl" begin
-        @test_trixi_include(joinpath(EXAMPLES_DIR,
+        @test_trixi_include(joinpath(EXAMPLES_DIR, "unstructured_2d_dgsem",
                                      "elixir_shallowwater_wall_bc_shockcapturing.jl"),
                             l2=[
                                 0.04444388691670699,
@@ -87,7 +87,10 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 2.4807635459119757,
                                 3.982097158683473e-7,
                             ],
-                            tspan=(0.0, 0.05))
+                            tspan=(0.0, 0.05),
+                            surface_flux=(FluxHydrostaticReconstruction(FluxHLL(min_max_speed_naive),
+                                                                        hydrostatic_reconstruction_audusse_etal),
+                                          flux_nonconservative_audusse_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
@@ -99,7 +102,7 @@ isdir(outdir) && rm(outdir, recursive = true)
     end
     # Structured2D
     @trixi_testset "Structured2D: elixir_shallowwater_conical_island.jl" begin
-        @test_trixi_include(joinpath(EXAMPLES_DIR,
+        @test_trixi_include(joinpath(EXAMPLES_DIR, "structured_2d_dgsem",
                                      "elixir_shallowwater_conical_island.jl"),
                             l2=[
                                 0.04593154164306353,

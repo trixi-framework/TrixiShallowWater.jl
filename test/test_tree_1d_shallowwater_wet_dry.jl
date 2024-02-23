@@ -180,7 +180,8 @@ end
                             9.098379777405796e-5,
                         ],
                         tspan=(0.0, 0.025),
-                        surface_flux=(flux_hll, flux_nonconservative_fjordholm_etal))
+                        surface_flux=(FluxHLL(min_max_speed_naive),
+                                      flux_nonconservative_fjordholm_etal))
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
     let
@@ -255,7 +256,7 @@ end
                             0.05720939349382359,
                             9.098379777405796e-5,
                         ],
-                        surface_flux=(FluxHydrostaticReconstruction(flux_hll,
+                        surface_flux=(FluxHydrostaticReconstruction(FluxHLL(min_max_speed_naive),
                                                                     hydrostatic_reconstruction_audusse_etal),
                                       flux_nonconservative_audusse_etal),
                         tspan=(0.0, 0.025))
@@ -282,7 +283,9 @@ end
                             3.469453422316143e-15,
                             3.844551077492042e-8,
                         ],
-                        tspan=(0.0, 0.25))
+                        tspan=(0.0, 0.25),
+                        surface_flux=(FluxHLL(min_max_speed_naive),
+                                      flux_nonconservative_fjordholm_etal),)
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
     let
@@ -307,6 +310,8 @@ end
                             3.844551077492042e-8,
                         ],
                         tspan=(0.0, 0.25),
+                        surface_flux=(FluxHLL(min_max_speed_naive),
+                                      flux_nonconservative_fjordholm_etal),
                         boundary_condition=boundary_condition_slip_wall)
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
@@ -385,4 +390,5 @@ end
     end
 end
 end
+
 end # module

@@ -58,7 +58,4 @@ end
 end
 end
 
-# Clean up afterwards: delete TrixiShallowWater.jl output directory
-@test_nowarn rm(outdir, recursive = true)
-
 end # module
