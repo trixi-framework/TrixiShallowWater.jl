@@ -27,19 +27,19 @@ end
     H, v1, v2, b = 3.5, 0.25, 0.1, 0.4
 
     let equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.8)
-        cons_vars = Trixi.prim2cons(SVector(H, v1, b), equations)
-        entropy_vars = Trixi.cons2entropy(cons_vars, equations)
-        @test cons_vars ≈ Trixi.entropy2cons(entropy_vars, equations)
+        cons_vars = prim2cons(SVector(H, v1, b), equations)
+        entropy_vars = cons2entropy(cons_vars, equations)
+        @test cons_vars ≈ entropy2cons(entropy_vars, equations)
 
-        total_energy = Trixi.energy_total(cons_vars, equations)
-        @test total_energy ≈ Trixi.entropy(cons_vars, equations)
+        total_energy = energy_total(cons_vars, equations)
+        @test total_energy ≈ entropy(cons_vars, equations)
         @test total_energy ≈
-              Trixi.energy_internal(cons_vars, equations) +
+              energy_internal(cons_vars, equations) +
               energy_kinetic(cons_vars, equations)
         # test tuple args
-        cons_vars = Trixi.prim2cons((H, v1, b), equations)
-        entropy_vars = Trixi.cons2entropy(cons_vars, equations)
-        @test cons_vars ≈ Trixi.entropy2cons(entropy_vars, equations)
+        cons_vars = prim2cons((H, v1, b), equations)
+        entropy_vars = cons2entropy(cons_vars, equations)
+        @test cons_vars ≈ entropy2cons(entropy_vars, equations)
     end
 
     let equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.8)
@@ -54,6 +54,22 @@ end
         cons_vars = prim2cons((H, v1, v2, b), equations)
         entropy_vars = cons2entropy(cons_vars, equations)
         @test cons_vars ≈ entropy2cons(entropy_vars, equations)
+    end
+end
+
+@timed_testset "Consistency check for waterheight_pressure" begin
+    H, v1, v2, b = 3.5, 0.25, 0.1, 0.4
+
+    let equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.8)
+        cons_vars = prim2cons(SVector(H, v1, b), equations)
+        @test waterheight_pressure(cons_vars, equations) ≈
+            Trixi.waterheight(cons_vars, equations) * pressure(cons_vars, equations)
+    end
+
+    let equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.8)
+        cons_vars = prim2cons(SVector(H, v1, v2, b), equations)
+        @test waterheight_pressure(cons_vars, equations) ≈
+            Trixi.waterheight(cons_vars, equations) * pressure(cons_vars, equations)
     end
 end
 end

@@ -658,9 +658,9 @@ end
 
 """
     min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
-                              equations::ShallowWaterEquationsWetDry2D)
+                              equations::ShallowWaterEquations2D)
     min_max_speed_chen_noelle(u_ll, u_rr, normal_direction::AbstractVector,
-                              equations::ShallowWaterEquationsWetDry2D)
+                              equations::ShallowWaterEquations2D)
 
 Special estimate of the minimal and maximal wave speed of the shallow water equations for
 the left and right states `u_ll, u_rr`. These approximate speeds are used for the HLL-type
@@ -674,15 +674,7 @@ the reference below. The definition of the wave speeds are given in Equation (2.
   A new hydrostatic reconstruction scheme based on subcell reconstructions
   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
 """
-# Since FluxHLL is dispatched on ShallowWaterEquations1D, we also need to dispatch this wave speed 
-# estimate on ShallowWaterEquations1D.
-@inline function min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry2D)
-    return min_max_speed_chen_noelle(u_ll, u_rr, orientation,
-                                     ShallowWaterEquations2D(equations.gravity,
-                                                             equations.H0))
-end
-
+# Since FluxHLL is dispatched on ShallowWaterEquations1D this is only used by the ShallowWaterEquations2D.
 @inline function min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
                                            equations::ShallowWaterEquations2D)
     h_ll = Trixi.waterheight(u_ll, equations)
@@ -702,13 +694,6 @@ end
     end
 
     return λ_min, λ_max
-end
-
-@inline function min_max_speed_chen_noelle(u_ll, u_rr, normal_direction::AbstractVector,
-                                           equations::ShallowWaterEquationsWetDry2D)
-    return min_max_speed_chen_noelle(u_ll, u_rr, normal_direction::AbstractVector,
-                                     ShallowWaterEquations2D(equations.gravity,
-                                                             equations.H0))
 end
 
 @inline function min_max_speed_chen_noelle(u_ll, u_rr, normal_direction::AbstractVector,

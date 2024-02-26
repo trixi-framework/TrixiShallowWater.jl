@@ -483,7 +483,7 @@ end
 
 """
     min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
-                              equations::ShallowWaterEquationsWetDry1D)
+                              equations::ShallowWaterEquations1D)
 
 The approximated speeds for the HLL type numerical flux used by Chen and Noelle for their
 hydrostatic reconstruction. As they state in the paper, these speeds are chosen for the numerical
@@ -494,15 +494,7 @@ Further details on this hydrostatic reconstruction and its motivation can be fou
   A new hydrostatic reconstruction scheme based on subcell reconstructions
   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
 """
-# Since FluxHLL is dispatched on ShallowWaterEquations1D, we also need to dispatch this wave speed 
-# estimate on ShallowWaterEquations1D.
-@inline function min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry1D)
-    return min_max_speed_chen_noelle(u_ll, u_rr, orientation,
-                                     ShallowWaterEquations1D(equations.gravity,
-                                                             equations.H0))
-end
-
+# Since FluxHLL is dispatched on ShallowWaterEquations1D this is only used by the ShallowWaterEquations1D.
 @inline function min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
                                            equations::ShallowWaterEquations1D)
     # Get the velocity quantities
