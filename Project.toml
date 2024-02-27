@@ -12,6 +12,7 @@ Trixi = "a7f1ee26-1774-49b1-8366-f1abc58fbfcb"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
+LinearAlgebra = "1"
 MuladdMacro = "0.2.2"
 Static = "0.3, 0.4, 0.5, 0.6, 0.7, 0.8"
 StaticArrays = "1"

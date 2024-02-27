@@ -38,7 +38,8 @@ end
 
 # this method is used when the indicator is constructed as for shock-capturing volume integrals
 # of the shallow water equations
-# It modifies the shock-capturing indicator to use full FV method in dry cells
+# It modifies the shock-capturing indicator to use full FV method in dry elements
+# or partially dry elements containing a wet/dry transition.
 function IndicatorHennemannGassnerShallowWater(equations::Trixi.AbstractShallowWaterEquations,
                                                basis;
                                                alpha_max = 0.5,
