@@ -8,7 +8,11 @@ include("test_trixi.jl")
 
 EXAMPLES_DIR = pkgdir(TrixiShallowWater, "examples", "tree_2d_dgsem")
 
-@testset "Shallow Water Wet Dry" begin
+# Start with a clean environment: remove TrixiShallowWater.jl output directory if it exists
+outdir = "out"
+isdir(outdir) && rm(outdir, recursive = true)
+
+@testset "TreeMesh2D" begin
 #! format: noindent
 
 @trixi_testset "elixir_shallowwater_ec.jl" begin
@@ -352,6 +356,9 @@ end
         @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
     end
 end
-end
+end # TreeMesh2D
+
+# Clean up afterwards: delete TrixiShallowWater.jl output directory
+@test_nowarn rm(outdir, recursive = true)
 
 end # module
