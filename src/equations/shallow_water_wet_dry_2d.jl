@@ -651,9 +651,24 @@ end
 # Specialized `FluxHLL` to avoid spurious dissipation in the bottom topography
 @inline function (numflux::Trixi.FluxHLL)(u_ll, u_rr, orientation_or_normal_direction,
                                           equations::ShallowWaterEquationsWetDry2D)
-    return (numflux::Trixi.FluxHLL)(u_ll, u_rr, orientation_or_normal_direction,
-                                    ShallowWaterEquations2D(equations.gravity,
-                                                            equations.H0))
+    λ_min, λ_max = numflux.min_max_speed(u_ll, u_rr, orientation_or_normal_direction,
+                                         equations)
+
+    if λ_min >= 0 && λ_max >= 0
+        return flux(u_ll, orientation_or_normal_direction, equations)
+    elseif λ_max <= 0 && λ_min <= 0
+        return flux(u_rr, orientation_or_normal_direction, equations)
+    else
+        f_ll = flux(u_ll, orientation_or_normal_direction, equations)
+        f_rr = flux(u_rr, orientation_or_normal_direction, equations)
+        inv_λ_max_minus_λ_min = inv(λ_max - λ_min)
+        factor_ll = λ_max * inv_λ_max_minus_λ_min
+        factor_rr = λ_min * inv_λ_max_minus_λ_min
+        factor_diss = λ_min * λ_max * inv_λ_max_minus_λ_min
+        diss = u_rr - u_ll
+        return factor_ll * f_ll - factor_rr * f_rr +
+               factor_diss * SVector(diss[1], diss[2], diss[3], zero(eltype(u_ll)))
+    end
 end
 
 """
@@ -674,9 +689,8 @@ the reference below. The definition of the wave speeds are given in Equation (2.
   A new hydrostatic reconstruction scheme based on subcell reconstructions
   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
 """
-# Since FluxHLL is dispatched on ShallowWaterEquations1D this is only used by the ShallowWaterEquations2D.
 @inline function min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquations2D)
+                                           equations::ShallowWaterEquationsWetDry2D)
     h_ll = Trixi.waterheight(u_ll, equations)
     v1_ll, v2_ll = velocity(u_ll, equations)
     h_rr = Trixi.waterheight(u_rr, equations)
@@ -697,7 +711,7 @@ the reference below. The definition of the wave speeds are given in Equation (2.
 end
 
 @inline function min_max_speed_chen_noelle(u_ll, u_rr, normal_direction::AbstractVector,
-                                           equations::ShallowWaterEquations2D)
+                                           equations::ShallowWaterEquationsWetDry2D)
     h_ll = Trixi.waterheight(u_ll, equations)
     v1_ll, v2_ll = velocity(u_ll, equations)
     h_rr = Trixi.waterheight(u_rr, equations)
@@ -721,6 +735,51 @@ end
     return Trixi.max_abs_speeds(u,
                                 ShallowWaterEquations2D(equations.gravity,
                                                         equations.H0))
+end
+
+# Calculate estimates for minimum and maximum wave speeds for HLL-type fluxes
+@inline function Trixi.min_max_speed_naive(u_ll, u_rr, orientation::Integer,
+                                           equations::ShallowWaterEquationsWetDry2D)
+    return Trixi.min_max_speed_naive(u_ll, u_rr, orientation,
+                                     ShallowWaterEquations2D(equations.gravity,
+                                                             equations.H0))
+end
+
+@inline function Trixi.min_max_speed_naive(u_ll, u_rr, normal_direction::AbstractVector,
+                                           equations::ShallowWaterEquationsWetDry2D)
+    return Trixi.min_max_speed_naive(u_ll, u_rr, normal_direction,
+                                     ShallowWaterEquations2D(equations.gravity,
+                                                             equations.H0))
+end
+
+# More refined estimates for minimum and maximum wave speeds for HLL-type fluxes
+@inline function Trixi.min_max_speed_davis(u_ll, u_rr, orientation::Integer,
+                                           equations::ShallowWaterEquationsWetDry2D)
+    return Trixi.min_max_speed_davis(u_ll, u_rr, orientation,
+                                     ShallowWaterEquations2D(equations.gravity,
+                                                             equations.H0))
+end
+
+@inline function Trixi.min_max_speed_davis(u_ll, u_rr, normal_direction::AbstractVector,
+                                           equations::ShallowWaterEquationsWetDry2D)
+    return Trixi.min_max_speed_davis(u_ll, u_rr, normal_direction,
+                                     ShallowWaterEquations2D(equations.gravity,
+                                                             equations.H0))
+end
+
+@inline function Trixi.min_max_speed_einfeldt(u_ll, u_rr, orientation::Integer,
+                                              equations::ShallowWaterEquationsWetDry2D)
+    return Trixi.min_max_speed_einfeldt(u_ll, u_rr, orientation,
+                                        ShallowWaterEquations2D(equations.gravity,
+                                                                equations.H0))
+end
+
+@inline function Trixi.min_max_speed_einfeldt(u_ll, u_rr,
+                                              normal_direction::AbstractVector,
+                                              equations::ShallowWaterEquationsWetDry2D)
+    return Trixi.min_max_speed_einfeldt(u_ll, u_rr, normal_direction,
+                                        ShallowWaterEquations2D(equations.gravity,
+                                                                equations.H0))
 end
 
 # Helper function to extract the velocity vector from the conservative variables
