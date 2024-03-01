@@ -639,17 +639,17 @@ end
 end
 
 # Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom topography
-@inline function (dissipation::Trixi.DissipationLocalLaxFriedrichs)(u_ll, u_rr,
+@inline function (dissipation::DissipationLocalLaxFriedrichs)(u_ll, u_rr,
                                                                     orientation_or_normal_direction,
                                                                     equations::ShallowWaterEquationsWetDry2D)
-    return (dissipation::Trixi.DissipationLocalLaxFriedrichs)(u_ll, u_rr,
+    return (dissipation::DissipationLocalLaxFriedrichs)(u_ll, u_rr,
                                                               orientation_or_normal_direction,
                                                               ShallowWaterEquations2D(equations.gravity,
                                                                                       equations.H0))
 end
 
 # Specialized `FluxHLL` to avoid spurious dissipation in the bottom topography
-@inline function (numflux::Trixi.FluxHLL)(u_ll, u_rr, orientation_or_normal_direction,
+@inline function (numflux::FluxHLL)(u_ll, u_rr, orientation_or_normal_direction,
                                           equations::ShallowWaterEquationsWetDry2D)
     λ_min, λ_max = numflux.min_max_speed(u_ll, u_rr, orientation_or_normal_direction,
                                          equations)
