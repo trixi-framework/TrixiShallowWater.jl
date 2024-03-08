@@ -84,7 +84,9 @@ function ShallowWaterEquationsWetDry2D(; gravity_constant, H0 = zero(gravity_con
     if threshold_wet === nothing
         threshold_wet = 5 * eps(T)
     end
-    # Construct standard SWE for dispatch
+    # Construct the standard SWE for dispatch. Even though the `basic_swe` already store the 
+    # gravity constant and the total water height, we store an extra copy in 
+    # `ShallowWaterEquationsWetDry2D` for convenience.
     basic_swe = ShallowWaterEquations2D(gravity_constant = gravity_constant, H0 = H0)
 
     ShallowWaterEquationsWetDry2D(gravity_constant, H0, threshold_limiter,
