@@ -83,19 +83,19 @@ end
         @test min_max_speed_naive(u_ll, u_rr, orientation,
                                   equations) ==
               min_max_speed_naive(u_ll, u_rr, orientation,
-                                  equations.swe_trixi)
+                                  equations.basic_swe)
         @test min_max_speed_davis(u_ll, u_rr, orientation,
                                   equations) ==
               min_max_speed_davis(u_ll, u_rr, orientation,
-                                  equations.swe_trixi)
+                                  equations.basic_swe)
         @test min_max_speed_einfeldt(u_ll, u_rr, orientation,
                                      equations) ==
               min_max_speed_einfeldt(u_ll, u_rr, orientation,
-                                     equations.swe_trixi)
+                                     equations.basic_swe)
         @test min_max_speed_naive(u_ll, u_rr, orientation,
                                   equations) ==
               min_max_speed_naive(u_ll, u_rr, orientation,
-                                  equations.swe_trixi)
+                                  equations.basic_swe)
     end
 
     let equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.8)
@@ -111,38 +111,38 @@ end
             @test min_max_speed_naive(u_ll, u_rr, orientation,
                                       equations) ==
                   min_max_speed_naive(u_ll, u_rr, orientation,
-                                      equations.swe_trixi)
+                                      equations.basic_swe)
             @test min_max_speed_davis(u_ll, u_rr, orientation,
                                       equations) ==
                   min_max_speed_davis(u_ll, u_rr, orientation,
-                                      equations.swe_trixi)
+                                      equations.basic_swe)
             @test min_max_speed_einfeldt(u_ll, u_rr, orientation,
                                          equations) ==
                   min_max_speed_einfeldt(u_ll, u_rr, orientation,
-                                         equations.swe_trixi)
+                                         equations.basic_swe)
             @test min_max_speed_naive(u_ll, u_rr, orientation,
                                       equations) ==
                   min_max_speed_naive(u_ll, u_rr, orientation,
-                                      equations.swe_trixi)
+                                      equations.basic_swe)
         end
 
         for normal_direction in normal_directions
             @test min_max_speed_naive(u_ll, u_rr, normal_direction,
                                       equations) ==
                   min_max_speed_naive(u_ll, u_rr, normal_direction,
-                                      equations.swe_trixi)
+                                      equations.basic_swe)
             @test min_max_speed_davis(u_ll, u_rr, normal_direction,
                                       equations) ==
                   min_max_speed_davis(u_ll, u_rr, normal_direction,
-                                      equations.swe_trixi)
+                                      equations.basic_swe)
             @test min_max_speed_einfeldt(u_ll, u_rr, normal_direction,
                                          equations) ==
                   min_max_speed_einfeldt(u_ll, u_rr, normal_direction,
-                                         equations.swe_trixi)
+                                         equations.basic_swe)
             @test min_max_speed_naive(u_ll, u_rr, normal_direction,
                                       equations) ==
                   min_max_speed_naive(u_ll, u_rr, normal_direction,
-                                      equations.swe_trixi)
+                                      equations.basic_swe)
         end
     end
 end
