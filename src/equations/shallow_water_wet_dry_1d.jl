@@ -63,7 +63,7 @@ struct ShallowWaterEquationsWetDry1D{RealT <: Real} <:
     # Default is 5*eps() which in double precision is ≈1e-15.
     threshold_wet::RealT
     # Standard shallow water equations for dispatch on Trixi.jl functions 
-    swe_trixi::typeof(ShallowWaterEquations1D(gravity_constant=1.0))
+    swe_trixi::typeof(ShallowWaterEquations1D(gravity_constant = 1.0))
 end
 
 # Allow for flexibility to set the gravitational constant within an elixir depending on the
@@ -82,7 +82,7 @@ function ShallowWaterEquationsWetDry1D(; gravity_constant, H0 = zero(gravity_con
         threshold_wet = 5 * eps(T)
     end
     # Construct standard SWE for dispatch
-    swe_trixi = ShallowWaterEquations1D(gravity_constant=gravity_constant, H0 = H0)
+    swe_trixi = ShallowWaterEquations1D(gravity_constant = gravity_constant, H0 = H0)
 
     ShallowWaterEquationsWetDry1D(gravity_constant, H0, threshold_limiter,
                                   threshold_wet, swe_trixi)
