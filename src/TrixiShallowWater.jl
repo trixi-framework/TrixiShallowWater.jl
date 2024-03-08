@@ -6,7 +6,7 @@ module TrixiShallowWater
 # https://github.com/trixi-framework/TrixiShallowWater.jl/pull/10#discussion_r1433720559
 using Trixi
 # Import additional symbols that are not exported by Trixi.jl
-import Trixi: get_node_vars, set_node_vars!
+using Trixi: get_node_vars, set_node_vars!
 using MuladdMacro: @muladd
 using StaticArrays: SVector
 using Static: True, False
