@@ -57,6 +57,33 @@ end
     end
 end
 
+@timed_testset "Two-layer shallow water conversion between conservative/entropy variables" begin
+    H_upper, v1_upper, v2_upper, H_lower, v1_lower, v2_lower, b = 3.5, 0.25, 0.13, 2.5,
+                                                                  0.1, 0.37, 0.4
+
+    let equations = ShallowWaterTwoLayerEquations1D(gravity_constant = 9.8,
+                                                    rho_upper = 0.9, rho_lower = 1.0)
+        cons_vars = prim2cons(SVector(H_upper, v1_upper, H_lower, v1_lower, b),
+                              equations)
+        total_energy = energy_total(cons_vars, equations)
+        @test total_energy ≈ entropy(cons_vars, equations)
+        @test total_energy ≈
+              energy_internal(cons_vars, equations) +
+              energy_kinetic(cons_vars, equations)
+    end
+
+    let equations = ShallowWaterTwoLayerEquations2D(gravity_constant = 9.8,
+                                                    rho_upper = 0.9, rho_lower = 1.0)
+        cons_vars = prim2cons(SVector(H_upper, v1_upper, v2_upper, H_lower, v1_lower,
+                                      v2_lower, b), equations)
+        total_energy = energy_total(cons_vars, equations)
+        @test total_energy ≈ entropy(cons_vars, equations)
+        @test total_energy ≈
+              energy_internal(cons_vars, equations) +
+              energy_kinetic(cons_vars, equations)
+    end
+end
+
 @timed_testset "Consistency check for waterheight_pressure" begin
     H, v1, v2, b = 3.5, 0.25, 0.1, 0.4
 

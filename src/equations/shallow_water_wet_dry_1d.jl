@@ -584,7 +584,7 @@ end
 
 @inline function Trixi.waterheight(u, equations::ShallowWaterEquationsWetDry1D)
     return waterheight(u,
-                             equations.basic_swe)
+                       equations.basic_swe)
 end
 
 @inline function Trixi.pressure(u, equations::ShallowWaterEquationsWetDry1D)
