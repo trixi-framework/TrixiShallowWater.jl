@@ -10,4 +10,7 @@
 
 include("shallow_water_wet_dry_1d.jl")
 include("shallow_water_wet_dry_2d.jl")
+
+include("shallow_water_two_layer_1d.jl")
+include("shallow_water_two_layer_2d.jl")
 end # @muladd
