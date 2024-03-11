@@ -173,6 +173,16 @@ end
         end
     end
 end
+
+@timed_testset "Exception check for the 2LSWE" begin
+    error_message = "Invalid input: Densities must be chosen such that rho_upper < rho_lower"
+    @test_throws error_message ShallowWaterTwoLayerEquations1D(gravity_constant = 9.81,
+                                                               rho_upper = 1.0,
+                                                               rho_lower = 0.9)
+    @test_throws error_message ShallowWaterTwoLayerEquations2D(gravity_constant = 9.81,
+                                                               rho_upper = 1.0,
+                                                               rho_lower = 0.9)
+end
 end # Unit tests
 
 end # module

@@ -90,7 +90,7 @@ function ShallowWaterTwoLayerEquations2D(; gravity_constant,
                                          rho_lower)
     # Assign density ratio if rho_upper <= rho_lower
     if rho_upper > rho_lower
-        error("Invalid input: Densities must be chosen such that rho_upper <= rho_lower")
+        error("Invalid input: Densities must be chosen such that rho_upper < rho_lower")
     else
         r = rho_upper / rho_lower
     end
