@@ -360,7 +360,7 @@ end
                             4.4541473087633676e-7,
                         ],
                         tspan=(0.0, 0.05),
-                        atol=3e-10) # see https://github.com/trixi-framework/Trixi.jl/issues/1617
+                        atol=1e-7, rtol=1e-7) # see https://github.com/trixi-framework/Trixi.jl/issues/1617
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
     let

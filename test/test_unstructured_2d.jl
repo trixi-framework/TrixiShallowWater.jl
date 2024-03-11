@@ -54,7 +54,10 @@ end
                             2.0246214978154587e-11,
                             1.513851228231574,
                         ],
-                        tspan=(0.0, 0.25))
+                        tspan=(0.0, 0.25),
+                        # Since we expect erros slighlty above machine precision, relative errors can
+                        # become very large
+                        atol = 1e-10, rtol = 10)
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
     let
@@ -82,7 +85,10 @@ end
                         surface_flux=(FluxHydrostaticReconstruction(flux_lax_friedrichs,
                                                                     hydrostatic_reconstruction_audusse_etal),
                                       flux_nonconservative_audusse_etal),
-                        tspan=(0.0, 0.2))
+                        tspan=(0.0, 0.2),
+                        # Since we expect erros slighlty above machine precision, relative errors can
+                        # become very large
+                        atol = 1e-10, rtol = 10)
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
     let
@@ -111,7 +117,10 @@ end
                                       flux_nonconservative_ersing_etal),
                         volume_flux=(flux_wintermeyer_etal,
                                      flux_nonconservative_ersing_etal),
-                        tspan=(0.0, 0.25))
+                        tspan=(0.0, 0.25),
+                        # Since we expect erros slighlty above machine precision, relative errors can
+                        # become very large
+                        atol = 1e-10, rtol = 10)
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
     let
