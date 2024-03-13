@@ -682,9 +682,9 @@ the reference below. The definition of the wave speeds are given in Equation (2.
 """
 @inline function min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
                                            equations::ShallowWaterEquationsWetDry2D)
-    h_ll = Trixi.waterheight(u_ll, equations)
+    h_ll = waterheight(u_ll, equations)
     v1_ll, v2_ll = velocity(u_ll, equations)
-    h_rr = Trixi.waterheight(u_rr, equations)
+    h_rr = waterheight(u_rr, equations)
     v1_rr, v2_rr = velocity(u_rr, equations)
 
     a_ll = sqrt(equations.gravity * h_ll)
@@ -703,9 +703,9 @@ end
 
 @inline function min_max_speed_chen_noelle(u_ll, u_rr, normal_direction::AbstractVector,
                                            equations::ShallowWaterEquationsWetDry2D)
-    h_ll = Trixi.waterheight(u_ll, equations)
+    h_ll = waterheight(u_ll, equations)
     v1_ll, v2_ll = velocity(u_ll, equations)
-    h_rr = Trixi.waterheight(u_rr, equations)
+    h_rr = waterheight(u_rr, equations)
     v1_rr, v2_rr = velocity(u_rr, equations)
 
     v_normal_ll = v1_ll * normal_direction[1] + v2_ll * normal_direction[2]
@@ -797,8 +797,8 @@ end
 end
 
 @inline function Trixi.waterheight(u, equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.waterheight(u,
-                             equations.basic_swe)
+    return waterheight(u,
+                       equations.basic_swe)
 end
 
 @inline function Trixi.pressure(u, equations::ShallowWaterEquationsWetDry2D)
