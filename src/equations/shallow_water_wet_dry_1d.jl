@@ -513,8 +513,8 @@ Further details on this hydrostatic reconstruction and its motivation can be fou
     v_rr = velocity(u_rr, equations)
 
     # Calculate the wave celerity on the left and right
-    h_ll = Trixi.waterheight(u_ll, equations)
-    h_rr = Trixi.waterheight(u_rr, equations)
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
 
     a_ll = sqrt(equations.gravity * h_ll)
     a_rr = sqrt(equations.gravity * h_rr)
@@ -583,8 +583,8 @@ end
 end
 
 @inline function Trixi.waterheight(u, equations::ShallowWaterEquationsWetDry1D)
-    return Trixi.waterheight(u,
-                             equations.basic_swe)
+    return waterheight(u,
+                       equations.basic_swe)
 end
 
 @inline function Trixi.pressure(u, equations::ShallowWaterEquationsWetDry1D)
