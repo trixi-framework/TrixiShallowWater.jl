@@ -18,7 +18,7 @@ Multi-Layer Shallow Water equations (MLSWE) in one space dimension. The equation
 \right.
 ```
 
-where ``m = 1, 2, ..., M`` is the layer index and the unkown variables are the water height ``h`` and
+where ``m = 1, 2, ..., M`` is the layer index and the unknown variables are the water height ``h`` and
 the velocity ``v``.  Furthermore, ``g`` denotes the gravitational constant, ``b(x)`` the bottom 
 topography and ``\rho`` the layer density, that must be chosen such that 
 ``\rho_1 < \rho_2 < ... < \rho_M``, to make sure that layers are ordered from top to bottom, with 
@@ -241,7 +241,8 @@ In the two-layer setting this combination is equivalent to the fluxes in:
         f_hv = g * h_ll[i] * b_jump
         for j in eachlayer(equations)
             if j < i
-                f_hv += g * h_ll[i] * (equations.rhos[j] / equations.rhos[i] * h_jump[j])
+                f_hv += g * h_ll[i] *
+                        (equations.rhos[j] / equations.rhos[i] * h_jump[j])
             else # (i<j<nlayers) nonconservative formulation of the pressure
                 f_hv += g * h_ll[i] * h_jump[j]
             end

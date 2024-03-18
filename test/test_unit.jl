@@ -184,7 +184,7 @@ end
                                                                rho_lower = 0.9)
 end
 
-@time_testset "Input argument check for the ML-SWE" begin
+@timed_testset "Input argument check for the ML-SWE" begin
     @test_throws ArgumentError ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
                                                                  rhos = [
                                                                      -1.0,
