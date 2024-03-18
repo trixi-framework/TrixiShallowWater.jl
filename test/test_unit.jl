@@ -183,6 +183,22 @@ end
                                                                rho_upper = 1.0,
                                                                rho_lower = 0.9)
 end
+
+@time_testset "Input argument check for the ML-SWE" begin
+    @test_throws ArgumentError ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+                                                                 rhos = [
+                                                                     -1.0,
+                                                                     0.1,
+                                                                     0.2,
+                                                                 ])
+    @test_throws ArgumentError ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+                                                                 rhos = [0.1, 0.3, 0.2])
+    # Ensure that both tuple and array input are equivalent    
+    @test ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+                                            rhos = [0.1, 0.2, 0.3]) ==
+          ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+                                            rhos = (0.1, 0.2, 0.3))
+end
 end # Unit tests
 
 end # module

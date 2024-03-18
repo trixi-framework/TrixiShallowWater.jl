@@ -474,6 +474,36 @@ end # SWE
         end
     end
 end # 2LSWE
+
+@testset "Multilayer Shallow Water" begin
+    @trixi_testset "elixir_shallowwater_multilayer_convergence.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_convergence.jl"),
+                            l2=[
+                                0.005012009872110106,
+                                0.005049271397926405,
+                                0.0020910353267268073,
+                                0.002463306656296269,
+                                0.0004744186597731183,
+                            ],
+                            linf=[
+                                0.021377214934391375,
+                                0.021750237873536582,
+                                0.005385752427245816,
+                                0.008212004668841977,
+                                0.0008992474511775317,
+                            ],
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+end # MLSWE
 end # TreeMesh1D
 
 # Clean up afterwards: delete TrixiShallowWater.jl output directory
