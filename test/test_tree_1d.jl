@@ -503,6 +503,37 @@ end # 2LSWE
             @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
         end
     end
+    @trixi_testset "elixir_shallowwater_multilayer_well_balanced.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_well_balanced.jl"),
+                            l2=[
+                                1.2015338985485869e-17,
+                                1.4450281975802518e-17,
+                                0.001002881985401688,
+                                5.6968770683622844e-18,
+                                5.8630384557660415e-18,
+                                1.938143907661441e-17,
+                                0.0010028819854016856,
+                            ],
+                            linf=[
+                                8.326672684688674e-17,
+                                1.3877787807814457e-16,
+                                0.005119880996670767,
+                                3.2043414465411084e-17,
+                                3.288278489632501e-17,
+                                1.6336799907854548e-16,
+                                0.005119880996670708,
+                            ],
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
 end # MLSWE
 end # TreeMesh1D
 

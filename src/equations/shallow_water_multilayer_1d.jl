@@ -412,4 +412,14 @@ end
     setindex!(f, f_h, i)
     setindex!(f, f_hv, i + nlayers(equations))
 end
+
+# Calculate the error for the "lake-at-rest" test case where H = ∑h+b should
+# be a constant value over time
+@inline function Trixi.lake_at_rest_error(u,
+                                          equations::ShallowWaterMultiLayerEquations1D)
+    h = waterheight(u, equations)
+    b = u[end]
+
+    return abs(equations.H0 - (sum(h) + b))
+end
 end # @muladd
