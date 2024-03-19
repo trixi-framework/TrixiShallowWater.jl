@@ -106,9 +106,9 @@ Trixi.have_nonconservative_terms(::ShallowWaterMultiLayerEquations1D) = True()
 function Trixi.varnames(::typeof(cons2cons),
                         equations::ShallowWaterMultiLayerEquations1D)
     heights = ntuple(n -> "h" * string(n), Val(nlayers(equations)))
-    momentas = ntuple(n -> "h" * string(n) * "_v", Val(nlayers(equations)))
+    momentum = ntuple(n -> "h" * string(n) * "_v", Val(nlayers(equations)))
 
-    return (heights..., momentas..., "b")
+    return (heights..., momentum..., "b")
 end
 
 # Note, we use the total water heights, H = ∑h + b as primitive variables for easier visualization and setting initial
@@ -181,11 +181,45 @@ in non-periodic domains).
     return SVector(du1, du2, du3, du4, zero(eltype(u)))
 end
 
+"""
+    boundary_condition_slip_wall(u_inner, orientation_or_normal, x, t, surface_flux_function,
+                                 equations::ShallowWaterMultiLayerEquations1D)
+
+Create a boundary state by reflecting the normal velocity component and keep
+the tangential velocity component unchanged. The boundary water height is taken from
+the internal value.
+
+For details see Section 9.2.5 of the book:
+- Eleuterio F. Toro (2001)
+  Shock-Capturing Methods for Free-Surface Shallow Flows
+  1st edition
+  ISBN 0471987662
+"""
+@inline function Trixi.boundary_condition_slip_wall(u_inner, orientation_or_normal,
+                                                    direction,
+                                                    x, t, surface_flux_function,
+                                                    equations::ShallowWaterMultiLayerEquations1D)
+    # create the "external" boundary solution state
+    h = waterheight(u_inner, equations)
+    hv = momentum(u_inner, equations)
+    b = u_inner[end]
+
+    u_boundary = SVector(h..., -hv..., b)
+
+    # calculate the boundary flux
+    if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
+        f = surface_flux_function(u_inner, u_boundary, orientation_or_normal, equations)
+    else # u_boundary is "left" of boundary, u_inner is "right" of boundary
+        f = surface_flux_function(u_boundary, u_inner, orientation_or_normal, equations)
+    end
+    return f
+end
+
 # Calculate 1D flux for a single point
 @inline function Trixi.flux(u, orientation::Integer,
                             equations::ShallowWaterMultiLayerEquations1D)
-    # Extract waterheights and momentas and compute velocities
-    hv = momentas(u, equations)
+    # Extract waterheight and momentum and compute velocities
+    hv = momentum(u, equations)
     v = velocity(u, equations)
 
     # Initialize flux vector
@@ -272,8 +306,8 @@ In the two-layer setting this combination is equivalent to the fluxes in:
                                   orientation::Integer,
                                   equations::ShallowWaterMultiLayerEquations1D)
     # Unpack left and right state
-    hv_ll = momentas(u_ll, equations)
-    hv_rr = momentas(u_rr, equations)
+    hv_ll = momentum(u_ll, equations)
+    hv_rr = momentum(u_rr, equations)
 
     # Get the velocities on either side
     v_ll = velocity(u_ll, equations)
@@ -298,9 +332,20 @@ In the two-layer setting this combination is equivalent to the fluxes in:
     return SVector(f)
 end
 
+# Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom
+# topography
+@inline function (dissipation::DissipationLocalLaxFriedrichs)(u_ll, u_rr,
+                                                              orientation_or_normal_direction,
+                                                              equations::ShallowWaterMultiLayerEquations1D)
+    λ = dissipation.max_abs_speed(u_ll, u_rr, orientation_or_normal_direction,
+                                  equations)
+    diss = -0.5 * λ * (u_rr - u_ll)
+    return SVector(@views diss[1:(end - 1)]..., zero(eltype(u_ll)))
+end
+
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterMultiLayerEquations1D)
     h = waterheight(u, equations)
-    hv = momentas(u, equations)
+    hv = momentum(u, equations)
 
     # Calculate averaged velocity of both layers
     H = sum(h)
@@ -310,9 +355,33 @@ end
     return (abs(v_m) + c)
 end
 
+# Calculate approximation for maximum wave speed for local Lax-Friedrichs-type dissipation as the
+# maximum velocity magnitude plus the maximum speed of sound. This function uses approximate
+# eigenvalues as there is no simple way to calculate them analytically.
+
+@inline function Trixi.max_abs_speed_naive(u_ll, u_rr,
+                                           orientation::Integer,
+                                           equations::ShallowWaterMultiLayerEquations1D)
+    # Unpack left and right state
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    hv_ll = momentum(u_ll, equations)
+    hv_rr = momentum(u_rr, equations)
+
+    # Get the averaged velocity
+    v_m_ll = sum(hv_ll) / sum(h_ll)
+    v_m_rr = sum(hv_rr) / sum(h_rr)
+
+    # Calculate the wave celerity on the left and right
+    c_ll = sqrt(equations.gravity * sum(h_ll))
+    c_rr = sqrt(equations.gravity * sum(h_rr))
+
+    return (max(abs(v_m_ll) + c_ll, abs(v_m_rr) + c_rr))
+end
+
 # Convert conservative variables to primitive
 @inline function Trixi.cons2prim(u, equations::ShallowWaterMultiLayerEquations1D)
-    # Extract waterheights and momentas
+    # Extract waterheight and momentum
     h = waterheight(u, equations)
     b = u[end]
 
@@ -347,7 +416,7 @@ end
         end
     end
 
-    # Calculate momentas
+    # Calculate momentum
     h_v = SVector{nlayers(equations), real(equations)}(h[i] * v[i]
                                                        for i in eachlayer(equations))
 
@@ -370,7 +439,7 @@ end
     # Calculate entropy variables in each layer
     for i in eachlayer(equations)
         # Compute w1[i] = ρ[i]g * (b + ∑h[k] + ∑σ[k]h[k])
-        w1 = equations.rhos[i] * g * b
+        w1 = equations.rhos[i] * (g * b - 0.5 * v[i]^2)
         for j in eachlayer(equations)
             if j < i
                 w1 += equations.rhos[i] * g *
@@ -393,7 +462,7 @@ end
                                                         for i in 1:nlayers(equations))
 end
 
-@inline function momentas(u, equations::ShallowWaterMultiLayerEquations1D)
+@inline function momentum(u, equations::ShallowWaterMultiLayerEquations1D)
     return SVector{nlayers(equations), real(equations)}(u[i]
                                                         for i in (nlayers(equations) + 1):(2 * nlayers(equations)))
 end
@@ -401,7 +470,7 @@ end
 # Helper function to extract the velocity vector from the conservative variables
 @inline function Trixi.velocity(u, equations::ShallowWaterMultiLayerEquations1D)
     h = waterheight(u, equations)
-    hv = momentas(u, equations)
+    hv = momentum(u, equations)
     return SVector{nlayers(equations), real(equations)}(hv[i] / h[i]
                                                         for i in 1:nlayers(equations))
 end

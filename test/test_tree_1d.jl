@@ -534,6 +534,68 @@ end # 2LSWE
             @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
         end
     end
+    @trixi_testset "elixir_shallowwater_multilayer_dam_break_ec.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_dam_break_ec.jl"),
+                            l2=[
+                                0.03797459518473401,
+                                0.038418485935199,
+                                0.051223819840353284,
+                                0.29104239802837284,
+                                0.2897819870634873,
+                                0.21991790700220484,
+                                0.013638618139749504,
+                            ],
+                            linf=[
+                                0.14811281751508787,
+                                0.14294051443354894,
+                                0.7862151912522912,
+                                1.079364356014889,
+                                1.0144419583593887,
+                                0.992467173339586,
+                                0.4999999999999993,
+                            ],
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+    @trixi_testset "elixir_shallowwater_multilayer_dam_break_es.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_dam_break_es.jl"),
+                            l2=[
+                                0.03715839782687889,
+                                0.03944992348741886,
+                                0.047363301719025856,
+                                0.28686684422935993,
+                                0.28693864344370795,
+                                0.21860509590943838,
+                                0.013638618139749504,
+                            ],
+                            linf=[
+                                0.18088706524197873,
+                                0.22218392524551045,
+                                0.4463223829540357,
+                                1.1462905426260082,
+                                1.14002097899466,
+                                0.9996443057617685,
+                                0.4999999999999993,
+                            ],
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
 end # MLSWE
 end # TreeMesh1D
 
