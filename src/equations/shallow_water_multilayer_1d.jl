@@ -406,11 +406,40 @@ end
                                                         for i in 1:nlayers(equations))
 end
 
-# Helper function to set the layer values in the flux computation
-@inline function setlayer!(f, f_h, f_hv, i,
-                           equations::ShallowWaterMultiLayerEquations1D)
-    setindex!(f, f_h, i)
-    setindex!(f, f_hv, i + nlayers(equations))
+# Entropy function for the multilayer shallow water equations is the total energy
+@inline function Trixi.entropy(u, equations::ShallowWaterMultiLayerEquations1D)
+    energy_total(u, equations)
+end
+
+# Calculate total energy for a conservative state `u`
+@inline function Trixi.energy_total(u, equations::ShallowWaterMultiLayerEquations1D)
+    h = waterheight(u, equations)
+    v = velocity(u, equations)
+    b = u[end]
+    g = equations.gravity
+
+    e = zero(real(equations))
+    for i in eachlayer(equations)
+        e += (equations.rhos[i] * (0.5 * (h[i] * v[i]^2 + g * h[i]^2) + g * h[i] * b))
+        for j in 1:(i - 1)
+            e += g * equations.rhos[j] * h[j] * h[i]
+        end
+    end
+
+    return e
+end
+
+# Calculate kinetic energy for a conservative state `u`
+@inline function Trixi.energy_kinetic(u, equations::ShallowWaterMultiLayerEquations1D)
+    h = waterheight(u, equations)
+    v = velocity(u, equations)
+
+    return (0.5 * sum(equations.rhos[i] * h[i] * v[i]^2 for i in eachlayer(equations)))
+end
+
+# Calculate potential energy for a conservative state `u`
+@inline function Trixi.energy_internal(u, equations::ShallowWaterMultiLayerEquations1D)
+    return energy_total(u, equations) - energy_kinetic(u, equations)
 end
 
 # Calculate the error for the "lake-at-rest" test case where H = ∑h+b should
@@ -421,5 +450,12 @@ end
     b = u[end]
 
     return abs(equations.H0 - (sum(h) + b))
+end
+
+# Helper function to set the layer values in the flux computation
+@inline function setlayer!(f, f_h, f_hv, i,
+                           equations::ShallowWaterMultiLayerEquations1D)
+    setindex!(f, f_h, i)
+    setindex!(f, f_hv, i + nlayers(equations))
 end
 end # @muladd

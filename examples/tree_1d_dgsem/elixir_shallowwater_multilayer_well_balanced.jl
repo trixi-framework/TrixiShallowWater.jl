@@ -7,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the multilayer shallow water equations to test well-balancedness
 
 equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.0, H0 = 0.7,
-                                            rhos = (0.8, 0.9, 1.0))
+                                              rhos = (0.8, 0.9, 1.0))
 
 """
     initial_condition_fjordholm_well_balanced(x, t, equations::ShallowWaterMultiLayerEquations1D)
@@ -26,7 +26,7 @@ function initial_condition_fjordholm_well_balanced(x, t,
     H = [0.7, 0.6, 0.5]
     v = [0.0, 0.0, 0.0]
     b = r <= 0.1 ? 0.2 * (cos(10 * pi * (x[1] - 0.5)) + 1) : 0.0
-    
+
     return prim2cons(SVector(H..., v..., b), equations)
 end
 
