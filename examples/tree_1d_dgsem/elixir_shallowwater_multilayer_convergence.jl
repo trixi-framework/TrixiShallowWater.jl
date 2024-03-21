@@ -4,9 +4,10 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the two-layer shallow water equations
+# Semidiscretization of the multilayer shallow water equations with three layers
 
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 10.0, rhos = (0.9, 1.0, 1.1))
+equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 10.0,
+                                              rhos = (0.9, 1.0, 1.1))
 
 initial_condition = initial_condition_convergence_test
 
