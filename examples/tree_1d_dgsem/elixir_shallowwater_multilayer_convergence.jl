@@ -6,7 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the two-layer shallow water equations
 
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 10.0, rhos = (0.9, 1.0))
+equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 10.0, rhos = (0.9, 1.0, 1.1))
 
 initial_condition = initial_condition_convergence_test
 
@@ -24,7 +24,7 @@ solver = DGSEM(polydeg = 3,
 coordinates_min = 0.0
 coordinates_max = sqrt(2.0)
 mesh = TreeMesh(coordinates_min, coordinates_max,
-                initial_refinement_level = 3,
+                initial_refinement_level = 4,
                 n_cells_max = 10_000,
                 periodicity = true)
 
