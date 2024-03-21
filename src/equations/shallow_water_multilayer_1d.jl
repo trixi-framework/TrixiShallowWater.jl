@@ -361,7 +361,7 @@ end
     hv = momentum(u, equations)
 
     # Calculate averaged velocity of both layers
-    H = sum(h)  
+    H = sum(h)
     v_m = sum(hv) / H
     c = sqrt(equations.gravity * H)
 
