@@ -22,7 +22,7 @@ where ``m = 1, 2, ..., M`` is the layer index and the unknown variables are the 
 the velocity ``v``.  Furthermore, ``g`` denotes the gravitational constant, ``b(x)`` the bottom 
 topography and ``\rho`` the layer density, that must be chosen such that 
 ``\rho_1 < \rho_2 < ... < \rho_M``, to make sure that layers are ordered from top to bottom, with 
-increasing layer density.
+increasing density.
 
 The additional quantity ``H_0`` is also available to store a reference value for the total water
 height that is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
@@ -63,11 +63,9 @@ struct ShallowWaterMultiLayerEquations1D{NVARS, NLAYERS, RealT <: Real} <:
                                                                                                    RealT <:
                                                                                                    Real
                                                                                                    }
-        ## Ensure that layer densities are all positive and in increasing order:
-        # Check for increasing order
+        # Ensure that layer densities are all positive and in increasing order
         issorted(rhos) ||
             throw(ArgumentError("densities must be in increasing order (rhos[1] < rhos[2] < ... < rhos[NLAYERS])"))
-        # Check for positive values
         min(rhos...) > 0 || throw(ArgumentError("densities must be positive"))
 
         new(gravity, H0, rhos)
@@ -84,11 +82,12 @@ function ShallowWaterMultiLayerEquations1D(; gravity_constant,
     # Promote all variables to a common type
     _rhos = promote(rhos...)
     RealT = promote_type(eltype(_rhos), eltype(gravity_constant), eltype(H0))
+    __rhos = SVector(map(RealT, _rhos))
 
+    # Extract number of layers and variables
     NLAYERS = length(rhos)
     NVARS = 2 * NLAYERS + 1
 
-    __rhos = SVector(map(RealT, _rhos))
     return ShallowWaterMultiLayerEquations1D{NVARS, NLAYERS, RealT}(gravity_constant,
                                                                     H0, __rhos)
 end
@@ -105,19 +104,19 @@ end
 Trixi.have_nonconservative_terms(::ShallowWaterMultiLayerEquations1D) = True()
 function Trixi.varnames(::typeof(cons2cons),
                         equations::ShallowWaterMultiLayerEquations1D)
-    heights = ntuple(n -> "h" * string(n), Val(nlayers(equations)))
+    waterheight = ntuple(n -> "h" * string(n), Val(nlayers(equations)))
     momentum = ntuple(n -> "h" * string(n) * "_v", Val(nlayers(equations)))
 
-    return (heights..., momentum..., "b")
+    return (waterheight..., momentum..., "b")
 end
 
-# Note, we use the total water heights, H = ∑h + b as primitive variables for easier visualization and setting initial
+# We use the interface heights, H = ∑h + b as primitive variables for easier visualization and setting initial
 # conditions
 function Trixi.varnames(::typeof(cons2prim),
                         equations::ShallowWaterMultiLayerEquations1D)
-    heights = ntuple(n -> "H" * string(n), Val(nlayers(equations)))
-    velocities = ntuple(n -> "v" * string(n) * "_1", Val(nlayers(equations)))
-    return (heights..., velocities..., "b")
+    interface_height = ntuple(n -> "H" * string(n), Val(nlayers(equations)))
+    velocity = ntuple(n -> "v" * string(n) * "_1", Val(nlayers(equations)))
+    return (interface_height..., velocity..., "b")
 end
 
 # Set initial conditions at physical location `x` for time `t`
@@ -130,7 +129,7 @@ A smooth initial condition for a three-layer configuration used for convergence 
 """
 function Trixi.initial_condition_convergence_test(x, t,
                                                   equations::ShallowWaterMultiLayerEquations1D)
-    # some constants are chosen such that the function is periodic on the domain [0,sqrt(2)]
+    # Some constants are chosen such that the function is periodic on the domain [0,sqrt(2)]
     ω = 2.0 * pi * sqrt(2.0)
 
     H1 = 4.0 + 0.1 * cos(ω * x[1] + t)
@@ -211,14 +210,14 @@ For details see Section 9.2.5 of the book:
                                                     direction,
                                                     x, t, surface_flux_function,
                                                     equations::ShallowWaterMultiLayerEquations1D)
-    # create the "external" boundary solution state
+    # Create the "external" boundary solution state
     h = waterheight(u_inner, equations)
     hv = momentum(u_inner, equations)
     b = u_inner[end]
 
     u_boundary = SVector(h..., -hv..., b)
 
-    # calculate the boundary flux
+    # Calculate the boundary flux
     if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
         f = surface_flux_function(u_inner, u_boundary, orientation_or_normal, equations)
     else # u_boundary is "left" of boundary, u_inner is "right" of boundary
@@ -236,10 +235,10 @@ end
 
     # Initialize flux vector
     f = zero(MVector{2 * nlayers(equations) + 1, real(equations)})
-    # Calculate fluxes in each layer. 
-    # Note that the momentum flux simplifies as the pressure is included in the nonconservative term.
+    # Calculate fluxes in each layer
     for i in eachlayer(equations)
         f_h = hv[i]
+        # The momentum flux simplifies as the pressure is included in the nonconservative term
         f_hv = hv[i] * v[i]
 
         setlayer!(f, f_h, f_hv, i, equations)
@@ -255,8 +254,7 @@ Non-symmetric path-conservative two-point flux discretizing the nonconservative 
 that contains the gradients of the bottom topography and waterheights from the coupling between layers
 and the nonconservative pressure formulation [`ShallowWaterMultiLayerEquations1D`](@ref).
 
-When the bottom topography is nonzero this scheme will be well-balanced when used with the 
-nonconservative [`flux_ersing_etal`](@ref).
+When the bottom topography is nonzero this scheme will be well-balanced when used with [`flux_ersing_etal`](@ref).
 
 In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
@@ -308,6 +306,9 @@ without the hydrostatic pressure.
 When the bottom topography is nonzero this scheme will be well-balanced when used with the 
 nonconservative [`flux_nonconservative_ersing_etal`](@ref).
 
+To obtain an entropy stable formulation the `surface_flux` can be set as
+[`FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs()), flux_nonconservative_ersing_etal`](@ref).
+
 In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
   An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
@@ -328,14 +329,14 @@ In the two-layer setting this combination is equivalent to the fluxes in:
     # Initialize flux vector
     f = zero(MVector{2 * nlayers(equations) + 1, real(equations)})
 
-    # Calculate fluxes in each layer. 
-    # Note that the momentum flux simplifies as the pressure is included in the nonconservative term.
+    # Calculate fluxes in each layer
     for i in eachlayer(equations)
         # Compute averages
         v_avg = 0.5 * (v_ll[i] + v_rr[i])
         hv_avg = 0.5 * (hv_ll[i] + hv_rr[i])
 
         f_h = hv_avg
+        # The momentum flux simplifies as the pressure is included in the nonconservative term.
         f_hv = f_h * v_avg
 
         setlayer!(f, f_h, f_hv, i, equations)
@@ -360,7 +361,7 @@ end
     hv = momentum(u, equations)
 
     # Calculate averaged velocity of both layers
-    H = sum(h)
+    H = sum(h)  
     v_m = sum(hv) / H
     c = sqrt(equations.gravity * H)
 
@@ -393,11 +394,11 @@ end
 
 # Convert conservative variables to primitive
 @inline function Trixi.cons2prim(u, equations::ShallowWaterMultiLayerEquations1D)
-    # Extract waterheight and momentum
+    # Extract waterheight
     h = waterheight(u, equations)
     b = u[end]
 
-    # Initialize total waterheight
+    # Initialize interface height
     H = MVector{nlayers(equations), real(equations)}(undef)
     for i in reverse(eachlayer(equations))
         if i == nlayers(equations)
@@ -417,7 +418,7 @@ end
     v = prim[(nlayers(equations) + 1):(2 * nlayers(equations))]
     b = prim[end]
 
-    # Calculate waterheights
+    # Calculate waterheight
     h = MVector{nlayers(equations), real(equations)}(undef)
     for i in eachlayer(equations)
         if i < nlayers(equations)
