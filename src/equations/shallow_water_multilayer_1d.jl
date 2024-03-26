@@ -288,8 +288,8 @@ In the two-layer setting this combination is equivalent to the fluxes in:
     f = zero(MVector{2 * nlayers(equations) + 1, real(equations)})
 
     # Compute the nonconservative flux in each layer (0, ..., 0, f_hv[1], ..., f_hv[NLAYERS], 0),
-    # where f_hv[i] = gh[i] * (b + ∑h[k] + ∑σ[k]h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the density 
-    # ratio of different layers
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # density ratio of different layers
     for i in eachlayer(equations)
         f_hv = g * h_ll[i] * b_jump
         for j in eachlayer(equations)
@@ -459,8 +459,8 @@ end
 
     # Calculate entropy variables in each layer
     for i in eachlayer(equations)
-        # Compute w1[i] = ρ[i]g * (b + ∑h[k] + ∑σ[k]h[k]), where σ[k] = ρ[k] / ρ[i] denotes the 
-        # density ratio of different layers
+        # Compute w1[i] = ρ[i] * g * (b + ∑h[k] + ∑σ[k] * h[k]), where σ[k] = ρ[k] / ρ[i] denotes 
+        # the density ratio of different layers
         w1 = equations.rhos[i] * (g * b - 0.5 * v[i]^2)
         for j in eachlayer(equations)
             if j < i
