@@ -12,7 +12,7 @@ equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.0, H0 = 0.7,
 """
     initial_condition_fjordholm_well_balanced(x, t, equations::ShallowWaterMultiLayerEquations1D)
 
-Initial condition to test well balanced with a bottom topography from Fjordholm
+Initial condition to test well balanced with a bottom topography adapted from Fjordholm
 - Ulrik Skre Fjordholm (2012)
   Energy conservative and stable schemes for the two-layer shallow water equations.
   [DOI: 10.1142/9789814417099_0039](https://doi.org/10.1142/9789814417099_0039)

@@ -20,9 +20,12 @@ Multi-Layer Shallow Water equations (MLSWE) in one space dimension. The equation
 
 where ``m = 1, 2, ..., M`` is the layer index and the unknown variables are the water height ``h`` and
 the velocity ``v``.  Furthermore, ``g`` denotes the gravitational constant, ``b(x)`` the bottom 
-topography and ``\rho`` the layer density, that must be chosen such that 
-``\rho_1 < \rho_2 < ... < \rho_M``, to make sure that layers are ordered from top to bottom, with 
+topography and ``\rho_m`` the m-th layer density, that must be chosen such that 
+``\rho_1 < \rho_2 < ... < \rho_M``, to ensure that different layers are ordered from top to bottom, with 
 increasing density.
+
+We use a specific formulation of the system, where the pressure term is reformulated as a 
+nonconservative term, which has some benefits for the design of well-balanced schemes.
 
 The additional quantity ``H_0`` is also available to store a reference value for the total water
 height that is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
@@ -129,6 +132,11 @@ A smooth initial condition for a three-layer configuration used for convergence 
 """
 function Trixi.initial_condition_convergence_test(x, t,
                                                   equations::ShallowWaterMultiLayerEquations1D)
+    # Check if the equation has been set up with three layers
+    if nlayers(equations) != 3
+        throw(ArgumentError("This initial condition is only valid for three layers"))
+    end
+
     # Some constants are chosen such that the function is periodic on the domain [0,sqrt(2)]
     ω = 2.0 * pi * sqrt(2.0)
 
@@ -226,7 +234,7 @@ For details see Section 9.2.5 of the book:
     return f
 end
 
-# Calculate 1D flux for a single point
+# Calculate 1D advective portion of the flux for a single point
 @inline function Trixi.flux(u, orientation::Integer,
                             equations::ShallowWaterMultiLayerEquations1D)
     # Extract waterheight and momentum and compute velocities
@@ -260,7 +268,7 @@ In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
   An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
   curvilinear meshes
-  [DOI: 10.48550/arXiv.2306.12699](https://doi.org/10.48550/arXiv.2306.12699)
+  [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
 """
 @inline function Trixi.flux_nonconservative_ersing_etal(u_ll, u_rr,
                                                         orientation::Integer,
@@ -279,8 +287,9 @@ In the two-layer setting this combination is equivalent to the fluxes in:
     # Initialize flux vector
     f = zero(MVector{2 * nlayers(equations) + 1, real(equations)})
 
-    # Compute the nonconservative flux in each layer (0, ..., 0, f_hv[1], ..., f_hv[NLAYERS], 0)
-    # with f_hv[i] = gh[i] * (b + ∑h[k] + ∑σ[k]h[k])_x.  
+    # Compute the nonconservative flux in each layer (0, ..., 0, f_hv[1], ..., f_hv[NLAYERS], 0),
+    # where f_hv[i] = gh[i] * (b + ∑h[k] + ∑σ[k]h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the density 
+    # ratio of different layers
     for i in eachlayer(equations)
         f_hv = g * h_ll[i] * b_jump
         for j in eachlayer(equations)
@@ -313,7 +322,7 @@ In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
   An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
   curvilinear meshes
-  [DOI: 10.48550/arXiv.2306.12699](https://doi.org/10.48550/arXiv.2306.12699)
+  [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
 """
 @inline function flux_ersing_etal(u_ll, u_rr,
                                   orientation::Integer,
@@ -371,7 +380,6 @@ end
 # Calculate approximation for maximum wave speed for local Lax-Friedrichs-type dissipation as the
 # maximum velocity magnitude plus the maximum speed of sound. This function uses approximate
 # eigenvalues as there is no simple way to calculate them analytically.
-
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr,
                                            orientation::Integer,
                                            equations::ShallowWaterMultiLayerEquations1D)
@@ -437,8 +445,8 @@ end
 end
 
 # Convert conservative variables to entropy variables
-# Note, only the first four are the entropy variables, the fifth entry still just carries the
-# bottom topography values for convenience
+# Note, only the first `2 * nlayers(equations)` are the entropy variables
+# The last entry still just carries the bottom topography values for convenience
 @inline function Trixi.cons2entropy(u, equations::ShallowWaterMultiLayerEquations1D)
     # Extract conservative variables and compute velocity
     h = waterheight(u, equations)
@@ -451,7 +459,8 @@ end
 
     # Calculate entropy variables in each layer
     for i in eachlayer(equations)
-        # Compute w1[i] = ρ[i]g * (b + ∑h[k] + ∑σ[k]h[k])
+        # Compute w1[i] = ρ[i]g * (b + ∑h[k] + ∑σ[k]h[k]), where σ[k] = ρ[k] / ρ[i] denotes the 
+        # density ratio of different layers
         w1 = equations.rhos[i] * (g * b - 0.5 * v[i]^2)
         for j in eachlayer(equations)
             if j < i
