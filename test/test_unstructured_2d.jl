@@ -258,7 +258,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             tspan=(0.0, 2.0),
                             surface_flux=(FluxHLL(min_max_speed_naive),
-                                          flux_nonconservative_fjordholm_etal))
+                                          flux_nonconservative_fjordholm_etal),
+                            atol=1e-10)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
