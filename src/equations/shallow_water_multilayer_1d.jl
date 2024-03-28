@@ -502,7 +502,9 @@ end
     energy_total(u, equations)
 end
 
-# Calculate total energy for a conservative state `u`
+# Calculate total energy for a conservative state `u`.
+# The total energy is composed of the kinetic energy, the hydrostatic pressure and the potential
+# energy from the bottom topography and the layer interfaces.
 @inline function Trixi.energy_total(u, equations::ShallowWaterMultiLayerEquations1D)
     h = waterheight(u, equations)
     v = velocity(u, equations)
