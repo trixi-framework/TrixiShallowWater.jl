@@ -13,4 +13,32 @@ include("shallow_water_wet_dry_2d.jl")
 
 include("shallow_water_two_layer_1d.jl")
 include("shallow_water_two_layer_2d.jl")
+
+abstract type AbstractShallowWaterMultiLayerEquations{NDIMS, NVARS, NLAYERS} <:
+              Trixi.AbstractEquations{NDIMS, NVARS} end
+include("shallow_water_multilayer_1d.jl")
+
+"""
+    eachlayer(equations::AbstractShallowWaterMultiLayerEquations)
+
+Return an iterator over the indices that specify the location in relevant data structures
+for the layers in `AbstractShallowWaterMultiLayerEquations`.
+"""
+@inline function eachlayer(equations::AbstractShallowWaterMultiLayerEquations)
+    Base.OneTo(nlayers(equations))
+end
+
+"""
+    nlayers(equations::AbstractShallowWaterMultiLayerEquations)
+
+Retrieve the number of layers from an equation instance of the `AbstractShallowWaterMultiLayerEquations`.
+"""
+@inline function nlayers(::AbstractShallowWaterMultiLayerEquations{NDIMS, NVARS,
+                                                                   NLAYERS}) where {
+                                                                                    NDIMS,
+                                                                                    NVARS,
+                                                                                    NLAYERS
+                                                                                    }
+    NLAYERS
+end
 end # @muladd
