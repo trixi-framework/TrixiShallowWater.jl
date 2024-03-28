@@ -233,6 +233,11 @@ end
                                             rhos = [0.1, 0.2, 0.3]) ==
           ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
                                             rhos = (0.1, 0.2, 0.3))
+
+    # Check for argument error if initial condition is called with wrong number of layers
+    equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+                                                  rhos = (0.1, 0.2, 0.3, 0.4))
+    @test_throws ArgumentError initial_condition_convergence_test(0.0, 0.0, equations)
 end
 end # Unit tests
 
