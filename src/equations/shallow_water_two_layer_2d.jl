@@ -63,7 +63,7 @@ This affects the implementation and use of these equations in various ways:
 * The flux values corresponding to the bottom topography must be zero.
 * The bottom topography values must be included when defining initial conditions, boundary
   conditions or source terms.
-* [`AnalysisCallback`](@ref) analyzes this variable.
+* [`Trixi.AnalysisCallback`](@extref) analyzes this variable.
 * Trixi's visualization tools will visualize the bottom topography by default.
 
 A good introduction for the 2LSWE is available in Chapter 12 of the book:

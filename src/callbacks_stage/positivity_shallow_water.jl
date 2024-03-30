@@ -15,7 +15,7 @@ or the [`ShallowWaterEquationsWetDry2D`](@ref) struct to determine the minimal a
 The order of the `variables` is important and might have a strong influence
 on the robustness.
 
-As opposed to the standard version of the [`PositivityPreservingLimiterZhangShu`](@ref),
+As opposed to the standard version of the [`Trixi.PositivityPreservingLimiterZhangShu`](@extref),
 nodes with a water height below the `threshold_limiter` are treated in a special way.
 To avoid numerical problems caused by velocities close to zero,
 the velocity is cut off, such that the node can be identified as "dry". The special feature of the

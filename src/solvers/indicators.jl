@@ -12,14 +12,14 @@
                                           alpha_smooth=true,
                                           variable)
 
-Modified version of the [`IndicatorHennemannGassner`](@ref)
+Modified version of the [`Trixi.IndicatorHennemannGassner`](@extref)
 indicator used for shock-capturing for shallow water equations. After
 the element-wise values for the blending factors are computed an additional check
 is made to see if the element is partially wet. In this case, partially wet elements
 are set to use the pure finite volume scheme that is guaranteed to be well-balanced
 for this wet/dry transition state of the flow regime.
 
-See also [`VolumeIntegralShockCapturingHG`](@ref).
+See also [`Trixi.VolumeIntegralShockCapturingHG`](@extref).
 
 ## References
 

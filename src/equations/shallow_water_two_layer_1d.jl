@@ -49,7 +49,7 @@ This affects the implementation and use of these equations in various ways:
 * The flux values corresponding to the bottom topography must be zero.
 * The bottom topography values must be included when defining initial conditions, boundary
   conditions or source terms.
-* [`AnalysisCallback`](@ref) analyzes this variable.
+* [`Trixi.AnalysisCallback`](@extref) analyzes this variable.
 * Trixi's visualization tools will visualize the bottom topography by default.
 
 A good introduction for the 2LSWE is available in Chapter 12 of the book:
@@ -102,7 +102,7 @@ end
 
 A smooth initial condition used for convergence tests in combination with
 [`source_terms_convergence_test`](@ref) (and
-[`BoundaryConditionDirichlet(initial_condition_convergence_test)`](@ref) in non-periodic domains).
+[`Trixi.BoundaryConditionDirichlet`](@extref) in non-periodic domains).
 """
 function Trixi.initial_condition_convergence_test(x, t,
                                                   equations::ShallowWaterTwoLayerEquations1D)
@@ -123,7 +123,7 @@ end
 
 Source terms used for convergence tests in combination with
 [`initial_condition_convergence_test`](@ref)
-(and [`BoundaryConditionDirichlet(initial_condition_convergence_test)`](@ref)
+(and [`Trixi.BoundaryConditionDirichlet`](@extref)
 in non-periodic domains).
 """
 @inline function Trixi.source_terms_convergence_test(u, x, t,
