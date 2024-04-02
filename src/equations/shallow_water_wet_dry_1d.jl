@@ -249,7 +249,7 @@ end
                                       equations::ShallowWaterEquationsWetDry1D)
 
 Non-symmetric two-point surface flux that discretizes the nonconservative (source) term.
-The discretization uses the `hydrostatic_reconstruction_audusse_etal` on the conservative
+The discretization uses the [`hydrostatic_reconstruction_audusse_etal`](@ref) on the conservative
 variables.
 
 This hydrostatic reconstruction ensures that the finite volume numerical fluxes remain
@@ -276,7 +276,7 @@ end
                                      equations::ShallowWaterEquationsWetDry1D)
 
 Non-symmetric two-point surface flux that discretizes the nonconservative (source) term.
-The discretization uses the `hydrostatic_reconstruction_chen_noelle` on the conservative
+The discretization uses the [`hydrostatic_reconstruction_chen_noelle`](@ref) on the conservative
 variables.
 
 Should be used together with [`Trixi.FluxHydrostaticReconstruction`](@extref) and
