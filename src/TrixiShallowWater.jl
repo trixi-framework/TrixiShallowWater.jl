@@ -8,7 +8,7 @@ using Trixi
 # Import additional symbols that are not exported by Trixi.jl
 using Trixi: get_node_vars, set_node_vars!, waterheight
 using MuladdMacro: @muladd
-using StaticArrays: SVector, @SMatrix
+using StaticArrays: SVector, @SMatrix, MVector
 using Static: True, False
 using LinearAlgebra: norm
 
@@ -19,15 +19,17 @@ include("solvers/indicators.jl")
 
 # Export types/functions that define the public API of TrixiShallowWater.jl
 export ShallowWaterEquationsWetDry1D, ShallowWaterEquationsWetDry2D,
-       ShallowWaterTwoLayerEquations1D, ShallowWaterTwoLayerEquations2D
+       ShallowWaterTwoLayerEquations1D, ShallowWaterTwoLayerEquations2D,
+       ShallowWaterMultiLayerEquations1D
 
 export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle,
-       min_max_speed_chen_noelle,
-       flux_hll_chen_noelle
+       min_max_speed_chen_noelle, flux_hll_chen_noelle,
+       flux_ersing_etal, flux_es_ersing_etal
 
-export flux_es_ersing_etal
+export nlayers, eachlayer
 
 export PositivityPreservingLimiterShallowWater
+
 export IndicatorHennemannGassnerShallowWater
 
 end
