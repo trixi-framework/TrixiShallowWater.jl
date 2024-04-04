@@ -17,7 +17,7 @@ function min_max_speed_chen_noelle end
 """
     flux_hll_chen_noelle = FluxHLL(min_max_speed_chen_noelle)
 
-An instance of [`FluxHLL`](@ref) specific to the shallow water equations that
+An instance of [`Trixi.FluxHLL`](@extref) specific to the shallow water equations that
 uses the wave speed estimates from [`min_max_speed_chen_noelle`](@ref).
 This HLL flux is guaranteed to have zero numerical mass flux out of a "dry" element,
 maintain positivity of the water height, and satisfy an entropy inequality.

@@ -42,7 +42,7 @@ This affects the implementation and use of these equations in various ways:
 * The flux values corresponding to the bottom topography must be zero.
 * The bottom topography values must be included when defining initial conditions, boundary conditions or
   source terms.
-* [`AnalysisCallback`](@ref) analyzes this variable.
+* [`Trixi.AnalysisCallback`](@extref) analyzes this variable.
 * Trixi.jl's visualization tools will visualize the bottom topography by default.
 
 References for the SWE are many but a good introduction is available in Chapter 13 of the book:
@@ -111,9 +111,8 @@ end
 
 A smooth initial condition used for convergence tests in combination with
 [`source_terms_convergence_test`](@ref)
-(and [`BoundaryConditionDirichlet(initial_condition_convergence_test)`](@ref) in non-periodic domains).
+(and [`Trixi.BoundaryConditionDirichlet`](@extref) in non-periodic domains).
 """
-
 function Trixi.initial_condition_convergence_test(x, t,
                                                   equations::ShallowWaterEquationsWetDry1D)
     return Trixi.initial_condition_convergence_test(x, t,
@@ -125,7 +124,7 @@ end
 
 Source terms used for convergence tests in combination with
 [`initial_condition_convergence_test`](@ref)
-(and [`BoundaryConditionDirichlet(initial_condition_convergence_test)`](@ref) in non-periodic domains).
+(and [`Trixi.BoundaryConditionDirichlet`](@extref) in non-periodic domains).
 
 This manufactured solution source term is specifically designed for the bottom topography function
 `b(x) = 2.0 + 0.5 * sin(sqrt(2.0)*pi*x[1])`
@@ -250,12 +249,12 @@ end
                                       equations::ShallowWaterEquationsWetDry1D)
 
 Non-symmetric two-point surface flux that discretizes the nonconservative (source) term.
-The discretization uses the `hydrostatic_reconstruction_audusse_etal` on the conservative
+The discretization uses the [`hydrostatic_reconstruction_audusse_etal`](@ref) on the conservative
 variables.
 
 This hydrostatic reconstruction ensures that the finite volume numerical fluxes remain
 well-balanced for discontinuous bottom topographies [`ShallowWaterEquationsWetDry1D`](@ref).
-Should be used together with [`FluxHydrostaticReconstruction`](@ref) and
+Should be used together with [`Trixi.FluxHydrostaticReconstruction`](@extref) and
 [`hydrostatic_reconstruction_audusse_etal`](@ref) in the surface flux to ensure consistency.
 
 Further details on the hydrostatic reconstruction and its motivation can be found in
@@ -277,10 +276,10 @@ end
                                      equations::ShallowWaterEquationsWetDry1D)
 
 Non-symmetric two-point surface flux that discretizes the nonconservative (source) term.
-The discretization uses the `hydrostatic_reconstruction_chen_noelle` on the conservative
+The discretization uses the [`hydrostatic_reconstruction_chen_noelle`](@ref) on the conservative
 variables.
 
-Should be used together with [`FluxHydrostaticReconstruction`](@ref) and
+Should be used together with [`Trixi.FluxHydrostaticReconstruction`](@extref) and
 [`hydrostatic_reconstruction_chen_noelle`](@ref) in the surface flux to ensure consistency.
 
 Further details on the hydrostatic reconstruction and its motivation can be found in
@@ -388,7 +387,7 @@ end
 A particular type of hydrostatic reconstruction on the water height to guarantee well-balancedness
 for a general bottom topography [`ShallowWaterEquationsWetDry1D`](@ref). The reconstructed solution states
 `u_ll_star` and `u_rr_star` variables are then used to evaluate the surface numerical flux at the interface.
-Use in combination with the generic numerical flux routine [`FluxHydrostaticReconstruction`](@ref).
+Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
 
 Further details on this hydrostatic reconstruction and its motivation can be found in
 - Emmanuel Audusse, François Bouchut, Marie-Odile Bristeau, Rupert Klein, and Benoit Perthame (2004)
@@ -409,7 +408,7 @@ A particular type of hydrostatic reconstruction of the water height to guarantee
 for a general bottom topography of the [`ShallowWaterEquationsWetDry1D`](@ref). The reconstructed solution states
 `u_ll_star` and `u_rr_star` variables are used to evaluate the surface numerical flux at the interface.
 The key idea is a linear reconstruction of the bottom and water height at the interfaces using subcells.
-Use in combination with the generic numerical flux routine [`FluxHydrostaticReconstruction`](@ref).
+Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
 
 Further details on this hydrostatic reconstruction and its motivation can be found in
 - Guoxian Chen and Sebastian Noelle (2017)

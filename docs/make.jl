@@ -1,5 +1,10 @@
 using TrixiShallowWater
 using Documenter
+using DocumenterInterLinks
+
+# Provide external links to the Trixi.jl docs (project root and inventory file)
+links = InterLinks("Trixi" => ("https://trixi-framework.github.io/Trixi.jl/stable/",
+                               "https://trixi-framework.github.io/Trixi.jl/stable/objects.inv"))
 
 DocMeta.setdocmeta!(TrixiShallowWater, :DocTestSetup, :(using TrixiShallowWater);
                     recursive = true)
@@ -16,7 +21,8 @@ makedocs(;
                                   assets = String[],),
          pages = [
              "Home" => "index.md",
-         ],)
+         ],
+         plugins = [links],)
 
 deploydocs(;
            repo = "github.com/trixi-framework/TrixiShallowWater.jl",
