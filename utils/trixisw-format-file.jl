@@ -10,7 +10,7 @@ using JuliaFormatter: format_file
 function main()
     # Show help
     if "-h" in ARGS || "--help" in ARGS
-        println("usage: trixi-format.jl PATH [PATH...]")
+        println("usage: trixisw-format.jl PATH [PATH...]")
         println()
         println("positional arguments:")
         println()
