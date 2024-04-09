@@ -8,12 +8,16 @@
 """
     PositivityPreservingLimiterShallowWater(; variables)
 
+!!! warning "Experimental code"
+    This is an experimental feature and may change in future releases.
+
 The limiter is specifically designed for the shallow water equations.
 It is applied to all scalar `variables` in their given order
-using the defined `threshold_limiter` from the [`ShallowWaterEquationsWetDry1D`](@ref) struct
-or the [`ShallowWaterEquationsWetDry2D`](@ref) struct to determine the minimal acceptable values.
+using the defined `threshold_limiter` from the equations struct 
+(e.g. in [`ShallowWaterEquationsWetDry1D`](@ref)) to determine the minimal acceptable values.
 The order of the `variables` is important and might have a strong influence
-on the robustness.
+on the robustness. The limiter is availble for the [`ShallowWaterEquationsWetDry1D`](@ref),
+[`ShallowWaterEquationsWetDry2D`](@ref), and [`ShallowWaterMultiLayerEquations1D`](@ref).
 
 As opposed to the standard version of the [`PositivityPreservingLimiterZhangShu`](@ref),
 nodes with a water height below the `threshold_limiter` are treated in a special way.
@@ -28,11 +32,21 @@ the `threshold_limiter` is applied again on all the DG nodes in order to avoid w
 In the case where the cell mean value is below the threshold before applying the limiter,
 there could still be dry nodes afterwards due to the logic of the limiter.
 
+For the [`ShallowWaterMultiLayerEquations1D`](@ref) the implementation differs. In this case the 
+positivity limiter is applied layerwise and only the waterheight `h` is limited within each layer. 
+Furthermore, a velocity desingularization is applied after the limiting to avoid numerical problems
+near dry states.
+
 This fully-discrete positivity-preserving limiter is based on the work of
 - Zhang, Shu (2011)
   Maximum-principle-satisfying and positivity-preserving high-order schemes
   for conservation laws: survey and new developments
   [doi: 10.1098/rspa.2011.0153](https://doi.org/10.1098/rspa.2011.0153)
+The specific implementation for the [`ShallowWaterMultiLayerEquations1D](@ref) is based on the work of
+- Y. Xing, X. Zhang (2013)
+  Positivity-preserving well-balanced discontinuous Galerkin methods for the shallow water equations
+  on unstructured triangular meshes
+  [doi: 10.1007/s10915-012-9644-4](https://doi.org/10.1007/s10915-012-9644-4)
 """
 struct PositivityPreservingLimiterShallowWater{N, Variables <: NTuple{N, Any}}
     variables::Variables
@@ -62,7 +76,8 @@ end
 function limiter_shallow_water!(u, variables::NTuple{N, Any},
                                 mesh,
                                 equations::Union{ShallowWaterEquationsWetDry1D,
-                                                 ShallowWaterEquationsWetDry2D},
+                                                 ShallowWaterEquationsWetDry2D,
+                                                 ShallowWaterMultiLayerEquations1D},
                                 solver, cache) where {N}
     variable = first(variables)
     remaining_variables = Base.tail(variables)
@@ -77,7 +92,8 @@ end
 function limiter_shallow_water!(u, variables::Tuple{},
                                 mesh,
                                 equations::Union{ShallowWaterEquationsWetDry1D,
-                                                 ShallowWaterEquationsWetDry2D},
+                                                 ShallowWaterEquationsWetDry2D,
+                                                 ShallowWaterMultiLayerEquations1D},
                                 solver, cache)
     nothing
 end

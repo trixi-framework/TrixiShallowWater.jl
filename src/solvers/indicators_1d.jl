@@ -5,13 +5,14 @@
 @muladd begin
 #! format: noindent
 
-# Modified indicator for ShallowWaterEquationsWetDry1D to apply full FV method on elements
-# containing some "dry" LGL nodes. That is, if an element is partially "wet" then it becomes a
-# full FV element.
+# Modified indicator for ShallowWaterEquationsWetDry1D and ShallowWaterMultiLayerEquations1D to 
+# apply full FV method on elements containing some "dry" LGL nodes. That is, if an element is 
+# partially "wet" then it becomes a full FV element.
 function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{<:Any,
                                                                                 3},
                                                                mesh,
-                                                               equations::ShallowWaterEquationsWetDry1D,
+                                                               equations::Union{ShallowWaterEquationsWetDry1D,
+                                                                                ShallowWaterMultiLayerEquations1D},
                                                                dg::DGSEM, cache;
                                                                kwargs...)
     @unpack alpha_max, alpha_min, alpha_smooth, variable = indicator_hg
@@ -28,20 +29,22 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
     threshold = 0.5 * 10^(-1.8 * (nnodes(dg))^0.25)
     parameter_s = log((1 - 0.0001) / 0.0001)
 
-    # If the water height `h` at one LGL node is lower than `threshold_partially_wet`
-    # the indicator sets the element-wise blending factor alpha[element] = 1
-    # via the local variable `indicator_wet`. In turn, this ensures that a pure
-    # FV method is used in partially wet elements and guarantees the well-balanced property.
-    #
-    # Hard-coded cut-off value of `threshold_partially_wet = 1e-4` was determined through many numerical experiments.
-    # Overall idea is to increase robustness when computing the velocity on (nearly) dry elements which
-    # could be "dangerous" due to division of conservative variables, e.g., v = hv / h.
-    # Here, the impact of the threshold on the number of elements being updated with FV is not that
-    # significant. However, its impact on the robustness is very significant.
-    # The value can be seen as a trade-off between accuracy and stability.
-    # Well-balancedness of the scheme on partially wet elements with hydrostatic reconstruction
-    # can only be proven for the FV method (see Chen and Noelle).
-    # Therefore we set alpha to one regardless of its given maximum value.
+    #=
+    If the water height `h` at one LGL node is lower than `threshold_partially_wet`
+    the indicator sets the element-wise blending factor alpha[element] = 1
+    via the local variable `indicator_wet`. In turn, this ensures that a pure
+    FV method is used in partially wet elements and guarantees the well-balanced property.
+    
+    Hard-coded cut-off value of `threshold_partially_wet = 1e-4` was determined through many numerical experiments.
+    Overall idea is to increase robustness when computing the velocity on (nearly) dry elements which
+    could be "dangerous" due to division of conservative variables, e.g., v = hv / h.
+    Here, the impact of the threshold on the number of elements being updated with FV is not that
+    significant. However, its impact on the robustness is very significant.
+    The value can be seen as a trade-off between accuracy and stability.
+    Well-balancedness of the scheme on partially wet elements with hydrostatic reconstruction
+    can only be proven for the FV method (see Chen and Noelle).
+    Therefore we set alpha to one regardless of its given maximum value. 
+    =#
     threshold_partially_wet = 1e-4
 
     Trixi.@threaded for element in eachelement(dg, cache)
@@ -54,9 +57,10 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
         # Calculate indicator variables at Gauss-Lobatto nodes
         for i in eachnode(dg)
             u_local = get_node_vars(u, equations, dg, i, element)
-            h, _, _ = u_local
+            h = waterheight(u_local, equations)
 
-            if h <= threshold_partially_wet
+            # Set indicator to FV if water height is below the threshold
+            if minimum(h) <= threshold_partially_wet
                 indicator_wet = 0
             end
 
