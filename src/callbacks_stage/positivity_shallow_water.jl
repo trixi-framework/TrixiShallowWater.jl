@@ -16,7 +16,7 @@ It is applied to all scalar `variables` in their given order
 using the defined `threshold_limiter` from the equations struct 
 (e.g. in [`ShallowWaterEquationsWetDry1D`](@ref)) to determine the minimal acceptable values.
 The order of the `variables` is important and might have a strong influence
-on the robustness. The limiter is availble for the [`ShallowWaterEquationsWetDry1D`](@ref),
+on the robustness. The limiter is available for the [`ShallowWaterEquationsWetDry1D`](@ref),
 [`ShallowWaterEquationsWetDry2D`](@ref), and [`ShallowWaterMultiLayerEquations1D`](@ref).
 
 As opposed to the standard version of the [`Trixi.PositivityPreservingLimiterZhangShu`](@extref),
