@@ -6,7 +6,8 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the two-layer shallow water equations to test well-balancedness
 
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.0, H0 = 2.0, rhos = (1.0, 3.0))
+equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.0, H0 = 2.0,
+                                              rhos = (1.0, 3.0))
 
 """
     initial_condition_twolayer_well_balanced_wet_dry(perturbation, equations:: ShallowWaterMultiLayerEquations1D)
@@ -22,7 +23,8 @@ The initial condition is taken from the paper:
     A 1D shallow-ﬂow model for two-layer ﬂows based on FORCE scheme with wet–dry treatment\n 
     [DOI:10.2166/hydro.2020.002](https://doi.org/10.2166/hydro.2020.002)
 """
-function initial_condition_twolayer_well_balanced_wet_dry(perturbation::Bool, equations::ShallowWaterMultiLayerEquations1D)
+function initial_condition_twolayer_well_balanced_wet_dry(perturbation::Bool,
+                                                          equations::ShallowWaterMultiLayerEquations1D)
     return function initial_condition_twolayer_well_balanced_wet_dry(x, t, equations)
         # Set interface height for the upper layer
         H_upper = 2.0
@@ -94,7 +96,8 @@ end
 # Default value for the perturbation
 perturbation = false
 
-initial_condition = initial_condition_twolayer_well_balanced_wet_dry(perturbation, equations)
+initial_condition = initial_condition_twolayer_well_balanced_wet_dry(perturbation,
+                                                                     equations)
 
 ###############################################################################
 # Get the DG approximation space

@@ -637,7 +637,7 @@ end
                                             equations::ShallowWaterMultiLayerEquations1D)
     h = waterheight(u, equations)
 
-    return 0.5 * equations.gravity * sum(h.^3)
+    return 0.5 * equations.gravity * sum(h .^ 3)
 end
 
 # Calculate the error for the "lake-at-rest" test case where H = ∑h + b should

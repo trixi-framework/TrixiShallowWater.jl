@@ -27,7 +27,8 @@ The particular setup below is taken from Section 6.2 of
   curvilinear meshes with wet/dry fronts accelerated by GPUs
   [DOI: 10.1016/j.jcp.2018.08.038](https://doi.org/10.1016/j.jcp.2018.08.038).
 """
-function initial_condition_parabolic_bowl(x, t, equations::ShallowWaterMultiLayerEquations1D)
+function initial_condition_parabolic_bowl(x, t,
+                                          equations::ShallowWaterMultiLayerEquations1D)
     a = 1
     h_0 = 0.1
     sigma = 0.5

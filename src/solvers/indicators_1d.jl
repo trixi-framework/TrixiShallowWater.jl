@@ -34,7 +34,7 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
     the indicator sets the element-wise blending factor alpha[element] = 1
     via the local variable `indicator_wet`. In turn, this ensures that a pure
     FV method is used in partially wet elements and guarantees the well-balanced property.
-    
+
     Hard-coded cut-off value of `threshold_partially_wet = 1e-4` was determined through many numerical experiments.
     Overall idea is to increase robustness when computing the velocity on (nearly) dry elements which
     could be "dangerous" due to division of conservative variables, e.g., v = hv / h.
