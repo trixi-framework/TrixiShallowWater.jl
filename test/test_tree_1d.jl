@@ -732,6 +732,46 @@ end # 2LSWE
         end
     end
 
+    @trixi_testset "elixir_shallowwater_multilayer_dam_break_es_dry.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_dam_break_es_dry.jl"),
+                            l2=[
+                                0.0539713484191238,
+                                0.05378401084239003,
+                                0.05343571027541134,
+                                0.05294334126567629,
+                                0.14409266517044308,
+                                0.2258690603183475,
+                                0.22395024283599815,
+                                0.22041584295217526,
+                                0.21549254848916716,
+                                0.6274449804372626,
+                                0.013638618139749523,
+                            ],
+                            linf=[
+                                0.27418120077237185,
+                                0.2738885780879326,
+                                0.2733530772398547,
+                                0.2726148157344642,
+                                0.8243308057901404,
+                                0.6976533131655047,
+                                0.6927619903064818,
+                                0.6836813560099443,
+                                0.6708713913679563,
+                                3.0233275007119254,
+                                0.5,
+                            ],
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
     @trixi_testset "elixir_shallowwater_multilayer_beach.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_beach.jl"),
