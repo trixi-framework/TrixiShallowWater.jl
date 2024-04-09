@@ -91,8 +91,10 @@ function initial_condition_twolayer_well_balanced_wet_dry(perturbation::Bool, eq
     end
 end
 
+# Default value for the perturbation
+perturbation = false
 
-initial_condition = initial_condition_twolayer_well_balanced_wet_dry(true, equations)
+initial_condition = initial_condition_twolayer_well_balanced_wet_dry(perturbation, equations)
 
 ###############################################################################
 # Get the DG approximation space

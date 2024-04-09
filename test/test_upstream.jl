@@ -42,7 +42,6 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
         end
     end
-    # TODO: add upstream tests in 2D and positivity-preserving tests
 
     # Shallow water wet/dry 2D
     # TreeMesh2D
