@@ -47,7 +47,7 @@ This affects the implementation and use of these equations in various ways:
 * The flux values corresponding to the bottom topography must be zero.
 * The bottom topography values must be included when defining initial conditions, boundary
   conditions or source terms.
-* [`AnalysisCallback`](@ref) analyzes this variable.
+* [`Trixi.AnalysisCallback`](@extref) analyzes this variable.
 * Trixi's visualization tools will visualize the bottom topography by default.
 
 A good introduction for the MLSWE is available in Chapter 12 of the book:
@@ -56,7 +56,6 @@ A good introduction for the MLSWE is available in Chapter 12 of the book:
       <https://www.sciencedirect.com/bookseries/international-geophysics/vol/101/suppl/C>\
       ISBN: 978-0-12-088759-0
 """
-
 struct ShallowWaterMultiLayerEquations1D{NVARS, NLAYERS, RealT <: Real} <:
        AbstractShallowWaterMultiLayerEquations{1, NVARS, NLAYERS}
     gravity::RealT   # gravitational constant
@@ -151,7 +150,7 @@ end
 
 A smooth initial condition for a three-layer configuration used for convergence tests in combination with
 [`source_terms_convergence_test`](@ref) (and
-[`BoundaryConditionDirichlet(initial_condition_convergence_test)`](@ref) in non-periodic domains).
+[`Trixi.BoundaryConditionDirichlet`](@extref) in non-periodic domains).
 """
 function Trixi.initial_condition_convergence_test(x, t,
                                                   equations::ShallowWaterMultiLayerEquations1D)
@@ -179,7 +178,7 @@ end
 
 Source terms used for convergence tests with a three-layer configuration in combination with
 [`initial_condition_convergence_test`](@ref)
-(and [`BoundaryConditionDirichlet(initial_condition_convergence_test)`](@ref)
+(and [`Trixi.BoundaryConditionDirichlet`](@extref)
 in non-periodic domains).
 """
 @inline function Trixi.source_terms_convergence_test(u, x, t,
@@ -339,7 +338,7 @@ When the bottom topography is nonzero this scheme will be well-balanced when use
 nonconservative [`flux_nonconservative_ersing_etal`](@ref).
 
 To obtain an entropy stable formulation the `surface_flux` can be set as
-[`FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs()), flux_nonconservative_ersing_etal`](@ref).
+`FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs()), flux_nonconservative_ersing_etal`.
 
 In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
