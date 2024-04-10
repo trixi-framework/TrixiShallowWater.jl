@@ -18,6 +18,30 @@ isdir(outdir) && rm(outdir, recursive = true)
 # Run tests for TreeMesh
 @testset "TreeMesh" begin
     # Shallow water wet/dry 1D
+    @trixi_testset "elixir_shallowwater_ec.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR, "tree_1d_dgsem",
+                                     "elixir_shallowwater_ec.jl"),
+                            l2=[
+                                0.24476140682560343,
+                                0.8587309324660326,
+                                0.07330427577586297,
+                            ],
+                            linf=[
+                                2.1636963952308372,
+                                3.8737770522883115,
+                                1.7711213427919539,
+                            ],
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
     @trixi_testset "TreeMesh1D: elixir_shallowwater_well_balanced_nonperiodic.jl with wall boundary" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR, "tree_1d_dgsem",
                                      "elixir_shallowwater_well_balanced_nonperiodic.jl"),
