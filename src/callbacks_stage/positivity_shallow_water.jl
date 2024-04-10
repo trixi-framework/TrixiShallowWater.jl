@@ -35,7 +35,10 @@ there could still be dry nodes afterwards due to the logic of the limiter.
 For the [`ShallowWaterMultiLayerEquations1D`](@ref) the implementation differs. In this case the 
 positivity limiter is applied layerwise and only the waterheight `h` is limited within each layer. 
 Furthermore, a velocity desingularization is applied after the limiting to avoid numerical problems
-near dry states.
+near dry states. Details about the desingularization strategy can be found in Section 2.2 of the paper
+- A. Kurganov, G. Petrova (2007)
+  A second-order well-balanced positivity preserving central-upwind scheme for the Saint-Venant system
+  [doi: 10.4310/CMS.2007.v5.n1.a6](https://dx.doi.org/10.4310/CMS.2007.v5.n1.a6)
 
 This fully-discrete positivity-preserving limiter is based on the work of
 - Zhang, Shu (2011)
