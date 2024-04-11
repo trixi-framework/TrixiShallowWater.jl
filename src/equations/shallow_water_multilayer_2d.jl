@@ -20,7 +20,7 @@ Multi-Layer Shallow Water equations (MLSWE) in two space dimension. The equation
 ```
 
 where ``m = 1, 2, ..., M`` is the layer index and the unknown variables are the water height ``h`` and
-the velocities ``v1, v2`` in both spatial dimenions .  Furthermore, ``g`` denotes the gravitational 
+the velocities ``v1, v2`` in both spatial dimensions .  Furthermore, ``g`` denotes the gravitational 
 constant, ``b(x)`` the bottom topography and ``\rho_m`` the m-th layer density, that must be chosen such that 
 ``\rho_1 < \rho_2 < ... < \rho_M``, to ensure that different layers are ordered from top to bottom, with 
 increasing density.
