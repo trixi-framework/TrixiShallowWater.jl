@@ -123,14 +123,13 @@ function Trixi.varnames(::typeof(cons2prim),
     return (total_layer_height..., velocity_1..., velocity_2..., "b")
 end
 
-# TODO: This needs to be redone
 # # Set initial conditions at physical location `x` for time `t`
 """
     initial_condition_convergence_test(x, t, equations::ShallowWaterMultiLayerEquations2D)
 
 A smooth initial condition for a three-layer configuration used for convergence tests in combination with
 [`source_terms_convergence_test`](@ref) (and
-[`BoundaryConditionDirichlet`](@extref) in non-periodic domains).
+[`Trixi.BoundaryConditionDirichlet`](@extref) in non-periodic domains).
 """
 function Trixi.initial_condition_convergence_test(x, t,
                                                   equations::ShallowWaterMultiLayerEquations2D)
@@ -159,7 +158,7 @@ end
 
 Source terms used for convergence tests with a three-layer configuration in combination with
 [`initial_condition_convergence_test`](@ref)
-(and [`BoundaryConditionDirichlet`](@extref)
+(and [`Trixi.BoundaryConditionDirichlet`](@extref)
 in non-periodic domains).
 """
 @inline function Trixi.source_terms_convergence_test(u, x, t,

@@ -32,7 +32,7 @@ end
 
 initial_condition = initial_condition_dam_break
 
-boundary_condition_constant = BoundaryConditionDirichlet(initial_condition_dam_break)
+boundary_conditions = boundary_condition_slip_wall
 
 ###############################################################################
 # Get the DG approximation space
@@ -50,10 +50,11 @@ coordinates_max = (1.0, 1.0)
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 4,
                 n_cells_max = 10_000,
-                periodicity = true)
+                periodicity = false)
 
 # Create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_conditions)
 ###############################################################################
 # ODE solver
 
