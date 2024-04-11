@@ -51,7 +51,6 @@ A good introduction for the MLSWE is available in Chapter 12 of the book:
       <https://www.sciencedirect.com/bookseries/international-geophysics/vol/101/suppl/C>\
       ISBN: 978-0-12-088759-0
 """
-
 struct ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT <: Real} <:
        AbstractShallowWaterMultiLayerEquations{2, NVARS, NLAYERS}
     gravity::RealT   # gravitational constant
@@ -131,7 +130,7 @@ end
 
 A smooth initial condition for a three-layer configuration used for convergence tests in combination with
 [`source_terms_convergence_test`](@ref) (and
-[`BoundaryConditionDirichlet(initial_condition_convergence_test)`](@ref) in non-periodic domains).
+[`BoundaryConditionDirichlet`](@extref) in non-periodic domains).
 """
 function Trixi.initial_condition_convergence_test(x, t,
                                                   equations::ShallowWaterMultiLayerEquations2D)
@@ -160,7 +159,7 @@ end
 
 Source terms used for convergence tests with a three-layer configuration in combination with
 [`initial_condition_convergence_test`](@ref)
-(and [`BoundaryConditionDirichlet(initial_condition_convergence_test)`](@ref)
+(and [`BoundaryConditionDirichlet`](@extref)
 in non-periodic domains).
 """
 @inline function Trixi.source_terms_convergence_test(u, x, t,
@@ -494,7 +493,7 @@ When the bottom topography is nonzero this scheme will be well-balanced when use
 nonconservative [`flux_nonconservative_ersing_etal`](@ref).
 
 To obtain an entropy stable formulation the `surface_flux` can be set as
-[`FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs()), flux_nonconservative_ersing_etal`](@ref).
+`FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs()), flux_nonconservative_ersing_etal`.
 
 In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
