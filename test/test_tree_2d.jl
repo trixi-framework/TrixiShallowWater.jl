@@ -511,7 +511,8 @@ end # 2LSWE
                             ],
                             surface_flux=(flux_lax_friedrichs,
                                           flux_nonconservative_ersing_etal),
-                            tspan=(0.0, 0.25))
+                            tspan=(0.0, 0.25),
+                            atol=1e-11)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
