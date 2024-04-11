@@ -43,7 +43,7 @@ solver = DGSEM(polydeg = 3, surface_flux = surface_flux,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 ###############################################################################
-# Get the TreeMesh and setup a periodic mesh
+# Get the TreeMesh and setup a non-periodic mesh with wall boundary conditions
 
 coordinates_min = (-1.0, -1.0)
 coordinates_max = (1.0, 1.0)

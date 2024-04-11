@@ -4,7 +4,7 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the two-layer shallow water equations with a bottom topography function 
+# Semidiscretization of the multilayer shallow water equations with a bottom topography function 
 # to test well-balancedness
 
 equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81, H0 = 0.6,

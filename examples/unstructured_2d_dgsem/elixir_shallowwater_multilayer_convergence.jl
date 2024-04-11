@@ -4,7 +4,7 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the two-layer shallow water equations with a periodic
+# Semidiscretization of the multilayer shallow water equations with a periodic
 # bottom topography function (set in the initial conditions)
 
 equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 10.0,
@@ -17,7 +17,7 @@ initial_condition = initial_condition_convergence_test
 
 volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
 surface_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
-solver = DGSEM(polydeg = 8, surface_flux = surface_flux,
+solver = DGSEM(polydeg = 6, surface_flux = surface_flux,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 ###############################################################################
