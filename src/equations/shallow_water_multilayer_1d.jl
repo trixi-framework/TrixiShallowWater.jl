@@ -135,13 +135,13 @@ function Trixi.varnames(::typeof(cons2cons),
     return (waterheight..., momentum..., "b")
 end
 
-# We use the interface heights, H = ∑h + b as primitive variables for easier visualization and setting initial
+# We use the total layer heights, H = ∑h + b as primitive variables for easier visualization and setting initial
 # conditions
 function Trixi.varnames(::typeof(cons2prim),
                         equations::ShallowWaterMultiLayerEquations1D)
-    interface_height = ntuple(n -> "H" * string(n), Val(nlayers(equations)))
+    total_layer_height = ntuple(n -> "H" * string(n), Val(nlayers(equations)))
     velocity = ntuple(n -> "v" * string(n) * "_1", Val(nlayers(equations)))
-    return (interface_height..., velocity..., "b")
+    return (total_layer_height..., velocity..., "b")
 end
 
 # Set initial conditions at physical location `x` for time `t`
@@ -379,9 +379,6 @@ end
 """
     hydrostatic_reconstruction_ersing_etal(u_ll, u_rr, equations::ShallowWaterMultiLayerEquations1D)
 
-!!! warning "Experimental code"
-    This is an experimental feature and may change in future releases.
-
 A particular type of hydrostatic reconstruction of the water height and bottom topography to 
 guarantee well-balancedness in the presence of wet/dry transitions and entropy stability for the 
 [`ShallowWaterMultiLayerEquations1D`](@ref). 
@@ -390,6 +387,9 @@ surface numerical flux at the interface. The key idea is a piecewise linear reco
 bottom topography and water height interfaces using subcells, where the bottom topography is allowed 
 to be discontinuous. 
 Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
+
+!!! warning "Experimental code"
+    This is an experimental feature and may change in future releases.
 """
 @inline function hydrostatic_reconstruction_ersing_etal(u_ll, u_rr,
                                                         equations::ShallowWaterMultiLayerEquations1D)
@@ -415,7 +415,7 @@ Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostat
         end
     end
 
-    # Calculate interface heights
+    # Calculate total layer heights
     H_ll = waterheight(cons2prim(u_ll, equations), equations)
     H_rr = waterheight(cons2prim(u_rr, equations), equations)
 
@@ -423,7 +423,7 @@ Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostat
     b_ll_star = min(H_ll[1], max(b_rr, b_ll))
     b_rr_star = min(H_rr[1], max(b_rr, b_ll))
 
-    # Calculate reconstructed interface heights
+    # Calculate reconstructed total layer heights
     H_ll_star = max.(H_ll, b_ll_star)
     H_rr_star = max.(H_rr, b_rr_star)
 
@@ -501,7 +501,7 @@ end
     h = waterheight(u, equations)
     b = u[end]
 
-    # Initialize interface height
+    # Initialize total layer height
     H = MVector{nlayers(equations), real(equations)}(undef)
     for i in reverse(eachlayer(equations))
         if i == nlayers(equations)
@@ -517,9 +517,9 @@ end
 
 # Convert primitive to conservative variables
 @inline function Trixi.prim2cons(prim, equations::ShallowWaterMultiLayerEquations1D)
-    # To extract the interface height and velocity we reuse the waterheight and momentum functions 
+    # To extract the total layer height and velocity we reuse the waterheight and momentum functions 
     # from the conservative variables.
-    H = waterheight(prim, equations)    # For primitive variables this extracts the interface height
+    H = waterheight(prim, equations)    # For primitive variables this extracts the total layer height
     v = momentum(prim, equations)       # For primitive variables this extracts the velocity
     b = prim[end]
 
@@ -556,9 +556,9 @@ end
 
     # Calculate entropy variables in each layer
     for i in eachlayer(equations)
-        # Compute w1[i] = ρ[i] * g * (b + ∑h[k] + ∑σ[k] * h[k]), where σ[k] = ρ[k] / ρ[i] denotes 
-        # the density ratio of different layers
-        w1 = equations.rhos[i] * (g * b - 0.5 * v[i]^2)
+        # Compute w1[i] = ρ[i] * g * (b + ∑h[k] + ∑σ[k] * h[k]) - 0.5 * ρ[i] * v[i]^2, 
+        # where σ[k] = ρ[k] / ρ[i] denotes the density ratio of different layers
+        w1 = equations.rhos[i] * (g * b) - 0.5 * equations.rhos[i] * v[i]^2
         for j in eachlayer(equations)
             if j < i
                 w1 += equations.rhos[i] * g *

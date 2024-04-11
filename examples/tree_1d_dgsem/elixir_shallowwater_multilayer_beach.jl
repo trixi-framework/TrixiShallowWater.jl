@@ -6,6 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
+# By passing only a single value for rhos, the system recovers the standard shallow water equations
 equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.812, rhos = 1.0)
 
 """

@@ -8,9 +8,6 @@
 """
     PositivityPreservingLimiterShallowWater(; variables)
 
-!!! warning "Experimental code"
-    This is an experimental feature and may change in future releases.
-
 The limiter is specifically designed for the shallow water equations.
 It is applied to all scalar `variables` in their given order
 using the defined `threshold_limiter` from the equations struct 
@@ -50,6 +47,10 @@ The specific implementation for the [`ShallowWaterMultiLayerEquations1D](@ref) i
   Positivity-preserving well-balanced discontinuous Galerkin methods for the shallow water equations
   on unstructured triangular meshes
   [doi: 10.1007/s10915-012-9644-4](https://doi.org/10.1007/s10915-012-9644-4)
+
+
+!!! warning "Experimental code"
+    This is an experimental feature and may change in future releases.
 """
 struct PositivityPreservingLimiterShallowWater{N, Variables <: NTuple{N, Any}}
     variables::Variables

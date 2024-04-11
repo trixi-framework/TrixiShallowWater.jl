@@ -75,8 +75,8 @@ function initial_condition_twolayer_well_balanced_wet_dry(perturbation::Bool,
         end
 
         # Set zero initial velocity
-        v1_upper = 0.0
-        v1_lower = 0.0
+        v1_upper = zero(H_upper)
+        v1_lower = zero(H_upper)
 
         #= 
         It is mandatory to shift the water level at dry areas to make sure the water height h
@@ -140,34 +140,6 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
 tspan = (0.0, 10.0)
 ode = semidiscretize(semi, tspan)
 
-#################################################################################
-# Workaround to set a discontinuous water and bottom topography for
-# debugging and testing. Essentially, this is a slight augmentation of the
-# `compute_coefficients` where the `x` node value passed here is slightly
-# perturbed to the left / right in order to set a true discontinuity that avoids
-# the doubled value of the LGL nodes at a particular element interface.
-#
-# Note! The errors from the analysis callback are not important but the error
-# for this lake at rest test case `∑|H0-(h+b)|` should be near machine roundoff.
-
-# point to the data we want to augment
-u = Trixi.wrap_array(ode.u0, semi)
-# reset the initial condition
-for element in eachelement(semi.solver, semi.cache)
-    for i in eachnode(semi.solver)
-        x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations,
-                                       semi.solver, i, element)
-        # We know that the discontinuity is a vertical line. Slightly augment the x value by a factor
-        # of unit roundoff to avoid the repeted value from the LGL nodes at at interface.
-        if i == 1
-            x_node = SVector(nextfloat(x_node[1]))
-        elseif i == nnodes(semi.solver)
-            x_node = SVector(prevfloat(x_node[1]))
-        end
-        u_node = initial_condition(x_node, first(tspan), equations)
-        Trixi.set_node_vars!(u, u_node, equations, semi.solver, i, element)
-    end
-end
 #############################################################################################
 
 summary_callback = SummaryCallback()
@@ -193,7 +165,7 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 ###############################################################################
 # run the simulation
 
-# use a Runge-Kutta method with automatic (error based) time step size control
+# use a Runge-Kutta method with CFL-based time step
 sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()..., callback = callbacks, adaptive = false, dt = 1.0);
 summary_callback() # print the timer summary
