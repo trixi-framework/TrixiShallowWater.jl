@@ -104,6 +104,7 @@ end
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterMultiLayerEquations1D) = True()
+
 function Trixi.varnames(::typeof(cons2cons),
                         equations::ShallowWaterMultiLayerEquations1D)
     waterheight = ntuple(n -> "h" * string(n), Val(nlayers(equations)))

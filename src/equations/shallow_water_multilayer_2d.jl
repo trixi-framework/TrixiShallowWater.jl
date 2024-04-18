@@ -105,6 +105,7 @@ end
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterMultiLayerEquations2D) = True()
+
 function Trixi.varnames(::typeof(cons2cons),
                         equations::ShallowWaterMultiLayerEquations2D)
     waterheight = ntuple(n -> "h" * string(n), Val(nlayers(equations)))
@@ -123,7 +124,7 @@ function Trixi.varnames(::typeof(cons2prim),
     return (total_layer_height..., velocity_1..., velocity_2..., "b")
 end
 
-# # Set initial conditions at physical location `x` for time `t`
+# Set initial conditions at physical location `x` for time `t`
 """
     initial_condition_convergence_test(x, t, equations::ShallowWaterMultiLayerEquations2D)
 
@@ -324,7 +325,7 @@ Should be used together with [`TreeMesh`](@ref).
     return flux
 end
 
-# Calculate 1D advective portion of the flux for a single point
+# Calculate 2D advective portion of the flux for a single point
 # Note, the bottom topography has no flux
 @inline function Trixi.flux(u, orientation::Integer,
                             equations::ShallowWaterMultiLayerEquations2D)
@@ -357,7 +358,7 @@ end
     return SVector(f)
 end
 
-# Calculate 1D flux for a single point in the normal direction
+# Calculate 2D flux for a single point in the normal direction
 # Note, this directional vector is not normalized and the bottom topography has no flux
 @inline function Trixi.flux(u, normal_direction::AbstractVector,
                             equations::ShallowWaterMultiLayerEquations2D)

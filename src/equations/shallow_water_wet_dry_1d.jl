@@ -91,6 +91,7 @@ function ShallowWaterEquationsWetDry1D(; gravity_constant, H0 = zero(gravity_con
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterEquationsWetDry1D) = True()
+
 function Trixi.varnames(::typeof(cons2cons), ::ShallowWaterEquationsWetDry1D)
     ("h", "h_v", "b")
 end
