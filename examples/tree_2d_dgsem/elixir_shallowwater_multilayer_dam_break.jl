@@ -60,6 +60,47 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
 
 tspan = (0.0, 2.0)
 ode = semidiscretize(semi, tspan)
+###############################################################################
+#= 
+Workaround for TreeMesh2D to set true discontinuities for debugging and testing. 
+Essentially, this is a slight augmentation of the `compute_coefficients` where the `x` node values
+passed here are slightly perturbed in order to set a true discontinuity that avoids the doubled 
+value of the LGL nodes at a particular element interface.
+=#
+
+# Point to the data we want to augment
+u = Trixi.wrap_array(ode.u0, semi)
+# Reset the initial condition
+for element in eachelement(semi.solver, semi.cache)
+    for i in eachnode(semi.solver), j in eachnode(semi.solver)
+        x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations,
+                                       semi.solver, i, j, element)
+        # Changing the node positions passed to the initial condition by the minimum
+        # amount possible with the current type of floating point numbers allows setting
+        # discontinuous initial data in a simple way. In particular, a check like `if x < x_jump`
+        # works if the jump location `x_jump` is at the position of an interface.
+        if i == 1 && j == 1 # bottom left corner
+            x_node = SVector(nextfloat(x_node[1]), nextfloat(x_node[2]))
+        elseif i == 1 && j == nnodes(semi.solver) # top left corner
+            x_node = SVector(nextfloat(x_node[1]), prevfloat(x_node[2]))
+        elseif i == nnodes(semi.solver) && j == 1 # bottom right corner
+            x_node = SVector(prevfloat(x_node[1]), nextfloat(x_node[2]))
+        elseif i == nnodes(semi.solver) && j == nnodes(semi.solver) # top right corner
+            x_node = SVector(prevfloat(x_node[1]), prevfloat(x_node[2]))
+        elseif i == 1 # left boundary
+            x_node = SVector(nextfloat(x_node[1]), x_node[2])
+        elseif j == 1 # bottom boundary
+            x_node = SVector(x_node[1], nextfloat(x_node[2]))
+        elseif i == nnodes(semi.solver) # right boundary
+            x_node = SVector(prevfloat(x_node[1]), x_node[2])
+        elseif j == nnodes(semi.solver) # top boundary
+            x_node = SVector(x_node[1], prevfloat(x_node[2]))
+        end
+
+        u_node = initial_condition_dam_break(x_node, first(tspan), equations)
+        Trixi.set_node_vars!(u, u_node, equations, semi.solver, i, j, element)
+    end
+end
 
 ###############################################################################
 # Callbacks

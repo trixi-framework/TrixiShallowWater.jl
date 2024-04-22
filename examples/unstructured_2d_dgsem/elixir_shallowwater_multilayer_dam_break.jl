@@ -10,8 +10,10 @@ using TrixiShallowWater
 equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.0,
                                               rhos = (0.9, 0.95, 1.0))
 
-# This academic testcase sets up a discontinuous bottom topography 
-# function and initial condition to test entropy conservation. 
+# This test case uses a special work around to setup a truly discontinuous bottom topography 
+# function and initial condition for this academic testcase of entropy conservation. First, a 
+# dummy initial_condition_dam_break is introduced to create the semidiscretization. Then the initial
+# condition is reset with the true discontinuous values from initial_condition_discontinuous_dam_break.
 
 function initial_condition_dam_break(x, t, equations::ShallowWaterMultiLayerEquations2D)
     # Bottom topography
@@ -64,6 +66,49 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition,
 
 tspan = (0.0, 0.5)
 ode = semidiscretize(semi, tspan)
+
+###############################################################################
+# Workaround to set a discontinuous bottom topography and initial condition for debugging and testing.
+
+# alternative version of the initial conditinon used to setup a truly discontinuous
+# test case and initial condition.
+# In contrast to the usual signature of initial conditions, this one get passed the
+# `element_id` explicitly. In particular, this initial conditions works as intended
+# only for the specific mesh loaded above!
+
+function initial_condition_discontinuous_dam_break(x, t, element_id,
+                                                   equations::ShallowWaterMultiLayerEquations2D)
+    # Bottom topography
+    b = 0.3 * exp(-0.5 * ((x[1] - sqrt(2) / 2)^2 + (x[2] - sqrt(2) / 2)^2))
+
+    # Left side of discontinuity
+    IDs = [1, 2, 5, 6, 9, 10, 13, 14]
+    if element_id in IDs
+        H = SVector(1.0, 0.8, 0.6)
+        # Right side of discontinuity
+    else
+        H = SVector(0.9, 0.7, 0.5)
+        b += 0.1
+    end
+
+    v1 = zero(H)
+    v2 = zero(H)
+    return prim2cons(SVector(H..., v1..., v2..., b),
+                     equations)
+end
+
+# point to the data we want to augment
+u = Trixi.wrap_array(ode.u0, semi)
+# reset the initial condition
+for element in eachelement(semi.solver, semi.cache)
+    for j in eachnode(semi.solver), i in eachnode(semi.solver)
+        x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations,
+                                       semi.solver, i, j, element)
+        u_node = initial_condition_discontinuous_dam_break(x_node, first(tspan), element,
+                                                           equations)
+        Trixi.set_node_vars!(u, u_node, equations, semi.solver, i, j, element)
+    end
+end
 
 ###############################################################################
 # Callbacks
