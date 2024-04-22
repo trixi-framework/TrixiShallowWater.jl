@@ -41,4 +41,12 @@ Retrieve the number of layers from an equation instance of the `AbstractShallowW
                                                                                     }
     NLAYERS
 end
+
+# Provide default thresholds dependend on number format (Currently default thresholds are only provided
+# for Float64)
+default_threshold_partially_wet(::Type{Float64}) = 1e-4
+default_threshold_partially_wet(catchall) = throw(ArgumentError("threshold_partially_wet must be provided for non-Float64 types"))
+
+default_threshold_desingularization(::Type{Float64}) = 1e-10
+default_threshold_desingularization(catchall) = throw(ArgumentError("threshold_desingularization must be provided for non-Float64 types"))
 end # @muladd

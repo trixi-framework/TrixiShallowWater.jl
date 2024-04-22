@@ -45,7 +45,7 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
     can only be proven for the FV method (see Chen and Noelle).
     Therefore we set alpha to one regardless of its given maximum value. 
     =#
-    threshold_partially_wet = 1e-4
+    threshold_partially_wet = equations.threshold_partially_wet
 
     Trixi.@threaded for element in eachelement(dg, cache)
         indicator = indicator_threaded[Threads.threadid()]

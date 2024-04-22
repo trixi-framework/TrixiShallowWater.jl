@@ -31,7 +31,11 @@ Also, there are two thresholds which prevent numerical problems as well as insta
 have to be passed, as default values are defined within the struct. The first one, `threshold_limiter`, is
 used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height, as a (small) shift on the initial
 condition and cutoff before the next time step. The second one, `threshold_wet`, is applied on the water height to
-define when the flow is "wet" before calculating the numerical flux.
+define when the flow is "wet" before calculating the numerical flux. A third 
+`threshold_partially_wet` is applied on the water height to define "partially wet" elements in 
+[`IndicatorHennemannGassnerShallowWater`](@ref), that are then calculated with a pure FV method to
+ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are 
+defined within the struct. For other number formats  `threshold_partially_wet` must be provided.
 
 The bottom topography function ``b(x,y)`` is set inside the initial condition routine
 for a particular problem setup. To test the conservative form of the SWE one can set the bottom topography
@@ -65,6 +69,10 @@ struct ShallowWaterEquationsWetDry2D{RealT <: Real} <:
     # before calculating the numerical flux.
     # Default is 5*eps() which in double precision is ≈1e-15.
     threshold_wet::RealT
+    # `threshold_partially_wet` used in `IndicatorHennemannGassnerShallowWater` on the water height 
+    # to define "partially wet" elements. Those elements are calculated with a pure FV method to 
+    # ensure well-balancedness. Default in double precision is 1e-4. 
+    threshold_partially_wet::RealT
     # Standard shallow water equations for dispatch on Trixi.jl functions 
     basic_swe::ShallowWaterEquations2D{RealT}
 end
@@ -76,7 +84,8 @@ end
 # Strict default values for thresholds that performed well in many numerical experiments
 function ShallowWaterEquationsWetDry2D(; gravity_constant, H0 = zero(gravity_constant),
                                        threshold_limiter = nothing,
-                                       threshold_wet = nothing)
+                                       threshold_wet = nothing,
+                                       threshold_partially_wet = nothing)
     T = promote_type(typeof(gravity_constant), typeof(H0))
     if threshold_limiter === nothing
         threshold_limiter = 500 * eps(T)
@@ -84,13 +93,16 @@ function ShallowWaterEquationsWetDry2D(; gravity_constant, H0 = zero(gravity_con
     if threshold_wet === nothing
         threshold_wet = 5 * eps(T)
     end
+    if threshold_partially_wet === nothing
+        threshold_partially_wet = default_threshold_partially_wet(T)
+    end
     # Construct the standard SWE for dispatch. Even though the `basic_swe` already store the 
     # gravity constant and the total water height, we store an extra copy in 
     # `ShallowWaterEquationsWetDry2D` for convenience.
     basic_swe = ShallowWaterEquations2D(gravity_constant = gravity_constant, H0 = H0)
 
     ShallowWaterEquationsWetDry2D(gravity_constant, H0, threshold_limiter,
-                                  threshold_wet, basic_swe)
+                                  threshold_wet, threshold_partially_wet, basic_swe)
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterEquationsWetDry2D) = True()

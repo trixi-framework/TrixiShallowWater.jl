@@ -30,11 +30,15 @@ nonconservative term, which has some benefits for the design of well-balanced sc
 The additional quantity ``H_0`` is also available to store a reference value for the total water
 height that is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 
-Also, there are two thresholds which prevent numerical problems as well as instabilities. Both of 
-them do not have to be passed, as default values are defined within the struct. The limiters are 
+Also, there are two thresholds which prevent numerical problems as well as instabilities. The limiters are 
 used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height. `threshold_limiter` 
 acts as a (small) shift on the initial condition and cutoff before the next time step, whereas 
-`threshold_desingularization` is used in the velocity desingularization.
+`threshold_desingularization` is used in the velocity desingularization. A third 
+`threshold_partially_wet` is applied on the water height to define "partially wet" elements in 
+[`IndicatorHennemannGassnerShallowWater`](@ref), that are then calculated with a pure FV method to
+ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are 
+defined within the struct. For other number formats `threshold_desingularization` and `threshold_partially_wet` 
+must be provided.
 
 The bottom topography function ``b(x)`` is set inside the initial condition routine
 for a particular problem setup.
@@ -62,12 +66,14 @@ struct ShallowWaterMultiLayerEquations1D{NVARS, NLAYERS, RealT <: Real} <:
     H0::RealT        # constant "lake-at-rest" total water height
     threshold_limiter::RealT    # threshold for the positivity-limiter
     threshold_desingularization::RealT  # threshold for velocity desingularization
+    threshold_partially_wet::RealT  # threshold to define partially wet elements
     rhos::SVector{NLAYERS, RealT} # Vector of layer densities
 
     function ShallowWaterMultiLayerEquations1D{NVARS, NLAYERS, RealT}(gravity::RealT,
                                                                       H0::RealT,
                                                                       threshold_limiter::RealT,
                                                                       threshold_desingularization::RealT,
+                                                                      threshold_partially_wet::RealT,
                                                                       rhos::SVector{NLAYERS,
                                                                                     RealT}) where {
                                                                                                    NVARS,
@@ -80,7 +86,8 @@ struct ShallowWaterMultiLayerEquations1D{NVARS, NLAYERS, RealT <: Real} <:
             throw(ArgumentError("densities must be in increasing order (rhos[1] < rhos[2] < ... < rhos[NLAYERS])"))
         min(rhos...) > 0 || throw(ArgumentError("densities must be positive"))
 
-        new(gravity, H0, threshold_limiter, threshold_desingularization, rhos)
+        new(gravity, H0, threshold_limiter, threshold_desingularization,
+            threshold_partially_wet, rhos)
     end
 end
 
@@ -91,7 +98,9 @@ end
 function ShallowWaterMultiLayerEquations1D(; gravity_constant,
                                            H0 = zero(gravity_constant),
                                            threshold_limiter = nothing,
-                                           threshold_desingularization = nothing, rhos)
+                                           threshold_desingularization = nothing,
+                                           threshold_partially_wet = nothing,
+                                           rhos)
 
     # Promote all variables to a common type
     _rhos = promote(rhos...)
@@ -103,7 +112,10 @@ function ShallowWaterMultiLayerEquations1D(; gravity_constant,
         threshold_limiter = 5 * eps(RealT)
     end
     if threshold_desingularization === nothing
-        threshold_desingularization = 1e-10
+        threshold_desingularization = default_threshold_desingularization(RealT)
+    end
+    if threshold_partially_wet === nothing
+        threshold_partially_wet = default_threshold_partially_wet(RealT)
     end
 
     # Extract number of layers and variables
@@ -114,6 +126,7 @@ function ShallowWaterMultiLayerEquations1D(; gravity_constant,
                                                                     H0,
                                                                     threshold_limiter,
                                                                     threshold_desingularization,
+                                                                    threshold_partially_wet,
                                                                     __rhos)
 end
 
