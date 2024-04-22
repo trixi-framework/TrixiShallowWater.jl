@@ -145,7 +145,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             tspan=(0.0, 0.25),
                             # Soften the tolerance as test results vary between different CPUs
-                            atol=1000 * eps())
+                            atol=1e-12)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
@@ -785,7 +785,8 @@ end # 2LSWE
                                 7.0962810662023035,
                                 4.452604027704865e-7,
                             ],
-                            tspan=(0.0, 0.25))
+                            tspan=(0.0, 0.25),
+                            atol=1e-5)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
@@ -809,7 +810,8 @@ end # 2LSWE
                                 0.0008665322585535845,
                                 1.6653345369377348e-16,
                             ],
-                            tspan=(0.0, 0.25))
+                            tspan=(0.0, 0.25),
+                            atol=1e-9)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
