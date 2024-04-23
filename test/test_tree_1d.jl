@@ -811,7 +811,8 @@ end # 2LSWE
                                 1.6653345369377348e-16,
                             ],
                             tspan=(0.0, 0.25),
-                            atol=1e-9)
+                            atol=1e-9,
+                            coverage_override=(maxiters = 15,))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
