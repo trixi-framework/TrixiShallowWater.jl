@@ -84,7 +84,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 1.9999999999999993,
                             ],
                             tspan=(0.0, 0.25),
-                            atol = 1e-12)
+                            atol=1e-12)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
