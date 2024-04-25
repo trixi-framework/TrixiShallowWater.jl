@@ -85,8 +85,7 @@ function initial_condition_discontinuous_dam_break(x, t, element_id,
     IDs = [1, 2, 5, 6, 9, 10, 13, 14]
     if element_id in IDs
         H = SVector(1.0, 0.8, 0.6)
-        # Right side of discontinuity
-    else
+    else # Right side of discontinuity
         H = SVector(0.9, 0.7, 0.5)
         b += 0.1
     end
