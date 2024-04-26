@@ -140,7 +140,7 @@ function Trixi.initial_condition_convergence_test(x, t,
     end
 
     # Some constants are chosen such that the function is periodic on the domain [0,sqrt(2)]
-    ω = 2.0 * pi * sqrt(2.0)
+    ω = pi * sqrt(2.0)
 
     H3 = 1.5 + 0.1 * cos(ω * x[1] + t) + 0.1 * cos(ω * x[2] + t)
     H2 = 2.0 + 0.1 * sin(ω * x[1] + t) + 0.1 * sin(ω * x[2] + t)
@@ -166,7 +166,8 @@ in non-periodic domains).
                                                      equations::ShallowWaterMultiLayerEquations2D)
     # Same settings as in `initial_condition_convergence_test`. Some derivative simplify because
     # this manufactured solution velocity is taken to be constant
-    ω = 2 * pi * sqrt(2.0)
+    ω = pi * sqrt(2.0)
+    g = equations.gravity
 
     du1 = (-0.1 * cos(t + x[2] * ω) - 0.1 * sin(t + x[1] * ω) -
            0.1 * sin(t + x[2] * ω) -
@@ -189,10 +190,12 @@ in non-periodic domains).
             0.1 * cos(t + x[1] * ω)) +
            0.8 * (-0.1 * cos(t + x[2] * ω) * ω - 0.1 * sin(t + x[2] * ω) * ω) +
            0.8^2 * (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω) +
-           10.0 *
+           g *
            (2.0 + 0.1 * cos(t + x[2] * ω) - 0.1 * sin(t + x[1] * ω) -
-            0.1 * sin(t + x[2] * ω) + 0.1 * cos(t + x[1] * ω)) *
+            0.1 * sin(t + x[2] * ω) +
+            0.1 * cos(t + x[1] * ω)) *
            (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω) +
+           0.1 * g *
            (2.0 + 0.1 * cos(t + x[2] * ω) - 0.1 * sin(t + x[1] * ω) -
             0.1 * sin(t + x[2] * ω) +
             0.1 * cos(t + x[1] * ω)) * cos(t + x[1] * ω) * ω)
@@ -202,24 +205,26 @@ in non-periodic domains).
             0.1 * cos(t + x[1] * ω)) +
            0.8 * (0.1 * cos(t + x[2] * ω) * ω + 0.1 * sin(t + x[2] * ω) * ω) +
            0.8^2 * (0.1 * sin(t + x[1] * ω) * ω + 0.1 * cos(t + x[1] * ω) * ω) +
-           10.0 *
+           g *
            (0.5 - 0.1 * cos(t + x[2] * ω) + 0.1 * sin(t + x[1] * ω) +
-            0.1 * sin(t + x[2] * ω) - 0.1 * cos(t + x[1] * ω)) *
-           (0.1 * sin(t + x[1] * ω) * ω + 0.1 * cos(t + x[1] * ω) * ω) +
-           10.0 *
-           (0.5 - 0.1 * cos(t + x[2] * ω) + 0.1 * sin(t + x[1] * ω) +
-            0.1 * sin(t + x[2] * ω) - 0.1 * cos(t + x[1] * ω)) *
+            0.1 * sin(t + x[2] * ω) -
+            0.1 * cos(t + x[1] * ω)) *
            (-0.1 * sin(t + x[1] * ω) * ω +
-            0.9 * (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω)))
+            0.9 * (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω)) +
+           g *
+           (0.5 - 0.1 * cos(t + x[2] * ω) + 0.1 * sin(t + x[1] * ω) +
+            0.1 * sin(t + x[2] * ω) -
+            0.1 * cos(t + x[1] * ω)) *
+           (0.1 * sin(t + x[1] * ω) * ω + 0.1 * cos(t + x[1] * ω) * ω))
 
     du6 = (0.8 * (-0.1 * sin(t + x[1] * ω) - 0.1 * sin(t + x[2] * ω)) +
            0.8 * (0.1 * sin(x[2] * ω) * ω - 0.1 * sin(t + x[2] * ω) * ω) +
            0.8^2 * (0.1 * sin(x[1] * ω) * ω - 0.1 * sin(t + x[1] * ω) * ω) +
-           10.0 *
+           g *
            (0.5 - 0.1 * cos(x[1] * ω) + 0.1 * cos(t + x[2] * ω) - 0.1 * cos(x[2] * ω) +
             0.1 * cos(t + x[1] * ω)) *
            (0.1 * sin(x[1] * ω) * ω - 0.1 * sin(t + x[1] * ω) * ω) +
-           10.0 *
+           g *
            (0.5 - 0.1 * cos(x[1] * ω) + 0.1 * cos(t + x[2] * ω) - 0.1 * cos(x[2] * ω) +
             0.1 * cos(t + x[1] * ω)) *
            (-0.1 * sin(x[1] * ω) * ω +
@@ -231,39 +236,43 @@ in non-periodic domains).
            0.1 * cos(t + x[1] * ω) - 0.1 * cos(t + x[2] * ω) * ω +
            0.8 * (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω) -
            0.1 * sin(t + x[2] * ω) * ω +
-           10.0 *
-           (2.0 + 0.1 * cos(t + x[2] * ω) - 0.1 * sin(t + x[1] * ω) -
-            0.1 * sin(t + x[2] * ω) + 0.1 * cos(t + x[1] * ω)) *
-           (-0.1 * cos(t + x[2] * ω) * ω - 0.1 * sin(t + x[2] * ω) * ω) +
+           0.1 * g *
            (2.0 + 0.1 * cos(t + x[2] * ω) - 0.1 * sin(t + x[1] * ω) -
             0.1 * sin(t + x[2] * ω) +
-            0.1 * cos(t + x[1] * ω)) * cos(t + x[2] * ω) * ω)
+            0.1 * cos(t + x[1] * ω)) * cos(t + x[2] * ω) * ω +
+           g *
+           (2.0 + 0.1 * cos(t + x[2] * ω) - 0.1 * sin(t + x[1] * ω) -
+            0.1 * sin(t + x[2] * ω) +
+            0.1 * cos(t + x[1] * ω)) *
+           (-0.1 * cos(t + x[2] * ω) * ω - 0.1 * sin(t + x[2] * ω) * ω))
 
     du8 = (0.1 * cos(t + x[2] * ω) + 0.1 * sin(t + x[1] * ω) + 0.1 * sin(t + x[2] * ω) +
            0.1 * cos(t + x[1] * ω) + 0.1 * cos(t + x[2] * ω) * ω +
            0.8 * (0.1 * sin(t + x[1] * ω) * ω + 0.1 * cos(t + x[1] * ω) * ω) +
            0.1 * sin(t + x[2] * ω) * ω +
-           10.0 *
+           g *
            (0.5 - 0.1 * cos(t + x[2] * ω) + 0.1 * sin(t + x[1] * ω) +
-            0.1 * sin(t + x[2] * ω) - 0.1 * cos(t + x[1] * ω)) *
+            0.1 * sin(t + x[2] * ω) -
+            0.1 * cos(t + x[1] * ω)) *
+           (0.1 * cos(t + x[2] * ω) * ω + 0.1 * sin(t + x[2] * ω) * ω) +
+           g *
+           (0.5 - 0.1 * cos(t + x[2] * ω) + 0.1 * sin(t + x[1] * ω) +
+            0.1 * sin(t + x[2] * ω) -
+            0.1 * cos(t + x[1] * ω)) *
            (0.9 * (-0.1 * cos(t + x[2] * ω) * ω - 0.1 * sin(t + x[2] * ω) * ω) -
-            0.1 * sin(t + x[2] * ω) * ω) +
-           10.0 *
-           (0.5 - 0.1 * cos(t + x[2] * ω) + 0.1 * sin(t + x[1] * ω) +
-            0.1 * sin(t + x[2] * ω) - 0.1 * cos(t + x[1] * ω)) *
-           (0.1 * cos(t + x[2] * ω) * ω + 0.1 * sin(t + x[2] * ω) * ω))
+            0.1 * sin(t + x[2] * ω) * ω))
 
     du9 = (-0.1 * sin(t + x[1] * ω) - 0.1 * sin(t + x[2] * ω) +
            0.1 * sin(x[2] * ω) * ω +
            0.8 * (0.1 * sin(x[1] * ω) * ω - 0.1 * sin(t + x[1] * ω) * ω) -
            0.1 * sin(t + x[2] * ω) * ω +
-           10.0 *
+           g *
            (0.5 - 0.1 * cos(x[1] * ω) + 0.1 * cos(t + x[2] * ω) - 0.1 * cos(x[2] * ω) +
             0.1 * cos(t + x[1] * ω)) *
            (0.9 / 1.1 * (-0.1 * cos(t + x[2] * ω) * ω - 0.1 * sin(t + x[2] * ω) * ω) +
             1.0 / 1.1 * (0.1 * cos(t + x[2] * ω) * ω + 0.1 * sin(t + x[2] * ω) * ω) -
             0.1 * sin(x[2] * ω) * ω) +
-           10.0 *
+           g *
            (0.5 - 0.1 * cos(x[1] * ω) + 0.1 * cos(t + x[2] * ω) - 0.1 * cos(x[2] * ω) +
             0.1 * cos(t + x[1] * ω)) *
            (0.1 * sin(x[2] * ω) * ω - 0.1 * sin(t + x[2] * ω) * ω))

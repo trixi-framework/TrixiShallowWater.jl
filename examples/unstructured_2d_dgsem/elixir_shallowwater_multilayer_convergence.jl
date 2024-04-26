@@ -7,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the multilayer shallow water equations with a periodic
 # bottom topography function (set in the initial conditions)
 
-equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 10.0,
+equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.1,
                                               rhos = (0.9, 1.0, 1.1))
 
 initial_condition = initial_condition_convergence_test
@@ -50,13 +50,16 @@ save_solution = SaveSolutionCallback(interval = 500,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution)
+stepsize_callback = StepsizeCallback(cfl = 0.9)
+
+callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution, stepsize_callback)
 
 ###############################################################################
 # run the simulation
 
 # use a Runge-Kutta method with automatic (error based) time step size control
-sol = solve(ode, RDPK3SpFSAL49(), abstol = 1.0e-8, reltol = 1.0e-8,
+sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+            dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             save_everystep = false, callback = callbacks);
 
 summary_callback() # print the timer summary
