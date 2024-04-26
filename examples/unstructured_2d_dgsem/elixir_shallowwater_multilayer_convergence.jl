@@ -52,12 +52,12 @@ save_solution = SaveSolutionCallback(interval = 500,
 
 stepsize_callback = StepsizeCallback(cfl = 0.9)
 
-callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution, stepsize_callback)
+callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
+                        stepsize_callback)
 
 ###############################################################################
 # run the simulation
 
-# use a Runge-Kutta method with automatic (error based) time step size control
 sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             save_everystep = false, callback = callbacks);
