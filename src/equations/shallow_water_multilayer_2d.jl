@@ -305,8 +305,6 @@ For details see Section 9.2.5 of the book:
     h_v1, h_v2 = momentum(u_inner, equations)
     b = u_inner[end]
 
-    # u_boundary = SVector(h..., -hv..., b)
-
     # compute the normal velocity
     u_normal = normal[1] * h_v1 + normal[2] * h_v2
 
