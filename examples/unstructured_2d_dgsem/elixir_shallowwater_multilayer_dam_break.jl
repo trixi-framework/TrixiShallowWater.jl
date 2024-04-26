@@ -75,7 +75,6 @@ ode = semidiscretize(semi, tspan)
 # In contrast to the usual signature of initial conditions, this one get passed the
 # `element_id` explicitly. In particular, this initial conditions works as intended
 # only for the specific mesh loaded above!
-
 function initial_condition_discontinuous_dam_break(x, t, element_id,
                                                    equations::ShallowWaterMultiLayerEquations2D)
     # Bottom topography
