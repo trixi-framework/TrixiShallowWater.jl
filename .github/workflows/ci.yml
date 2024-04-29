@@ -56,12 +56,13 @@ jobs:
           - upstream
         include:
           - version: '1.10'
-            os: 
-              - macOS-latest
-              - windows-latest
+            os: macOS-latest
             arch: x64
-            trixi_test:
-              - upstream
+            trixi_test: upstream
+          - version: '1.10'
+            os: windows-latest
+            arch: x64
+            trixi_test: upstream
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
