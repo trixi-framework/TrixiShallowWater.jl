@@ -45,8 +45,6 @@ jobs:
           - '1.10'
         os:
           - ubuntu-latest
-          - macOS-latest
-          - windows-latest
         arch:
           - x64
         trixi_test:
@@ -56,6 +54,14 @@ jobs:
           - unstructured_2d
           - unit
           - upstream
+        include:
+          - version: '1.10'
+            os: 
+              - macOS-latest
+              - windows-latest
+            arch: x64
+            trixi_test:
+              - upstream
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
@@ -72,8 +78,36 @@ jobs:
         env:
           PYTHON: ""
           TRIXI_TEST: ${{ matrix.trixi_test }}
+
+  test_coverage:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    name: coverage - ${{ matrix.trixi_test }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.10'
+        os:
+          - ubuntu-latest
+        arch:
+          - x64
+        trixi_test:
+          - tree_1d
+          - tree_2d
+          - structured_2d
+          - unstructured_2d
+          - unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - run: julia -e 'using InteractiveUtils; versioninfo(verbose=true)'
+      - uses: julia-actions/cache@v1
+      - uses: julia-actions/julia-buildpkg@v1
       - name: Run tests with coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.version == '1.10'
         uses: julia-actions/julia-runtest@v1
         with:
           coverage: true
@@ -81,22 +115,16 @@ jobs:
           PYTHON: ""
           TRIXI_TEST: ${{ matrix.trixi_test }}
       - name: Process coverage results
-        # Only run coverage on Ubuntu
-        if: matrix.os == 'ubuntu-latest'
         uses: julia-actions/julia-processcoverage@v1
         with:
           directories: src,examples
       - name: Upload coverage report to Codecov
-        # Only run coverage on Ubuntu
-        if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v4
         with:
           files: lcov.info
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }} # now required for public repos
       - name: Upload coverage report to Coveralls
-        # Only run coverage on Ubuntu
-        if: matrix.os == 'ubuntu-latest'
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
