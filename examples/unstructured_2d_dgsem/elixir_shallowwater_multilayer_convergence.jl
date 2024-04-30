@@ -4,9 +4,10 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the multilayer shallow water equations with three layers
+# Semidiscretization of the multilayer shallow water equations with a periodic
+# bottom topography function (set in the initial conditions)
 
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.1,
+equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.1,
                                               rhos = (0.9, 1.0, 1.1))
 
 initial_condition = initial_condition_convergence_test
@@ -15,21 +16,20 @@ initial_condition = initial_condition_convergence_test
 # Get the DG approximation space
 
 volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
-solver = DGSEM(polydeg = 3,
-               surface_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal),
+surface_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
+solver = DGSEM(polydeg = 6, surface_flux = surface_flux,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 ###############################################################################
-# Get the TreeMesh and setup a periodic mesh
+# This setup is for the curved, split form convergence test on a periodic domain
 
-coordinates_min = 0.0
-coordinates_max = sqrt(2.0)
-mesh = TreeMesh(coordinates_min, coordinates_max,
-                initial_refinement_level = 2,
-                n_cells_max = 10_000,
-                periodicity = true)
+# Get the unstructured quad mesh from a file (downloads the file if not available locally)
+mesh_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/8f8cd23df27fcd494553f2a89f3c1ba4/raw/85e3c8d976bbe57ca3d559d653087b0889535295/mesh_alfven_wave_with_twist_and_flip.mesh",
+                           joinpath(@__DIR__, "mesh_alfven_wave_with_twist_and_flip.mesh"))
 
-# create the semi discretization object
+mesh = UnstructuredMesh2D(mesh_file, periodicity = true)
+
+# Create the semidiscretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
                                     source_terms = source_terms_convergence_test)
 
@@ -50,7 +50,7 @@ save_solution = SaveSolutionCallback(interval = 500,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stepsize_callback = StepsizeCallback(cfl = 1.0)
+stepsize_callback = StepsizeCallback(cfl = 0.9)
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)

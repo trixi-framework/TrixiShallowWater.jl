@@ -6,7 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations with three layers
 
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.1,
+equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.1,
                                               rhos = (0.9, 1.0, 1.1))
 
 initial_condition = initial_condition_convergence_test
@@ -22,11 +22,11 @@ solver = DGSEM(polydeg = 3,
 ###############################################################################
 # Get the TreeMesh and setup a periodic mesh
 
-coordinates_min = 0.0
-coordinates_max = sqrt(2.0)
+coordinates_min = (0.0, 0.0)
+coordinates_max = (sqrt(2.0), sqrt(2.0))
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 2,
-                n_cells_max = 10_000,
+                n_cells_max = 100_000,
                 periodicity = true)
 
 # create the semi discretization object
@@ -61,5 +61,4 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             save_everystep = false, callback = callbacks);
-
 summary_callback() # print the timer summary

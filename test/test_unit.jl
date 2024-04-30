@@ -101,13 +101,28 @@ end
 
 @timed_testset "Multilayer shallow water conversion between conservative/entropy variables" begin
     H = (3.5, 2.5, 1.5)
-    v = (0.25, 0.1, 0.37)
+    v1 = (0.25, 0.1, 0.37)
+    v2 = (0.13, 0.2, 0.3)
     b = 0.4
 
     let equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.8,
                                                       rhos = (0.7, 0.8, 0.9))
         # test conservion between primitive and conservative variables
-        prim_vars = SVector(H..., v..., b)
+        prim_vars = SVector(H..., v1..., b)
+        cons_vars = prim2cons(prim_vars, equations)
+        @test prim_vars ≈ cons2prim(cons_vars, equations)
+
+        total_energy = energy_total(cons_vars, equations)
+        @test total_energy ≈ entropy(cons_vars, equations)
+        @test total_energy ≈
+              energy_internal(cons_vars, equations) +
+              energy_kinetic(cons_vars, equations)
+    end
+
+    let equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.8,
+                                                      rhos = (0.7, 0.8, 0.9))
+        # test conservion between primitive and conservative variables
+        prim_vars = SVector(H..., v1..., v2..., b)
         cons_vars = prim2cons(prim_vars, equations)
         @test prim_vars ≈ cons2prim(cons_vars, equations)
 
@@ -226,16 +241,31 @@ end
                                                                      0.1,
                                                                      0.2,
                                                                  ])
+    @test_throws ArgumentError ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
+                                                                 rhos = [
+                                                                     -1.0,
+                                                                     0.1,
+                                                                     0.2,
+                                                                 ])
     @test_throws ArgumentError ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+                                                                 rhos = [0.1, 0.3, 0.2])
+    @test_throws ArgumentError ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
                                                                  rhos = [0.1, 0.3, 0.2])
     # Ensure that both tuple and array input are equivalent    
     @test ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
                                             rhos = [0.1, 0.2, 0.3]) ==
           ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
                                             rhos = (0.1, 0.2, 0.3))
+    @test ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
+                                            rhos = [0.1, 0.2, 0.3]) ==
+          ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
+                                            rhos = (0.1, 0.2, 0.3))
 
     # Check for argument error if initial condition is called with wrong number of layers
     equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+                                                  rhos = (0.1, 0.2, 0.3, 0.4))
+    @test_throws ArgumentError initial_condition_convergence_test(0.0, 0.0, equations)
+    equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
                                                   rhos = (0.1, 0.2, 0.3, 0.4))
     @test_throws ArgumentError initial_condition_convergence_test(0.0, 0.0, equations)
 end

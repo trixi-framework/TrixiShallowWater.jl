@@ -94,6 +94,7 @@ function ShallowWaterEquationsWetDry2D(; gravity_constant, H0 = zero(gravity_con
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterEquationsWetDry2D) = True()
+
 Trixi.varnames(::typeof(cons2cons), ::ShallowWaterEquationsWetDry2D) = ("h", "h_v1",
                                                                         "h_v2", "b")
 # Note, we use the total water height, H = h + b, as the first primitive variable for easier
