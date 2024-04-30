@@ -7,11 +7,23 @@ using Test
 const TRIXI_TEST = get(ENV, "TRIXI_TEST", "all")
 
 @time @testset "TrixiShallowWater.jl tests" begin
-    @time if TRIXI_TEST == "all"
+    @time if TRIXI_TEST == "all" || TRIXI_TEST == "tree_1d"
         include("test_tree_1d.jl")
+    end
+
+    @time if TRIXI_TEST == "all" || TRIXI_TEST == "tree_2d"
         include("test_tree_2d.jl")
+    end
+
+    @time if TRIXI_TEST == "all" || TRIXI_TEST == "unstructured_2d"
         include("test_unstructured_2d.jl")
+    end
+
+    @time if TRIXI_TEST == "all" || TRIXI_TEST == "structured_2d"
         include("test_structured_2d.jl")
+    end
+
+    @time if TRIXI_TEST == "all" || TRIXI_TEST == "unit"
         include("test_unit.jl")
     end
 
