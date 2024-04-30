@@ -66,6 +66,7 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
         end
     end
+
     # Shallow water wet/dry 2D
     # TreeMesh2D
     @trixi_testset "TreeMesh2D: elixir_shallowwater_conical_island.jl" begin

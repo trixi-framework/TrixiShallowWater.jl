@@ -42,7 +42,7 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
     # Well-balancedness of the scheme on partially wet elements with hydrostatic reconstruction
     # can only be proven for the FV method (see Chen and Noelle).
     # Therefore we set alpha to be one regardless of its given value from the modal indicator.
-    threshold_partially_wet = 1e-4
+    threshold_partially_wet = equations.threshold_partially_wet
 
     Trixi.@threaded for element in eachelement(dg, cache)
         indicator = indicator_threaded[Threads.threadid()]

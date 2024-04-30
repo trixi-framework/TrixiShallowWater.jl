@@ -269,6 +269,11 @@ end
                                                   rhos = (0.1, 0.2, 0.3, 0.4))
     @test_throws ArgumentError initial_condition_convergence_test(0.0, 0.0, equations)
 end
+
+@timed_testset "Exception check for default_threshold functions" begin
+    @test_throws ArgumentError TrixiShallowWater.default_threshold_partially_wet(Int64)
+    @test_throws ArgumentError TrixiShallowWater.default_threshold_desingularization(Int64)
+end
 end # Unit tests
 
 end # module
