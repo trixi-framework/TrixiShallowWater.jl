@@ -140,6 +140,7 @@ end
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterMultiLayerEquations1D) = True()
+
 function Trixi.varnames(::typeof(cons2cons),
                         equations::ShallowWaterMultiLayerEquations1D)
     waterheight = ntuple(n -> "h" * string(n), Val(nlayers(equations)))
@@ -173,7 +174,7 @@ function Trixi.initial_condition_convergence_test(x, t,
     end
 
     # Some constants are chosen such that the function is periodic on the domain [0,sqrt(2)]
-    ω = 2.0 * pi * sqrt(2.0)
+    ω = pi * sqrt(2.0)
 
     H1 = 4.0 + 0.1 * cos(ω * x[1] + t)
     H2 = 2.0 + 0.1 * sin(ω * x[1] + t)
@@ -181,7 +182,7 @@ function Trixi.initial_condition_convergence_test(x, t,
     v1 = 0.9
     v2 = 1.0
     v3 = 1.1
-    b = 1.0 + 0.1 * cos(2.0 * ω * x[1])
+    b = 1.0 + 0.1 * cos(ω * x[1])
 
     return prim2cons(SVector(H1, H2, H3, v1, v2, v3, b), equations)
 end
@@ -198,39 +199,43 @@ in non-periodic domains).
                                                      equations::ShallowWaterMultiLayerEquations1D)
     # Same settings as in `initial_condition_convergence_test`. Some derivative simplify because
     # this manufactured solution velocity is taken to be constant
-    ω = 2 * pi * sqrt(2.0)
+    ω = pi * sqrt(2.0)
+    g = equations.gravity
 
     du1 = -0.1 * sin(t + x[1] * ω) - 0.1 * cos(t + x[1] * ω) +
           0.9 * (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω)
+
     du2 = 0.1 * sin(t + x[1] * ω) + 0.1 * cos(t + x[1] * ω) +
           0.1 * sin(t + x[1] * ω) * ω +
           0.1 * cos(t + x[1] * ω) * ω
+
     du3 = -0.1 * sin(t + x[1] * ω) +
-          1.1 * (-0.1 * sin(t + x[1] * ω) * ω + 0.2 * sin(2.0 * x[1] * ω) * ω)
+          1.1 * (0.1 * sin(x[1] * ω) * ω - 0.1 * sin(t + x[1] * ω) * ω)
+
     du4 = 0.9 * (-0.1 * sin(t + x[1] * ω) - 0.1 * cos(t + x[1] * ω)) +
           0.81 * (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω) +
-          10.0 * (2.0 - 0.1 * sin(t + x[1] * ω) + 0.1 * cos(t + x[1] * ω)) *
+          g * (2.0 - 0.1 * sin(t + x[1] * ω) + 0.1 * cos(t + x[1] * ω)) *
           (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω) +
-          (2.0 - 0.1 * sin(t + x[1] * ω) + 0.1 * cos(t + x[1] * ω)) *
+          0.1 * g * (2.0 - 0.1 * sin(t + x[1] * ω) + 0.1 * cos(t + x[1] * ω)) *
           cos(t + x[1] * ω) * ω
+
     du5 = 0.1 * sin(t + x[1] * ω) + 0.1 * cos(t + x[1] * ω) +
           0.1 * sin(t + x[1] * ω) * ω +
           0.1 * cos(t + x[1] * ω) * ω +
-          10.0 * (0.5 + 0.1 * sin(t + x[1] * ω) - 0.1 * cos(t + x[1] * ω)) *
+          g * (0.5 + 0.1 * sin(t + x[1] * ω) - 0.1 * cos(t + x[1] * ω)) *
+          (0.1 * sin(t + x[1] * ω) * ω + 0.1 * cos(t + x[1] * ω) * ω) +
+          g * (0.5 + 0.1 * sin(t + x[1] * ω) - 0.1 * cos(t + x[1] * ω)) *
           (-0.1 * sin(t + x[1] * ω) * ω +
-           0.9 * (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω)) +
-          10.0 * (0.5 + 0.1 * sin(t + x[1] * ω) - 0.1 * cos(t + x[1] * ω)) *
-          (0.1 * sin(t + x[1] * ω) * ω + 0.1 * cos(t + x[1] * ω) * ω)
+           0.9 * (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω))
+
     du6 = -0.11 * sin(t + x[1] * ω) +
-          1.21 * (-0.1 * sin(t + x[1] * ω) * ω + 0.2 * sin(2.0x[1] * ω) * ω) +
-          10.0 * (0.5 - 0.1 * cos(2.0 * x[1] * ω) + 0.1 * cos(t + x[1] * ω)) *
-          (-0.1 * sin(t + x[1] * ω) * ω + 0.2 * sin(2.0 * x[1] * ω) * ω) +
-          10.0 * (0.5 - 0.1 * cos(2.0 * x[1] * ω) + 0.1 * cos(t + x[1] * ω)) *
-          (0.8181818181818181 *
-           (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω) +
-           0.9090909090909091 *
-           (0.1 * sin(t + x[1] * ω) * ω + 0.1 * cos(t + x[1] * ω) * ω) -
-           0.2 * sin(2.0 * x[1] * ω) * ω)
+          1.21 * (0.1 * sin(x[1] * ω) * ω - 0.1 * sin(t + x[1] * ω) * ω) +
+          g * (0.5 - 0.1 * cos(x[1] * ω) + 0.1 * cos(t + x[1] * ω)) *
+          (-0.1 * sin(x[1] * ω) * ω +
+           1.0 / 1.1 * (0.1 * sin(t + x[1] * ω) * ω + 0.1 * cos(t + x[1] * ω) * ω) +
+           0.9 / 1.1 * (-0.1 * sin(t + x[1] * ω) * ω - 0.1 * cos(t + x[1] * ω) * ω)) +
+          g * (0.5 - 0.1 * cos(x[1] * ω) + 0.1 * cos(t + x[1] * ω)) *
+          (0.1 * sin(x[1] * ω) * ω - 0.1 * sin(t + x[1] * ω) * ω)
 
     return SVector(du1, du2, du3, du4, du5, du6, zero(eltype(u)))
 end

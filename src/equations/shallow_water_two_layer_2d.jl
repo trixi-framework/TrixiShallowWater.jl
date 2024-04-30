@@ -98,6 +98,7 @@ function ShallowWaterTwoLayerEquations2D(; gravity_constant,
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterTwoLayerEquations2D) = True()
+
 function Trixi.varnames(::typeof(cons2cons), ::ShallowWaterTwoLayerEquations2D)
     ("h_upper", "h_v1_upper", "h_v2_upper", "h_lower", "h_v1_lower", "h_v2_lower", "b")
 end

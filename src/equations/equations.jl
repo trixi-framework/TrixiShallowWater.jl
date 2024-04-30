@@ -17,6 +17,7 @@ include("shallow_water_two_layer_2d.jl")
 abstract type AbstractShallowWaterMultiLayerEquations{NDIMS, NVARS, NLAYERS} <:
               Trixi.AbstractEquations{NDIMS, NVARS} end
 include("shallow_water_multilayer_1d.jl")
+include("shallow_water_multilayer_2d.jl")
 
 """
     eachlayer(equations::AbstractShallowWaterMultiLayerEquations)
