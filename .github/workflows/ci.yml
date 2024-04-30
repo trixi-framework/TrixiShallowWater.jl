@@ -56,8 +56,8 @@ jobs:
           - upstream
         include:
           - version: '1.10'
-            os: macOS-latest
-            arch: x64
+            os: macos-latest
+            arch: aarch64
             trixi_test: upstream
           - version: '1.10'
             os: windows-latest
