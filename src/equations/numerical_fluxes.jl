@@ -36,13 +36,13 @@ const flux_hll_chen_noelle = FluxHLL(min_max_speed_chen_noelle)
                                                                 normal_direction_ll,
                                                                 normal_direction_average,
                                                                 equations::Trixi.AbstractEquations)
-    @unpack numerical_flux, hydrostatic_reconstruction = numflux
+    @unpack nonconservative_flux, hydrostatic_reconstruction = numflux
 
     # Create the reconstructed left/right solution states in conservative form
     u_ll_star, u_rr_star = hydrostatic_reconstruction(u_ll, u_rr, equations)
 
-    # Use the reconstructed states to compute the numerical surface flux
-    return numerical_flux(u_ll_star, u_rr_star, normal_direction_ll,
+    # Use the reconstructed states to compute the nonconservative surface flux
+    return nonconservative_flux(u_ll_star, u_rr_star, normal_direction_ll,
                           normal_direction_average,
                           equations)
 end

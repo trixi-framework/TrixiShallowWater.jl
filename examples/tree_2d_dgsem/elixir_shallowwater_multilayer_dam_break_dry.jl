@@ -29,7 +29,7 @@ function initial_condition_dam_break(x, t, equations::ShallowWaterMultiLayerEqua
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
     # with a default value of 5*eps() ≈ 1e-15 in double precision, is set in the constructor above
-    # for the ShallowWaterMultiLayerEquations1D and added to the initial condition if h = 0.
+    # for the ShallowWaterMultiLayerEquations2D and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     for i in reverse(eachlayer(equations))
         if i == nlayers(equations)
