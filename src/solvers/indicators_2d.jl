@@ -56,9 +56,10 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
         # Calculate indicator variables at Gauss-Lobatto nodes
         for j in eachnode(dg), i in eachnode(dg)
             u_local = get_node_vars(u, equations, dg, i, j, element)
-            h, _, _, _ = u_local
+            h = waterheight(u_local, equations)
 
-            if h <= threshold_partially_wet
+            # Set indicator to FV if water height is below the threshold
+            if minimum(h) <= threshold_partially_wet
                 indicator_wet = 0
             end
 
