@@ -2,7 +2,6 @@
 using OrdinaryDiffEq
 using Trixi
 using TrixiShallowWater
-using StaticArrays: MVector
 
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations for a dam break test over a dry domain

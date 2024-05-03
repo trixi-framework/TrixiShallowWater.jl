@@ -667,7 +667,7 @@ Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostat
     v2_rr = MVector(velocity(u_rr, equations)[2])
 
     threshold = equations.threshold_limiter
-    
+
     # Ensure zero velocity at dry states
     for i in eachlayer(equations)
         if h_ll[i] <= threshold
