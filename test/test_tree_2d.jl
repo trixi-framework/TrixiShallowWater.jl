@@ -523,6 +523,48 @@ end # 2LSWE
         end
     end
 
+    @trixi_testset "elixir_shallowwater_multilayer_convergence.jl with FluxHydrostaticReconstruction" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_convergence.jl"),
+                            l2=[
+                                0.0015784809121655386,
+                                0.0010725791806396989,
+                                0.000361175462962745,
+                                0.001010776670918376,
+                                0.0009612673392275332,
+                                0.0002639057696207499,
+                                0.0011407118095590378,
+                                0.0011974691247903164,
+                                0.00031384421384170354,
+                                0.00019675440964325044,
+                            ],
+                            linf=[
+                                0.006611273262456141,
+                                0.004798759663784402,
+                                0.0014761631666105335,
+                                0.004378481797736367,
+                                0.004059620398099983,
+                                0.001072537228128334,
+                                0.004650692998510397,
+                                0.00501486495741188,
+                                0.0013175223929257074,
+                                0.0004374891172380657,
+                            ],
+                            surface_flux=(FluxHydrostaticReconstruction(flux_ersing_etal,
+                                                                        hydrostatic_reconstruction_ersing_etal),
+                                          FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
+                                                                        hydrostatic_reconstruction_ersing_etal)),
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_well_balanced.jl"),
@@ -680,6 +722,44 @@ end # 2LSWE
                             ],
                             surface_flux=(flux_lax_friedrichs,
                                           flux_nonconservative_ersing_etal),
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_multilayer_dam_break_dry.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_dam_break_dry.jl"),
+                            l2=[
+                                0.0296376504586858,
+                                0.029447383800955382,
+                                0.045809400450865546,
+                                0.017958554059665146,
+                                0.01768940056895248,
+                                0.028375881034412867,
+                                0.0003680912616432293,
+                                0.00036588338949622657,
+                                0.000599358794592359,
+                                0.004003203849568449,
+                            ],
+                            linf=[
+                                0.10031245502847894,
+                                0.10068362169927011,
+                                0.28430163520755,
+                                0.04291794214784933,
+                                0.042481793995433136,
+                                0.11323698875128625,
+                                0.0019466030268946305,
+                                0.001934584018725075,
+                                0.003700828775145786,
+                                0.10000000026183736,
+                            ],
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
