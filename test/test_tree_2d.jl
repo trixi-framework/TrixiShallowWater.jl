@@ -763,7 +763,7 @@ end # 2LSWE
                             tspan=(0.0, 0.25),
                             # Increase iterations for coverage testing to trigger the 
                             # positivity limiter
-                            coverage_override=(maxiters = 130,))
+                            coverage_override=(maxiters = 130, tspan = (0.0, 1.5)))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
