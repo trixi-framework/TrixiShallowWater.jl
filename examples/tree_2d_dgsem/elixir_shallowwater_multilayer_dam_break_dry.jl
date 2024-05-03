@@ -5,18 +5,20 @@ using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations for a dam break test over a dry domain
-# with a discontinuous bottom topography function
+# with a discontinuous bottom topography function.
 equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.0,
                                               rhos = (0.9, 0.95, 1.0))
 
 function initial_condition_dam_break(x, t, equations::ShallowWaterMultiLayerEquations2D)
     # Bottom topography
-    b = 0.3 * exp(-0.5 * ((x[1])^2 + (x[2])^2))
+    b = 1.4 * exp(-10.0 * (x[1]^2 + x[2]^2))
+    if x[1] > 0.0
+        b += 0.1
+    end
 
-    if x[1] < 0.0
+    if x[1] < -0.5
         H = [1.0, 0.8, 0.6]
     else
-        b += 0.1
         H = [b, b, b]
     end
 
@@ -73,7 +75,7 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 coordinates_min = (-1.0, -1.0)
 coordinates_max = (1.0, 1.0)
 mesh = TreeMesh(coordinates_min, coordinates_max,
-                initial_refinement_level = 4,
+                initial_refinement_level = 3,
                 n_cells_max = 10_000,
                 periodicity = false)
 
@@ -141,11 +143,11 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(interval = 50,
+save_solution = SaveSolutionCallback(interval = 100,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stepsize_callback = StepsizeCallback(cfl = 1.0)
+stepsize_callback = StepsizeCallback(cfl = 0.3)
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)

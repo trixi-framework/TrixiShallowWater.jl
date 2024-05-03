@@ -16,7 +16,7 @@ equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.0,
 
 function initial_condition_dam_break(x, t, equations::ShallowWaterMultiLayerEquations2D)
     # Bottom topography
-    b = 0.3 * exp(-0.5 * ((x[1] - sqrt(2) / 2)^2 + (x[2] - sqrt(2) / 2)^2))
+    b = 1.4 * exp(-10.0 * ((x[1] - sqrt(2) / 2)^2 + (x[2] - sqrt(2) / 2)^2))
 
     if x[1] < sqrt(2) / 2
         H = [1.0, 0.8, 0.6]
@@ -92,7 +92,7 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition,
 ###############################################################################
 # ODE solver
 
-tspan = (0.0, 1.0)
+tspan = (0.0, 2.0)
 ode = semidiscretize(semi, tspan)
 
 ###############################################################################
@@ -106,7 +106,7 @@ ode = semidiscretize(semi, tspan)
 function initial_condition_discontinuous_dam_break(x, t, element_id,
                                                    equations::ShallowWaterMultiLayerEquations2D)
     # Bottom topography
-    b = 0.3 * exp(-0.5 * ((x[1] - sqrt(2) / 2)^2 + (x[2] - sqrt(2) / 2)^2))
+    b = 1.4 * exp(-10.0 * ((x[1] - sqrt(2) / 2)^2 + (x[2] - sqrt(2) / 2)^2))
 
     # Left side of discontinuity
     IDs = [1, 2, 5, 6, 9, 10, 13, 14]
@@ -169,7 +169,7 @@ save_solution = SaveSolutionCallback(interval = 100,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stepsize_callback = StepsizeCallback(cfl = 0.7)
+stepsize_callback = StepsizeCallback(cfl = 0.5)
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)
