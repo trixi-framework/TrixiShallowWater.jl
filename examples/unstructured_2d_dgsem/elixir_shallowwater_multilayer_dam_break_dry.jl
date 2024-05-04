@@ -48,8 +48,6 @@ end
 
 initial_condition = initial_condition_dam_break
 
-boundary_condition_constant = BoundaryConditionDirichlet(initial_condition_dam_break)
-
 ###############################################################################
 # Get the DG approximation space
 
