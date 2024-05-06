@@ -88,6 +88,7 @@ function limiter_shallow_water!(u, threshold::Real, variable,
 
     return nothing
 end
+
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 function limiter_shallow_water!(u, threshold::Real, variable,
