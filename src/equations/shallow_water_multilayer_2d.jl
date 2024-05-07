@@ -31,6 +31,16 @@ nonconservative term, which has some benefits for the design of well-balanced sc
 The additional quantity ``H_0`` is also available to store a reference value for the total water
 height that is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 
+Also, there are two thresholds which prevent numerical problems as well as instabilities. The limiters are 
+used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height. `threshold_limiter` 
+acts as a (small) shift on the initial condition and cutoff before the next time step, whereas 
+`threshold_desingularization` is used in the velocity desingularization. A third 
+`threshold_partially_wet` is applied on the water height to define "partially wet" elements in 
+[`IndicatorHennemannGassnerShallowWater`](@ref), that are then calculated with a pure FV method to
+ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are 
+defined within the struct. For other number formats `threshold_desingularization` and `threshold_partially_wet` 
+must be provided.
+
 The bottom topography function ``b(x)`` is set inside the initial condition routine
 for a particular problem setup.
 
@@ -55,10 +65,16 @@ struct ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT <: Real} <:
        AbstractShallowWaterMultiLayerEquations{2, NVARS, NLAYERS}
     gravity::RealT   # gravitational constant
     H0::RealT        # constant "lake-at-rest" total water height
+    threshold_limiter::RealT    # threshold for the positivity-limiter
+    threshold_desingularization::RealT  # threshold for velocity desingularization
+    threshold_partially_wet::RealT  # threshold to define partially wet elements
     rhos::SVector{NLAYERS, RealT} # Vector of layer densities
 
     function ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT}(gravity::RealT,
                                                                       H0::RealT,
+                                                                      threshold_limiter::RealT,
+                                                                      threshold_desingularization::RealT,
+                                                                      threshold_partially_wet::RealT,
                                                                       rhos::SVector{NLAYERS,
                                                                                     RealT}) where {
                                                                                                    NVARS,
@@ -71,7 +87,8 @@ struct ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT <: Real} <:
             throw(ArgumentError("densities must be in increasing order (rhos[1] < rhos[2] < ... < rhos[NLAYERS])"))
         min(rhos...) > 0 || throw(ArgumentError("densities must be positive"))
 
-        new(gravity, H0, rhos)
+        new(gravity, H0, threshold_limiter, threshold_desingularization,
+            threshold_partially_wet, rhos)
     end
 end
 
@@ -80,19 +97,38 @@ end
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
 # well-balancedness test cases. 
 function ShallowWaterMultiLayerEquations2D(; gravity_constant,
-                                           H0 = zero(gravity_constant), rhos)
+                                           H0 = zero(gravity_constant),
+                                           threshold_limiter = nothing,
+                                           threshold_desingularization = nothing,
+                                           threshold_partially_wet = nothing,
+                                           rhos)
 
     # Promote all variables to a common type
     _rhos = promote(rhos...)
     RealT = promote_type(eltype(_rhos), eltype(gravity_constant), eltype(H0))
     __rhos = SVector(map(RealT, _rhos))
 
+    # Set default values for thresholds
+    if threshold_limiter === nothing
+        threshold_limiter = 5 * eps(RealT)
+    end
+    if threshold_desingularization === nothing
+        threshold_desingularization = default_threshold_desingularization(RealT)
+    end
+    if threshold_partially_wet === nothing
+        threshold_partially_wet = default_threshold_partially_wet(RealT)
+    end
+
     # Extract number of layers and variables
     NLAYERS = length(rhos)
     NVARS = 3 * NLAYERS + 1
 
     return ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT}(gravity_constant,
-                                                                    H0, __rhos)
+                                                                    H0,
+                                                                    threshold_limiter,
+                                                                    threshold_desingularization,
+                                                                    threshold_partially_wet,
+                                                                    __rhos)
 end
 
 @inline function Base.real(::ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT}) where {
@@ -505,7 +541,7 @@ end
                   f_hv * normal_direction_average[2], i, equations)
     end
 
-    return (SVector(f))
+    return SVector(f)
 end
 
 """
@@ -599,6 +635,85 @@ end
     end
 
     return SVector(f)
+end
+
+"""
+    hydrostatic_reconstruction_ersing_etal(u_ll, u_rr, equations::ShallowWaterMultiLayerEquations2D)
+
+A particular type of hydrostatic reconstruction of the water height and bottom topography to 
+guarantee well-balancedness in the presence of wet/dry transitions and entropy stability for the 
+[`ShallowWaterMultiLayerEquations2D`](@ref). 
+The reconstructed solution states `u_ll_star` and `u_rr_star` variables are used to evaluate the 
+surface numerical flux at the interface. The key idea is a piecewise linear reconstruction of the 
+bottom topography and water height interfaces using subcells, where the bottom topography is allowed 
+to be discontinuous. 
+Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
+
+!!! warning "Experimental code"
+    This is an experimental feature and may change in future releases.
+"""
+@inline function hydrostatic_reconstruction_ersing_etal(u_ll, u_rr,
+                                                        equations::ShallowWaterMultiLayerEquations2D)
+    # Unpack waterheight and bottom topographies
+    h_ll = MVector(waterheight(u_ll, equations))
+    h_rr = MVector(waterheight(u_rr, equations))
+    b_ll = u_ll[end]
+    b_rr = u_rr[end]
+
+    # Get the velocities on either side
+    v1_ll = MVector(velocity(u_ll, equations)[1])
+    v2_ll = MVector(velocity(u_ll, equations)[2])
+    v1_rr = MVector(velocity(u_rr, equations)[1])
+    v2_rr = MVector(velocity(u_rr, equations)[2])
+
+    threshold = equations.threshold_limiter
+
+    # Ensure zero velocity at dry states
+    for i in eachlayer(equations)
+        if h_ll[i] <= threshold
+            v1_ll[i] = zero(eltype(u_ll))
+            v2_ll[i] = zero(eltype(u_ll))
+        end
+        if h_rr[i] <= threshold
+            v1_rr[i] = zero(eltype(u_rr))
+            v2_rr[i] = zero(eltype(u_rr))
+        end
+    end
+
+    # Calculate total layer heights
+    H_ll = waterheight(cons2prim(u_ll, equations), equations)
+    H_rr = waterheight(cons2prim(u_rr, equations), equations)
+
+    # Discontinuous reconstruction of the bottom topography
+    b_ll_star = min(H_ll[1], max(b_rr, b_ll))
+    b_rr_star = min(H_rr[1], max(b_rr, b_ll))
+
+    # Calculate reconstructed total layer heights
+    H_ll_star = max.(H_ll, b_ll_star)
+    H_rr_star = max.(H_rr, b_rr_star)
+
+    # Initialize reconstructed waterheights
+    h_ll_star = zero(MVector{nlayers(equations), real(equations)})
+    h_rr_star = zero(MVector{nlayers(equations), real(equations)})
+
+    # Reconstruct the waterheights
+    for i in eachlayer(equations)
+        if i == nlayers(equations) # The lowest layer is measured from the bottom topography
+            h_ll_star[i] = max(H_ll_star[i] - b_ll_star, threshold)
+            h_rr_star[i] = max(H_rr_star[i] - b_rr_star, threshold)
+        else
+            h_ll_star[i] = max(H_ll_star[i] - H_ll_star[i + 1], threshold)
+            h_rr_star[i] = max(H_rr_star[i] - H_rr_star[i + 1], threshold)
+        end
+    end
+
+    # Reconstructed states
+    u_ll_star = SVector(h_ll_star..., (h_ll_star .* v1_ll)..., (h_ll_star .* v2_ll)...,
+                        b_ll_star)
+    u_rr_star = SVector(h_rr_star..., (h_rr_star .* v1_rr)..., (h_rr_star .* v2_rr)...,
+                        b_rr_star)
+
+    return SVector(u_ll_star, u_rr_star)
 end
 
 # Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom
@@ -834,14 +949,28 @@ end
     return energy_total(u, equations) - energy_kinetic(u, equations)
 end
 
-# Calculate the error for the "lake-at-rest" test case where H = ∑h+b should
-# be a constant value over time
+@inline function Trixi.waterheight_pressure(u,
+                                            equations::ShallowWaterMultiLayerEquations2D)
+    h = waterheight(u, equations)
+
+    return 0.5 * equations.gravity * sum(h .^ 3)
+end
+
+# Calculate the error for the "lake-at-rest" test case where H = ∑h + b should
+# be a constant value over time. 
+# Note, assumes there is a single reference water height `H0` with which to compare.
 @inline function Trixi.lake_at_rest_error(u,
                                           equations::ShallowWaterMultiLayerEquations2D)
     h = waterheight(u, equations)
     b = u[end]
 
-    return abs(equations.H0 - (sum(h) + b))
+    # For well-balancedness testing with possible wet/dry regions the reference
+    # water height `H0` accounts for the possibility that the bottom topography
+    # can emerge out of the water as well as for the threshold offset to avoid
+    # division by a "hard" zero water heights as well.
+    H0_wet_dry = max(equations.H0, b + equations.threshold_limiter)
+
+    return abs(H0_wet_dry - (sum(h) + b))
 end
 
 # Helper function to set the layer values in the flux computation

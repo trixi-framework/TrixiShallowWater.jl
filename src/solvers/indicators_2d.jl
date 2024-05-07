@@ -5,13 +5,14 @@
 @muladd begin
 #! format: noindent
 
-# Modified indicator for ShallowWaterEquationsWetDry2D to apply full FV method on elements
-# containing some "dry" LGL nodes. That is, if an element is partially "wet" then it becomes a
-# full FV element.
+# Modified indicator for ShallowWaterEquationsWetDry2D and ShallowWaterMultiLayerEquations2D to apply
+# full FV method on elements containing some "dry" LGL nodes. That is, if an element is partially 
+# "wet" then it becomes a full FV element.
 function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{<:Any,
                                                                                 4},
                                                                mesh,
-                                                               equations::ShallowWaterEquationsWetDry2D,
+                                                               equations::Union{ShallowWaterEquationsWetDry2D,
+                                                                                ShallowWaterMultiLayerEquations2D},
                                                                dg::DGSEM, cache;
                                                                kwargs...)
     @unpack alpha_max, alpha_min, alpha_smooth, variable = indicator_hg
@@ -55,9 +56,10 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
         # Calculate indicator variables at Gauss-Lobatto nodes
         for j in eachnode(dg), i in eachnode(dg)
             u_local = get_node_vars(u, equations, dg, i, j, element)
-            h, _, _, _ = u_local
+            h = waterheight(u_local, equations)
 
-            if h <= threshold_partially_wet
+            # Set indicator to FV if water height is below the threshold
+            if minimum(h) <= threshold_partially_wet
                 indicator_wet = 0
             end
 

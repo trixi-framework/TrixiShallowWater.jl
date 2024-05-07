@@ -523,6 +523,48 @@ end # 2LSWE
         end
     end
 
+    @trixi_testset "elixir_shallowwater_multilayer_convergence.jl with FluxHydrostaticReconstruction" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_convergence.jl"),
+                            l2=[
+                                0.0015784809121655386,
+                                0.0010725791806396989,
+                                0.000361175462962745,
+                                0.001010776670918376,
+                                0.0009612673392275332,
+                                0.0002639057696207499,
+                                0.0011407118095590378,
+                                0.0011974691247903164,
+                                0.00031384421384170354,
+                                0.00019675440964325044,
+                            ],
+                            linf=[
+                                0.006611273262456141,
+                                0.004798759663784402,
+                                0.0014761631666105335,
+                                0.004378481797736367,
+                                0.004059620398099983,
+                                0.001072537228128334,
+                                0.004650692998510397,
+                                0.00501486495741188,
+                                0.0013175223929257074,
+                                0.0004374891172380657,
+                            ],
+                            surface_flux=(FluxHydrostaticReconstruction(flux_ersing_etal,
+                                                                        hydrostatic_reconstruction_ersing_etal),
+                                          FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
+                                                                        hydrostatic_reconstruction_ersing_etal)),
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_well_balanced.jl"),
@@ -681,6 +723,47 @@ end # 2LSWE
                             surface_flux=(flux_lax_friedrichs,
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_multilayer_dam_break_dry.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_dam_break_dry.jl"),
+                            l2=[
+                                0.030684387782428005,
+                                0.03094529104416787,
+                                0.09023105191044616,
+                                0.021006479937144513,
+                                0.02094556081555727,
+                                0.06145762035878689,
+                                0.0010401307741441598,
+                                0.0010346793974473935,
+                                0.002952821531601029,
+                                0.005470808030402103,
+                            ],
+                            linf=[
+                                0.10807087634534615,
+                                0.11202631201715663,
+                                0.33977650047095415,
+                                0.05694587797245012,
+                                0.056598515593249694,
+                                0.17171444846932465,
+                                0.00827507857831736,
+                                0.008095427727762589,
+                                0.026626783423061535,
+                                0.1016120899921184,
+                            ],
+                            tspan=(0.0, 0.25),
+                            # Increase iterations for coverage testing to trigger the 
+                            # positivity limiter
+                            coverage_override=(maxiters = 130, tspan = (0.0, 1.5)))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
