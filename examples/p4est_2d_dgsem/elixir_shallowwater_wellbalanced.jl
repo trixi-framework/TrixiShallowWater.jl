@@ -81,8 +81,6 @@ isfile(default_mesh_file) ||
              default_mesh_file)
 mesh_file = default_mesh_file
 
-mesh_file = joinpath(@__DIR__, "pond.inp")
-
 mesh = P4estMesh{2}(mesh_file)
 
 # Refine bottom left quadrant of each tree to level 2
@@ -169,7 +167,7 @@ save_solution = SaveSolutionCallback(dt = 1.0,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stepsize_callback = StepsizeCallback(cfl = 2.0)
+stepsize_callback = StepsizeCallback(cfl = 1.5)
 
 callbacks = CallbackSet(summary_callback,
                         analysis_callback,
