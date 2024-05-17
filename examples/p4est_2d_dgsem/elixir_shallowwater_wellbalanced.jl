@@ -8,7 +8,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a continuous
 # bottom topography function
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 3.0)
+equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 2.0)
 
 function initial_condition_wb_testing(x, t, equations::ShallowWaterEquationsWetDry2D)
     # Set up polar coordinates
@@ -23,10 +23,21 @@ function initial_condition_wb_testing(x, t, equations::ShallowWaterEquationsWetD
     # v1 = r < 0.6 ? 1.75 : 0.0
     # v2 = r < 0.6 ? -1.75 : 0.0
     # bottom topography taken from Pond.control in [HOHQMesh](https://github.com/trixi-framework/HOHQMesh)
+
     x1, x2 = x
-    b = (1.5 / exp(0.5 * ((x1 - 1.0)^2 + (x2 - 1.0)^2))
+    # for the circular mesh
+    b = (1.5 / exp(0.5 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
          +
-         0.75 / exp(0.5 * ((x1 + 1.0)^2 + (x2 + 1.0)^2)))
+         0.8 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
+         -
+         0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
+
+    # # for the flag mesh
+    # b = 1.5 / (exp(20.75 * ((x1)^2 + (x2)^2)))
+
+    # for testing
+    # b = zero(eltype(x))
+
     # H = equations.H0
     H = max(equations.H0, b + equations.threshold_limiter)
 
@@ -35,39 +46,45 @@ end
 
 initial_condition = initial_condition_wb_testing
 
+# Wall BCs
 boundary_condition = Dict(:OuterCircle => boundary_condition_slip_wall)
+
+# # Dirichlet BCs
+# boundary_condition_constant = BoundaryConditionDirichlet(initial_condition)
+# boundary_condition = Dict(:OuterCircle => boundary_condition_constant)
 
 ###############################################################################
 # Get the DG approximation space
 
-# # ersing flux in both
+# ersing flux in both
 # volume_flux = (flux_wintermeyer_etal, flux_nonconservative_ersing_etal)
 # surface_fluxes = (flux_wintermeyer_etal, flux_nonconservative_ersing_etal)
 
-# Wintermeyer flux in the volume
-volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
+# # Wintermeyer flux in the volume
+# volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 
 # # Wintermeyer flux in the surface for testing
 # surface_fluxes = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 
-surface_fluxes = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
-                  flux_nonconservative_chen_noelle)
+# surface_fluxes = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
+#                   flux_nonconservative_chen_noelle)
 
 
 # # Fjordholms flux for testing
 # surface_fluxes = (flux_fjordholm_etal, flux_nonconservative_fjordholm_etal)
 
 # Audusse HR with Rusanov flux
-# surface_fluxes = (FluxHydrostaticReconstruction(flux_lax_friedrichs,
-#                                                 hydrostatic_reconstruction_audusse_etal),
-#                   flux_nonconservative_audusse_etal)
+volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
+surface_fluxes = (FluxHydrostaticReconstruction(flux_lax_friedrichs,
+                                                hydrostatic_reconstruction_audusse_etal),
+                  flux_nonconservative_audusse_etal)
 
 # Audusse HR with HLL flux
 # surface_fluxes = (FluxHydrostaticReconstruction(flux_hll, hydrostatic_reconstruction_audusse_etal),
 #                   flux_nonconservative_audusse_etal)
 
 # Create the solver
-solver = DGSEM(polydeg = 4, surface_flux = surface_fluxes,
+solver = DGSEM(polydeg = 3, surface_flux = surface_fluxes,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 ###############################################################################
@@ -75,18 +92,39 @@ solver = DGSEM(polydeg = 4, surface_flux = surface_fluxes,
 
 # Get the unstructured quad mesh from a file (downloads the file if not available locally)
 
-default_mesh_file = joinpath(@__DIR__, "abaqus_outer_circle.inp")
-isfile(default_mesh_file) ||
-    download("https://gist.githubusercontent.com/andrewwinters5000/df92dd4986909927e96af23c37f6db5f/raw/8620823342f98c505a36351b210aab7f3b368041/abaqus_outer_circle.inp",
-             default_mesh_file)
-mesh_file = default_mesh_file
+# default_mesh_file = joinpath(@__DIR__, "abaqus_outer_circle.inp")
+# isfile(default_mesh_file) ||
+#     download("https://gist.githubusercontent.com/andrewwinters5000/df92dd4986909927e96af23c37f6db5f/raw/8620823342f98c505a36351b210aab7f3b368041/abaqus_outer_circle.inp",
+#              default_mesh_file)
+# mesh_file = default_mesh_file
 
-mesh = P4estMesh{2}(mesh_file)
+# mesh = P4estMesh{2}(mesh_file)
+
+boundary_condition = Dict(:all => boundary_condition_slip_wall)
+
+# Deformed rectangle that looks like a waving flag,
+# lower and upper faces are sinus curves, left and right are vertical lines.
+f1(s) = SVector(-1.0, s - 1.0)
+f2(s) = SVector(1.0, s + 1.0)
+f3(s) = SVector(s, -1.0 + sin(0.5 * pi * s))
+f4(s) = SVector(s, 1.0 + sin(0.5 * pi * s))
+faces = (f1, f2, f3, f4)
+
+Trixi.validate_faces(faces)
+mapping_flag = Trixi.transfinite_mapping(faces)
+
+# Unstructured mesh with 24 cells of the square domain [-1, 1]^n
+mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2ea224409e55ee8423b3a33e316a/raw/7db58af7446d1479753ae718930741c47a3b79b7/square_unstructured_2.inp",
+                           joinpath(@__DIR__, "square_unstructured_2.inp"))
+
+mesh = P4estMesh{2}(mesh_file, polydeg = 1,
+                   # mapping = mapping_flag,
+                    initial_refinement_level = 0)
 
 # Refine bottom left quadrant of each tree to level 2
 function refine_fn(p4est, which_tree, quadrant)
     quadrant_obj = unsafe_load(quadrant)
-    if quadrant_obj.x == 0 && quadrant_obj.y == 0 && quadrant_obj.level < 2
+    if quadrant_obj.x == 0 && quadrant_obj.y == 0 && quadrant_obj.level < 3
           # return true (refine)
         return Cint(1)
     else
@@ -109,7 +147,7 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
 ###############################################################################
 # ODE solvers, callbacks, etc.
 
-tspan = (0.0, 3.0)
+tspan = (0.0, 0.5) # very short time such that we can print files for every time step
 ode = semidiscretize(semi, tspan)
 
 ###############################################################################
@@ -163,7 +201,7 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(dt = 1.0,
+save_solution = SaveSolutionCallback(interval = 100, # dt = 1.0,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
@@ -178,7 +216,9 @@ callbacks = CallbackSet(summary_callback,
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+#sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, SSPRK43(),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            save_everystep = false, callback = callbacks);
+            adaptive = false,
+            save_everystep = false, callback = callbacks,);
 summary_callback() # print the timer summary
