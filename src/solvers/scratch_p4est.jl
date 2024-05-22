@@ -7,7 +7,7 @@
 
 # TODO: once working the mortar methods could likely be extended to the other
 # equations types available in the package. Although for the multilayer equations
-# care must be taken beacuse the pressure term is separated from the physical flux
+# care must be taken because the pressure term is separated from the physical flux
 # and directly placed in the nonconservative flux
 
 # The methods below are specialized on the mortar type
@@ -118,7 +118,7 @@ function Trixi.prolong2mortars!(cache, u,
         # After the projection of the constant solution we can modify the values
         # in the first solution variable to no longer be the sigma variable of
         # Benov et al. and instead be the conservative water height variable `h`.
-        # Bascially, unpacking the sigma variable to create the projected local water
+        # Basically, unpacking the sigma variable to create the projected local water
         # height from Eq. 41 in Benov et al.
         # TODO: My main hope was that this avoids allocations
         # TODO: My other hope is that such a strategy will make this code extensible
@@ -308,7 +308,7 @@ end
 
     # Project small numerical fluxes and physical flux penalty computed on the projected
     # large element solution back onto large element.
-    # This is bascially Eq. (46) from Benov et al. where the factor of 1/2 is already
+    # This is basically Eq. (46) from Benov et al. where the factor of 1/2 is already
     # already included in `reverse_upper` and `reverse_lower` operators.
     Trixi.multiply_dimensionwise!(u_buffer,
                                   mortar_l2.reverse_upper, (fstar_secondary[2] .- f_large[2]),
@@ -332,7 +332,7 @@ end
     large_direction = Trixi.indices2direction(large_indices)
 
     # TODO: We need to store the unprojected solution in the mortars such that we have access to them
-    # here when we go to compute the flux on the parent elements and remove the physcial flux evaluated
+    # here when we go to compute the flux on the parent elements and remove the physical flux evaluated
     # at the upprojected solution state that is present from the volume integral computation
     index_range = eachnode(dg)
     i_large_start, i_large_step = Trixi.index_to_start_step_2d(large_indices[1],
