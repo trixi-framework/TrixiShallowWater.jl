@@ -342,8 +342,9 @@ end
 
     i_large = i_large_start
     j_large = j_large_start
+    # maybe similar(u_buffer) instead? Would avoid adding to the cache
     flux_buffer = cache.f_threaded[Threads.threadid()]
-    for i in eachnode(dg)
+    for node in eachnode(dg)
         # Get the proper normal_direction now that we are back computing on the large element
         normal_direction = Trixi.get_normal_direction(large_direction,
                                                       contravariant_vectors,
@@ -353,16 +354,18 @@ end
         # solution state to recover the physical flux at this point because the surface flux
         # has in-built mechanisms to avoid division by zero in dry regions whereas `Trixi.flux`
         # does not have such mechanisms to desingularize the velocity computation.
-        flux_buffer[:, i] = surface_flux(view(cache.mortars.u, 3, :, 1, i, mortar),
-                                         view(cache.mortars.u, 3, :, 1, i, mortar),
-                                         normal_direction, equations)
+        flux = surface_flux(view(cache.mortars.u, 3, :, 1, node, mortar),
+                            view(cache.mortars.u, 3, :, 1, node, mortar),
+                            normal_direction, equations)
 
-        noncons = nonconservative_flux(view(cache.mortars.u, 3, :, 1, i, mortar),
-                                       view(cache.mortars.u, 3, :, 1, i, mortar),
+        noncons = nonconservative_flux(view(cache.mortars.u, 3, :, 1, node, mortar),
+                                       view(cache.mortars.u, 3, :, 1, node, mortar),
                                        normal_direction, normal_direction,
                                        equations)
 
-        flux_buffer[:, i] += 0.5 * noncons
+        flux_plus_noncons = flux + 0.5 * noncons
+
+        set_node_vars!(flux_buffer, flux_plus_noncons, equations, dg, node)
 
         i_large += i_large_step
         j_large += j_large_step
