@@ -353,12 +353,12 @@ end
         # solution state to recover the physical flux at this point because the surface flux
         # has in-built mechanisms to avoid division by zero in dry regions whereas `Trixi.flux`
         # does not have such mechanisms to desingularize the velocity computation.
-        flux_buffer[:, i] = surface_flux(cache.mortars.u[3, :, 1, i, mortar],
-                                         cache.mortars.u[3, :, 1, i, mortar],
+        flux_buffer[:, i] = surface_flux(view(cache.mortars.u, 3, :, 1, i, mortar),
+                                         view(cache.mortars.u, 3, :, 1, i, mortar),
                                          normal_direction, equations)
 
-        noncons = nonconservative_flux(cache.mortars.u[3, :, 1, i, mortar],
-                                       cache.mortars.u[3, :, 1, i, mortar],
+        noncons = nonconservative_flux(view(cache.mortars.u, 3, :, 1, i, mortar),
+                                       view(cache.mortars.u, 3, :, 1, i, mortar),
                                        normal_direction, normal_direction,
                                        equations)
 
