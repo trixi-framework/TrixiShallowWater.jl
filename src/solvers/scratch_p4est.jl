@@ -86,22 +86,29 @@ function Trixi.prolong2mortars!(cache, u,
         j_large = j_large_start
         element = neighbor_ids[3, mortar]
         for i in eachnode(dg)
+            # TODO: Do this is a better way that is agnostic with respect the number of equations
+            # Compute and save the sigma variable from Benov et al. (essentially H = h+b),
+            # momenta, and bottom topography into the buffer for projection. This ensures
+            # that we only project constant solution data in still water regions of the domain.
+            # OBS! A small shift is likely required to ensure we catch water heights close to the threshold
+            # TODO: This strategy from Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008) assumes that
+            # we know the constant background water height H0 which we pertub around. Fairly restrictive
+            # in practice but a good place to start with the development. We may nee to consider more sophisticated
+            # positivity preserving projections of the solution like those found in the ALE-DG community to remove
+            # this assumption. Then we might be able to directly project the water height `h` instead...
+            if u[1, i_large, j_large, element] > equations.threshold_limiter + eps()
+                u_buffer[1, i] = u[1, i_large, j_large, element] + u[4, i_large, j_large, element]
+            else
+                u_buffer[1, i] = equations.H0 # from Benov et al.
+                # u_buffer[1, i] = u[4, i_large, j_large, element] + equations.threshold_limiter # do we need to project this instead?
+            end
+            u_buffer[2:4, i] = u[2:4, i_large, j_large, element]
+
             for v in eachvariable(equations)
-                # Compute and save the sigma variable from Benov et al. (essentially H = h+b),
-                # momenta, and bottom topography into the buffer for projection. This ensures
-                # that we only project constant solution data in still water regions of the domain.
-                if u[1, i_large, j_large, element] > equations.threshold_limiter
-                    u_buffer[1, i] = u[1, i_large, j_large, element] + u[4, i_large, j_large, element]
-                else
-                    u_buffer[1, i] = equations.H0 # from Benov et al.
-                    # u_buffer[1, i] = u[4, i_large, j_large, element] + equations.threshold_limiter # do we need to project this instead?
-                end
-                u_buffer[2:4, i] = u[2:4, i_large, j_large, element]
                 # TODO: FIX ME! (or find a better way)
                 # OBS! incredibly hacky way to save a copy of the (unprojected) parent solution on the mortar
                 # where the mortar container has been modified to have extra storage space
                 cache.mortars.u[3, v, 1, i, mortar] = u[v, i_large, j_large, element]
-                # u_buffer[v, i] = u[v, i_large, j_large, element]
             end
             i_large += i_large_step
             j_large += j_large_step
@@ -127,6 +134,14 @@ function Trixi.prolong2mortars!(cache, u,
             cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar], equations.threshold_limiter)
             cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar], equations.threshold_limiter)
         end
+
+        # TODO: Can we call the stage limiter here for saftey / debugging?
+        # adapt this call?!
+        # limiter_shallow_water!(u, threshold::Real, variable,
+        #                         mesh::Trixi.AbstractMesh{2},
+        #                         equations::ShallowWaterEquationsWetDry2D, dg::DGSEM,
+        #                         cache)
+
     end
 
     return nothing
@@ -192,7 +207,7 @@ function Trixi.calc_mortar_flux!(surface_flux_values,
                 #       once things are working
                 # The projected solution from the large element is always stored in `u_rr`
                 _, u_rr = Trixi.get_surface_node_vars(cache.mortars.u, equations, dg,
-                                                         position, node, mortar)
+                                                      position, node, mortar)
 
                 # Compute conservative flux. Note, we use the surface flux here evaluated at the same
                 # solution state to recover the physical flux at this point because the surface flux

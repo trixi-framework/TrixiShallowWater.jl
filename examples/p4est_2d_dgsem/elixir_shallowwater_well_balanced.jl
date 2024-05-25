@@ -49,7 +49,7 @@ initial_condition = initial_condition_wb_testing
 # surface_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 
 # surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
-#                   flux_nonconservative_chen_noelle)
+#                 flux_nonconservative_chen_noelle)
 
 
 # # Fjordholms flux for testing
@@ -59,7 +59,7 @@ initial_condition = initial_condition_wb_testing
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 surface_flux = (FluxHydrostaticReconstruction(flux_lax_friedrichs,
                                                 hydrostatic_reconstruction_audusse_etal),
-                  flux_nonconservative_audusse_etal)
+                flux_nonconservative_audusse_etal)
 
 # Audusse HR with HLL flux
 # surface_flux = (FluxHydrostaticReconstruction(flux_hll, hydrostatic_reconstruction_audusse_etal),
@@ -85,7 +85,7 @@ solver = DGSEM(polydeg = 3, surface_flux = surface_flux,
 boundary_condition = Dict(:all => boundary_condition_slip_wall)
 
 # Affine type mapping to take the [-1,1]^2 domain from the mesh file
-# and warp it with a mapping as described in https://arxiv.org/abs/2012.12040
+# and warp it as described in https://arxiv.org/abs/2012.12040
 # Warping with the coefficient 0.2 is even more extreme.
 function mapping_twist(xi, eta)
     y = eta + 0.15 * cos(1.5 * pi * xi) * cos(0.5 * pi * eta)

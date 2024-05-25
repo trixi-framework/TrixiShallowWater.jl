@@ -5,6 +5,8 @@
 @muladd begin
 #! format: noindent
 
+# TODO: update this docstring (and probably others) to include `threshold_partially_wet` too
+
 @doc raw"""
     ShallowWaterEquationsWetDry2D(; gravity, H0 = 0, threshold_limiter = nothing, threshold_wet = nothing)
 
