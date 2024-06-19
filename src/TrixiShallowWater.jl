@@ -1,8 +1,8 @@
 module TrixiShallowWater
 
-# While `using Trixi` makes all exported symbols available, in order to extend a method from the 
+# While `using Trixi` makes all exported symbols available, in order to extend a method from the
 # `Trixi.jl` module, symbols need to be explicitly qualified with `Trixi.function_name`.
-# For more information, see 
+# For more information, see
 # https://github.com/trixi-framework/TrixiShallowWater.jl/pull/10#discussion_r1433720559
 using Trixi
 # Import additional symbols that are not exported by Trixi.jl
@@ -16,6 +16,7 @@ include("equations/equations.jl")
 include("equations/numerical_fluxes.jl")
 include("callbacks_stage/callbacks_stage.jl")
 include("solvers/indicators.jl")
+include("solvers/scratch_p4est.jl")
 
 # Export types/functions that define the public API of TrixiShallowWater.jl
 export ShallowWaterEquationsWetDry1D, ShallowWaterEquationsWetDry2D,
