@@ -79,6 +79,10 @@ function limiter_shallow_water!(u, threshold::Real, variable,
 
             h, h_v1, h_v2, b = u_node
 
+            # Velocity desingularization
+            h_v1 = h * (2.0 * h * h_v1) / (h^2 + max(h^2, 1e-6))
+            h_v2 = h * (2.0 * h * h_v2) / (h^2 + max(h^2, 1e-6))
+
             if h <= threshold
                 h = threshold
                 h_v1 = zero(eltype(u))
