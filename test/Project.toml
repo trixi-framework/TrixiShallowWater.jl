@@ -7,7 +7,7 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
 Test = "1"
-Trixi = "0.7"
+Trixi = "0.7, 0.8"
 OrdinaryDiffEq = "6.49.1"
 Downloads = "1"
 Printf = "1"
