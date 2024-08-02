@@ -4,7 +4,7 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the SWE-Exner equations with a discontinous sediment bed 
+# Semidiscretization of the SWE-Exner equations with a discontinuous sediment bed 
 # to test well-balancedness
 
 equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, H0 = 1.0,
