@@ -823,6 +823,160 @@ end # 2LSWE
         end
     end
 end # MLSWE
+
+@testset "Shallow Water - Exner" begin
+    @trixi_testset "elixir_shallowwater_exner_source_terms.jl with EC fluxes/Grass" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_source_terms.jl"),
+                            l2=[
+                                0.0004102960441666415,
+                                0.0024123111823754154,
+                                2.855259772927741e-5,
+                            ],
+                            linf=[
+                                0.0008005791155958342,
+                                0.0075032017005062235,
+                                4.7151297207559395e-5,
+                            ])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_exner_source_terms.jl with Roe/MPM" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_source_terms.jl"),
+                            l2=[
+                                8.314469574617161e-5,
+                                0.00037371557342261787,
+                                2.8140625974847256e-5,
+                            ],
+                            linf=[
+                                0.0003199264478970232,
+                                0.0017104276669870355,
+                                4.494237942265222e-5,
+                            ],
+                            surface_flux=(FluxPlusDissipation(flux_ersing_etal,
+                                                              dissipation_roe),
+                                          flux_nonconservative_ersing_etal),
+                            friction=ManningFriction(n = 0.01),
+                            sediment_model=MeyerPeterMueller(theta_c = 0.0,
+                                                             d_s = 1e-3))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_exner_source_terms.jl with LLF/MPM" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_source_terms.jl"),
+                            l2=[
+                                8.494087939853228e-5,
+                                0.00037012479603853885,
+                                2.8139644904971178e-5,
+                            ],
+                            linf=[
+                                0.0003106352175714644,
+                                0.0016775444674146378,
+                                4.4937259775723604e-5,
+                            ],
+                            surface_flux=(FluxPlusDissipation(flux_ersing_etal,
+                                                              DissipationLocalLaxFriedrichs()),
+                                          flux_nonconservative_ersing_etal),
+                            friction=ManningFriction(n = 0.01),
+                            sediment_model=MeyerPeterMueller(theta_c = 0.0,
+                                                             d_s = 1e-3))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_exner_well_balanced.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_well_balanced.jl"),
+                            l2=[
+                                0.0204167335836456,
+                                1.5412805715405497e-15,
+                                0.020416733583645628,
+                            ],
+                            linf=[
+                                0.19999999999999907,
+                                2.957304143715833e-15,
+                                0.19999999999999998,
+                            ])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_exner_channel.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_channel.jl"),
+                            l2=[
+                                0.061254948402258286,
+                                0.004292092112018592,
+                                0.06170746566026623,
+                            ],
+                            linf=[
+                                0.555255659544267,
+                                0.009352017074599317,
+                                0.5499622869285615,
+                            ])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_exner_channel.jl with EC fluxes" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_channel.jl"),
+                            l2=[
+                                0.06511905620487073,
+                                0.021756041726745886,
+                                0.06488442680626008,
+                            ],
+                            linf=[
+                                0.4644690482223428,
+                                0.058166305725594114,
+                                0.4604211411585378,
+                            ],
+                            surface_flux=(flux_ersing_etal,
+                                          flux_nonconservative_ersing_etal))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+end # SWE-Exner
 end # TreeMesh1D
 
 # Clean up afterwards: delete TrixiShallowWater.jl output directory
