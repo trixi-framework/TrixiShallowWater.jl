@@ -316,7 +316,12 @@ for the sediment discharge `q_s`.
     h_avg = 0.5 * (u_ll[1] + u_rr[1])
     v_avg = (sqrt(u_ll[1]) * v_ll + sqrt(u_rr[1]) * v_rr) /
             (sqrt(u_ll[1]) + sqrt(u_rr[1]))
-    h_s_avg = q_s(SVector(h_avg, h_avg * v_avg, z), equations) / v_avg
+    # Workaround to avoid division by zero, when computing the effective sediment height
+    if v_avg < eps()
+        h_s_avg = 0.0
+    else
+        h_s_avg = 0.5 * (q_s(u_ll, equations) / v_ll + q_s(u_rr, equations) / v_rr)
+    end
 
     # Compute the eigenvalues using Cardano's formula
     λ1, λ2, λ3 = eigvals_cardano(SVector(h_avg, h_avg * v_avg, h_s_avg), equations)
