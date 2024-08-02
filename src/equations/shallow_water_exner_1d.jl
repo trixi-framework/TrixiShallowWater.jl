@@ -12,8 +12,8 @@ abstract type Friction{RealT} end
     ManningFriction(; n)
 
 Creates a Manning friction model for the bottom friction with Manning coefficient `n`.
-The type is used to dispatch on the respective friction law
-[`shear_stress_coefficient(u, friction::ManningFriction)`](@ref) when computing the [`shear_stress`](@ref).
+The type is used to dispatch on the respective friction law through the
+`shear_stress_coefficient` when computing the `shear_stress`.
 """
 struct ManningFriction{RealT} <: Friction{RealT}
     n::RealT
@@ -26,14 +26,14 @@ end
 # Abstract type for the different models to compute sediment discharge
 abstract type SedimentModel{RealT} end
 
-"""
+@doc raw"""
     ShieldsStressModel(; m_1, m_2, m_3, k_1, k_2, k_3, theta_c, d_s)
 
-Create a Shields stress model to compute the sediment discharge [`q_s`](@ref) based on the generalized 
+Create a Shields stress model to compute the sediment discharge `q_s` based on the generalized 
 formulation from equation (1.2) in the paper:
-- E.D. Fernández-Nieto, T.M. de Luna, G. Narbona-Reina and J. de Dieu Zabsonré (2017)
+- E.D. Fernández-Nieto, T.M. de Luna, G. Narbona-Reina and J. de Dieu Zabsonré (2017)\
   Formal deduction of the Saint-Venant–Exner model including arbitrarily sloping sediment beds and 
-  associated energy
+  associated energy\
   [DOI: 10.1051/m2an/2016018](https://doi.org/10.1051/m2an/2016018)
 """
 struct ShieldsStressModel{RealT} <: SedimentModel{RealT}
@@ -47,19 +47,19 @@ struct ShieldsStressModel{RealT} <: SedimentModel{RealT}
     d_s::RealT        # grain diameter
 end
 
-"""
+@doc raw"""
     GrassModel(; A_g, m_g=3)
 
-Creates a Grass model to compute the sediment discharge [`q_s``](@ref) as
+Creates a Grass model to compute the sediment discharge `q_s` as
 ```math
-q_s = A_g v^m_g
+q_s = A_g v^{m_g}
 ```
 with the coefficients `A_g` and `m_g`.
 
 An overview of different formulations to compute the sediment discharge can be found in:
-- M.J. Castro Díaz, E.D. Fernández-Nieto, A.M. Ferreiro (2008)
+- M.J. Castro Díaz, E.D. Fernández-Nieto, A.M. Ferreiro (2008)\
   Sediment transport models in Shallow Water equations and numerical approach by high order 
-  finite volume methods
+  finite volume methods\
   [DOI:10.1016/j.compfluid.2007.07.017](https://doi.org/10.1016/j.compfluid.2007.07.017)
 """
 struct GrassModel{RealT} <: SedimentModel{RealT}
@@ -71,16 +71,16 @@ function GrassModel(; A_g, m_g = 3.0)
     return GrassModel(A_g, m_g)
 end
 
-"""
+@doc raw"""
     MeyerPeterMueller(; theta_c, d_s)
 
 Creates a Meyer-Peter-Mueller model to compute the sediment discharge 
-[`q_s``](@ref) with the critical Shields stress `theta_c` and the grain diameter `d_s`.
+`q_s` with the critical Shields stress `theta_c` and the grain diameter `d_s`.
 
 An overview of different formulations to compute the sediment discharge can be found in:
-- M.J. Castro Díaz, E.D. Fernández-Nieto, A.M. Ferreiro (2008)
+- M.J. Castro Díaz, E.D. Fernández-Nieto, A.M. Ferreiro (2008)\
   Sediment transport models in Shallow Water equations and numerical approach by high order 
-  finite volume methods
+  finite volume methods\
   [DOI:10.1016/j.compfluid.2007.07.017](https://doi.org/10.1016/j.compfluid.2007.07.017)
 """
 function MeyerPeterMueller(; theta_c, d_s)
@@ -103,11 +103,11 @@ The equations are given by
 \end{cases}
 ```
 The unknown quantities are the water and sediment height ``h``, ``h_b`` and the velocity ``v``.
-The sediment discharge ``q_s(h, hv)`` is determined by the ``sediment_model`` and is used to determine 
+The sediment discharge ``q_s(h, hv)`` is determined by the `sediment_model` and is used to determine 
 the active sediment height ``h_s = q_s / v``. 
 Furthermore ``\tau`` denotes the shear stress at the water-sediment interface and is determined by 
-the ``friction`` model.  
-The gravitational constant is denoted by `g`, and ``rho_f`` and ``rho_s`` are the fluid and sediment
+the `friction` model.  
+The gravitational constant is denoted by ``g``, and ``\rho_f`` and ``\rho_s`` are the fluid and sediment
 densities, respectively. The density ratio is given by ``r = \rho_f / \rho_s``.
 
 The conservative variable water height ``h`` is measured from the sediment height ``h_b``, therefore
@@ -117,9 +117,9 @@ The additional quantity ``H_0`` is also available to store a reference value for
 height that is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 
 The entropy conservative formulation has been derived in the paper:
-- E.D. Fernández-Nieto, T.M. de Luna, G. Narbona-Reina and J. de Dieu Zabsonré (2017)
+- E.D. Fernández-Nieto, T.M. de Luna, G. Narbona-Reina and J. de Dieu Zabsonré (2017)\
   Formal deduction of the Saint-Venant–Exner model including arbitrarily sloping sediment beds and 
-  associated energy
+  associated energy\
   [DOI: 10.1051/m2an/2016018](https://doi.org/10.1051/m2an/2016018)
 """
 struct ShallowWaterExnerEquations1D{RealT <: Real,
@@ -159,7 +159,7 @@ Trixi.varnames(::typeof(cons2cons), ::ShallowWaterExnerEquations1D) = ("h", "hv"
 # visualization and setting initial conditions
 Trixi.varnames(::typeof(cons2prim), ::ShallowWaterExnerEquations1D) = ("H", "v", "h_b")
 
-"""
+@doc raw"""
     boundary_condition_slip_wall(u_inner, orientation_or_normal, x, t, surface_flux_function,
                                   equations::ShallowWaterExnerEquations1D)
 
@@ -168,9 +168,9 @@ the tangential velocity component unchanged. The boundary water height is taken 
 the internal value.
 
 For details see Section 9.2.5 of the book:
-- Eleuterio F. Toro (2001)
-  Shock-Capturing Methods for Free-Surface Shallow Flows
-  1st edition
+- Eleuterio F. Toro (2001)\
+  Shock-Capturing Methods for Free-Surface Shallow Flows\
+  1st edition\
   ISBN 0471987662
 """
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation_or_normal,
@@ -297,7 +297,7 @@ end
 """
     dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
                                     equations::ShallowWaterExnerEquations1D)
-Roe-type dissipation term for the [`ShallowWaterExnerEquations1D`] with an approximate Roe average 
+Roe-type dissipation term for the [`ShallowWaterExnerEquations1D`](@ref) with an approximate Roe average 
 for the sediment discharge `q_s`.
 """
 @inline function dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
@@ -366,7 +366,7 @@ end
     return v
 end
 
-# Compute the sediment discharge for Shields stress models 
+# Compute the sediment discharge for Shields stress models
 @inline function q_s(u,
                      equations::ShallowWaterExnerEquations1D{T, S,
                                                              ShieldsStressModel{T}}) where {
