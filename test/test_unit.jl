@@ -134,6 +134,74 @@ end
     end
 end
 
+@timed_testset "SWE-Exner conversion between conservative/entropy variables" begin
+    h, v, h_b = (1.0, 0.3, 0.1)
+
+    let equations = ShallowWaterExnerEquations1D(gravity_constant = 9.81, rho_f = 0.9,
+                                                 rho_s = 1.0, porosity = 0.4,
+                                                 sediment_model = GrassModel(A_g = 0.01))
+        # Test conversion between primitive and conservative variables
+        prim_vars = SVector(h, v, h_b)
+        cons_vars = prim2cons(prim_vars, equations)
+        @test prim_vars ≈ cons2prim(cons_vars, equations)
+
+        # Test conversion from conservative to entropy variables
+        entropy_vars = cons2entropy(cons_vars, equations)
+        @test entropy_vars ≈
+              Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)
+    end
+end
+
+@timed_testset "SWE-Exner eigenvalue / eigenvector computation" begin
+    h, v, h_b = (1.0, 0.3, 0.1)
+
+    let equations = ShallowWaterExnerEquations1D(gravity_constant = 9.81, rho_f = 0.9,
+                                                 rho_s = 1.0, porosity = 0.4,
+                                                 sediment_model = GrassModel(A_g = 0.01))
+        u = SVector(h, h * v, h_b)
+        r = equations.r
+        g = equations.gravity
+
+        # Compute effective sediment height
+        h_s = TrixiShallowWater.q_s(SVector(h, h * v, 0.0), equations) / v
+        dq_s_dh, dq_s_dhv, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.q_s(u,
+                                                                                     equations),
+                                                          u)
+
+        # flux Jacobian
+        A = [0 1 0; (g * (h + h_s)-v^2) (2*v) (g*(h + 1 / equations.r * h_s));
+             dq_s_dh dq_s_dhv 0]
+
+        # Compute the eigenvalues using Cardano's formula
+        λ1, λ2, λ3 = TrixiShallowWater.eigvals_cardano(SVector(h, h * v, h_b),
+                                                       equations)
+
+        # Precompute some common expressions
+        c1 = g * (h + h_s)
+        c2 = g * (h + h_s / r)
+
+        # Eigenvector matrix
+        r31 = ((v - λ1)^2 - c1) / c2
+        r32 = ((v - λ2)^2 - c1) / c2
+        r33 = ((v - λ3)^2 - c1) / c2
+        R = [[1 1 1]; [λ1 λ2 λ3]; [r31 r32 r33]]
+
+        # Inverse eigenvector matrix
+        d1 = (λ1 - λ2) * (λ1 - λ3)
+        d2 = (λ2 - λ1) * (λ2 - λ3)
+        d3 = (λ3 - λ2) * (λ3 - λ1)
+        R_inv = [(c1 - v^2 + λ2 * λ3)/d1 (2 * v - λ2 - λ3)/d1 c2/d1;
+                 (c1 - v^2 + λ1 * λ3)/d2 (2 * v - λ1 - λ3)/d2 c2/d2;
+                 (c1 - v^2 + λ1 * λ2)/d3 (2 * v - λ2 - λ1)/d3 c2/d3]
+
+        # Eigenvalue vale matrix
+        Λ = [λ1 0 0; 0 λ2 0; 0 0 λ3]
+
+        @test R * R_inv ≈ [1 0 0; 0 1 0; 0 0 1]
+        @test A ≈ R * Λ * R_inv
+    end
+end
+
 @timed_testset "Consistency check for waterheight_pressure" begin
     H, v1, v2, b = 3.5, 0.25, 0.1, 0.4
 
