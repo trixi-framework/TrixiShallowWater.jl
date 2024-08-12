@@ -5,20 +5,11 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the SWE-Exner equations with source terms for convergence testing
 
-# Equations with MeyerPeterMueller model
-equations_mpm = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
-                                             rho_s = 1.0, porosity = 0.5,
-                                             friction = ManningFriction(n = 0.01),
-                                             sediment_model = MeyerPeterMueller(theta_c = 0.0,
-                                                                                d_s = 1e-3))
-
 # Equations with Grass model
-equations_grass = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
-                                               rho_s = 1.0, porosity = 0.5,
-                                               friction = ManningFriction(n = 0.0),
-                                               sediment_model = GrassModel(A_g = 0.01))
-
-equations = equations_grass
+equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
+                                         rho_s = 1.0, porosity = 0.5,
+                                         friction = ManningFriction(n = 0.0),
+                                         sediment_model = GrassModel(A_g = 0.01))
 
 # Smooth initial condition to test convergence
 @inline function Trixi.initial_condition_convergence_test(x, t,
@@ -32,12 +23,15 @@ equations = equations_grass
     return SVector(h, h * v, h_b)
 end
 
-"""
-    source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations1D{T, S, ShieldsStressModel{T}}) where {T, S})
-
-Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@extref) 
-when using the [`MeyerPeterMueller`](@ref) model.
-"""
+# Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@extref) 
+# when using the [`MeyerPeterMueller`](@ref) model. 
+# To use this source term the equations must be set to:
+#
+#    equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
+#                                            rho_s = 1.0, porosity = 0.5,
+#                                            friction = ManningFriction(n = 0.01),
+#                                            sediment_model = MeyerPeterMueller(theta_c = 0.0,
+#                                                                                d_s = 1e-3))
 @inline function Trixi.source_terms_convergence_test(u, x, t,
                                                      equations::ShallowWaterExnerEquations1D{T,
                                                                                              S,
@@ -70,12 +64,14 @@ when using the [`MeyerPeterMueller`](@ref) model.
     return SVector(h, hv, h_b)
 end
 
-"""
-    source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations1D{T, S, GrassModel{T}}) where {T, S})
-
-Source terms used for convergence tests in combination with [`initial_condition_convergence_test`](@extref) 
-when using the the [`GrassModel`](@ref) model.
-"""
+# Source terms used for convergence tests in combination with [`initial_condition_convergence_test`](@extref) 
+# when using the the [`GrassModel`](@ref) model.
+# To use this source term the equations must be set to:
+#
+#    equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
+#                                                  rho_s = 1.0, porosity = 0.5,
+#                                                  friction = ManningFriction(n = 0.0),
+#                                                  sediment_model = GrassModel(A_g = 0.01)
 @inline function Trixi.source_terms_convergence_test(u, x, t,
                                                      equations::ShallowWaterExnerEquations1D{T,
                                                                                              S,
