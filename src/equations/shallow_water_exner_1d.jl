@@ -575,7 +575,7 @@ end
 # Trigonometric version of Cardano's method to compute the eigenvalues of 
 # the [`ShallowWaterExnerEquations1D`[(@ref)] assuming only real roots.
 @inline function eigvals_cardano(u, equations::ShallowWaterExnerEquations1D)
-    h, _, _ = u
+    h = waterheight(u, equations)
     v = velocity(u, equations)
     g = equations.gravity
     r = equations.r

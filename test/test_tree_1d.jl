@@ -852,16 +852,16 @@ end # MLSWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_exner_source_terms_mpm.jl"),
                             l2=[
-                                8.314469574617161e-5,
-                                0.00037371557342261787,
-                                2.8140625974847256e-5,
+                                8.314340397306541e-5,
+                                0.0003737050980420925,
+                                2.81406288308791e-5,
                             ],
                             linf=[
-                                0.0003199264478970232,
-                                0.0017104276669870355,
-                                4.494237942265222e-5,
+                                0.000319905497986106,
+                                0.001710420951723135,
+                                4.494237163465975e-5,
                             ],
-                            surface_flux=(FluxPlusDissipation(flux_ersing_etal,
+                            surface_flux=(FluxPlusDissipation(flux_central,
                                                               dissipation_roe),
                                           flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
@@ -913,6 +913,32 @@ end # MLSWE
                                 2.957304143715833e-15,
                                 0.19999999999999998,
                             ])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_exner_well_balanced.jl with Roe dissipation" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_well_balanced.jl"),
+                            l2=[
+                                0.010910894511791577,
+                                1.8877123431891935e-15,
+                                0.010910894511791757,
+                            ],
+                            linf=[
+                                0.19999999999999674,
+                                3.752915460516524e-15,
+                                0.19999999999999998,
+                            ],
+                            surface_flux=(FluxPlusDissipation(flux_ersing_etal,
+                                                              dissipation_roe),
+                                          flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
