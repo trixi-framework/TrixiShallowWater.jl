@@ -11,46 +11,6 @@ equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
                                          friction = ManningFriction(n = 0.0),
                                          sediment_model = GrassModel(A_g = 0.01))
 
-# Smooth initial condition to test convergence
-@inline function Trixi.initial_condition_convergence_test(x, t,
-                                                          equations::ShallowWaterExnerEquations1D)
-    ω = sqrt(2) * pi
-
-    h = 2.0 + cos(ω * x[1]) * cos(ω * t)
-    v = 0.5
-    h_b = 2.0 + sin(ω * x[1]) * cos(ω * t)
-
-    return SVector(h, h * v, h_b)
-end
-
-# Source terms used for convergence tests in combination with [`initial_condition_convergence_test`](@extref) 
-# when using the the [`GrassModel`](@ref) model.
-# To use this source term the equations must be set to:
-#
-#    equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
-#                                                  rho_s = 1.0, porosity = 0.5,
-#                                                  friction = ManningFriction(n = 0.0),
-#                                                  sediment_model = GrassModel(A_g = 0.01)
-@inline function Trixi.source_terms_convergence_test(u, x, t,
-                                                     equations::ShallowWaterExnerEquations1D{T,
-                                                                                             S,
-                                                                                             GrassModel{T}}) where {
-                                                                                                                    T,
-                                                                                                                    S
-                                                                                                                    }
-    ω = sqrt(2.0) * pi
-    A_g = equations.sediment_model.A_g
-
-    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5 * sin(x[1] * ω) * cos(t * ω) * ω
-    hv = -0.5 * cos(x[1] * ω) * sin(t * ω) * ω - 0.25 * sin(x[1] * ω) * cos(t * ω) * ω +
-         10.0 * A_g *
-         (cos(x[1] * ω) * cos(t * ω) * ω - 0.5 * sin(x[1] * ω) * cos(t * ω) * ω) +
-         10.0 * (2.0 + cos(x[1] * ω) * cos(t * ω)) *
-         (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω)
-    h_b = -sin(x[1] * ω) * sin(t * ω) * ω
-    return SVector(h, hv, h_b)
-end
-
 initial_condition = initial_condition_convergence_test
 
 ###############################################################################
