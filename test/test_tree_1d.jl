@@ -825,9 +825,9 @@ end # 2LSWE
 end # MLSWE
 
 @testset "Shallow Water - Exner" begin
-    @trixi_testset "elixir_shallowwater_exner_source_terms.jl with EC fluxes/Grass" begin
+    @trixi_testset "elixir_shallowwater_exner_source_terms_grass.jl with EC fluxes" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_exner_source_terms.jl"),
+                                     "elixir_shallowwater_exner_source_terms_grass.jl"),
                             l2=[
                                 0.0004102960441666415,
                                 0.0024123111823754154,
@@ -848,9 +848,9 @@ end # MLSWE
         end
     end
 
-    @trixi_testset "elixir_shallowwater_exner_source_terms.jl with Roe/MPM" begin
+    @trixi_testset "elixir_shallowwater_exner_source_terms_mpm.jl with Roe dissipation" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_exner_source_terms.jl"),
+                                     "elixir_shallowwater_exner_source_terms_mpm.jl"),
                             l2=[
                                 8.314469574617161e-5,
                                 0.00037371557342261787,
@@ -863,10 +863,7 @@ end # MLSWE
                             ],
                             surface_flux=(FluxPlusDissipation(flux_ersing_etal,
                                                               dissipation_roe),
-                                          flux_nonconservative_ersing_etal),
-                            friction=ManningFriction(n = 0.01),
-                            sediment_model=MeyerPeterMueller(theta_c = 0.0,
-                                                             d_s = 1e-3))
+                                          flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
@@ -877,9 +874,9 @@ end # MLSWE
         end
     end
 
-    @trixi_testset "elixir_shallowwater_exner_source_terms.jl with LLF/MPM" begin
+    @trixi_testset "elixir_shallowwater_exner_source_terms_mpm.jl with LLF dissipation" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_exner_source_terms.jl"),
+                                     "elixir_shallowwater_exner_source_terms_mpm.jl"),
                             l2=[
                                 8.494087939853228e-5,
                                 0.00037012479603853885,
@@ -892,10 +889,7 @@ end # MLSWE
                             ],
                             surface_flux=(FluxPlusDissipation(flux_ersing_etal,
                                                               DissipationLocalLaxFriedrichs()),
-                                          flux_nonconservative_ersing_etal),
-                            friction=ManningFriction(n = 0.01),
-                            sediment_model=MeyerPeterMueller(theta_c = 0.0,
-                                                             d_s = 1e-3))
+                                          flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
