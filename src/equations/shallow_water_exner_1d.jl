@@ -32,7 +32,7 @@ abstract type SedimentModel{RealT} end
 Create a Shields stress model to compute the sediment discharge `q_s` based on the generalized 
 formulation from equation (1.2) in the given reference.
 
-The choice of the real constants ´m_1`, ´m_2`, ´m_3`, ´k_1`, ´k_2`, and ´k_3` creates
+The choice of the real constants `m_1`, `m_2`, `m_3`, `k_1`, `k_2`, and `k_3` creates
 different models. For example, setting `m_1=0`, `m_2=1.5`, `m_3=0`, `k_1=8`, `k_2=1`, and `k_3=0`
 yields the sedimentation model of Meyer-Peter and Müller as given in [`MeyerPeterMueller`](@ref) below.
 The Shields stress represents the ratio of agitating and stabilizing forces in the sediment bed where
@@ -62,10 +62,9 @@ Creates a Grass model to compute the sediment discharge `q_s` as
 ```math
 q_s = A_g v^{m_g}
 ```
-with the coefficients `A_g` and `m_g`.
 with the coefficients `A_g` and `m_g`. The constant `A_g` lies in the interval ``[0,1]``
 and is a dimensional calibration constant that is usually measured experimental. It expresses
-the kind of interaction between the fluid and the sediment the strength of which 
+the kind of interaction between the fluid and the sediment, the strength of which 
 increases as `A_g` approaches to 1. The factor `m_g` lies in the interval ``[1, 4]``.
 Typically, one considers an odd integer value for `m_g` such that the sediment discharge
 `q_s` can be differentiated and the model remains valid for all values of the velocity `v`.
@@ -107,8 +106,8 @@ end
                                  sediment_model,
                                  porosity,
                                  rho_f, rho_s)
-Entropy conservative formulation of the Shallow water-Exner equations in one space dimension. 
-The equations are given by
+Formulation of the Shallow water-Exner equations in one space dimension that possesses a mathematical
+entropy inequality. The equations are given by
 ```math
 \begin{cases}
 \partial_t h + \partial_x hv = 0, \\
@@ -122,7 +121,8 @@ the active sediment height ``h_s = q_s / v``.
 Furthermore ``\tau`` denotes the shear stress at the water-sediment interface and is determined by 
 the `friction` model.  
 The gravitational constant is denoted by ``g``, and ``\rho_f`` and ``\rho_s`` are the fluid and sediment
-densities, respectively. The density ratio is given by ``r = \rho_f / \rho_s``.
+densities, respectively. The density ratio is given by ``r = \rho_f / \rho_s``, where ``r`` lies between
+``0 < r < 1`` as the fluid density ``\rho_f`` should be smaller than the sediment density ``\rho_s``.
 
 The conservative variable water height ``h`` is measured from the sediment height ``h_b``, therefore
 one also defines the total water height as ``H = h + h_b``.
@@ -500,8 +500,8 @@ end
     Q = d_s * sqrt(gravity * (rho_s / rho_f - 1.0) * d_s) # Characteristic discharge
 
     return (porosity_inv * Q * sign(theta) * k_1 * theta^m_1 *
-           (max(theta - k_2 * theta_c, 0.0))^m_2 *
-           (max(sqrt(theta) - k_3 * sqrt(theta_c), 0.0))^m_3)
+            (max(theta - k_2 * theta_c, 0.0))^m_2 *
+            (max(sqrt(theta) - k_3 * sqrt(theta_c), 0.0))^m_3)
 end
 
 # Compute the sediment discharge for the Grass model 
@@ -511,7 +511,7 @@ end
                                                                                           S
                                                                                           }
     (; porosity_inv, sediment_model) = equations
-    return porosity_inv * sediment_model.A_g * velocity(u, equations)^3
+    return porosity_inv * sediment_model.A_g * velocity(u, equations)^sediment_model.m_g
 end
 
 # Shear stress formulation using a coefficient to take into account different friction models
@@ -570,7 +570,7 @@ end
     return equations.gravity * u[1] * u[3]
 end
 
-# Entropy function
+# Mathematical entropy function
 @inline function Trixi.entropy(u, equations::ShallowWaterExnerEquations1D)
     h, _, h_b = u
     v = velocity(u, equations)
