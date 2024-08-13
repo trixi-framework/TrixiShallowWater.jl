@@ -85,7 +85,7 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
 ###############################################################################
 # ODE solver
 
-tspan = (0.0, 30000)
+tspan = (0.0, 30_000.0)
 ode = semidiscretize(semi, tspan)
 
 ###############################################################################
@@ -100,7 +100,7 @@ alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
 stepsize_callback = StepsizeCallback(cfl = 0.8)
 
-save_solution = SaveSolutionCallback(dt = 10000,
+save_solution = SaveSolutionCallback(dt = 10_000.0,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 

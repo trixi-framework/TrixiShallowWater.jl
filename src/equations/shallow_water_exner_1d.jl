@@ -30,7 +30,15 @@ abstract type SedimentModel{RealT} end
     ShieldsStressModel(; m_1, m_2, m_3, k_1, k_2, k_3, theta_c, d_s)
 
 Create a Shields stress model to compute the sediment discharge `q_s` based on the generalized 
-formulation from equation (1.2) in the paper:
+formulation from equation (1.2) in the given reference.
+
+The choice of the real constants ´m_1`, ´m_2`, ´m_3`, ´k_1`, ´k_2`, and ´k_3` creates
+different models. For example, setting `m_1=0`, `m_2=1.5`, `m_3=0`, `k_1=8`, `k_2=1`, and `k_3=0`
+yields the sedimentation model of Meyer-Peter and Müller as given in [`MeyerPeterMueller`](@ref) below.
+The Shields stress represents the ratio of agitating and stabilizing forces in the sediment bed where
+`theta_c` is the critical Shields stress for incipient motion and `d_s` is the mean diameter of
+the sediment grain size.
+
 - E.D. Fernández-Nieto, T.M. de Luna, G. Narbona-Reina and J. de Dieu Zabsonré (2017)\
   Formal deduction of the Saint-Venant–Exner model including arbitrarily sloping sediment beds and 
   associated energy\
@@ -55,6 +63,12 @@ Creates a Grass model to compute the sediment discharge `q_s` as
 q_s = A_g v^{m_g}
 ```
 with the coefficients `A_g` and `m_g`.
+with the coefficients `A_g` and `m_g`. The constant `A_g` lies in the interval ``[0,1]``
+and is a dimensional calibration constant that is usually measured experimental. It expresses
+the kind of interaction between the fluid and the sediment the strength of which 
+increases as `A_g` approaches to 1. The factor `m_g` lies in the interval ``[1, 4]``.
+Typically, one considers an odd integer value for `m_g` such that the sediment discharge
+`q_s` can be differentiated and the model remains valid for all values of the velocity `v`.
 
 An overview of different formulations to compute the sediment discharge can be found in:
 - M.J. Castro Díaz, E.D. Fernández-Nieto, A.M. Ferreiro (2008)\
@@ -147,7 +161,7 @@ function ShallowWaterExnerEquations1D(; gravity_constant, H0 = zero(gravity_cons
                                       sediment_model,
                                       porosity, rho_f, rho_s)
     # Precompute common expressions for the porosity and density ratio
-    porosity_inv = 1 / (1 - porosity)
+    porosity_inv = inv(1 - porosity)
     r = rho_f / rho_s
     return ShallowWaterExnerEquations1D(gravity_constant, H0, friction, sediment_model,
                                         porosity_inv, rho_f, rho_s, r)
@@ -155,7 +169,7 @@ end
 
 Trixi.have_nonconservative_terms(::ShallowWaterExnerEquations1D) = True()
 Trixi.varnames(::typeof(cons2cons), ::ShallowWaterExnerEquations1D) = ("h", "hv", "h_b")
-# Note, we use the total water height, H = h + h_s, as the first primitive variable for easier
+# Note, we use the total water height, H = h + h_b, as the first primitive variable for easier
 # visualization and setting initial conditions
 Trixi.varnames(::typeof(cons2prim), ::ShallowWaterExnerEquations1D) = ("H", "v", "h_b")
 
@@ -309,7 +323,6 @@ The actual friction law is determined through the friction model in `equations.f
 end
 
 # Calculate 1D flux for a single point
-# Note, the bottom topography has no flux
 @inline function Trixi.flux(u, orientation::Integer,
                             equations::ShallowWaterExnerEquations1D)
     _, hv, _ = u
@@ -412,7 +425,8 @@ for the sediment discharge `q_s`.
 
     # Compute approximate Roe averages.
     # The actual Roe average for the sediment discharge `q_s` would depend on the sediment and 
-    # friction model and can be hard to find. Therefore we only use an approximation here.
+    # friction model and can be difficult to compute analytically. 
+    # Therefore we only use an approximation here.
     h_avg = 0.5 * (u_ll[1] + u_rr[1])
     v_avg = (sqrt(u_ll[1]) * v_ll + sqrt(u_rr[1]) * v_rr) /
             (sqrt(u_ll[1]) + sqrt(u_rr[1]))
@@ -485,9 +499,9 @@ end
 
     Q = d_s * sqrt(gravity * (rho_s / rho_f - 1.0) * d_s) # Characteristic discharge
 
-    return porosity_inv * Q * sign(theta) * k_1 * theta^m_1 *
+    return (porosity_inv * Q * sign(theta) * k_1 * theta^m_1 *
            (max(theta - k_2 * theta_c, 0.0))^m_2 *
-           (max(sqrt(theta) - k_3 * sqrt(theta_c), 0.0))^m_3
+           (max(sqrt(theta) - k_3 * sqrt(theta_c), 0.0))^m_3)
 end
 
 # Compute the sediment discharge for the Grass model 
@@ -572,8 +586,9 @@ end
     return abs(equations.H0 - (h + h_b))
 end
 
-# Trigonometric version of Cardano's method to compute the eigenvalues of 
-# the [`ShallowWaterExnerEquations1D`[(@ref)] assuming only real roots.
+# Trigonometric version of Cardano's method for the roots of a cubic polynomial
+# in order to compute the eigenvalues of the [`ShallowWaterExnerEquations1D`[(@ref)].
+# Note, assumes only real roots.
 @inline function eigvals_cardano(u, equations::ShallowWaterExnerEquations1D)
     h = waterheight(u, equations)
     v = velocity(u, equations)
