@@ -1,16 +1,18 @@
 [deps]
+Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Trixi = "a7f1ee26-1774-49b1-8366-f1abc58fbfcb"
-OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
-Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
+Downloads = "1"
+OrdinaryDiffEq = "6.49.1"
+Printf = "1"
+Roots = "2.1.6"
 Test = "1"
 Trixi = "0.7, 0.8"
-OrdinaryDiffEq = "6.49.1"
-Downloads = "1"
-Printf = "1"
 
 [preferences.OrdinaryDiffEq]
 PrecompileAutoSpecialize = false
