@@ -20,12 +20,16 @@ include("solvers/scratch_p4est.jl")
 
 # Export types/functions that define the public API of TrixiShallowWater.jl
 export ShallowWaterEquationsWetDry1D, ShallowWaterEquationsWetDry2D,
+       ShallowWaterExnerEquations1D,
        ShallowWaterTwoLayerEquations1D, ShallowWaterTwoLayerEquations2D,
        ShallowWaterMultiLayerEquations1D, ShallowWaterMultiLayerEquations2D
 
 export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle,
        min_max_speed_chen_noelle, flux_hll_chen_noelle,
        flux_ersing_etal, flux_es_ersing_etal, hydrostatic_reconstruction_ersing_etal
+
+export ManningFriction, MeyerPeterMueller, GrassModel, ShieldsStressModel,
+       dissipation_roe, water_sediment_height, source_term_bottom_friction
 
 export nlayers, eachlayer
 
