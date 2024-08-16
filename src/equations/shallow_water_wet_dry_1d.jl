@@ -214,11 +214,18 @@ end
 Non-symmetric two-point volume flux discretizing the nonconservative (source) term
 that contains the gradient of the bottom topography [`ShallowWaterEquationsWetDry1D`](@ref).
 
-Further details are available in the paper:#include("numerical_fluxes.jl")
+Gives entropy conservation and well-balancedness on both the volume and surface when combined with 
+[`flux_wintermeyer_etal`](@ref).
+
+Further details are available in the papers:
 - Niklas Wintermeyer, Andrew R. Winters, Gregor J. Gassner and David A. Kopriva (2017)
   An entropy stable nodal discontinuous Galerkin method for the two dimensional
   shallow water equations on unstructured curvilinear meshes with discontinuous bathymetry
   [DOI: 10.1016/j.jcp.2017.03.036](https://doi.org/10.1016/j.jcp.2017.03.036)
+- Patrick Ersing, Andrew R. Winters (2023)
+  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
+  curvilinear meshes
+  [DOI: 10.48550/arXiv.2306.12699](https://doi.org/10.48550/arXiv.2306.12699)
 """
 @inline function Trixi.flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
                                                              orientation::Integer,
@@ -234,11 +241,8 @@ end
 Non-symmetric two-point surface flux discretizing the nonconservative (source) term of
 that contains the gradient of the bottom topography [`ShallowWaterEquationsWetDry1D`](@ref).
 
-This contains additional terms compared to [`flux_nonconservative_wintermeyer_etal`](@ref)
-that account for possible discontinuities in the bottom topography function.
-Thus, this flux should be used in general at interfaces. For flux differencing volume terms,
-[`flux_nonconservative_wintermeyer_etal`](@ref) is analytically equivalent but slightly
-cheaper.
+This flux can be used together with [`flux_fjordholm_etal`](@ref) at interfaces to ensure entropy
+conservation and well-balancedness.
 
 Further details for the original finite volume formulation are available in
 - Ulrik S. Fjordholm, Siddhartha Mishr and Eitan Tadmor (2011)
@@ -320,38 +324,10 @@ Further details on the hydrostatic reconstruction and its motivation can be foun
     h_ll_star = u_ll_star[1]
 
     z = zero(eltype(u_ll))
-    # Includes two parts:
-    #   (i)  Diagonal (consistent) term from the volume flux that uses `b_ll` to avoid
-    #        cross-averaging across a discontinuous bottom topography
-    #   (ii) True surface part that uses `h_ll` and `h_ll_star` to handle discontinuous bathymetry
+
     return SVector(z,
-                   equations.gravity * h_ll * b_ll -
-                   equations.gravity * (h_ll_star + h_ll) * (b_ll - b_star),
+                   -equations.gravity * (h_ll_star + h_ll) * (b_ll - b_star),
                    z)
-end
-
-"""
-    flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
-                                     equations::ShallowWaterEquationsWetDry1D)
-
-Non-symmetric path-conservative two-point volume flux discretizing the nonconservative (source) term
-that contains the gradient of the bottom topography [`ShallowWaterEquationsWetDry1D`](@ref).
-
-This is a modified version of [`flux_nonconservative_wintermeyer_etal`](@ref) that gives entropy 
-conservation and well-balancedness in both the volume and surface when combined with 
-[`flux_wintermeyer_etal`](@ref).
-
-For further details see:
-- Patrick Ersing, Andrew R. Winters (2023)
-  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
-  curvilinear meshes
-  [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
-"""
-@inline function Trixi.flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                        orientation::Integer,
-                                                        equations::ShallowWaterEquationsWetDry1D)
-    return Trixi.flux_nonconservative_ersing_etal(u_ll, u_rr, orientation,
-                                                  equations.basic_swe)
 end
 
 """
@@ -379,7 +355,8 @@ end
 
 Total energy conservative (mathematical entropy for shallow water equations) split form.
 When the bottom topography is nonzero this scheme will be well-balanced when used as a `volume_flux`.
-The `surface_flux` should still use, e.g., [`flux_fjordholm_etal`](@ref).
+For the `surface_flux` either [`flux_wintermeyer_etal`](@ref) or [`flux_fjordholm_etal`](@ref) can
+be used to ensure well-balancedness and entropy conservation.
 
 Further details are available in Theorem 1 of the paper:
 - Niklas Wintermeyer, Andrew R. Winters, Gregor J. Gassner and David A. Kopriva (2017)

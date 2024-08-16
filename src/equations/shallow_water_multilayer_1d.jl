@@ -310,9 +310,9 @@ In the two-layer setting this combination is equivalent to the fluxes in:
   curvilinear meshes
   [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
 """
-@inline function Trixi.flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                        orientation::Integer,
-                                                        equations::ShallowWaterMultiLayerEquations1D)
+@inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
+                                                  orientation::Integer,
+                                                  equations::ShallowWaterMultiLayerEquations1D)
     # Pull the necessary left and right state information
     h_ll = waterheight(u_ll, equations)
     h_rr = waterheight(u_rr, equations)
