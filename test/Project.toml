@@ -12,7 +12,7 @@ OrdinaryDiffEq = "6.49.1"
 Printf = "1"
 Roots = "2.1.6"
 Test = "1"
-Trixi = "0.7 - 0.8.6"
+Trixi = "0.8.7"
 
 [preferences.OrdinaryDiffEq]
 PrecompileAutoSpecialize = false
