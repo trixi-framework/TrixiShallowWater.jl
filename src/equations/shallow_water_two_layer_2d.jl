@@ -343,9 +343,9 @@ For further details see:
   curvilinear meshes
   [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
 """
-@inline function Trixi.flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                        orientation::Integer,
-                                                        equations::ShallowWaterTwoLayerEquations2D)
+@inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
+                                                  orientation::Integer,
+                                                  equations::ShallowWaterTwoLayerEquations2D)
     # Pull the necessary left and right state information
     h_upper_ll, h_lower_ll = waterheight(u_ll, equations)
     h_upper_rr, h_lower_rr = waterheight(u_rr, equations)
@@ -381,10 +381,10 @@ For further details see:
     return f
 end
 
-@inline function Trixi.flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                        normal_direction_ll::AbstractVector,
-                                                        normal_direction_average::AbstractVector,
-                                                        equations::ShallowWaterTwoLayerEquations2D)
+@inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
+                                                  normal_direction_ll::AbstractVector,
+                                                  normal_direction_average::AbstractVector,
+                                                  equations::ShallowWaterTwoLayerEquations2D)
     # Pull the necessary left and right state information
     h_upper_ll, h_lower_ll = waterheight(u_ll, equations)
     h_upper_rr, h_lower_rr = waterheight(u_rr, equations)
