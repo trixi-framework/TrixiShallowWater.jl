@@ -6,12 +6,11 @@ using DocumenterInterLinks
 links = InterLinks("Trixi" => ("https://trixi-framework.github.io/Trixi.jl/stable/",
                                "https://trixi-framework.github.io/Trixi.jl/stable/objects.inv"))
 
-
 # Copy list of authors to not need to synchronize it manually
 authors_text = read(joinpath(dirname(@__DIR__), "AUTHORS.md"), String)
-authors_text = replace(authors_text, "in the [LICENSE.md](LICENSE.md) file" => "under [License](@ref)")
+authors_text = replace(authors_text,
+                       "in the [LICENSE.md](LICENSE.md) file" => "under [License](@ref)")
 write(joinpath(@__DIR__, "src", "authors.md"), authors_text)
-
 
 DocMeta.setdocmeta!(TrixiShallowWater, :DocTestSetup, :(using TrixiShallowWater);
                     recursive = true)
@@ -51,7 +50,6 @@ open(joinpath(@__DIR__, "src", "contributing.md"), "w") do io
         println(io, line)
     end
 end
-                    
 
 makedocs(;
          modules = [TrixiShallowWater],
@@ -67,6 +65,8 @@ makedocs(;
              "Home" => "index.md",
              "Installation" => "installation.md",
              "Tutorials" => "tutorial.md",
+             "Advanced topics & developers" => ["Development" => "development.md"
+                                                "Testing" => "testing.md"],
              "Authors" => "authors.md",
              "Contributing" => "contributing.md",
              "Code of Conduct" => "code_of_conduct.md",
