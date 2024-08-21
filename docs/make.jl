@@ -24,6 +24,8 @@ makedocs(;
              "Installation" => "installation.md",
              "Tutorials" => "tutorial.md",
              "Authors" => "authors.md",
+             "Contributing" => "contributing.md",
+             "Code of Conduct" => "code_of_conduct.md",
              "License" => "license.md",
          ],
          plugins = [links],)
