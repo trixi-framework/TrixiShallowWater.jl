@@ -469,11 +469,12 @@ end
 
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr, orientation::Integer,
                                            equations::ShallowWaterExnerEquations1D)
-    return max(eigvals_cardano(u_rr, equations)..., eigvals_cardano(u_ll, equations)...)
+    return max(maximum(abs, eigvals_cardano(u_rr, equations)),
+               maximum(abs, eigvals_cardano(u_ll, equations)))
 end
 
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterExnerEquations1D)
-    return maximum(eigvals_cardano(u, equations))
+    return maximum(abs, eigvals_cardano(u, equations))
 end
 
 #Helper function to extract the velocity vector from the conservative variables
