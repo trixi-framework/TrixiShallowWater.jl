@@ -21,6 +21,10 @@ makedocs(;
                                   assets = String[],),
          pages = [
              "Home" => "index.md",
+             "Installation" => "installation.md",
+             "Tutorials" => "tutorial.md",
+             "Authors" => "authors.md",
+             "License" => "license.md",
          ],
          plugins = [links],)
 
