@@ -32,6 +32,12 @@ Below is a short summary of the available features:
 ## Examples
 
 ## Installation
+If you have not yet installed Julia, please [follow the instructions for your
+operating system](https://julialang.org/downloads/platform/). TrixiShallowWater.jl works
+with Julia v1.8 and newer. We recommend using the latest stable release of Julia.
+
+[comment]: <> (We can update this with a "for users" and "for developers" section once the package is registered)
+
 TrixiShallowWater.jl is **not** a registered Julia package, and therefore needs to be downloaded manually and then run from with the cloned directory:
 ```bash
 git clone https://github.com/trixi-framework/TrixiShallowWater.jl.git
@@ -51,6 +57,16 @@ community. To get in touch with the developers,
 [join us on Slack](https://join.slack.com/t/trixi-framework/shared_invite/zt-sgkc6ppw-6OXJqZAD5SPjBYqLd8MU~g)
 or [create an issue](https://github.com/trixi-framework/TrixiShallowWater.jl/issues/new).
 
+## Acknowledgments
+<p align="center" style="font-size:0;"><!--
+  SRC      --><img align="middle" src="https://github.com/trixi-framework/Trixi.jl/assets/3637659/48f9da06-6f7a-4586-b23e-739bee3901c0" height="120"><!--
+  -->
+</p>
+
+This project has benefited from funding from [Vetenskapsrådet](https://www.vr.se)
+(VR, Swedish Research Council), Sweden
+through the VR Starting Grant "Shallow water flows including sediment transport and morphodynamics",
+VR grant agreement 2020-03642 VR.
 
 **Note: This repository is still in its alpha stage and anything might change at
 any time and without warning, including the deletion of this repository
