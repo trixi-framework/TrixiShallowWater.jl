@@ -8,6 +8,10 @@
 [![Coverage](https://coveralls.io/repos/github/trixi-framework/TrixiShallowWater.jl/badge.svg?branch=main)](https://coveralls.io/github/trixi-framework/TrixiShallowWater.jl?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 
+<p align="center">
+  <img width="300px" src="https://trixi-framework.github.io/assets/logo_sw.png">
+</p>
+
 **TrixiShallowWater.jl** is a numerical simulation package focused on solving shallow water equations
 with the discontinuous Galerkin method and written in Julia. The package builds on the numerical
 simulation framework for conservation laws [Trixi.jl](https://github.com/trixi-framework/Trixi.jl)
