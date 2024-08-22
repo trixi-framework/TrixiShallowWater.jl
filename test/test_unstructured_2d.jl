@@ -98,7 +98,7 @@ isdir(outdir) && rm(outdir, recursive = true)
         end
     end
 
-    @trixi_testset "elixir_shallowwater_well_balanced.jl with flux_nonconservative_ersing_etal" begin
+    @trixi_testset "elixir_shallowwater_well_balanced.jl with flux_nonconservative_wintermeyer_etal" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_well_balanced.jl"),
                             l2=[
@@ -114,9 +114,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 1.513851228231574,
                             ],
                             surface_flux=(flux_wintermeyer_etal,
-                                          flux_nonconservative_ersing_etal),
-                            volume_flux=(flux_wintermeyer_etal,
-                                         flux_nonconservative_ersing_etal),
+                                          flux_nonconservative_wintermeyer_etal),
                             tspan=(0.0, 0.25),
                             atol=1e-10)
         # Ensure that we do not have excessive memory allocations
@@ -184,7 +182,7 @@ isdir(outdir) && rm(outdir, recursive = true)
         end
     end
 
-    @trixi_testset "elixir_shallowwater_source_terms.jl with flux_nonconservative_ersing_etal" begin
+    @trixi_testset "elixir_shallowwater_source_terms.jl with flux_nonconservative_wintermeyer_etal" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_source_terms.jl"),
                             l2=[
@@ -200,9 +198,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 2.6407324614341476e-5,
                             ],
                             surface_flux=(flux_wintermeyer_etal,
-                                          flux_nonconservative_ersing_etal),
-                            volume_flux=(flux_wintermeyer_etal,
-                                         flux_nonconservative_ersing_etal),
+                                          flux_nonconservative_wintermeyer_etal),
                             tspan=(0.0, 0.025))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
@@ -245,15 +241,15 @@ isdir(outdir) && rm(outdir, recursive = true)
     @trixi_testset "elixir_shallowwater_dirichlet.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR, "elixir_shallowwater_dirichlet.jl"),
                             l2=[
-                                1.1577518608940115e-5,
-                                4.867189932537344e-13,
-                                4.647273240470541e-13,
-                                1.1577518608933468e-5,
+                                1.1577518608928104e-5,
+                                4.761468345949485e-13,
+                                4.546054642605431e-13,
+                                1.157751860893347e-5,
                             ],
                             linf=[
-                                8.394063878602864e-5,
-                                1.1469760027632646e-10,
-                                1.1146619484429974e-10,
+                                8.394063878847113e-5,
+                                1.1211499950000422e-10,
+                                1.0890394254534975e-10,
                                 8.394063879602065e-5,
                             ],
                             tspan=(0.0, 2.0),

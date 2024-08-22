@@ -347,9 +347,9 @@ inequality.
 This non-conservative flux should be used together with [`flux_ersing_etal`](@ref) to create a
 scheme that is entropy conservative and well-balanced.
 """
-@inline function Trixi.flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                        orientation::Integer,
-                                                        equations::ShallowWaterExnerEquations1D)
+@inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
+                                                  orientation::Integer,
+                                                  equations::ShallowWaterExnerEquations1D)
     # Pull the necessary left and right state information
     h_ll, _, h_b_ll = u_ll
     h_rr, _, h_b_rr = u_rr
@@ -469,11 +469,12 @@ end
 
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr, orientation::Integer,
                                            equations::ShallowWaterExnerEquations1D)
-    return max(eigvals_cardano(u_rr, equations)..., eigvals_cardano(u_ll, equations)...)
+    return max(maximum(abs, eigvals_cardano(u_rr, equations)),
+               maximum(abs, eigvals_cardano(u_ll, equations)))
 end
 
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterExnerEquations1D)
-    return maximum(eigvals_cardano(u, equations))
+    return maximum(abs, eigvals_cardano(u, equations))
 end
 
 #Helper function to extract the velocity vector from the conservative variables
