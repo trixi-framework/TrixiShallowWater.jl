@@ -2,12 +2,14 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://trixi-framework.github.io/TrixiShallowWater.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://trixi-framework.github.io/TrixiShallowWater.jl/dev/)
+[![Slack](https://img.shields.io/badge/chat-slack-e01e5a)](https://join.slack.com/t/trixi-framework/shared_invite/zt-sgkc6ppw-6OXJqZAD5SPjBYqLd8MU~g)
 [![Build Status](https://github.com/trixi-framework/TrixiShallowWater.jl/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/trixi-framework/TrixiShallowWater.jl/actions/workflows/ci.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/trixi-framework/TrixiShallowWater.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/trixi-framework/TrixiShallowWater.jl)
 [![Coverage](https://coveralls.io/repos/github/trixi-framework/TrixiShallowWater.jl/badge.svg?branch=main)](https://coveralls.io/github/trixi-framework/TrixiShallowWater.jl?branch=main)
+[![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 
-**TrixiShallowWater.jl** is a numerical simulation package focused on solving shallow water equations 
-with the discontinuous Galerkin method and written in Julia. The package builds on the numerical solver [Trixi.jl](https://github.com/trixi-framework/Trixi.jl) 
+**TrixiShallowWater.jl** is a numerical simulation package focused on solving shallow water equations
+with the discontinuous Galerkin method and written in Julia. The package builds on the numerical solver [Trixi.jl](https://github.com/trixi-framework/Trixi.jl)
 and provides several specialized models and features specific for shallow water applications.
 
 ## Examples
