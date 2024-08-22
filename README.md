@@ -50,6 +50,15 @@ julia> using Pkg
 julia> Pkg.add(["Trixi", "Trixi2Vtk", "OrdinaryDiffEq", "Plots"])
 ```
 
+## Authors
+TrixiShallowWater.jl is maintained by the
+[Trixi authors](https://github.com/trixi-framework/Trixi.jl/blob/main/AUTHORS.md).
+Its principal developers are [Andrew Winters](https://liu.se/en/employee/andwi94)
+(Linköping University, Sweden)
+and [Patrick Ersing](https://liu.se/en/employee/pater53)
+(Linköping University, Sweden). The principle developers are
+The full list of contributors can be found in [AUTHORS.md](AUTHORS.md).
+
 ## License and contributing
 TrixiShallowWater.jl is licensed under the MIT license (see [LICENSE.md](LICENSE.md)). Since Trixi.jl is
 an open-source project, we are very happy to accept contributions from the
