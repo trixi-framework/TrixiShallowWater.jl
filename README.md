@@ -9,8 +9,25 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
 
 **TrixiShallowWater.jl** is a numerical simulation package focused on solving shallow water equations
-with the discontinuous Galerkin method and written in Julia. The package builds on the numerical solver [Trixi.jl](https://github.com/trixi-framework/Trixi.jl)
+with the discontinuous Galerkin method and written in Julia. The package builds on the numerical
+simulation framework for conservation laws [Trixi.jl](https://github.com/trixi-framework/Trixi.jl)
 and provides several specialized models and features specific for shallow water applications.
+Below is a short summary of the available features:
+
+* 1D and 2D simulations on [line/quad meshes](https://trixi-framework.github.io/Trixi.jl/stable/overview/#Semidiscretizations)
+  * Cartesian and curvilinear meshes
+  * Conforming and non-conforming meshes
+  * Hierarchical quadtree meshes with adaptive mesh refinement
+* High-order accuracy in space and time
+  * Entropy-stable discontinuous Galerkin methods based on flux differencing
+  * Entropy-stable shock capturing
+  * Positivity-preserving limiting
+  * Compatible with the [SciML ecosystem for ordinary differential equations](https://diffeq.sciml.ai/latest/)
+  * CFL-based and error-based time step control
+* Shallow water capabilities
+  * Wetting and drying
+  * Multi-layer flows
+  * Sediment transport via an Exner model
 
 ## Examples
 
