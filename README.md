@@ -60,12 +60,12 @@ TrixiShallowWater.jl is maintained by the
 Its principal developers are [Andrew Winters](https://liu.se/en/employee/andwi94)
 (Linköping University, Sweden)
 and [Patrick Ersing](https://liu.se/en/employee/pater53)
-(Linköping University, Sweden). The principle developers are
+(Linköping University, Sweden).
 The full list of contributors can be found in [AUTHORS.md](AUTHORS.md).
 
 ## License and contributing
-TrixiShallowWater.jl is licensed under the MIT license (see [LICENSE.md](LICENSE.md)). Since Trixi.jl is
-an open-source project, we are very happy to accept contributions from the
+TrixiShallowWater.jl is licensed under the MIT license (see [LICENSE.md](LICENSE.md)).
+Since TrixiShallowWater.jl is an open-source project, we are very happy to accept contributions from the
 community. To get in touch with the developers,
 [join us on Slack](https://join.slack.com/t/trixi-framework/shared_invite/zt-sgkc6ppw-6OXJqZAD5SPjBYqLd8MU~g)
 or [create an issue](https://github.com/trixi-framework/TrixiShallowWater.jl/issues/new).
