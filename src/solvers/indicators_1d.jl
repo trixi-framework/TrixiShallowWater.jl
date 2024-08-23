@@ -12,7 +12,8 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
                                                                                 3},
                                                                mesh,
                                                                equations::Union{ShallowWaterEquationsWetDry1D,
-                                                                                ShallowWaterMultiLayerEquations1D},
+                                                                                ShallowWaterMultiLayerEquations1D,
+                                                                                ShallowWaterExnerEquations1D},
                                                                dg::DGSEM, cache;
                                                                kwargs...)
     @unpack alpha_max, alpha_min, alpha_smooth, variable = indicator_hg
