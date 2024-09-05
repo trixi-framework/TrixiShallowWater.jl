@@ -33,8 +33,7 @@ const flux_hll_chen_noelle = FluxHLL(min_max_speed_chen_noelle)
 # unstructured meshes. These can depend on both the contravariant vectors (normal direction) at 
 # the current node and the averaged ones.
 @inline function (numflux::Trixi.FluxHydrostaticReconstruction)(u_ll, u_rr,
-                                                                normal_direction_ll,
-                                                                normal_direction_average,
+                                                                normal_direction,
                                                                 equations::Trixi.AbstractEquations)
     @unpack numerical_flux, hydrostatic_reconstruction = numflux
 
@@ -42,8 +41,8 @@ const flux_hll_chen_noelle = FluxHLL(min_max_speed_chen_noelle)
     u_ll_star, u_rr_star = hydrostatic_reconstruction(u_ll, u_rr, equations)
 
     # Use the reconstructed states to compute the nonconservative surface flux
-    return numerical_flux(u_ll_star, u_rr_star, normal_direction_ll,
-                          normal_direction_average,
+    return numerical_flux(u_ll_star, u_rr_star,
+                          normal_direction,
                           equations)
 end
 end
