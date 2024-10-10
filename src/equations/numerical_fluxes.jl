@@ -28,5 +28,4 @@ For complete details see Section 2.4 of the following reference
   [DOI: 10.1137/15M1053074](https://doi.org/10.1137/15M1053074)
 """
 const flux_hll_chen_noelle = FluxHLL(min_max_speed_chen_noelle)
-
 end
