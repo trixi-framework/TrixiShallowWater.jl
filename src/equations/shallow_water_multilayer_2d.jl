@@ -451,8 +451,7 @@ end
     flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
                                      equations::ShallowWaterMultiLayerEquations2D)
     flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                     normal_direction_ll::AbstractVector,
-                                     normal_direction_average::AbstractVector,
+                                     normal_direction::AbstractVector,
                                      equations::ShallowWaterMultiLayerEquations2D)
 
 Non-symmetric path-conservative two-point flux discretizing the nonconservative (source) term
@@ -509,8 +508,7 @@ In the two-layer setting this combination is equivalent to the fluxes in:
 end
 
 @inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                  normal_direction_ll::AbstractVector,
-                                                  normal_direction_average::AbstractVector,
+                                                  normal_direction::AbstractVector,
                                                   equations::ShallowWaterMultiLayerEquations2D)
     # Pull the necessary left and right state information
     h_ll = waterheight(u_ll, equations)
@@ -537,8 +535,8 @@ end
                 f_hv += g * h_ll[i] * h_jump[j]
             end
         end
-        setlayer!(f, f_h, f_hv * normal_direction_average[1],
-                  f_hv * normal_direction_average[2], i, equations)
+        setlayer!(f, f_h, f_hv * normal_direction[1],
+                  f_hv * normal_direction[2], i, equations)
     end
 
     return SVector(f)

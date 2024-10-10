@@ -322,8 +322,7 @@ end
     flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
                                      equations::ShallowWaterTwoLayerEquations2D)
     flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                     normal_direction_ll::AbstractVector,
-                                     normal_direction_average::AbstractVector,
+                                     normal_direction::AbstractVector,
                                      equations::ShallowWaterTwoLayerEquations2D)
 
 !!! warning "Experimental code"
@@ -382,8 +381,7 @@ For further details see:
 end
 
 @inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                  normal_direction_ll::AbstractVector,
-                                                  normal_direction_average::AbstractVector,
+                                                  normal_direction::AbstractVector,
                                                   equations::ShallowWaterTwoLayerEquations2D)
     # Pull the necessary left and right state information
     h_upper_ll, h_lower_ll = waterheight(u_ll, equations)
@@ -396,17 +394,17 @@ end
     h_lower_jump = (h_lower_rr - h_lower_ll)
     b_jump = (b_rr - b_ll)
 
-    # Note this routine only uses the `normal_direction_average` and the average of the
+    # Note this routine only uses the `normal_direction` and the average of the
     # bottom topography to get a quadratic split form DG gradient on curved elements
     return SVector(zero(eltype(u_ll)),
-                   normal_direction_average[1] * equations.gravity * h_upper_ll *
+                   normal_direction[1] * equations.gravity * h_upper_ll *
                    (b_jump + h_lower_jump),
-                   normal_direction_average[2] * equations.gravity * h_upper_ll *
+                   normal_direction[2] * equations.gravity * h_upper_ll *
                    (b_jump + h_lower_jump),
                    zero(eltype(u_ll)),
-                   normal_direction_average[1] * equations.gravity * h_lower_ll *
+                   normal_direction[1] * equations.gravity * h_lower_ll *
                    (b_jump + equations.r * h_upper_jump),
-                   normal_direction_average[2] * equations.gravity * h_lower_ll *
+                   normal_direction[2] * equations.gravity * h_lower_ll *
                    (b_jump + equations.r * h_upper_jump),
                    zero(eltype(u_ll)))
 end
