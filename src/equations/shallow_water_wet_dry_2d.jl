@@ -243,8 +243,7 @@ end
     flux_nonconservative_wintermeyer_etal(u_ll, u_rr, orientation::Integer,
                                           equations::ShallowWaterEquationsWetDry2D)
     flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
-                                          normal_direction_ll     ::AbstractVector,
-                                          normal_direction_average::AbstractVector,
+                                          normal_direction::AbstractVector,
                                           equations::ShallowWaterEquationsWetDry2D)
 
 Non-symmetric two-point volume flux discretizing the nonconservative (source) term
@@ -271,12 +270,10 @@ Further details are available in the papers:
 end
 
 @inline function Trixi.flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
-                                                             normal_direction_ll::AbstractVector,
-                                                             normal_direction_average::AbstractVector,
+                                                             normal_direction::AbstractVector,
                                                              equations::ShallowWaterEquationsWetDry2D)
     return Trixi.flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
-                                                       normal_direction_ll,
-                                                       normal_direction_average,
+                                                       normal_direction,
                                                        equations.basic_swe)
 end
 
@@ -284,8 +281,7 @@ end
     flux_nonconservative_fjordholm_etal(u_ll, u_rr, orientation::Integer,
                                         equations::ShallowWaterEquationsWetDry2D)
     flux_nonconservative_fjordholm_etal(u_ll, u_rr,
-                                        normal_direction_ll     ::AbstractVector,
-                                        normal_direction_average::AbstractVector,
+                                        normal_direction::AbstractVector,
                                         equations::ShallowWaterEquationsWetDry2D)
 
 Non-symmetric two-point surface flux discretizing the nonconservative (source) term of
@@ -312,12 +308,10 @@ and for curvilinear 2D case in the paper:
 end
 
 @inline function Trixi.flux_nonconservative_fjordholm_etal(u_ll, u_rr,
-                                                           normal_direction_ll::AbstractVector,
-                                                           normal_direction_average::AbstractVector,
+                                                           normal_direction::AbstractVector,
                                                            equations::ShallowWaterEquationsWetDry2D)
     Trixi.flux_nonconservative_fjordholm_etal(u_ll, u_rr,
-                                              normal_direction_ll,
-                                              normal_direction_average,
+                                              normal_direction,
                                               equations.basic_swe)
 end
 
@@ -407,8 +401,7 @@ end
     flux_nonconservative_audusse_etal(u_ll, u_rr, orientation::Integer,
                                       equations::ShallowWaterEquationsWetDry2D)
     flux_nonconservative_audusse_etal(u_ll, u_rr,
-                                      normal_direction_ll     ::AbstractVector,
-                                      normal_direction_average::AbstractVector,
+                                      normal_direction::AbstractVector,
                                       equations::ShallowWaterEquationsWetDry2D)
 
 Non-symmetric two-point surface flux that discretizes the nonconservative (source) term.
@@ -433,12 +426,10 @@ Further details for the hydrostatic reconstruction and its motivation can be fou
 end
 
 @inline function Trixi.flux_nonconservative_audusse_etal(u_ll, u_rr,
-                                                         normal_direction_ll::AbstractVector,
-                                                         normal_direction_average::AbstractVector,
+                                                         normal_direction::AbstractVector,
                                                          equations::ShallowWaterEquationsWetDry2D)
     return Trixi.flux_nonconservative_audusse_etal(u_ll, u_rr,
-                                                   normal_direction_ll,
-                                                   normal_direction_average,
+                                                   normal_direction,
                                                    equations.basic_swe)
 end
 
@@ -447,8 +438,7 @@ end
                                      orientation::Integer,
                                      equations::ShallowWaterEquationsWetDry2D)
     flux_nonconservative_chen_noelle(u_ll, u_rr,
-                                     normal_direction_ll      ::AbstractVector,
-                                     normal_direction_average ::AbstractVector,
+                                     normal_direction::AbstractVector,
                                      equations::ShallowWaterEquationsWetDry2D)
 
 Non-symmetric two-point surface flux that discretizes the nonconservative (source) term.
@@ -497,8 +487,7 @@ Further details on the hydrostatic reconstruction and its motivation can be foun
 end
 
 @inline function flux_nonconservative_chen_noelle(u_ll, u_rr,
-                                                  normal_direction_ll::AbstractVector,
-                                                  normal_direction_average::AbstractVector,
+                                                  normal_direction::AbstractVector,
                                                   equations::ShallowWaterEquationsWetDry2D)
     # Pull the water height and bottom topography on the left
     h_ll, _, _, b_ll = u_ll
@@ -515,9 +504,9 @@ end
     # Copy the reconstructed water height for easier to read code
     h_ll_star = u_ll_star[1]
 
-    f2 = -normal_direction_average[1] * equations.gravity * (h_ll_star + h_ll) *
+    f2 = -normal_direction[1] * equations.gravity * (h_ll_star + h_ll) *
          (b_ll - b_star)
-    f3 = -normal_direction_average[2] * equations.gravity * (h_ll_star + h_ll) *
+    f3 = -normal_direction[2] * equations.gravity * (h_ll_star + h_ll) *
          (b_ll - b_star)
 
     # First and last equations do not have a nonconservative flux
