@@ -13,6 +13,9 @@
 **/Manifest.toml
 out*/
 docs/build
+docs/src/authors.md
+docs/src/code_of_conduct.md
+docs/src/contributing.md
 public/
 coverage/
 coverage_report/
