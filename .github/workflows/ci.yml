@@ -120,7 +120,7 @@ jobs:
         with:
           directories: src,examples
       - name: Upload coverage report to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: lcov.info
         env:
