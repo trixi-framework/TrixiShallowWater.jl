@@ -52,7 +52,7 @@ This affects the implementation and use of these equations in various ways:
 * The flux values corresponding to the bottom topography must be zero.
 * The bottom topography values must be included when defining initial conditions, boundary
   conditions or source terms.
-* [`AnalysisCallback`](@ref) analyzes this variable.
+* [`Trixi.AnalysisCallback`](@extref) analyzes this variable.
 * Trixi's visualization tools will visualize the bottom topography by default.
 
 A good introduction for the MLSWE is available in Chapter 12 of the book:
@@ -360,7 +360,7 @@ end
     boundary_condition_slip_wall(u_inner, orientation, direction, x, t,
                                  surface_flux_function, equations::ShallowWaterMultiLayerEquations2D)
 
-Should be used together with [`TreeMesh`](@ref).
+Should be used together with [`Trixi.TreeMesh`](@extref).
 """
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation,
                                                     direction, x, t,
