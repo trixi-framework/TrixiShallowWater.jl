@@ -256,8 +256,10 @@ For details see Section 9.2.5 of the book:
 """
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation_or_normal,
                                                     direction,
-                                                    x, t, surface_flux_function,
+                                                    x, t, surface_flux_functions,
                                                     equations::ShallowWaterMultiLayerEquations1D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
     # Create the "external" boundary solution state
     h = waterheight(u_inner, equations)
     hv = momentum(u_inner, equations)
@@ -267,11 +269,19 @@ For details see Section 9.2.5 of the book:
 
     # Calculate the boundary flux
     if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
-        f = surface_flux_function(u_inner, u_boundary, orientation_or_normal, equations)
+        flux = surface_flux_function(u_inner, u_boundary, orientation_or_normal,
+                                     equations)
+        noncons_flux = nonconservative_flux_function(u_inner, u_boundary,
+                                                     orientation_or_normal,
+                                                     equations)
     else # u_boundary is "left" of boundary, u_inner is "right" of boundary
-        f = surface_flux_function(u_boundary, u_inner, orientation_or_normal, equations)
+        flux = surface_flux_function(u_boundary, u_inner, orientation_or_normal,
+                                     equations)
+        noncons_flux = nonconservative_flux_function(u_inner, u_boundary,
+                                                     orientation_or_normal,
+                                                     equations)
     end
-    return f
+    return flux, noncons_flux
 end
 
 # Calculate 1D advective portion of the flux for a single point

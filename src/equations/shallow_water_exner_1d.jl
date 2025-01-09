@@ -190,8 +190,10 @@ For details see Section 9.2.5 of the book:
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation_or_normal,
                                                     direction,
                                                     x, t,
-                                                    surface_flux_function,
+                                                    surface_flux_functions,
                                                     equations::ShallowWaterExnerEquations1D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
     # create the "external" boundary solution state
     u_boundary = SVector(u_inner[1],
                          -u_inner[2],
@@ -201,12 +203,18 @@ For details see Section 9.2.5 of the book:
     if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
         flux = surface_flux_function(u_inner, u_boundary, orientation_or_normal,
                                      equations)
+        noncons_flux = nonconservative_flux_function(u_inner, u_boundary,
+                                                     orientation_or_normal,
+                                                     equations)
     else # u_boundary is "left" of boundary, u_inner is "right" of boundary
         flux = surface_flux_function(u_boundary, u_inner, orientation_or_normal,
                                      equations)
+        noncons_flux = nonconservative_flux_function(u_boundary, u_inner,
+                                                     orientation_or_normal,
+                                                     equations)
     end
 
-    return flux
+    return flux, noncons_flux
 end
 
 # Set initial conditions at physical location `x` for time `t`
