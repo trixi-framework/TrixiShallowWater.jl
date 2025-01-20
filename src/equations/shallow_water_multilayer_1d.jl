@@ -513,6 +513,27 @@ end
     return (max(abs(v_m_ll), abs(v_m_rr)) + max(c_ll, c_rr))
 end
 
+# Less "cautios", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     orientation::Integer,
+                                     equations::ShallowWaterMultiLayerEquations1D)
+    # Unpack left and right state
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    hv_ll = momentum(u_ll, equations)
+    hv_rr = momentum(u_rr, equations)
+
+    # Get the averaged velocity
+    v_m_ll = sum(hv_ll) / sum(h_ll)
+    v_m_rr = sum(hv_rr) / sum(h_rr)
+
+    # Calculate the wave celerity on the left and right
+    c_ll = sqrt(equations.gravity * sum(h_ll))
+    c_rr = sqrt(equations.gravity * sum(h_rr))
+
+    return (max(abs(v_m_ll) + c_ll, abs(v_m_rr) + c_rr))
+end
+
 # Convert conservative variables to primitive
 @inline function Trixi.cons2prim(u, equations::ShallowWaterMultiLayerEquations1D)
     # Extract waterheight

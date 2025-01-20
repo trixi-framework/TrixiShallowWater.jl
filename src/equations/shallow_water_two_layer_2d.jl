@@ -669,6 +669,71 @@ end
     return max(abs(v_m_ll), abs(v_m_rr)) + max(c_ll, c_rr) * norm(normal_direction)
 end
 
+# Less "cautios", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     orientation::Integer,
+                                     equations::ShallowWaterTwoLayerEquations2D)
+    # Unpack left and right state
+    h_upper_ll, h_v1_upper_ll, h_v2_upper_ll, h_lower_ll, h_v1_lower_ll, h_v2_lower_ll, _ = u_ll
+    h_upper_rr, h_v1_upper_rr, h_v2_upper_rr, h_lower_rr, h_v1_lower_rr, h_v2_lower_rr, _ = u_rr
+
+    # Calculate averaged velocity of both layers
+    if orientation == 1
+        v_m_ll = (h_v1_upper_ll + h_v1_lower_ll) / (h_upper_ll + h_lower_ll)
+        v_m_rr = (h_v1_upper_rr + h_v1_lower_rr) / (h_upper_rr + h_lower_rr)
+    else
+        v_m_ll = (h_v2_upper_ll + h_v2_lower_ll) / (h_upper_ll + h_lower_ll)
+        v_m_rr = (h_v2_upper_rr + h_v2_lower_rr) / (h_upper_rr + h_lower_rr)
+    end
+
+    # Calculate the wave celerity on the left and right
+    h_upper_ll, h_lower_ll = waterheight(u_ll, equations)
+    h_upper_rr, h_lower_rr = waterheight(u_rr, equations)
+
+    c_ll = sqrt(equations.gravity * (h_upper_ll + h_lower_ll))
+    c_rr = sqrt(equations.gravity * (h_upper_rr + h_lower_rr))
+
+    return max(abs(v_m_ll) + c_ll, abs(v_m_rr) + c_rr)
+end
+
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     normal_direction::AbstractVector,
+                                     equations::ShallowWaterTwoLayerEquations2D)
+    # Unpack left and right state
+    h_upper_ll, _, _, h_lower_ll, _, _, _ = u_ll
+    h_upper_rr, _, _, h_lower_rr, _, _, _ = u_rr
+
+    # Extract and compute the velocities in the normal direction
+    v1_upper_ll, v2_upper_ll, v1_lower_ll, v2_lower_ll = velocity(u_ll, equations)
+    v1_upper_rr, v2_upper_rr, v1_lower_rr, v2_lower_rr = velocity(u_rr, equations)
+
+    v_upper_dot_n_ll = v1_upper_ll * normal_direction[1] +
+                       v2_upper_ll * normal_direction[2]
+    v_upper_dot_n_rr = v1_upper_rr * normal_direction[1] +
+                       v2_upper_rr * normal_direction[2]
+    v_lower_dot_n_ll = v1_lower_ll * normal_direction[1] +
+                       v2_lower_ll * normal_direction[2]
+    v_lower_dot_n_rr = v1_lower_rr * normal_direction[1] +
+                       v2_lower_rr * normal_direction[2]
+
+    # Calculate averaged velocity of both layers
+    v_m_ll = (v_upper_dot_n_ll * h_upper_ll + v_lower_dot_n_ll * h_lower_ll) /
+             (h_upper_ll + h_lower_ll)
+    v_m_rr = (v_upper_dot_n_rr * h_upper_rr + v_lower_dot_n_rr * h_lower_rr) /
+             (h_upper_rr + h_lower_rr)
+
+    # Compute the wave celerity on the left and right
+    h_upper_ll, h_lower_ll = waterheight(u_ll, equations)
+    h_upper_rr, h_lower_rr = waterheight(u_rr, equations)
+
+    c_ll = sqrt(equations.gravity * (h_upper_ll + h_lower_ll))
+    c_rr = sqrt(equations.gravity * (h_upper_rr + h_lower_rr))
+
+    norm_ = norm(normal_direction)
+    # The normal velocities are already scaled by the norm
+    return (max(abs(v_m_ll) + c_ll * norm_, abs(v_m_rr) + c_rr * norm_))
+end
+
 # Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom topography
 @inline function (dissipation::DissipationLocalLaxFriedrichs)(u_ll, u_rr,
                                                               orientation_or_normal_direction,

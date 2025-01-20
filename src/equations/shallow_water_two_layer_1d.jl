@@ -393,6 +393,27 @@ end
     c_ll = sqrt(equations.gravity * (h_upper_ll + h_lower_ll))
     c_rr = sqrt(equations.gravity * (h_upper_rr + h_lower_rr))
 
+    return (max(abs(v_m_ll), abs(v_m_rr))) + max(c_ll, c_rr)
+end
+
+# Less "cautios", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     orientation::Integer,
+                                     equations::ShallowWaterTwoLayerEquations1D)
+    # Unpack left and right state
+    h_upper_ll, h_v_upper_ll, h_lower_ll, h_v_lower_ll, _ = u_ll
+    h_upper_rr, h_v_upper_rr, h_lower_rr, h_v_lower_rr, _ = u_rr
+
+    # Get the averaged velocity
+    v_m_ll = (h_v_upper_ll + h_v_lower_ll) / (h_upper_ll + h_lower_ll)
+    v_m_rr = (h_v_upper_rr + h_v_lower_rr) / (h_upper_rr + h_lower_rr)
+
+    # Calculate the wave celerity on the left and right
+    h_upper_ll, h_lower_ll = waterheight(u_ll, equations)
+    h_upper_rr, h_lower_rr = waterheight(u_rr, equations)
+    c_ll = sqrt(equations.gravity * (h_upper_ll + h_lower_ll))
+    c_rr = sqrt(equations.gravity * (h_upper_rr + h_lower_rr))
+
     return (max(abs(v_m_ll) + c_ll, abs(v_m_rr) + c_rr))
 end
 
