@@ -176,7 +176,7 @@ function lake_at_rest_error_two_level(u, x, equations::ShallowWaterEquationsWetD
 end
 
 # point to the data we want to analyze
-u = Trixi.wrap_array(sol[end], semi)
+u = Trixi.wrap_array(sol.u[end], semi)
 # Perform the actual integration of the well-balancedness error over the domain
 l1_well_balance_error = Trixi.integrate_via_indices(u, mesh, equations, semi.solver,
                                                     semi.cache;
