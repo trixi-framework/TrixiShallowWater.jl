@@ -121,4 +121,3 @@ stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.wate
 
 sol = solve(ode, SSPRK43(stage_limiter!), dt = 1.0,
             save_everystep = false, callback = callbacks, adaptive = false);
-summary_callback() # print the timer summary
