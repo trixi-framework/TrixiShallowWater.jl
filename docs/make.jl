@@ -19,9 +19,7 @@ makedocs(;
                                   canonical = "https://trixi-framework.github.io/TrixiShallowWater.jl",
                                   edit_link = "main",
                                   assets = String[],),
-         pages = [
-             "Home" => "index.md",
-         ],
+         pages = ["Home" => "index.md"],
          plugins = [links],)
 
 deploydocs(;
