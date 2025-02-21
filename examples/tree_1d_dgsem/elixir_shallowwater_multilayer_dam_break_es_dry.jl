@@ -11,7 +11,7 @@ equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
                                               rhos = (0.8, 0.85, 0.9, 0.95, 1.0))
 
 # Initial condition of a dam break with a discontinuous water heights and bottom topography.
-# To test the wet/dry functionality this test case considers a dam break over a dry domain with 
+# To test the wet/dry functionality this test case considers a dam break over a dry domain with
 # multiple layers.
 # Works as intended for TreeMesh1D with `initial_refinement_level=5`. If the mesh
 # refinement level is changed the initial condition below may need changed as well to
@@ -119,5 +119,6 @@ stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.wate
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, SSPRK43(stage_limiter!), dt = 1.0,
-            save_everystep = false, callback = callbacks, adaptive = false);
+sol = solve(ode, SSPRK43(stage_limiter!);
+            dt = 1.0, adaptive = false,
+            ode_default_options()..., callback = callbacks);

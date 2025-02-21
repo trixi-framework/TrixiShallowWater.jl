@@ -4,13 +4,13 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the multilayer shallow water equations with a bottom topography function 
+# Semidiscretization of the multilayer shallow water equations with a bottom topography function
 # to test well-balancedness
 
 equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81, H0 = 0.6,
                                               rhos = (0.7, 0.8, 0.9, 1.0))
 
-# An initial condition with constant total water height, zero velocities and a bottom topography to 
+# An initial condition with constant total water height, zero velocities and a bottom topography to
 # test well-balancedness
 function initial_condition_well_balanced(x, t, equations::ShallowWaterMultiLayerEquations2D)
     H = SVector(0.6, 0.55, 0.5, 0.45)
@@ -71,6 +71,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false);
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            save_everystep = false, callback = callbacks);
+            ode_default_options()..., callback = callbacks);
