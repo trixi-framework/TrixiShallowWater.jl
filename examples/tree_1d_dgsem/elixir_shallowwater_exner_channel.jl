@@ -5,7 +5,7 @@ using TrixiShallowWater
 using Roots
 
 ###############################################################################
-# Semidiscretization of the shallow water exner equations for a channel flow problem 
+# Semidiscretization of the shallow water exner equations for a channel flow problem
 # with sediment transport
 
 equations = ShallowWaterExnerEquations1D(gravity_constant = 9.81, rho_f = 1.0, rho_s = 1.0,
@@ -13,7 +13,7 @@ equations = ShallowWaterExnerEquations1D(gravity_constant = 9.81, rho_f = 1.0, r
                                          sediment_model = GrassModel(A_g = 0.01))
 
 # Initial condition for for a channel flow problem over a sediment hump.
-# An asymptotic solution based on the method of characteristics was derived under a rigid-lid 
+# An asymptotic solution based on the method of characteristics was derived under a rigid-lid
 # approximation in chapter 3.5.1 of the thesis:
 # - Justin Hudson (2001)
 #   "Numerical Techniques for Morphodynamic Modelling"
@@ -25,9 +25,9 @@ function initial_condition_channel(x, t,
     H_ref = 10.0    # Reference water level
     hv = 10.0
 
-    # Use the method of characteristics to find the asymptotic solution for the bed height, see 
+    # Use the method of characteristics to find the asymptotic solution for the bed height, see
     # Eq. 3.16 in the reference.
-    # First use an iterative method to predict x0 
+    # First use an iterative method to predict x0
     f(x0) = x[1] - x0 -
             sediment_model.A_g * porosity_inv * 3 * hv^3 * t *
             (H_ref - sinpi((x0 - 300) / 200)^2)^(-4)
@@ -112,5 +112,3 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback,
 sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false);
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             ode_default_options()..., callback = callbacks);
-
-summary_callback() # print the timer summary
