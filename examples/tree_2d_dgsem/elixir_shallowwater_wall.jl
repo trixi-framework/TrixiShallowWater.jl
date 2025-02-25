@@ -1,4 +1,4 @@
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -7,7 +7,7 @@ using TrixiShallowWater
 
 equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 3.25)
 
-# An initial condition with a bottom topography and a perturbation in the waterheight to test 
+# An initial condition with a bottom topography and a perturbation in the waterheight to test
 # boundary_condition_slip_wall
 function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWetDry2D)
     # Set the background values

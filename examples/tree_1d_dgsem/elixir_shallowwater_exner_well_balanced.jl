@@ -1,10 +1,10 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the SWE-Exner equations with a discontinuous sediment bed 
+# Semidiscretization of the SWE-Exner equations with a discontinuous sediment bed
 # to test well-balancedness
 
 # Equations with Meyer-Peter-Mueller sedimentation model

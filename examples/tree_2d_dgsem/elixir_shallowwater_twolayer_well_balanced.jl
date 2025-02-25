@@ -1,16 +1,16 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the two-layer shallow water equations with a bottom topography function 
+# Semidiscretization of the two-layer shallow water equations with a bottom topography function
 # to test well-balancedness
 
 equations = ShallowWaterTwoLayerEquations2D(gravity_constant = 9.81, H0 = 0.6,
                                             rho_upper = 0.9, rho_lower = 1.0)
 
-# An initial condition with constant total water height, zero velocities and a bottom topography to 
+# An initial condition with constant total water height, zero velocities and a bottom topography to
 # test well-balancedness
 function initial_condition_well_balanced(x, t, equations::ShallowWaterTwoLayerEquations2D)
     H_lower = 0.5

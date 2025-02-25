@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -88,10 +88,10 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
 tspan = (0.0, 2.0)
 ode = semidiscretize(semi, tspan)
 ###############################################################################
-#= 
-Workaround for TreeMesh2D to set true discontinuities for debugging and testing. 
+#=
+Workaround for TreeMesh2D to set true discontinuities for debugging and testing.
 Essentially, this is a slight augmentation of the `compute_coefficients` where the `x` node values
-passed here are slightly perturbed in order to set a true discontinuity that avoids the doubled 
+passed here are slightly perturbed in order to set a true discontinuity that avoids the doubled
 value of the LGL nodes at a particular element interface.
 =#
 

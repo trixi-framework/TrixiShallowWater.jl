@@ -1,17 +1,17 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the two-layer shallow water equations for a dam break test with a 
+# Semidiscretization of the two-layer shallow water equations for a dam break test with a
 # discontinuous bottom topography function to test energy conservation
 
 equations = ShallowWaterTwoLayerEquations2D(gravity_constant = 1.0, rho_upper = 0.9,
                                             rho_lower = 1.0)
 
-# This test case uses a special work around to setup a truly discontinuous bottom topography 
-# function and initial condition for this academic testcase of entropy conservation. First, a 
+# This test case uses a special work around to setup a truly discontinuous bottom topography
+# function and initial condition for this academic testcase of entropy conservation. First, a
 # dummy initial_condition_dam_break is introduced to create the semidiscretization. Then the initial
 # condition is reset with the true discontinuous values from initial_condition_discontinuous_dam_break.
 
