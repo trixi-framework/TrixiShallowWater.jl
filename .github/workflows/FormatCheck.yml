@@ -28,7 +28,7 @@ jobs:
         #
         # TODO: remove version restriction once formatting has sorted itself out
         run: |
-          julia  -e 'using Pkg; Pkg.add(PackageSpec(name = "JuliaFormatter", version="1.0.45"))'
+          julia  -e 'using Pkg; Pkg.add(PackageSpec(name = "JuliaFormatter", version="1.0.60"))'
           julia  -e 'using JuliaFormatter; format(".")'
       - name: Format check
         run: |
