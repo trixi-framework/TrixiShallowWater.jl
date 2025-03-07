@@ -61,6 +61,9 @@ struct ShallowWaterEquationsWetDry2D{RealT <: Real} <:
        Trixi.AbstractShallowWaterEquations{2, 4}
     gravity::RealT # gravitational constant
     H0::RealT      # constant "lake-at-rest" total water height
+    # Corriolis parameter coeffficients in the beta-plane approximation (f = f0 + beta * y)
+    f0::RealT
+    beta::RealT
     # `threshold_limiter` used in `PositivityPreservingLimiterShallowWater` on water height,
     # as a (small) shift on the initial condition and cutoff before the next time step.
     # Default is 500*eps() which in double precision is ≈1e-13.
@@ -83,6 +86,7 @@ end
 # well-balancedness test cases.
 # Strict default values for thresholds that performed well in many numerical experiments
 function ShallowWaterEquationsWetDry2D(; gravity_constant, H0 = zero(gravity_constant),
+                                       f0 = 0.0, beta = 0.0,
                                        threshold_limiter = nothing,
                                        threshold_wet = nothing,
                                        threshold_partially_wet = nothing)
@@ -101,7 +105,7 @@ function ShallowWaterEquationsWetDry2D(; gravity_constant, H0 = zero(gravity_con
     # `ShallowWaterEquationsWetDry2D` for convenience.
     basic_swe = ShallowWaterEquations2D(gravity_constant = gravity_constant, H0 = H0)
 
-    ShallowWaterEquationsWetDry2D(gravity_constant, H0, threshold_limiter,
+    ShallowWaterEquationsWetDry2D(gravity_constant, H0, f0, beta, threshold_limiter,
                                   threshold_wet, threshold_partially_wet, basic_swe)
 end
 
@@ -148,6 +152,19 @@ as defined in [`initial_condition_convergence_test`](@ref).
                                                      equations::ShallowWaterEquationsWetDry2D)
     return Trixi.source_terms_convergence_test(u, x, t,
                                                equations.basic_swe)
+end
+
+"""
+    source_terms_corriolis(u, x, t, equations::ShallowWaterEquationsWetDry2D)
+
+This source term can used to account for the Corriolis forces in the [`ShallowWaterEquationsWetDry2D`](@ref).
+The Corriolis parameter `f` is computed with a beta-plane approxmiation (f ≈ f0 + beta * x[2]), where 
+`f` is approximated by the first two terms of its Taylor expansion around x[2] = 0.
+"""
+@inline function source_terms_corriolis(u, x, t, equations::ShallowWaterEquationsWetDry2D)
+    # Compute the Corriolis parameter with a beta-plane approximation
+    f = equations.f0 + equations.beta * x[2]
+    return SVector(0, f*u[3], -f*u[2], 0)
 end
 
 """

@@ -26,7 +26,8 @@ export ShallowWaterEquationsWetDry1D, ShallowWaterEquationsWetDry2D,
 export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle,
        min_max_speed_chen_noelle, flux_hll_chen_noelle,
        flux_ersing_etal, flux_nonconservative_ersing_etal,
-       flux_es_ersing_etal, hydrostatic_reconstruction_ersing_etal
+       flux_es_ersing_etal, hydrostatic_reconstruction_ersing_etal,
+       source_terms_corriolis
 
 export ManningFriction, MeyerPeterMueller, GrassModel, ShieldsStressModel,
        dissipation_roe, water_sediment_height, source_term_bottom_friction
