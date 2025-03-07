@@ -491,6 +491,50 @@ end
 end
 
 """
+    dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
+                                    equations::ShallowWaterEquationsWetDry1D)
+Roe-type dissipation term for the [`ShallowWaterEquationsWetDry1D`](@ref). To create the classical Roe solver,
+this dissipation term can be combined with [`Trixi.flux_central`](@extref) using [`Trixi.FluxPlusDissipation`](@extref).
+"""
+@inline function dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
+                                 equations::ShallowWaterEquationsWetDry1D)
+    g = equations.gravity
+    z = zero(eltype(u_ll))
+
+    # Get velocities and waterheights
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v_ll = velocity(u_ll, equations)
+    v_rr = velocity(u_rr, equations)
+
+    # Compute Roe averages
+    h_avg = 0.5f0 * (h_ll + h_rr)
+    v_avg = (sqrt(h_ll) * v_ll + sqrt(h_rr) * v_rr) /
+            (sqrt(h_ll) + sqrt(h_rr))
+    c_avg = (sqrt(g * h_avg))
+
+    # Compute the eigenvalues
+    λ1 = v_avg - c_avg
+    λ2 = v_avg + c_avg
+
+    # Eigenvector matrix
+    R = @SMatrix [[1 1]; [(v_avg - c_avg) (v_avg + c_avg)]]
+
+    # Inverse eigenvector matrix
+    R_inv = 1 / (2 * c_avg) * @SMatrix [[(v_avg + c_avg) -1]; [(c_avg - v_avg) 1]]
+
+    # Eigenvalue absolute value matrix
+    Λ_abs = @SMatrix [[abs(λ1) z]; [z abs(λ2)]]
+
+    # Compute the jump in conserved variables, excluding the bottom topography
+    u_jump = @views (u_rr - u_ll)[1:2]
+
+    diss = SVector(-0.5f0 * R * Λ_abs * R_inv * u_jump)
+
+    return SVector(diss[1], diss[2], z)
+end
+
+"""
     min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
                               equations::ShallowWaterEquations1D)
 
