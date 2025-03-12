@@ -147,8 +147,6 @@ stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.wate
 sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
             ode_default_options()..., callback = callbacks, adaptive = false);
 
-summary_callback() # print the timer summary
-
 ###############################################################################
 # Workaround to compute the well-balancedness error for this particular problem
 # that has two reference water heights. One for a lake to the left of the
