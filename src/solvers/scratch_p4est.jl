@@ -23,6 +23,8 @@ function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
     MA2d = Trixi.MArray{Tuple{nvariables(equations), nnodes(mortar_l2)},
                         uEltype, 2,
                         nvariables(equations) * nnodes(mortar_l2)}
+
+    # TODO: this could be simplified and reuse some of the cache structure that already exists in Trixi
     fstar_primary_upper_threaded = MA2d[MA2d(undef) for _ in 1:Threads.nthreads()]
     fstar_primary_lower_threaded = MA2d[MA2d(undef) for _ in 1:Threads.nthreads()]
     fstar_secondary_upper_threaded = MA2d[MA2d(undef) for _ in 1:Threads.nthreads()]
@@ -41,7 +43,7 @@ function Trixi.prolong2mortars!(cache, u,
                                 mesh::Union{P4estMesh{2}, T8codeMesh{2}},
                                 equations::ShallowWaterEquationsWetDry2D,
                                 mortar_l2::Trixi.LobattoLegendreMortarL2,
-                                surface_integral, dg::DGSEM)
+                                dg::DGSEM)
     @unpack neighbor_ids, node_indices = cache.mortars
     index_range = eachnode(dg)
 
@@ -96,16 +98,13 @@ function Trixi.prolong2mortars!(cache, u,
             # in practice but a good place to start with the development. We may need to consider more sophisticated
             # positivity preserving projections of the solution like those found in the ALE-DG community to remove
             # this assumption. Then we might be able to directly project the water height `h` instead...
-            # if u[1, i_large, j_large, element] > equations.threshold_limiter + eps()
-            if u[1, i_large, j_large, element] > 2.0 * (equations.threshold_limiter + eps()) # 1e-6
+            # if u[1, i_large, j_large, element] > equations.threshold_partially_wet + eps()
+            # if u[1, i_large, j_large, element] > 2.0 * (equations.threshold_limiter + eps()) # 1e-6
+            if u[1, i_large, j_large, element] > equations.threshold_limiter
             # if u[1, i_large, j_large, element] > 0.0
                 u_buffer[1, i] = u[1, i_large, j_large, element] + u[4, i_large, j_large, element]
-                # u_buffer[2:4, i] = u[2:4, i_large, j_large, element]
-            # else
-            #     u_buffer[1, i] = equations.H0 # from Benov et al.
-            #     u_buffer[2, i] = zero(eltype(u))
-            #     u_buffer[3, i] = zero(eltype(u))
-            #     u_buffer[4, i] = u[4, i_large, j_large, element]
+            else
+                u_buffer[1, i] = equations.H0 # from Benov et al.
             end
             u_buffer[2:4, i] = u[2:4, i_large, j_large, element]
 
@@ -132,9 +131,9 @@ function Trixi.prolong2mortars!(cache, u,
         # Benov et al. and instead be the conservative water height variable `h`.
         # Basically, unpacking the sigma variable to create the projected local water
         # height from Eq. 41 in Benov et al.
-        # TODO: My main hope was that this avoids allocations
-        # TODO: My other hope is that such a strategy will make this code extensible
+        # TODO: Adapt this strategy so that it will be extensible
         #       to the multilayer equations as well.
+        # TODO: Maybe apply the limiter again here (in combo with HR) as a better approach
         for i in eachnode(dg)
             cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar], equations.threshold_limiter)
             cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar], equations.threshold_limiter)
@@ -143,55 +142,18 @@ function Trixi.prolong2mortars!(cache, u,
             # cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar], 0.0)
             # cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar], 0.0)
 
-            # TODO: Should we desingularize the velocities after the projection?
-
-            # Desingularize velocity on the mortars
-
-            # Mortars with the projected solution from the parent
-            h = cache.mortars.u[2, 1, 1, i, mortar]
-            cache.mortars.u[2, 2, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[2, 2, 1, i, mortar]) / (h^2 + max(h^2, 1e-6))
-            cache.mortars.u[2, 3, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[2, 3, 1, i, mortar]) / (h^2 + max(h^2, 1e-6))
-
-            h = cache.mortars.u[2, 1, 2, i, mortar]
-            cache.mortars.u[2, 2, 2, i, mortar] = h * (2.0 * h * cache.mortars.u[2, 2, 2, i, mortar]) / (h^2 + max(h^2, 1e-6))
-            cache.mortars.u[2, 3, 2, i, mortar] = h * (2.0 * h * cache.mortars.u[2, 3, 2, i, mortar]) / (h^2 + max(h^2, 1e-6))
-
-            # Mortars with the solutions copied from the children
-            h = cache.mortars.u[1, 1, 1, i, mortar]
-            cache.mortars.u[1, 2, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[1, 2, 1, i, mortar]) / (h^2 + max(h^2, 1e-6))
-            cache.mortars.u[1, 3, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[1, 3, 1, i, mortar]) / (h^2 + max(h^2, 1e-6))
-
-            h = cache.mortars.u[1, 1, 2, i, mortar]
-            cache.mortars.u[1, 2, 2, i, mortar] = h * (2.0 * h * cache.mortars.u[1, 2, 2, i, mortar]) / (h^2 + max(h^2, 1e-6))
-            cache.mortars.u[1, 3, 2, i, mortar] = h * (2.0 * h * cache.mortars.u[1, 3, 2, i, mortar]) / (h^2 + max(h^2, 1e-6))
-
-            # Mortar with the convenience storage of the unprojected parent solution
-            h = cache.mortars.u[3, 1, 1, i, mortar]
-            cache.mortars.u[3, 2, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[3, 2, 1, i, mortar]) / (h^2 + max(h^2, 1e-6))
-            cache.mortars.u[3, 3, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[3, 3, 1, i, mortar]) / (h^2 + max(h^2, 1e-6))
-
-            # if cache.mortars.u[2, 1, 1, i, mortar] <= equations.threshold_limiter
-            #     cache.mortars.u[2, 1, 1, i, mortar] = equations.threshold_limiter
-            #     cache.mortars.u[2, 2, 1, i, mortar] = zero(eltype(u))
-            #     cache.mortars.u[2, 3, 1, i, mortar] = zero(eltype(u))
-            # end
-            # if cache.mortars.u[2, 1, 2, i, mortar] <= equations.threshold_limiter
-            #     cache.mortars.u[2, 1, 2, i, mortar] = equations.threshold_limiter
-            #     cache.mortars.u[2, 2, 2, i, mortar] = zero(eltype(u))
-            #     cache.mortars.u[2, 3, 2, i, mortar] = zero(eltype(u))
-            # end
-            # if cache.mortars.u[3, 1, 1, i, mortar] <= equations.threshold_limiter
-            #     cache.mortars.u[3, 1, 1, i, mortar] = equations.threshold_limiter
-            #     cache.mortars.u[3, 2, 1, i, mortar] = zero(eltype(u))
-            #     cache.mortars.u[3, 3, 1, i, mortar] = zero(eltype(u))
-            # end
+            # TODO: Can we call the stage limiter here for safety / debugging?
+            # adapt this call?!
+            # limiter_shallow_water!(u, threshold::Real, variable,
+            #                         mesh::Trixi.AbstractMesh{2},
+            #                         equations::ShallowWaterEquationsWetDry2D, dg::DGSEM,
+            #                         cache)
         end
     end
 
     return nothing
 end
 
-# TODO: The procedure below allocates a lot. Need a better way to avoid this
 function Trixi.calc_mortar_flux!(surface_flux_values,
                                     mesh::Union{P4estMesh{2}, T8codeMesh{2}},
                                     nonconservative_terms,
@@ -200,7 +162,7 @@ function Trixi.calc_mortar_flux!(surface_flux_values,
                                     surface_integral, dg::DG, cache)
     @unpack neighbor_ids, node_indices = cache.mortars
     @unpack contravariant_vectors = cache.elements
-    @unpack fstar_primary_upper_threaded, fstar_primary_lower_threaded, fstar_secondary_upper_threaded, fstar_secondary_lower_threaded, f_upper_threaded, f_lower_threaded = cache
+    @unpack fstar_primary_upper_threaded, fstar_primary_lower_threaded, fstar_secondary_upper_threaded, fstar_secondary_lower_threaded, f_upper_threaded, f_lower_threaded = cache#, fchild1_threaded, fchild2_threaded, fchild1_original_threaded, fchild2_original_threaded = cache
     surface_flux, nonconservative_flux = surface_integral.surface_flux
     index_range = eachnode(dg)
 
@@ -264,14 +226,13 @@ function Trixi.calc_mortar_flux!(surface_flux_values,
                 # the interpretation of global SBP operators coupled discontinuously via
                 # central fluxes/SATs
                 noncons = nonconservative_flux(u_rr, u_rr,
-                                               normal_direction, normal_direction,
+                                               normal_direction,
                                                equations)
 
                 flux_plus_noncons = flux + 0.5 * noncons
 
                 # Copy to the physical flux buffer
                 set_node_vars!(f[position], flux_plus_noncons, equations, dg, node)
-                #####
 
                 i_small += i_small_step
                 j_small += j_small_step
@@ -296,57 +257,13 @@ function Trixi.calc_mortar_flux!(surface_flux_values,
     return nothing
 end
 
-# Inlined version of the mortar flux computation on small elements for equations with conservative and
-# nonconservative terms
-@inline function Trixi.calc_mortar_flux!(fstar_primary, fstar_secondary,
-                                            mesh::Union{P4estMesh{2}, T8codeMesh{2}},
-                                            nonconservative_terms::True,
-                                            equations::ShallowWaterEquationsWetDry2D,
-                                            surface_integral, dg::DG, cache,
-                                            mortar_index, position_index, normal_direction,
-                                            node_index)
-    @unpack u = cache.mortars
-    surface_flux, nonconservative_flux = surface_integral.surface_flux
-
-    u_ll, u_rr = Trixi.get_surface_node_vars(u, equations, dg, position_index, node_index,
-                                             mortar_index)
-
-    # General idea of the mortar flux plus nonconserative term treatment is the following:
-    #    (1) unpack the sigma to create the water height on the mortar from Eq. 41 in Benov et al.
-    #    (2) perform hydrostatic reconstruction on the mortar solution
-    #    (3) use these HR quantities to compute the flux and nonconservative terms
-    # The first step is actually done in the `prolong2mortars!`routine.
-    # The other two steps occur within the surface flux and nonconservative computations.
-
-    # Compute conservative flux
-    flux = surface_flux(u_ll, u_rr, normal_direction, equations)
-
-    # Compute nonconservative flux and add it to the conservative flux.
-    # The nonconservative flux is scaled by a factor of 0.5 based on
-    # the interpretation of global SBP operators coupled discontinuously via
-    # central fluxes/SATs
-    noncons_primary = nonconservative_flux(u_ll, u_rr,
-                                           normal_direction, normal_direction,
-                                           equations)
-    noncons_secondary = nonconservative_flux(u_rr, u_ll,
-                                             normal_direction, normal_direction,
-                                             equations)
-
-    flux_plus_noncons_primary = flux + 0.5 * noncons_primary
-    flux_plus_noncons_secondary = flux + 0.5 * noncons_secondary
-
-    # Copy results to the buffers
-    set_node_vars!(fstar_primary[position_index], flux_plus_noncons_primary, equations, dg, node_index)
-    set_node_vars!(fstar_secondary[position_index], flux_plus_noncons_secondary, equations, dg, node_index)
-end
-
 @inline function Trixi.mortar_fluxes_to_elements!(surface_flux_values,
-                                                    mesh::Union{P4estMesh{2}, T8codeMesh{2}},
-                                                    equations::ShallowWaterEquationsWetDry2D,
-                                                    mortar_l2::Trixi.LobattoLegendreMortarL2,
-                                                    dg::DGSEM, cache, mortar,
-                                                    fstar_primary, fstar_secondary,
-                                                    f_large, u_buffer)
+                                                  mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+                                                  equations::ShallowWaterEquationsWetDry2D,
+                                                  mortar_l2::Trixi.LobattoLegendreMortarL2,
+                                                  dg::DGSEM, cache, mortar,
+                                                  fstar_primary, fstar_secondary,
+                                                  f_large, u_buffer)
     @unpack contravariant_vectors = cache.elements
     @unpack neighbor_ids, node_indices = cache.mortars
     surface_flux, nonconservative_flux = dg.surface_integral.surface_flux
@@ -359,19 +276,21 @@ end
         element = neighbor_ids[position, mortar]
         for i in eachnode(dg)
             for v in eachvariable(equations)
-                surface_flux_values[v, i, small_direction, element] = fstar_primary[position][v,
-                                                                                        i]
+                surface_flux_values[v, i, small_direction, element] = fstar_primary[position][v, i]
             end
         end
     end
 
+    Trixi.@trixi_timeit Trixi.timer() "penalty to parents" begin
     # Project small numerical fluxes and physical flux penalty computed on the projected
     # large element solution back onto large element.
     # This is basically Eq. (46) from Benov et al. where the factor of 1/2 is already
     # already included in `reverse_upper` and `reverse_lower` operators.
+    # TODO: This portion of the procedure allocates a lot. Need a better way to avoid this
     Trixi.multiply_dimensionwise!(u_buffer,
                                   mortar_l2.reverse_upper, (fstar_secondary[2] .- f_large[2]),
                                   mortar_l2.reverse_lower, (fstar_secondary[1] .- f_large[1]))
+    end
 
     # The flux is calculated in the outward direction of the small elements,
     # so the sign must be switched to get the flux in outward direction
@@ -419,7 +338,7 @@ end
 
         noncons = nonconservative_flux(view(cache.mortars.u, 3, :, 1, node, mortar),
                                        view(cache.mortars.u, 3, :, 1, node, mortar),
-                                       normal_direction, normal_direction,
+                                       normal_direction,
                                        equations)
 
         flux_plus_noncons = flux + 0.5 * noncons
