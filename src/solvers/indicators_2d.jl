@@ -6,7 +6,7 @@
 #! format: noindent
 
 # Modified indicator for ShallowWaterEquationsWetDry2D and ShallowWaterMultiLayerEquations2D to apply
-# full FV method on elements containing some "dry" LGL nodes. That is, if an element is partially 
+# full FV method on elements containing some "dry" LGL nodes. That is, if an element is partially
 # "wet" then it becomes a full FV element.
 function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{<:Any,
                                                                                 4},
@@ -103,7 +103,7 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
 
         # Clip the maximum amount of FV allowed or set to 1 depending on indicator_wet
         if indicator_wet == 0
-            alpha[element] = 1
+            alpha[element] = one(alpha_element)
         else # Element is not defined as dry but wet
             alpha[element] = min(alpha_max, alpha_element)
         end
