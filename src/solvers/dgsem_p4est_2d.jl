@@ -94,7 +94,7 @@ function Trixi.prolong2mortars!(cache, u,
             # that we only project constant solution data in still water regions of the domain.
             # OBS! A small shift is likely required to ensure we catch water heights close to the threshold
             # TODO: This strategy from Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008) assumes that
-            # we know the constant background water height H0 which we pertub around. Fairly restrictive
+            # we know the constant background water height H0 which we perturb around. Fairly restrictive
             # in practice but a good place to start with the development. We may need to consider more sophisticated
             # positivity preserving projections of the solution like those found in the ALE-DG community to remove
             # this assumption. Then we might be able to directly project the water height `h` instead...

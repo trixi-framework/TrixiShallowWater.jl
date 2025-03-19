@@ -16,7 +16,8 @@ include("equations/equations.jl")
 include("equations/numerical_fluxes.jl")
 include("callbacks_stage/callbacks_stage.jl")
 include("solvers/indicators.jl")
-include("solvers/scratch_p4est.jl")
+# include("solvers/dgsem_p4est_containers_2d.jl")
+include("solvers/dgsem_p4est_2d.jl")
 
 # Export types/functions that define the public API of TrixiShallowWater.jl
 export ShallowWaterEquationsWetDry1D, ShallowWaterEquationsWetDry2D,
