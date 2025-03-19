@@ -200,15 +200,16 @@ summary_callback = SummaryCallback()
 
 analysis_interval = 10000
 analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
+                                     extra_analysis_errors = (:conservation_error,),
                                      extra_analysis_integrals = (lake_at_rest_error,))
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(dt = 1.0,
+save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stepsize_callback = StepsizeCallback(cfl = 0.48)
+stepsize_callback = StepsizeCallback(cfl = 1.0)
 
 callbacks = CallbackSet(summary_callback,
                         analysis_callback,
@@ -224,4 +225,3 @@ sol = solve(ode, SSPRK43(stage_limiter!),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             adaptive = false,
             save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary

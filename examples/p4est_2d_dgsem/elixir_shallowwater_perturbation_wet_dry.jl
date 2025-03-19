@@ -4,6 +4,22 @@ using OrdinaryDiffEq
 using Trixi
 using TrixiShallowWater
 
+##
+# we might need this change in the Trixi main
+# @inline function velocity(u, equations::ShallowWaterEquations2D)
+#     h, h_v1, h_v2, _ = u
+
+# -    v1 = h_v1 / h
+# -    v2 = h_v2 / h
+# +    # v1 = h_v1 / h
+# +    # v2 = h_v2 / h
+# +    # Velocity desingularization
+# +    v1 = (2.0 * h * h_v1) / (h^2 + max(h^2, 1e-6))
+# +    v2 = (2.0 * h * h_v2) / (h^2 + max(h^2, 1e-6))
+#     return SVector(v1, v2)
+# end
+#
+
 # TODO: This elixir is for debugging purposes of the AMR + well-balanced mortars.
 # Currently this crashes very early in the simulation. ONe possible explanation is that
 # the projection / interpolation of the solution as it is refined / coarsened may need
@@ -15,7 +31,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a continuous
 # bottom topography function
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 1.235)
+equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 1.235)#, threshold_partially_wet=1e-4)#, threshold_limiter=1e-6) #, threshold_limiter=1e-4) #5*eps())
 
 function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWetDry2D)
     # Calculate primitive variables
@@ -56,13 +72,21 @@ surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_
 #                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 # Create the solver
-basis = LobattoLegendreBasis(3)
+basis = LobattoLegendreBasis(4)
+
+# indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
+#                                                      alpha_max = 1.0,
+#                                                      alpha_min = 0.001,
+#                                                      alpha_smooth = false,
+#                                                      variable = Trixi.waterheight)
 
 indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
                                                      alpha_max = 0.5,
                                                      alpha_min = 0.001,
                                                      alpha_smooth = true,
-                                                     variable = Trixi.waterheight) # waterheight_pressure)
+                                                     variable = Trixi.waterheight)
+                                                    #  variable = waterheight_pressure)
+                                                    #  variable = pressure)
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
                                                  volume_flux_dg = volume_flux,
                                                  volume_flux_fv = surface_flux)
@@ -71,6 +95,9 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 
 ###############################################################################
 # This setup is for the curved, split form well-balancedness testing
+
+# TODO: Make this mesh periodic to properly test for conservation
+#       for this wet/dry testcase with AMR + well-balanced mortars
 
 # Unstructured mesh with 24 cells of the square domain [-1, 1]^2
 mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2ea224409e55ee8423b3a33e316a/raw/7db58af7446d1479753ae718930741c47a3b79b7/square_unstructured_2.inp",
@@ -85,7 +112,7 @@ function mapping_twist(xi, eta)
     return SVector(x, y)
 end
 
-mesh = P4estMesh{2}(mesh_file, polydeg = 3,
+mesh = P4estMesh{2}(mesh_file, polydeg = 4,
                     mapping = mapping_twist,
                     initial_refinement_level = 0)
 
@@ -115,7 +142,7 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
 ###############################################################################
 # ODE solvers, callbacks, etc.
 
-tspan = (0.0, 0.5)
+tspan = (0.0, 1.0)
 ode = semidiscretize(semi, tspan)
 
 function initial_condition_discontinuous_well_balancedness(x, t, element_id, equations::ShallowWaterEquationsWetDry2D)
@@ -142,7 +169,7 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id, equ
 
     # Put in a discontinous purturbation using the element number
     if element_id in [232, 224, 225, 226, 227, 228, 229, 230]
-        H = H + 0.3
+        H = H + 1.3 # 1.8
     end
 
     # Clip the initialization to avoid negative water heights and division by zero
@@ -168,30 +195,33 @@ end
 summary_callback = SummaryCallback()
 
 analysis_interval = 1000
-analysis_callback = AnalysisCallback(semi, interval = analysis_interval)
+analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
+                                     extra_analysis_errors = (:conservation_error,),
+                                     extra_analysis_integrals = (lake_at_rest_error,))
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(interval=20, #dt = 0.04,
+save_solution = SaveSolutionCallback(dt = 0.02, #interval=20,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
 # # Define a better variable to use in the AMR indicator
 # @inline function total_water_height(u, equations::ShallowWaterEquationsWetDry2D)
-#   return u[1] + u[4]
+#   # return u[1]
+#   return min(abs(u[1] + u[4] - equations.H0 - equations.threshold_limiter), abs(u[1] - equations.threshold_limiter)) + equations.H0
 # end
 
 # amr_controller = ControllerThreeLevel(semi, IndicatorMax(semi, variable = total_water_height),
-#                                       base_level = 1,
-#                                       med_level = 2, med_threshold = 1.225, # 2.01,
-#                                       max_level = 4, max_threshold = 1.245) # 2.15)
+#                                       base_level = 0,
+#                                       med_level = 1, med_threshold = 1.1, # with adding back H0
+#                                       max_level = 2, max_threshold = 1.3)
 
 # amr_callback = AMRCallback(semi, amr_controller,
 #                            interval = 1,
 #                            adapt_initial_condition = false,
 #                            adapt_initial_condition_only_refine = false)
 
-stepsize_callback = StepsizeCallback(cfl = 0.2)
+stepsize_callback = StepsizeCallback(cfl = 0.8)
 
 callbacks = CallbackSet(summary_callback,
                         analysis_callback,
@@ -208,4 +238,3 @@ sol = solve(ode, SSPRK43(stage_limiter!),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             adaptive = false,
             save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary

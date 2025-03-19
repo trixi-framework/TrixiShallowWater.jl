@@ -38,28 +38,23 @@ initial_condition = initial_condition_wb_testing
 ###############################################################################
 # Get the DG approximation space
 
-# # ersing flux in both
-# volume_flux = (flux_wintermeyer_etal, flux_nonconservative_ersing_etal)
-# surface_flux = (flux_wintermeyer_etal, flux_nonconservative_ersing_etal)
 
-# # Wintermeyer flux in the volume
-# volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
-
-# Wintermeyer flux in the surface for testing
+# Wintermeyer for both
+volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 # surface_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 
-# surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
-#                 flux_nonconservative_chen_noelle)
+surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
+                flux_nonconservative_chen_noelle)
 
 
 # # Fjordholms flux for testing
 # surface_flux = (flux_fjordholm_etal, flux_nonconservative_fjordholm_etal)
 
-# Audusse HR with Rusanov flux
-volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
-surface_flux = (FluxHydrostaticReconstruction(flux_lax_friedrichs,
-                                                hydrostatic_reconstruction_audusse_etal),
-                flux_nonconservative_audusse_etal)
+# # Audusse HR with Rusanov flux
+# volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
+# surface_flux = (FluxHydrostaticReconstruction(flux_lax_friedrichs,
+#                                                 hydrostatic_reconstruction_audusse_etal),
+#                 flux_nonconservative_audusse_etal)
 
 # Audusse HR with HLL flux
 # surface_flux = (FluxHydrostaticReconstruction(flux_hll, hydrostatic_reconstruction_audusse_etal),
@@ -133,7 +128,7 @@ ode = semidiscretize(semi, tspan)
 ###############################################################################
 # # Workaround to set a discontinuous bottom topography for debugging and testing.
 
-# alternative version of the initial conditinon used to setup a truly discontinuous
+# alternative version of the initial condition used to setup a truly discontinuous
 # bottom topography function for this academic testcase.
 # The errors from the analysis callback are not important but the error for this lake at rest test case
 # `∑|H0-(h+b)|` should be around machine roundoff
@@ -162,6 +157,8 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id, equ
              0.25 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
     end
 
+    # b = pi/10 # test out a constant bottom topography that is not zero
+
   return prim2cons(SVector(H, v1, v2, b), equations)
 end
 
@@ -179,13 +176,14 @@ end
 
 summary_callback = SummaryCallback()
 
-analysis_interval = 100
+analysis_interval = 1000
 analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
+                                     extra_analysis_errors = (:conservation_error,),
                                      extra_analysis_integrals = (lake_at_rest_error,))
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(interval = 100, # dt = 1.0,
+save_solution = SaveSolutionCallback( dt = 1.0, #interval = 50,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
@@ -199,9 +197,8 @@ callbacks = CallbackSet(summary_callback,
 
 ###############################################################################
 # run the simulation
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
-# sol = solve(ode, SSPRK43(),
+# sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, SSPRK43(),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            # adaptive = false,
+            adaptive = false,
             save_everystep = false, callback = callbacks,);
-summary_callback() # print the timer summary

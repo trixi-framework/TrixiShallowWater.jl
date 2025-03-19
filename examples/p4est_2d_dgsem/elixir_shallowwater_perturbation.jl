@@ -23,6 +23,8 @@ function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWe
          -
          0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
 
+    # b = pi/10
+
     # Waterheight perturbation
     H = H + 0.5 * exp(-40.0 * ((x[1])^2 + (x[2])^2))
 
@@ -42,6 +44,9 @@ volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
                 flux_nonconservative_chen_noelle)
 
+# # Wintermeyer flux in the surface for testing
+# surface_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
+
 # Create the solver
 solver = DGSEM(polydeg = 3, surface_flux = surface_flux,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
@@ -49,26 +54,69 @@ solver = DGSEM(polydeg = 3, surface_flux = surface_flux,
 ###############################################################################
 # This setup is for the curved, split form well-balancedness testing
 
-# Unstructured mesh with 24 cells of the square domain [-1, 1]^2
-mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2ea224409e55ee8423b3a33e316a/raw/7db58af7446d1479753ae718930741c47a3b79b7/square_unstructured_2.inp",
-                           joinpath(@__DIR__, "square_unstructured_2.inp"))
+# TODO: Make this mesh periodic to properly test for conservation for the fully
+#       wet testcase with AMR + well-balanced mortars
+
+# # Version from the mesh file
+
+# # Unstructured mesh with 24 cells of the square domain [-1, 1]^2
+# mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2ea224409e55ee8423b3a33e316a/raw/7db58af7446d1479753ae718930741c47a3b79b7/square_unstructured_2.inp",
+#                            joinpath(@__DIR__, "square_unstructured_2.inp"))
+
+# # Affine type mapping to take the [-1,1]^2 domain from the mesh file
+# # and warp it as described in https://arxiv.org/abs/2012.12040
+# # Warping with the coefficient 0.2 is even more extreme.
+# function mapping_twist(xi, eta)
+#     y = eta + 0.175 * cos(1.5 * pi * xi) * cos(0.5 * pi * eta)
+#     x = xi + 0.175 * cos(0.5 * pi * xi) * cos(2.0 * pi * y)
+#     return SVector(x, y)
+# end
+
+# mesh = P4estMesh{2}(mesh_file, polydeg = 3,
+#                     mapping = mapping_twist,
+#                     initial_refinement_level = 0)
+
+# Version from the built in constructor
 
 # Affine type mapping to take the [-1,1]^2 domain from the mesh file
 # and warp it as described in https://arxiv.org/abs/2012.12040
 # Warping with the coefficient 0.2 is even more extreme.
 function mapping_twist(xi, eta)
-    y = eta + 0.175 * cos(1.5 * pi * xi) * cos(0.5 * pi * eta)
-    x = xi + 0.175 * cos(0.5 * pi * xi) * cos(2.0 * pi * y)
+    y = eta + 0.125 * cos(1.5 * pi * xi) * cos(0.5 * pi * eta)
+    x = xi + 0.125 * cos(0.5 * pi * xi) * cos(2.0 * pi * y)
     return SVector(x, y)
 end
 
-mesh = P4estMesh{2}(mesh_file, polydeg = 3,
-                    mapping = mapping_twist,
-                    initial_refinement_level = 0)
+# The mesh below can be made periodic
+# Create P4estMesh with 4 x 4 trees
+trees_per_dimension = (4, 4)
+mesh = P4estMesh(trees_per_dimension, polydeg = 3,
+                 mapping = mapping_twist,
+                 initial_refinement_level = 0,
+                 periodicity = true)
+
+# Refine bottom left quadrant of each tree to level 3
+function refine_fn(p4est, which_tree, quadrant)
+  quadrant_obj = unsafe_load(quadrant)
+  if quadrant_obj.x == 0 && quadrant_obj.y == 0 && quadrant_obj.level < 3
+      # return true (refine)
+      return Cint(1)
+  else
+      # return false (don't refine)
+      return Cint(0)
+  end
+end
+
+# Refine recursively until each bottom left quadrant of a tree has level 3
+# The mesh will be rebalanced before the simulation starts
+refine_fn_c = @cfunction(refine_fn, Cint,
+                       (Ptr{Trixi.p4est_t}, Ptr{Trixi.p4est_topidx_t},
+                        Ptr{Trixi.p4est_quadrant_t}))
+Trixi.refine_p4est!(mesh.p4est, true, refine_fn_c, C_NULL)
 
 # Create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
-                                    boundary_conditions = boundary_condition)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)#,
+                                    # boundary_conditions = boundary_condition)
 
 ###############################################################################
 # ODE solvers, callbacks, etc.
@@ -81,7 +129,8 @@ ode = semidiscretize(semi, tspan)
 summary_callback = SummaryCallback()
 
 analysis_interval = 100
-analysis_callback = AnalysisCallback(semi, interval = analysis_interval)
+analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
+                                     extra_analysis_errors = (:conservation_error,))
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
@@ -110,7 +159,7 @@ callbacks = CallbackSet(summary_callback,
                         analysis_callback,
                         alive_callback,
                         save_solution,
-                        amr_callback,
+                        # amr_callback,
                         stepsize_callback)
 
 ###############################################################################
@@ -119,4 +168,3 @@ sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             # adaptive = false,
             save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary
