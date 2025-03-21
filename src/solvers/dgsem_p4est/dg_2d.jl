@@ -99,8 +99,8 @@ function Trixi.prolong2mortars!(cache, u,
             # positivity preserving projections of the solution like those found in the ALE-DG community to remove
             # this assumption. Then we might be able to directly project the water height `h` instead...
             # if u[1, i_large, j_large, element] > equations.threshold_partially_wet + eps()
-            # if u[1, i_large, j_large, element] > 2.0 * (equations.threshold_limiter + eps()) # 1e-6
-            if u[1, i_large, j_large, element] > equations.threshold_limiter
+            if u[1, i_large, j_large, element] > 2 * (equations.threshold_limiter + eps())
+            # if u[1, i_large, j_large, element] > equations.threshold_limiter
             # if u[1, i_large, j_large, element] > 0.0
                 u_buffer[1, i] = u[1, i_large, j_large, element] + u[4, i_large, j_large, element]
             else
@@ -287,10 +287,15 @@ end
     # This is basically Eq. (46) from Benov et al. where the factor of 1/2 is already
     # already included in `reverse_upper` and `reverse_lower` operators.
     # TODO: This portion of the procedure allocates a lot. Need a better way to avoid this
+    new2 = fstar_secondary[2] - f_large[2]
+    new1 = fstar_secondary[1] - f_large[1]
     Trixi.multiply_dimensionwise!(u_buffer,
-                                  mortar_l2.reverse_upper, (fstar_secondary[2] .- f_large[2]),
-                                  mortar_l2.reverse_lower, (fstar_secondary[1] .- f_large[1]))
+                                  mortar_l2.reverse_upper, new2,
+                                  mortar_l2.reverse_lower, new1)
     end
+
+    # println(typeof(fstar_secondary)," ", typeof(f_large)," ", typeof(fstar_secondary[2] - f_large[2]))
+    # wololo()
 
     # The flux is calculated in the outward direction of the small elements,
     # so the sign must be switched to get the flux in outward direction
