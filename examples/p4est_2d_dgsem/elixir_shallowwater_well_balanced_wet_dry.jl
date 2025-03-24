@@ -145,7 +145,7 @@ ode = semidiscretize(semi, tspan)
 ###############################################################################
 # # Workaround to set a discontinuous bottom topography for debugging and testing.
 
-# alternative version of the initial conditinon used to setup a truly discontinuous
+# alternative version of the initial condition used to setup a truly discontinuous
 # bottom topography function for this academic testcase.
 # The errors from the analysis callback are not important but the error for this lake at rest test case
 # `∑|H0-(h+b)|` should be around machine roundoff

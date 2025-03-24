@@ -82,8 +82,8 @@ solver = DGSEM(polydeg = 3, surface_flux = surface_flux,
 # and warp it as described in https://arxiv.org/abs/2012.12040
 # Warping with the coefficient 0.2 is even more extreme.
 function mapping_twist(xi, eta)
-    y = eta + 0.125 * cos(1.5 * pi * xi) * cos(0.5 * pi * eta)
-    x = xi + 0.125 * cos(0.5 * pi * xi) * cos(2.0 * pi * y)
+    y = eta + 0.2 * cos(1.5 * pi * xi) * cos(0.5 * pi * eta)
+    x = xi + 0.2 * cos(0.5 * pi * xi) * cos(2.0 * pi * y)
     return SVector(x, y)
 end
 
@@ -144,8 +144,8 @@ save_solution = SaveSolutionCallback(dt = 0.04,
 end
 
 amr_controller = ControllerThreeLevel(semi, IndicatorMax(semi, variable = total_water_height),
-                                      base_level = 0,
-                                      med_level = 1, med_threshold = 2.01,
+                                      base_level = 1,
+                                      med_level = 2, med_threshold = 2.01,
                                       max_level = 4, max_threshold = 2.15)
 
 amr_callback = AMRCallback(semi, amr_controller,
@@ -159,12 +159,12 @@ callbacks = CallbackSet(summary_callback,
                         analysis_callback,
                         alive_callback,
                         save_solution,
-                        # amr_callback,
+                        amr_callback,
                         stepsize_callback)
 
 ###############################################################################
 # run the simulation
 sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            # adaptive = false,
+            adaptive = false,
             save_everystep = false, callback = callbacks);
