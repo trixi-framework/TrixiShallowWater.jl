@@ -281,21 +281,15 @@ end
         end
     end
 
-    Trixi.@trixi_timeit Trixi.timer() "penalty to parents" begin
     # Project small numerical fluxes and physical flux penalty computed on the projected
     # large element solution back onto large element.
     # This is basically Eq. (46) from Benov et al. where the factor of 1/2 is already
     # already included in `reverse_upper` and `reverse_lower` operators.
-    # TODO: This portion of the procedure allocates a lot. Need a better way to avoid this
-    new2 = fstar_secondary[2] - f_large[2]
-    new1 = fstar_secondary[1] - f_large[1]
+    penalty_upper = Trixi.SMatrix(fstar_secondary[2]) - Trixi.SMatrix(f_large[2])
+    penalty_lower = Trixi.SMatrix(fstar_secondary[1]) - Trixi.SMatrix(f_large[1])
     Trixi.multiply_dimensionwise!(u_buffer,
-                                  mortar_l2.reverse_upper, new2,
-                                  mortar_l2.reverse_lower, new1)
-    end
-
-    # println(typeof(fstar_secondary)," ", typeof(f_large)," ", typeof(fstar_secondary[2] - f_large[2]))
-    # wololo()
+                                  mortar_l2.reverse_upper, penalty_upper,
+                                  mortar_l2.reverse_lower, penalty_lower)
 
     # The flux is calculated in the outward direction of the small elements,
     # so the sign must be switched to get the flux in outward direction
