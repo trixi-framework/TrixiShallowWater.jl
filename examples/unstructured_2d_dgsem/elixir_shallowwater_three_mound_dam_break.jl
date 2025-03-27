@@ -53,15 +53,17 @@ end
 initial_condition = initial_condition_three_mounds
 
 function boundary_condition_outflow(u_inner, normal_direction::AbstractVector, x, t,
-                                    surface_flux_function,
+                                    surface_flux_functions,
                                     equations::ShallowWaterEquationsWetDry2D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
     # Impulse and bottom from inside, height from external state
     u_outer = SVector(equations.threshold_wet, u_inner[2], u_inner[3], u_inner[4])
 
     # calculate the boundary flux
     flux = surface_flux_function(u_inner, u_outer, normal_direction, equations)
-
-    return flux
+    noncons_flux = nonconservative_flux_function(u_inner, u_outer, normal_direction,
+                                                 equations)
+    return flux, noncons_flux
 end
 
 boundary_conditions = Dict(:Bottom => boundary_condition_slip_wall,
@@ -136,4 +138,3 @@ stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.wate
 
 sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()..., callback = callbacks);
-summary_callback() # print the timer summary

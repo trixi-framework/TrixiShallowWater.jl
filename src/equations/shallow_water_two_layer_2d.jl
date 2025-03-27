@@ -238,8 +238,10 @@ For details see Section 9.2.5 of the book:
 """
 @inline function Trixi.boundary_condition_slip_wall(u_inner,
                                                     normal_direction::AbstractVector,
-                                                    x, t, surface_flux_function,
+                                                    x, t, surface_flux_functions,
                                                     equations::ShallowWaterTwoLayerEquations2D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
     # normalize the outward pointing direction
     normal = normal_direction / norm(normal_direction)
 
@@ -258,7 +260,10 @@ For details see Section 9.2.5 of the book:
 
     # calculate the boundary flux
     flux = surface_flux_function(u_inner, u_boundary, normal_direction, equations)
-    return flux
+    noncons_flux = nonconservative_flux_function(u_inner, u_boundary, normal_direction,
+                                                 equations)
+
+    return flux, noncons_flux
 end
 
 # Calculate 1D flux for a single point

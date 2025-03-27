@@ -331,8 +331,10 @@ For details see Section 9.2.5 of the book:
 @inline function Trixi.boundary_condition_slip_wall(u_inner,
                                                     normal_direction::AbstractVector,
                                                     x, t,
-                                                    surface_flux_function,
+                                                    surface_flux_functions,
                                                     equations::ShallowWaterMultiLayerEquations2D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
     # normalize the outward pointing direction
     normal = normal_direction / norm(normal_direction)
 
@@ -352,8 +354,10 @@ For details see Section 9.2.5 of the book:
 
     # calculate the boundary flux
     flux = surface_flux_function(u_inner, u_boundary, normal_direction, equations)
+    noncons_flux = nonconservative_flux_function(u_inner, u_boundary, normal_direction,
+                                                 equations)
 
-    return flux
+    return flux, noncons_flux
 end
 
 """
@@ -364,8 +368,10 @@ Should be used together with [`TreeMesh`](@ref).
 """
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation,
                                                     direction, x, t,
-                                                    surface_flux_function,
+                                                    surface_flux_functions,
                                                     equations::ShallowWaterMultiLayerEquations2D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
     # Extract internal values
     h = waterheight(u_inner, equations)
     h_v1, h_v2 = momentum(u_inner, equations)
@@ -381,11 +387,15 @@ Should be used together with [`TreeMesh`](@ref).
     # Calculate boundary flux
     if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
         flux = surface_flux_function(u_inner, u_boundary, orientation, equations)
+        noncons_flux = nonconservative_flux_function(u_inner, u_boundary, orientation,
+                                                     equations)
     else # u_boundary is "left" of boundary, u_inner is "right" of boundary
         flux = surface_flux_function(u_boundary, u_inner, orientation, equations)
+        noncons_flux = nonconservative_flux_function(u_boundary, u_inner, orientation,
+                                                     equations)
     end
 
-    return flux
+    return flux, noncons_flux
 end
 
 # Calculate 2D advective portion of the flux for a single point

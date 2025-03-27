@@ -179,8 +179,10 @@ For details see Section 9.2.5 of the book:
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation_or_normal,
                                                     direction,
                                                     x, t,
-                                                    surface_flux_function,
+                                                    surface_flux_functions,
                                                     equations::ShallowWaterEquationsWetDry1D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
     # This can not be dispatched, when Flux Hydrostactic reconstruction is used
     # create the "external" boundary solution state
     u_boundary = SVector(u_inner[1],
@@ -191,12 +193,18 @@ For details see Section 9.2.5 of the book:
     if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
         flux = surface_flux_function(u_inner, u_boundary, orientation_or_normal,
                                      equations)
+        noncons_flux = nonconservative_flux_function(u_inner, u_boundary,
+                                                     orientation_or_normal,
+                                                     equations)
     else # u_boundary is "left" of boundary, u_inner is "right" of boundary
         flux = surface_flux_function(u_boundary, u_inner, orientation_or_normal,
                                      equations)
+        noncons_flux = nonconservative_flux_function(u_boundary, u_inner,
+                                                     orientation_or_normal,
+                                                     equations)
     end
 
-    return flux
+    return flux, noncons_flux
 end
 
 # Calculate 1D flux for a single point
@@ -480,6 +488,56 @@ end
         return factor_ll * f_ll - factor_rr * f_rr +
                factor_diss * SVector(diss[1], diss[2], zero(eltype(u_ll)))
     end
+end
+
+"""
+    dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
+                                    equations::ShallowWaterEquationsWetDry1D)
+Roe-type dissipation term for the [`ShallowWaterEquationsWetDry1D`](@ref). To create the classical Roe solver,
+this dissipation term can be combined with [`Trixi.flux_central`](@extref) using [`Trixi.FluxPlusDissipation`](@extref).
+
+For details on the Roe linearization see Chapter 15.3.2 and Chapter 15.3.3 for the one-dimensional
+shallow water equations of the book:
+- Randall J. LeVeque (2002)
+  Finite Volume Methods for Hyperbolic Problems
+  [DOI: 10.1017/CBO9780511791253](https://doi.org/10.1017/CBO9780511791253)
+"""
+@inline function dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
+                                 equations::ShallowWaterEquationsWetDry1D)
+    g = equations.gravity
+    z = zero(eltype(u_ll))
+
+    # Get velocities and waterheights
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v_ll = velocity(u_ll, equations)
+    v_rr = velocity(u_rr, equations)
+
+    # Compute Roe averages
+    h_avg = 0.5f0 * (h_ll + h_rr)
+    v_avg = (sqrt(h_ll) * v_ll + sqrt(h_rr) * v_rr) /
+            (sqrt(h_ll) + sqrt(h_rr))
+    c_avg = (sqrt(g * h_avg))
+
+    # Compute the eigenvalues
+    λ1 = v_avg - c_avg
+    λ2 = v_avg + c_avg
+
+    # Eigenvector matrix
+    R = @SMatrix [[1 1]; [(v_avg - c_avg) (v_avg + c_avg)]]
+
+    # Inverse eigenvector matrix
+    R_inv = 1 / (2 * c_avg) * @SMatrix [[(v_avg + c_avg) -1]; [(c_avg - v_avg) 1]]
+
+    # Eigenvalue absolute value matrix
+    Λ_abs = @SMatrix [[abs(λ1) z]; [z abs(λ2)]]
+
+    # Compute the jump in conserved variables, excluding the bottom topography
+    u_jump = @views (u_rr - u_ll)[1:2]
+
+    diss = SVector(-0.5f0 * R * Λ_abs * R_inv * u_jump)
+
+    return SVector(diss[1], diss[2], z)
 end
 
 """
