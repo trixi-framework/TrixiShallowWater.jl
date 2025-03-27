@@ -806,7 +806,7 @@ end
             max(c_ll, c_rr) * norm(normal_direction))
 end
 
-# Less "cautios", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+# Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
 @inline function Trixi.max_abs_speed(u_ll, u_rr,
                                      orientation::Integer,
                                      equations::ShallowWaterMultiLayerEquations2D)
