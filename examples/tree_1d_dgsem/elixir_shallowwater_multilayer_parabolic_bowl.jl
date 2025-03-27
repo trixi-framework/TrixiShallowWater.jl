@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -41,7 +41,7 @@ function initial_condition_parabolic_bowl(x, t,
 
     H = sigma * h_0 / a^2 * (2 * x[1] * cos(ω * t) - sigma) + h_0
 
-    #= 
+    #=
     It is mandatory to shift the water level at dry areas to make sure the water height h
     stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
