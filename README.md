@@ -38,11 +38,11 @@ Below is a short summary of the available features:
 ## Installation
 If you have not yet installed Julia, please [follow the instructions for your
 operating system](https://julialang.org/downloads/platform/). TrixiShallowWater.jl works
-with Julia v1.8 and newer. We recommend using the latest stable release of Julia.
+with Julia v1.10 and newer. We recommend using the latest stable release of Julia.
 
 [comment]: <> (We can update this with a "for users" and "for developers" section once the package is registered)
 
-TrixiShallowWater.jl is **not** a registered Julia package, and therefore needs to be downloaded manually and then run from with the cloned directory:
+TrixiShallowWater.jl is **not** a registered Julia package, and therefore needs to be downloaded manually and then run from within the cloned directory:
 ```bash
 git clone https://github.com/trixi-framework/TrixiShallowWater.jl.git
 julia --project=@.
@@ -51,7 +51,7 @@ In addition TrixiShallowWater.jl requires the numerical solver framework [Trixi.
 ```julia
 julia> using Pkg
 
-julia> Pkg.add(["Trixi", "Trixi2Vtk", "OrdinaryDiffEq", "Plots"])
+julia> Pkg.add(["Trixi", "Trixi2Vtk", "OrdinaryDiffEqLowStorageRK", "OrdinaryDiffEqSSPRK", "Plots"])
 ```
 
 ## Authors
