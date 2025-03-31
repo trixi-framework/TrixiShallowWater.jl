@@ -80,7 +80,3 @@ This project has benefited from funding from [Vetenskapsrådet](https://www.vr.s
 (VR, Swedish Research Council), Sweden
 through the VR Starting Grant "Shallow water flows including sediment transport and morphodynamics",
 VR grant agreement 2020-03642 VR.
-
-**Note: This repository is still in its alpha stage and anything might change at
-any time and without warning, including the deletion of this repository
-itself.**
