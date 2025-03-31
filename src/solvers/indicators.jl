@@ -76,7 +76,7 @@ function Base.show(io::IO, ::MIME"text/plain",
             "indicator variable" => indicator.variable,
             "max. α" => indicator.alpha_max,
             "min. α" => indicator.alpha_min,
-            "smooth α" => (indicator.alpha_smooth ? "yes" : "no"),
+            "smooth α" => (indicator.alpha_smooth ? "yes" : "no")
         ]
         Trixi.summary_box(io, "IndicatorHennemannGassnerShallowWater", setup)
     end
