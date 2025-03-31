@@ -831,7 +831,7 @@ end
     c_ll = sqrt(equations.gravity * sum(h_ll))
     c_rr = sqrt(equations.gravity * sum(h_rr))
 
-    return max(abs(v_m_ll) + c_ll, abs(v_m_rr) + c_rr)
+    return (max(abs(v_m_ll) + c_ll, abs(v_m_rr) + c_rr))
 end
 
 @inline function Trixi.max_abs_speed(u_ll, u_rr,
@@ -859,7 +859,7 @@ end
 
     norm_ = norm(normal_direction)
     # The normal velocities are already scaled by the norm
-    return max(abs(v_dot_n_ll) + c_ll * norm_, abs(v_dot_n_rr) + c_rr * norm_)
+    return (max(abs(v_dot_n_ll) + c_ll * norm_, abs(v_dot_n_rr) + c_rr * norm_))
 end
 
 # Convert conservative variables to primitive
