@@ -40,7 +40,7 @@ open(joinpath(@__DIR__, "src", "contributing.md"), "w") do io
     println(io,
             """
             ```@meta
-            EditURL = "https://github.com/trixi-framework/TrixiTrixiShallowWater.jl/blob/main/CONTRIBUTING.md"
+            EditURL = "https://github.com/trixi-framework/TrixiShallowWater.jl/blob/main/CONTRIBUTING.md"
             ```
             """)
     # Write the modified contents
