@@ -859,7 +859,7 @@ end
 
     norm_ = norm(normal_direction)
     # The normal velocities are already scaled by the norm
-    return (max(abs(v_dot_n_ll) + c_ll * norm_, abs(v_dot_n_rr)) + c_rr * norm_)
+    return max(abs(v_dot_n_ll) + c_ll * norm_, abs(v_dot_n_rr) + c_rr * norm_)
 end
 
 # Convert conservative variables to primitive
