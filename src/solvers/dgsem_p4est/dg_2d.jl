@@ -36,8 +36,8 @@ function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
     f_threaded = MA2d[MA2d(undef) for _ in 1:Threads.nthreads()]
 
     (; fstar_primary_upper_threaded, fstar_primary_lower_threaded,
-       fstar_secondary_upper_threaded, fstar_secondary_lower_threaded,
-       f_upper_threaded, f_lower_threaded, u_threaded, f_threaded)
+     fstar_secondary_upper_threaded, fstar_secondary_lower_threaded,
+     f_upper_threaded, f_lower_threaded, u_threaded, f_threaded)
 end
 
 function Trixi.prolong2mortars!(cache, u,
@@ -90,14 +90,16 @@ function Trixi.prolong2mortars!(cache, u,
         for i in eachnode(dg)
             # This strategy from Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008) assumes that
             # we know a constant background water height `H0` which we perturb around. may be restrictive
-            # in practice but a good place to start with the development. We may need to consider more sophisticated
-            # positivity preserving projections of the solution like those found in the ALE-DG community
-            # for the Euler equations with gravity to remove this assumption.
+            # in practice but a good place to start with the development. We may need to consider more
+            # sophisticated positivity preserving projections of the solution like those found
+            # in the ALE-DG community for the Euler equations with gravity to remove this assumption.
             # That is, we might be able to directly project the water height `h` instead while maintaining
             # important steady-state solution behavior.
             # Note, a small shift is required to ensure we catch water heights close to the threshold
-            if u[1, i_large, j_large, element] >= 2 * (equations.threshold_limiter + eps())
-                u_buffer[1, i] = u[1, i_large, j_large, element] + u[4, i_large, j_large, element]
+            if u[1, i_large, j_large, element] >=
+               2 * (equations.threshold_limiter + eps())
+                u_buffer[1, i] = u[1, i_large, j_large, element] +
+                                 u[4, i_large, j_large, element]
             else
                 u_buffer[1, i] = equations.H0
             end
@@ -125,57 +127,58 @@ function Trixi.prolong2mortars!(cache, u,
         # Basically, unpacking the total water height variable to create the projected local water
         # height `h` from Eq. 41 in Benov et al.
         for i in eachnode(dg)
-            cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar], equations.threshold_limiter)
-            cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar], equations.threshold_limiter)
+            cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i,
+                                                                      mortar] -
+                                                      cache.mortars.u[2, 4, 1, i,
+                                                                      mortar],
+                                                      equations.threshold_limiter)
+            cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i,
+                                                                      mortar] -
+                                                      cache.mortars.u[2, 4, 2, i,
+                                                                      mortar],
+                                                      equations.threshold_limiter)
 
-            # Desingularize velocity on the mortars (for safety do it to everyone)
-            # TODO: this could be done in a loop nest instead
-            # TODO: document what this tolerance is with a reference to Chertok and Patrick's other code
+            # Safety application of velocity desingularization and water height cutoff on the mortars.
+            # Here we use the rather conservative velocity desingularization tolerance of `1e-4`
+            # which works for the AMR testing. The more standard value of `1e-6` works
+            # for well-balancedness testing, but crashes the AMR simulation elixir.
+            #
+            # For details on the motivation of the velocity desingularization see
+            # - A. Chertock, S. Cui, A. Kurganov, T. Wu (2015)
+            #   Well-balanced positivity preserving central-upwind scheme for
+            #   the shallow water system with friction terms
+            #   [DOI: 10.1002/fld.4023](https://doi.org/10.1002/fld.4023)
 
-            # Mortars with the projected solution from the parent
-            h = cache.mortars.u[2, 1, 1, i, mortar]
-            cache.mortars.u[2, 2, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[2, 2, 1, i, mortar]) / (h^2 + max(h^2, 1e-4))
-            cache.mortars.u[2, 3, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[2, 3, 1, i, mortar]) / (h^2 + max(h^2, 1e-4))
+            # Mortars with the copied or projected solution
+            tol = 1e-4
+            for child in 1:2, side in 1:2
+                h = cache.mortars.u[side, 1, child, i, mortar]
+                cache.mortars.u[side, 2, child, i, mortar] = h * (2.0 * h *
+                                                              cache.mortars.u[side, 2,
+                                                                              child, i,
+                                                                              mortar]) /
+                                                             (h^2 + max(h^2, tol))
+                cache.mortars.u[side, 3, child, i, mortar] = h * (2.0 * h *
+                                                              cache.mortars.u[side, 3,
+                                                                              child, i,
+                                                                              mortar]) /
+                                                             (h^2 + max(h^2, tol))
+                if cache.mortars.u[side, 1, child, i, mortar] <=
+                   equations.threshold_limiter
+                    cache.mortars.u[side, 1, child, i, mortar] = equations.threshold_limiter
+                    cache.mortars.u[side, 2, child, i, mortar] = zero(eltype(u))
+                    cache.mortars.u[side, 3, child, i, mortar] = zero(eltype(u))
+                end
+            end
 
-            h = cache.mortars.u[2, 1, 2, i, mortar]
-            cache.mortars.u[2, 2, 2, i, mortar] = h * (2.0 * h * cache.mortars.u[2, 2, 2, i, mortar]) / (h^2 + max(h^2, 1e-4))
-            cache.mortars.u[2, 3, 2, i, mortar] = h * (2.0 * h * cache.mortars.u[2, 3, 2, i, mortar]) / (h^2 + max(h^2, 1e-4))
-
-            # Mortars with the solutions copied from the children
-            h = cache.mortars.u[1, 1, 1, i, mortar]
-            cache.mortars.u[1, 2, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[1, 2, 1, i, mortar]) / (h^2 + max(h^2, 1e-4))
-            cache.mortars.u[1, 3, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[1, 3, 1, i, mortar]) / (h^2 + max(h^2, 1e-4))
-
-            h = cache.mortars.u[1, 1, 2, i, mortar]
-            cache.mortars.u[1, 2, 2, i, mortar] = h * (2.0 * h * cache.mortars.u[1, 2, 2, i, mortar]) / (h^2 + max(h^2, 1e-4))
-            cache.mortars.u[1, 3, 2, i, mortar] = h * (2.0 * h * cache.mortars.u[1, 3, 2, i, mortar]) / (h^2 + max(h^2, 1e-4))
-
-            # Mortar with the convenience storage of the unprojected parent solution
+            # Unprojected parent solution copied into the mortar storage
             h = cache.mortars.u_parent[1, i, mortar]
-            cache.mortars.u_parent[2, i, mortar] = h * (2.0 * h * cache.mortars.u_parent[2, i, mortar]) / (h^2 + max(h^2, 1e-4))
-            cache.mortars.u_parent[3, i, mortar] = h * (2.0 * h * cache.mortars.u_parent[3, i, mortar]) / (h^2 + max(h^2, 1e-4))
-
-            if cache.mortars.u[2, 1, 1, i, mortar] <= equations.threshold_limiter
-                cache.mortars.u[2, 1, 1, i, mortar] = equations.threshold_limiter
-                cache.mortars.u[2, 2, 1, i, mortar] = zero(eltype(u))
-                cache.mortars.u[2, 3, 1, i, mortar] = zero(eltype(u))
-            end
-            if cache.mortars.u[2, 1, 2, i, mortar] <= equations.threshold_limiter
-                cache.mortars.u[2, 1, 2, i, mortar] = equations.threshold_limiter
-                cache.mortars.u[2, 2, 2, i, mortar] = zero(eltype(u))
-                cache.mortars.u[2, 3, 2, i, mortar] = zero(eltype(u))
-            end
-            if cache.mortars.u[1, 1, 1, i, mortar] <= equations.threshold_limiter
-                cache.mortars.u[1, 1, 1, i, mortar] = equations.threshold_limiter
-                cache.mortars.u[1, 2, 1, i, mortar] = zero(eltype(u))
-                cache.mortars.u[1, 3, 1, i, mortar] = zero(eltype(u))
-            end
-            if cache.mortars.u[1, 1, 2, i, mortar] <= equations.threshold_limiter
-                cache.mortars.u[1, 1, 2, i, mortar] = equations.threshold_limiter
-                cache.mortars.u[1, 2, 2, i, mortar] = zero(eltype(u))
-                cache.mortars.u[1, 3, 2, i, mortar] = zero(eltype(u))
-            end
-
+            cache.mortars.u_parent[2, i, mortar] = h * (2.0 * h *
+                                                    cache.mortars.u_parent[2, i, mortar]) /
+                                                   (h^2 + max(h^2, tol))
+            cache.mortars.u_parent[3, i, mortar] = h * (2.0 * h *
+                                                    cache.mortars.u_parent[3, i, mortar]) /
+                                                   (h^2 + max(h^2, tol))
             if cache.mortars.u_parent[1, i, mortar] <= equations.threshold_limiter
                 cache.mortars.u_parent[1, i, mortar] = equations.threshold_limiter
                 cache.mortars.u_parent[2, i, mortar] = zero(eltype(u))
@@ -190,11 +193,11 @@ end
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 function Trixi.calc_mortar_flux!(surface_flux_values,
-                                    mesh::Union{P4estMesh{2}, T8codeMesh{2}},
-                                    nonconservative_terms,
-                                    equations::ShallowWaterEquationsWetDry2D,
-                                    mortar_l2::Trixi.LobattoLegendreMortarL2,
-                                    surface_integral, dg::DG, cache)
+                                 mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+                                 nonconservative_terms,
+                                 equations::ShallowWaterEquationsWetDry2D,
+                                 mortar_l2::Trixi.LobattoLegendreMortarL2,
+                                 surface_integral, dg::DG, cache)
     @unpack neighbor_ids, node_indices = cache.mortars
     @unpack contravariant_vectors = cache.elements
     @unpack fstar_primary_upper_threaded, fstar_primary_lower_threaded, fstar_secondary_upper_threaded, fstar_secondary_lower_threaded, f_upper_threaded, f_lower_threaded = cache#, fchild1_threaded, fchild2_threaded, fchild1_original_threaded, fchild2_original_threaded = cache
@@ -291,7 +294,8 @@ end
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 @inline function Trixi.mortar_fluxes_to_elements!(surface_flux_values,
-                                                  mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+                                                  mesh::Union{P4estMesh{2},
+                                                              T8codeMesh{2}},
                                                   equations::ShallowWaterEquationsWetDry2D,
                                                   mortar_l2::Trixi.LobattoLegendreMortarL2,
                                                   dg::DGSEM, cache, mortar,
@@ -309,7 +313,8 @@ end
         element = neighbor_ids[position, mortar]
         for i in eachnode(dg)
             for v in eachvariable(equations)
-                surface_flux_values[v, i, small_direction, element] = fstar_primary[position][v, i]
+                surface_flux_values[v, i, small_direction, element] = fstar_primary[position][v,
+                                                                                              i]
             end
         end
     end
@@ -390,13 +395,19 @@ end
     if :i_backward in large_indices
         for i in eachnode(dg)
             for v in eachvariable(equations)
-                surface_flux_values[v, end + 1 - i, large_direction, large_element] = u_buffer[v, i] + flux_buffer[v, i]
+                surface_flux_values[v, end + 1 - i, large_direction, large_element] = u_buffer[v,
+                                                                                               i] +
+                                                                                      flux_buffer[v,
+                                                                                                  i]
             end
         end
     else
         for i in eachnode(dg)
             for v in eachvariable(equations)
-                surface_flux_values[v, i, large_direction, large_element] = u_buffer[v, i] + flux_buffer[v, i]
+                surface_flux_values[v, i, large_direction, large_element] = u_buffer[v,
+                                                                                     i] +
+                                                                            flux_buffer[v,
+                                                                                        i]
             end
         end
     end

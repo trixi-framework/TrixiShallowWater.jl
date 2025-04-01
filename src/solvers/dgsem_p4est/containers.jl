@@ -30,8 +30,8 @@ are saved in `u_parent` on each mortar.
 !!! warning "Experimental code"
     This is an experimental feature and may change in future releases.
 """
-mutable struct P4estShallowWaterMortarContainer{NDIMS, uEltype <: Real, NDIMSP1, NDIMSP3} <:
-               Trixi.AbstractContainer
+mutable struct P4estShallowWaterMortarContainer{NDIMS, uEltype <: Real, NDIMSP1,
+                                                NDIMSP3} <: Trixi.AbstractContainer
     u::Array{uEltype, NDIMSP3} # [small/large side, variable, position, i, mortar]
     neighbor_ids::Matrix{Int} # [position, mortar]
     node_indices::Matrix{NTuple{NDIMS, Symbol}} # [small/large, mortar]
@@ -44,7 +44,8 @@ mutable struct P4estShallowWaterMortarContainer{NDIMS, uEltype <: Real, NDIMSP1,
     _u_parent::Vector{uEltype}
 end
 
-@inline Trixi.nmortars(mortars::P4estShallowWaterMortarContainer) = size(mortars.neighbor_ids, 2)
+@inline Trixi.nmortars(mortars::P4estShallowWaterMortarContainer) = size(mortars.neighbor_ids,
+                                                                         2)
 @inline Base.ndims(::P4estShallowWaterMortarContainer{NDIMS}) where {NDIMS} = NDIMS
 
 # See explanation of Base.resize! for the element container in the Trixi.jl documentation
@@ -58,19 +59,21 @@ function Base.resize!(mortars::P4estShallowWaterMortarContainer, capacity)
     resize!(_u, 2 * n_variables * 2^(n_dims - 1) * n_nodes^(n_dims - 1) * capacity)
     mortars.u = Trixi.unsafe_wrap(Array, pointer(_u),
                                   (2, n_variables, 2^(n_dims - 1),
-                                  ntuple(_ -> n_nodes, n_dims - 1)..., capacity))
+                                   ntuple(_ -> n_nodes, n_dims - 1)..., capacity))
 
     resize!(_neighbor_ids, (2^(n_dims - 1) + 1) * capacity)
     mortars.neighbor_ids = Trixi.unsafe_wrap(Array, pointer(_neighbor_ids),
                                              (2^(n_dims - 1) + 1, capacity))
 
     resize!(_node_indices, 2 * capacity)
-    mortars.node_indices = Trixi.unsafe_wrap(Array, pointer(_node_indices), (2, capacity))
+    mortars.node_indices = Trixi.unsafe_wrap(Array, pointer(_node_indices),
+                                             (2, capacity))
 
     resize!(_u_parent, n_variables * n_nodes^(n_dims - 1) * capacity)
     mortars.u_parent = Trixi.unsafe_wrap(Array, pointer(_u_parent),
                                          (n_variables,
-                                         ntuple(_ -> n_nodes, n_dims - 1)..., capacity))
+                                          ntuple(_ -> n_nodes, n_dims - 1)...,
+                                          capacity))
 
     return nothing
 end
@@ -89,12 +92,12 @@ function Trixi.init_mortars(mesh::Union{P4estMesh, T8codeMesh},
                          2 * nvariables(equations) * 2^(NDIMS - 1) *
                          nnodes(basis)^(NDIMS - 1) * n_mortars)
     u = Trixi.unsafe_wrap(Array, pointer(_u),
-                    (2, nvariables(equations), 2^(NDIMS - 1),
-                     ntuple(_ -> nnodes(basis), NDIMS - 1)..., n_mortars))
+                          (2, nvariables(equations), 2^(NDIMS - 1),
+                           ntuple(_ -> nnodes(basis), NDIMS - 1)..., n_mortars))
 
     _neighbor_ids = Vector{Int}(undef, (2^(NDIMS - 1) + 1) * n_mortars)
     neighbor_ids = Trixi.unsafe_wrap(Array, pointer(_neighbor_ids),
-                               (2^(NDIMS - 1) + 1, n_mortars))
+                                     (2^(NDIMS - 1) + 1, n_mortars))
 
     _node_indices = Vector{NTuple{NDIMS, Symbol}}(undef, 2 * n_mortars)
     node_indices = Trixi.unsafe_wrap(Array, pointer(_node_indices), (2, n_mortars))
@@ -103,17 +106,17 @@ function Trixi.init_mortars(mesh::Union{P4estMesh, T8codeMesh},
                                 nvariables(equations) *
                                 nnodes(basis)^(NDIMS - 1) * n_mortars)
     u_parent = Trixi.unsafe_wrap(Array, pointer(_u_parent),
-                    (nvariables(equations),
-                     ntuple(_ -> nnodes(basis), NDIMS - 1)..., n_mortars))
+                                 (nvariables(equations),
+                                  ntuple(_ -> nnodes(basis), NDIMS - 1)..., n_mortars))
 
     mortars = P4estShallowWaterMortarContainer{NDIMS, uEltype, NDIMS + 1, NDIMS + 3}(u,
-                                                                         neighbor_ids,
-                                                                         node_indices,
-                                                                         u_parent,
-                                                                         _u,
-                                                                         _neighbor_ids,
-                                                                         _node_indices,
-                                                                         _u_parent)
+                                                                                     neighbor_ids,
+                                                                                     node_indices,
+                                                                                     u_parent,
+                                                                                     _u,
+                                                                                     _neighbor_ids,
+                                                                                     _node_indices,
+                                                                                     _u_parent)
 
     if n_mortars > 0
         Trixi.init_mortars!(mortars, mesh)
