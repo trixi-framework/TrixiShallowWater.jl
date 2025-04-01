@@ -5,17 +5,19 @@
 @muladd begin
 #! format: noindent
 
-# TODO: once working the mortar methods could likely be extended to the other
+# TODO: Once working the mortar methods could likely be extended to the other
 # equations types available in the package. Although for the multilayer equations
 # care must be taken because the pressure term is separated from the physical flux
 # and directly placed in the nonconservative flux
 
-# The methods below are specialized on the mortar type
-# and called from the basic `create_cache` method at the top.
-# Extra storage is necessary for the numerical flux plus nonconservative term
-# on either side of the large and small element mortars. We also require a work
-# array to compute the flux with the project large element solutions on each mortar
+# The methods below are specialized on the `P4estShallowWaterMortarContainer`
+# mortar type. Extra storage is necessary for the numerical flux plus nonconservative term
+# on either side of the parent (large) element mortars. It also requires a work
+# array to compute the flux with the projected large element solutions on each mortar
 # to ensure we project back the flux penalty.
+#
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
 function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
                             equations::ShallowWaterEquationsWetDry2D,
                             mortar_l2::Trixi.LobattoLegendreMortarL2, uEltype)
@@ -24,7 +26,6 @@ function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
                         uEltype, 2,
                         nvariables(equations) * nnodes(mortar_l2)}
 
-    # TODO: this could be simplified and reuse some of the cache structure that already exists in Trixi
     fstar_primary_upper_threaded = MA2d[MA2d(undef) for _ in 1:Threads.nthreads()]
     fstar_primary_lower_threaded = MA2d[MA2d(undef) for _ in 1:Threads.nthreads()]
     fstar_secondary_upper_threaded = MA2d[MA2d(undef) for _ in 1:Threads.nthreads()]
@@ -72,11 +73,10 @@ function Trixi.prolong2mortars!(cache, u,
         end
 
         # Buffer to copy solution values of the large element in the correct orientation
-        # before interpolating
+        # before projection
         u_buffer = cache.u_threaded[Threads.threadid()]
 
-        # Copy solution of large element face to buffer in the
-        # correct orientation
+        # Copy solution of large element face to buffer in the correct orientation
         large_indices = node_indices[2, mortar]
 
         i_large_start, i_large_step = Trixi.index_to_start_step_2d(large_indices[1],
@@ -88,36 +88,23 @@ function Trixi.prolong2mortars!(cache, u,
         j_large = j_large_start
         element = neighbor_ids[3, mortar]
         for i in eachnode(dg)
-            # TODO: Do this is a better way that is agnostic with respect the number of equations
-            # Compute and save the sigma variable from Benov et al. (essentially H = h+b),
-            # momenta, and bottom topography into the buffer for projection. This ensures
-            # that we only project constant solution data in still water regions of the domain.
-            # OBS! A small shift is likely required to ensure we catch water heights close to the threshold
-            # TODO: This strategy from Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008) assumes that
-            # we know the constant background water height H0 which we perturb around. Fairly restrictive
+            # This strategy from Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008) assumes that
+            # we know a constant background water height `H0` which we perturb around. may be restrictive
             # in practice but a good place to start with the development. We may need to consider more sophisticated
-            # positivity preserving projections of the solution like those found in the ALE-DG community to remove
-            # this assumption. Then we might be able to directly project the water height `h` instead...
-            # if u[1, i_large, j_large, element] > equations.threshold_partially_wet + eps()
-            # if u[1, i_large, j_large, element] > 1e-4
-            # if u[1, i_large, j_large, element] > equations.threshold_limiter
-            # if u[1, i_large, j_large, element] > 0.0
-
-            # Best version
+            # positivity preserving projections of the solution like those found in the ALE-DG community
+            # for the Euler equations with gravity to remove this assumption.
+            # That is, we might be able to directly project the water height `h` instead while maintaining
+            # important steady-state solution behavior.
+            # Note, a small shift is required to ensure we catch water heights close to the threshold
             if u[1, i_large, j_large, element] >= 2 * (equations.threshold_limiter + eps())
                 u_buffer[1, i] = u[1, i_large, j_large, element] + u[4, i_large, j_large, element]
             else
-                u_buffer[1, i] = equations.H0 # from Benov et al.
+                u_buffer[1, i] = equations.H0
             end
             u_buffer[2:4, i] = u[2:4, i_large, j_large, element]
 
-            # #  |∑U - ∑U₀|:     3.06310532e-13   5.54955377e-02   3.91866748e-02   1.12132525e-14
-            # # but not well-balanced
-            # u_buffer[:, i] = u[:, i_large, j_large, element]
-
             for v in eachvariable(equations)
                 # Save a copy of the (unprojected) parent solution on the mortar
-                # cache.mortars.u[3, v, 1, i, mortar] = u[v, i_large, j_large, element]
                 cache.mortars.u_parent[v, i, mortar] = u[v, i_large, j_large, element]
             end
             i_large += i_large_step
@@ -132,28 +119,14 @@ function Trixi.prolong2mortars!(cache, u,
                                       mortar_l2.forward_upper,
                                       u_buffer)
 
-        # After the projection of the constant solution we can modify the values
-        # in the first solution variable to no longer be the sigma variable of
-        # Benov et al. and instead be the conservative water height variable `h`.
-        # Basically, unpacking the sigma variable to create the projected local water
-        # height from Eq. 41 in Benov et al.
-        # TODO: Adapt this strategy so that it will be extensible
-        #       to the multilayer equations as well.
-        # TODO: Maybe apply the limiter again here (in combo with HR) as a better approach
+        # After the projection of the constant solution we modify the values
+        # in the first solution variable to no longer be the total water height H = h+b
+        # and instead recover the conservative water height variable `h`.
+        # Basically, unpacking the total water height variable to create the projected local water
+        # height `h` from Eq. 41 in Benov et al.
         for i in eachnode(dg)
-            # # This also works but has no "safety net" for round-off issues
-            # cache.mortars.u[2, 1, 1, i, mortar] = cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar]
-            # cache.mortars.u[2, 1, 2, i, mortar] = cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar]
-            ### Best version
             cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar], equations.threshold_limiter)
             cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar], equations.threshold_limiter)
-            ###
-            # cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar], equations.threshold_wet)
-            # cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar], equations.threshold_wet)
-        #     # # cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar], 2.0 * (equations.threshold_limiter + eps()))
-        #     # cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar], 2.0 * (equations.threshold_limiter + eps()))
-        #     # cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar], 0.0)
-        #     # cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar], 0.0)
 
             # Desingularize velocity on the mortars (for safety do it to everyone)
             # TODO: this could be done in a loop nest instead
@@ -178,9 +151,6 @@ function Trixi.prolong2mortars!(cache, u,
             cache.mortars.u[1, 3, 2, i, mortar] = h * (2.0 * h * cache.mortars.u[1, 3, 2, i, mortar]) / (h^2 + max(h^2, 1e-4))
 
             # Mortar with the convenience storage of the unprojected parent solution
-            # h = cache.mortars.u[3, 1, 1, i, mortar]
-            # cache.mortars.u[3, 2, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[3, 2, 1, i, mortar]) / (h^2 + max(h^2, 1e-4))
-            # cache.mortars.u[3, 3, 1, i, mortar] = h * (2.0 * h * cache.mortars.u[3, 3, 1, i, mortar]) / (h^2 + max(h^2, 1e-4))
             h = cache.mortars.u_parent[1, i, mortar]
             cache.mortars.u_parent[2, i, mortar] = h * (2.0 * h * cache.mortars.u_parent[2, i, mortar]) / (h^2 + max(h^2, 1e-4))
             cache.mortars.u_parent[3, i, mortar] = h * (2.0 * h * cache.mortars.u_parent[3, i, mortar]) / (h^2 + max(h^2, 1e-4))
@@ -205,11 +175,7 @@ function Trixi.prolong2mortars!(cache, u,
                 cache.mortars.u[1, 2, 2, i, mortar] = zero(eltype(u))
                 cache.mortars.u[1, 3, 2, i, mortar] = zero(eltype(u))
             end
-            # if cache.mortars.u[3, 1, 1, i, mortar] <= equations.threshold_limiter
-            #     cache.mortars.u[3, 1, 1, i, mortar] = equations.threshold_limiter
-            #     cache.mortars.u[3, 2, 1, i, mortar] = zero(eltype(u))
-            #     cache.mortars.u[3, 3, 1, i, mortar] = zero(eltype(u))
-            # end
+
             if cache.mortars.u_parent[1, i, mortar] <= equations.threshold_limiter
                 cache.mortars.u_parent[1, i, mortar] = equations.threshold_limiter
                 cache.mortars.u_parent[2, i, mortar] = zero(eltype(u))
@@ -221,6 +187,8 @@ function Trixi.prolong2mortars!(cache, u,
     return nothing
 end
 
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
 function Trixi.calc_mortar_flux!(surface_flux_values,
                                     mesh::Union{P4estMesh{2}, T8codeMesh{2}},
                                     nonconservative_terms,
@@ -320,6 +288,8 @@ function Trixi.calc_mortar_flux!(surface_flux_values,
     return nothing
 end
 
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
 @inline function Trixi.mortar_fluxes_to_elements!(surface_flux_values,
                                                   mesh::Union{P4estMesh{2}, T8codeMesh{2}},
                                                   equations::ShallowWaterEquationsWetDry2D,
@@ -350,8 +320,6 @@ end
     # already included in `reverse_upper` and `reverse_lower` operators.
     penalty_upper = Trixi.SMatrix(fstar_secondary[2] - f_large[2])
     penalty_lower = Trixi.SMatrix(fstar_secondary[1] - f_large[1])
-    # penalty_upper = fstar_secondary[2]
-    # penalty_lower = fstar_secondary[1]
     Trixi.multiply_dimensionwise!(u_buffer,
                                   mortar_l2.reverse_upper, penalty_upper,
                                   mortar_l2.reverse_lower, penalty_lower)
@@ -373,9 +341,10 @@ end
     large_indices = node_indices[2, mortar]
     large_direction = Trixi.indices2direction(large_indices)
 
-    # TODO: We need to store the unprojected solution in the mortars such that we have access to them
-    # here when we go to compute the flux on the parent elements and remove the physical flux evaluated
+    # From the unprojected solution stored in the mortars we have access compute the flux
+    # on the parent elements and remove the physical flux evaluated
     # at the unprojected solution state that is present from the volume integral computation
+    # later in the computation.
     index_range = eachnode(dg)
     i_large_start, i_large_step = Trixi.index_to_start_step_2d(large_indices[1],
                                                                index_range)
@@ -384,7 +353,6 @@ end
 
     i_large = i_large_start
     j_large = j_large_start
-    # maybe similar(u_buffer) instead? Would avoid adding to the cache
     flux_buffer = cache.f_threaded[Threads.threadid()]
     for node in eachnode(dg)
         # Get the proper normal_direction now that we are back computing on the large element
@@ -396,14 +364,6 @@ end
         # solution state to recover the physical flux at this point because the surface flux
         # has in-built mechanisms to avoid division by zero in dry regions whereas `Trixi.flux`
         # does not have such mechanisms to desingularize the velocity computation.
-        # flux = surface_flux(view(cache.mortars.u, 3, :, 1, node, mortar),
-        #                     view(cache.mortars.u, 3, :, 1, node, mortar),
-        #                     normal_direction, equations)
-
-        # noncons = nonconservative_flux(view(cache.mortars.u, 3, :, 1, node, mortar),
-        #                                view(cache.mortars.u, 3, :, 1, node, mortar),
-        #                                normal_direction,
-        #                                equations)
         flux = surface_flux(view(cache.mortars.u_parent, :, node, mortar),
                             view(cache.mortars.u_parent, :, node, mortar),
                             normal_direction, equations)
