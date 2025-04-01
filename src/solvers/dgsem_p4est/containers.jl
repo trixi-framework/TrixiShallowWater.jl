@@ -52,7 +52,6 @@ end
 function Trixi.resize!(mortars::P4estShallowWaterMortarContainer, capacity)
     @unpack _u, _neighbor_ids, _node_indices, _u_parent = mortars
 
-    println("in here!")
     n_dims = ndims(mortars)
     n_nodes = size(mortars.u, 4)
     n_variables = size(mortars.u, 2)
