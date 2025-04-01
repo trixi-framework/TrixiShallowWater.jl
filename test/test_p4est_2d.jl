@@ -96,6 +96,9 @@ isdir(outdir) && rm(outdir, recursive = true)
         end
     end
 
+    # Note, these values may change as the functionality of well-balanced mortars
+    # with AMR and wet/dry are further developed according to the issue
+    # https://github.com/trixi-framework/TrixiShallowWater.jl/issues/77
     @trixi_testset "elixir_shallowwater_perturbation_wet_dry.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_perturbation_wet_dry.jl"),
