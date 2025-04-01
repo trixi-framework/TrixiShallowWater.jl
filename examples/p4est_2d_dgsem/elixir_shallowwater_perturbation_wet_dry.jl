@@ -1,35 +1,21 @@
 
 using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
-##
-# we might need this change in the Trixi main
-# @inline function velocity(u, equations::ShallowWaterEquations2D)
-#     h, h_v1, h_v2, _ = u
-
-# -    v1 = h_v1 / h
-# -    v2 = h_v2 / h
-# +    # v1 = h_v1 / h
-# +    # v2 = h_v2 / h
-# +    # Velocity desingularization
-# +    v1 = (2.0 * h * h_v1) / (h^2 + max(h^2, 1e-6))
-# +    v2 = (2.0 * h * h_v2) / (h^2 + max(h^2, 1e-6))
-#     return SVector(v1, v2)
-# end
-#
-
-# TODO: This elixir is for debugging purposes of the AMR + well-balanced mortars.
-# Currently this crashes very early in the simulation. ONe possible explanation is that
-# the projection / interpolation of the solution as it is refined / coarsened may need
-# to use a similar strategy as the mortar projection where we ensure that a constant solution
-# is projected on the dry elements. Further investigation is needed to see if this is indeed
-# the case.
+# Note, this elixir is still actively used for debugging purposes of the AMR + well-balanced mortars.
+# Currently, this run remains sensitive to the limiting and/or desingularization of the water
+# height and velocities. For this configuration past a final time of ≈2.2 the explicit time step
+# might nose dives to around double precision roundoff (effectively crashing) depending
+# on the desingularization value taken at the mortar.
+# Also, there is an appreciable loss of conservation in the water height
+# as the flow evolves (on the order of 1e-4 or 1e-5).
+# Further investigation is needed to identify exactly why each aspect of this strange behavior occurs
 
 ###############################################################################
-# semidiscretization of the shallow water equations with a continuous
-# bottom topography function
+# semidiscretization of the shallow water equations with a discontinuous
+# bottom topography function for a perturbed water height on a nonconforming mesh with AMR
 
 equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 1.235)
 
@@ -45,9 +31,6 @@ function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWe
          0.8 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
          -
          0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
-
-    # for testing
-    # b = zero(eltype(x))
 
     H = max(equations.H0, b + equations.threshold_limiter)
 
@@ -67,26 +50,15 @@ volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
                 flux_nonconservative_chen_noelle)
 
-# # Create the solver (for fully wet!)
-# solver = DGSEM(polydeg = 3, surface_flux = surface_flux,
-#                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
-
 # Create the solver
 basis = LobattoLegendreBasis(4)
-
-# indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
-#                                                      alpha_max = 1.0,
-#                                                      alpha_min = 0.001,
-#                                                      alpha_smooth = false,
-#                                                      variable = Trixi.waterheight)
 
 indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
                                                      alpha_max = 0.5,
                                                      alpha_min = 0.001,
                                                      alpha_smooth = true,
                                                      variable = Trixi.waterheight)
-                                                    #  variable = waterheight_pressure)
-                                                    #  variable = pressure)
+
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
                                                  volume_flux_dg = volume_flux,
                                                  volume_flux_fv = surface_flux)
@@ -94,10 +66,7 @@ volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
 solver = DGSEM(basis, surface_flux, volume_integral)
 
 ###############################################################################
-# This setup is for the curved, split form well-balancedness testing
-
-# TODO: Make this mesh periodic to properly test for conservation
-#       for this wet/dry testcase with AMR + well-balanced mortars
+# Get the unstructured quad mesh from a file (downloads the file if not available locally)
 
 # Unstructured mesh with 24 cells of the square domain [-1, 1]^2
 mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2ea224409e55ee8423b3a33e316a/raw/7db58af7446d1479753ae718930741c47a3b79b7/square_unstructured_2.inp",
@@ -115,9 +84,8 @@ end
 mesh = P4estMesh{2}(mesh_file, polydeg = 4,
                     mapping = mapping_twist,
                     initial_refinement_level = 0)
-                    # initial_refinement_level = 2)
 
-# Refine bottom left quadrant of each tree to level 2
+# Refine bottom left quadrant of each tree to level 3
 function refine_fn(p4est, which_tree, quadrant)
   quadrant_obj = unsafe_load(quadrant)
   if quadrant_obj.x == 0 && quadrant_obj.y == 0 && quadrant_obj.level < 3
@@ -143,10 +111,11 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
 ###############################################################################
 # ODE solvers, callbacks, etc.
 
-tspan = (0.0, 1.0)
+tspan = (0.0, 4.0)
 ode = semidiscretize(semi, tspan)
 
-function initial_condition_discontinuous_well_balancedness(x, t, element_id, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_discontinuous_perturbation(x, t, element_id,
+                                                      equations::ShallowWaterEquationsWetDry2D)
     # Set the background values for velocity
     H = equations.H0
     v1 = zero(H)
@@ -156,14 +125,12 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id, equ
 
     # For the mesh file version of the testing
     b = (1.75 / exp(0.6 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
-    # b = (2.5 / exp(0.6 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
         +
         0.8 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
         -
         0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
 
     # Setup a discontinuous bottom topography using the element id number
-    # if (element_id > 207 && element_id < 301) || (element_id > 125 && element_id < 133) # for the forced hanging node grid with with < 3 in function above
     IDs = [collect(114:133); collect(138:141); collect(156:164); collect(208:300)]
     if element_id in IDs
         b = (0.75 / exp(0.5 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
@@ -175,7 +142,7 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id, equ
 
     # Put in a discontinuous perturbation using the element number
     if element_id in [232, 224, 225, 226, 227, 228, 229, 230]
-        H = H + 1.6 # 1.25
+        H = H + 1.6
     end
 
     # Clip the initialization to avoid negative water heights and division by zero
@@ -191,7 +158,7 @@ u = Trixi.wrap_array(ode.u0, semi)
 for element in eachelement(semi.solver, semi.cache)
   for j in eachnode(semi.solver), i in eachnode(semi.solver)
       x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations, semi.solver, i, j, element)
-      u_node = initial_condition_discontinuous_well_balancedness(x_node, first(tspan), element, equations)
+      u_node = initial_condition_discontinuous_perturbation(x_node, first(tspan), element, equations)
       Trixi.set_node_vars!(u, u_node, equations, semi.solver, i, j, element)
   end
 end
@@ -207,17 +174,16 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(dt = 0.2, # dt = 0.02, # interval = 200,
+save_solution = SaveSolutionCallback(dt = 0.2,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-# Define a better variable to use in the AMR indicator
+# Define the water height as the variable for use in the AMR indicator
 @inline function total_water_height(u, equations::ShallowWaterEquationsWetDry2D)
   return max(u[1], 0.0)
-#   return min(abs(u[1] + u[4] - equations.H0 - equations.threshold_limiter), abs(u[1] - equations.threshold_limiter)) + equations.H0
 end
 
-# # Another AMR indicator function could be the velocity, such that it only fires
+# # Another possible AMR indicator function could be the velocity, such that it only fires
 # # in regions where the water is moving
 # @inline function velocity_norm(u, equations::ShallowWaterEquationsWetDry2D)
 #    v1, v2 = velocity(u, equations)
@@ -226,22 +192,15 @@ end
 
 amr_controller = ControllerThreeLevel(semi, IndicatorMax(semi, variable = total_water_height),
                                       base_level = 0,
-                                      med_level = 1, med_threshold = 0.3, # with adding back H0
+                                      med_level = 1, med_threshold = 0.3,
                                       max_level = 4, max_threshold = 1.15)
-                                    #   med_level = 1, med_threshold = 0.8, # with adding back H0
-                                    #   max_level = 4, max_threshold = 1.4)
-
-# amr_controller = ControllerThreeLevel(semi, IndicatorMax(semi, variable = velocity_norm),
-#                                       base_level = 0,
-#                                       med_level = 2, med_threshold = 0.5,
-#                                       max_level = 4, max_threshold = 0.75)
 
 amr_callback = AMRCallback(semi, amr_controller,
                            interval = 3,
                            adapt_initial_condition = false,
                            adapt_initial_condition_only_refine = false)
 
-stepsize_callback = StepsizeCallback(cfl = 0.75)
+stepsize_callback = StepsizeCallback(cfl = 0.5)
 
 callbacks = CallbackSet(summary_callback,
                         analysis_callback,
