@@ -1,12 +1,12 @@
 
 using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the shallow water equations with a discontinuous
-# bottom topography function
+# bottom topography function and wet/dry transition elements on a nonconforming mesh
 
 equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 1.235)
 
@@ -31,6 +31,8 @@ function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquati
 end
 
 initial_condition = initial_condition_well_balancedness
+
+boundary_condition = Dict(:all => boundary_condition_slip_wall)
 
 ###############################################################################
 # Get the DG approximation space
@@ -73,8 +75,6 @@ end
 mesh = P4estMesh{2}(mesh_file, polydeg = 3,
                     mapping = mapping_twist,
                     initial_refinement_level = 0)
-
-boundary_condition = Dict(:all => boundary_condition_slip_wall)
 
 # Refine bottom left quadrant of each tree to level 3
 function refine_fn(p4est, which_tree, quadrant)
@@ -162,7 +162,7 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(dt = 0.5,
+save_solution = SaveSolutionCallback(dt = 5.0,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 

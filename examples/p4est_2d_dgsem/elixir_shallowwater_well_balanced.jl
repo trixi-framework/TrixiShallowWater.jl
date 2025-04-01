@@ -1,17 +1,20 @@
 
 using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# semidiscretization of the shallow water equations with a continuous
-# bottom topography function
+# semidiscretization of the shallow water equations with a discontinuous
+# bottom topography function for a fully wet configuration on a nonconforming mesh
 
 equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 2.0)
 
-function initial_condition_wb_testing(x, t, equations::ShallowWaterEquationsWetDry2D)
-    # Calculate primitive variables
+# An initial condition with constant total water height and zero velocities to test well-balancedness.
+# Note, this routine is used to compute errors in the analysis callback but the initialization is
+# overwritten by `initial_condition_discontinuous_well_balancedness` below.
+function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquationsWetDry2D)
+  # Calculate primitive variables
     H = equations.H0
     v1 = 0.0
     v2 = 0.0
@@ -26,58 +29,28 @@ function initial_condition_wb_testing(x, t, equations::ShallowWaterEquationsWetD
     return prim2cons(SVector(H, v1, v2, b), equations)
 end
 
-initial_condition = initial_condition_wb_testing
+initial_condition = initial_condition_well_balancedness
 
-# # Wall BCs
-# boundary_condition = Dict(:OuterCircle => boundary_condition_slip_wall)
-
-# # Dirichlet BCs
-# boundary_condition_constant = BoundaryConditionDirichlet(initial_condition)
-# boundary_condition = Dict(:OuterCircle => boundary_condition_constant)
+boundary_condition = Dict(:all => boundary_condition_slip_wall)
 
 ###############################################################################
 # Get the DG approximation space
 
-
-# Wintermeyer for both
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
-# surface_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 
 surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
                 flux_nonconservative_chen_noelle)
-
-
-# # Fjordholms flux for testing
-# surface_flux = (flux_fjordholm_etal, flux_nonconservative_fjordholm_etal)
-
-# # Audusse HR with Rusanov flux
-# volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
-# surface_flux = (FluxHydrostaticReconstruction(flux_lax_friedrichs,
-#                                                 hydrostatic_reconstruction_audusse_etal),
-#                 flux_nonconservative_audusse_etal)
-
-# Audusse HR with HLL flux
-# surface_flux = (FluxHydrostaticReconstruction(flux_hll, hydrostatic_reconstruction_audusse_etal),
-#                   flux_nonconservative_audusse_etal)
 
 # Create the solver
 solver = DGSEM(polydeg = 3, surface_flux = surface_flux,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 ###############################################################################
-# This setup is for the curved, split form well-balancedness testing
+# Get the unstructured quad mesh from a file (downloads the file if not available locally)
 
-# # Get the unstructured quad mesh from a file (downloads the file if not available locally)
-
-# default_mesh_file = joinpath(@__DIR__, "abaqus_outer_circle.inp")
-# isfile(default_mesh_file) ||
-#     download("https://gist.githubusercontent.com/andrewwinters5000/df92dd4986909927e96af23c37f6db5f/raw/8620823342f98c505a36351b210aab7f3b368041/abaqus_outer_circle.inp",
-#              default_mesh_file)
-# mesh_file = default_mesh_file
-
-# mesh = P4estMesh{2}(mesh_file)
-
-boundary_condition = Dict(:all => boundary_condition_slip_wall)
+# Unstructured mesh with 24 cells of the square domain [-1, 1]^n
+mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2ea224409e55ee8423b3a33e316a/raw/7db58af7446d1479753ae718930741c47a3b79b7/square_unstructured_2.inp",
+                           joinpath(@__DIR__, "square_unstructured_2.inp"))
 
 # Affine type mapping to take the [-1,1]^2 domain from the mesh file
 # and warp it as described in https://arxiv.org/abs/2012.12040
@@ -88,15 +61,11 @@ function mapping_twist(xi, eta)
     return SVector(x, y)
 end
 
-# Unstructured mesh with 24 cells of the square domain [-1, 1]^n
-mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2ea224409e55ee8423b3a33e316a/raw/7db58af7446d1479753ae718930741c47a3b79b7/square_unstructured_2.inp",
-                           joinpath(@__DIR__, "square_unstructured_2.inp"))
-
 mesh = P4estMesh{2}(mesh_file, polydeg = 3,
                     mapping = mapping_twist,
                     initial_refinement_level = 0)
 
-# Refine bottom left quadrant of each tree to level 2
+# Refine bottom left quadrant of each tree to level 3
 function refine_fn(p4est, which_tree, quadrant)
     quadrant_obj = unsafe_load(quadrant)
     if quadrant_obj.x == 0 && quadrant_obj.y == 0 && quadrant_obj.level < 3
@@ -122,34 +91,33 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
 ###############################################################################
 # ODE solvers, callbacks, etc.
 
-tspan = (0.0, 0.5)
+tspan = (0.0, 100.0)
 ode = semidiscretize(semi, tspan)
 
 ###############################################################################
-# # Workaround to set a discontinuous bottom topography for debugging and testing.
-
-# alternative version of the initial condition used to setup a truly discontinuous
-# bottom topography function for this academic testcase.
+# Workaround to set a discontinuous bottom topography for debugging and testing.
 # The errors from the analysis callback are not important but the error for this lake at rest test case
 # `∑|H0-(h+b)|` should be around machine roundoff
 # In contrast to the usual signature of initial conditions, this one get passed the
 # `element_id` explicitly. In particular, this initial conditions works as intended
 # only for the specific mesh loaded above!
-function initial_condition_discontinuous_well_balancedness(x, t, element_id, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_discontinuous_well_balancedness(x, t, element_id,
+                                                           equations::ShallowWaterEquationsWetDry2D)
     # Set the background values
     H = equations.H0
     v1 = 0.0
     v2 = 0.0
 
     x1, x2 = x
-    b = (1.5 / exp(0.5 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
+    b = (1.75 / exp(0.5 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
          +
          0.8 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
          -
          0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
 
     # Setup a discontinuous bottom topography using the element id number
-    if element_id > 200 && element_id < 300 # for the forced hanging node grid with with < 3 in function above
+    IDs = [collect(114:133); collect(138:141); collect(156:164); collect(208:300)]
+    if element_id in IDs
         b = (0.75 / exp(0.5 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
              +
              0.4 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
@@ -157,9 +125,7 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id, equ
              0.25 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
     end
 
-    # b = pi/10 # test out a constant bottom topography that is not zero
-
-  return prim2cons(SVector(H, v1, v2, b), equations)
+    return prim2cons(SVector(H, v1, v2, b), equations)
 end
 
 # point to the data we want to augment
@@ -183,7 +149,7 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback( dt = 1.0, #interval = 50,
+save_solution = SaveSolutionCallback( dt = 5.0,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
