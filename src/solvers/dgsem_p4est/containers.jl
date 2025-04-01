@@ -46,12 +46,13 @@ end
 
 @inline Trixi.nmortars(mortars::P4estShallowWaterMortarContainer) = size(mortars.neighbor_ids,
                                                                          2)
-@inline Base.ndims(::P4estShallowWaterMortarContainer{NDIMS}) where {NDIMS} = NDIMS
+@inline Trixi.ndims(::P4estShallowWaterMortarContainer{NDIMS}) where {NDIMS} = NDIMS
 
 # See explanation of Base.resize! for the element container in the Trixi.jl documentation
-function Base.resize!(mortars::P4estShallowWaterMortarContainer, capacity)
+function Trixi.resize!(mortars::P4estShallowWaterMortarContainer, capacity)
     @unpack _u, _neighbor_ids, _node_indices, _u_parent = mortars
 
+    println("in here!")
     n_dims = ndims(mortars)
     n_nodes = size(mortars.u, 4)
     n_variables = size(mortars.u, 2)
