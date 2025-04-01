@@ -47,7 +47,8 @@ boundary_condition = Dict(:all => boundary_condition_slip_wall)
 
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 
-surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
+surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle,
+                                              hydrostatic_reconstruction_chen_noelle),
                 flux_nonconservative_chen_noelle)
 
 # Create the solver
@@ -87,21 +88,21 @@ mesh = P4estMesh{2}(mesh_file, polydeg = 4,
 
 # Refine bottom left quadrant of each tree to level 3
 function refine_fn(p4est, which_tree, quadrant)
-  quadrant_obj = unsafe_load(quadrant)
-  if quadrant_obj.x == 0 && quadrant_obj.y == 0 && quadrant_obj.level < 3
-      # return true (refine)
-      return Cint(1)
-  else
-      # return false (don't refine)
-      return Cint(0)
-  end
+    quadrant_obj = unsafe_load(quadrant)
+    if quadrant_obj.x == 0 && quadrant_obj.y == 0 && quadrant_obj.level < 3
+        # return true (refine)
+        return Cint(1)
+    else
+        # return false (don't refine)
+        return Cint(0)
+    end
 end
 
 # Refine recursively until each bottom left quadrant of a tree has level 3
 # The mesh will be rebalanced before the simulation starts
 refine_fn_c = @cfunction(refine_fn, Cint,
-                       (Ptr{Trixi.p4est_t}, Ptr{Trixi.p4est_topidx_t},
-                        Ptr{Trixi.p4est_quadrant_t}))
+                         (Ptr{Trixi.p4est_t}, Ptr{Trixi.p4est_topidx_t},
+                          Ptr{Trixi.p4est_quadrant_t}))
 Trixi.refine_p4est!(mesh.p4est, true, refine_fn_c, C_NULL)
 
 # Create the semi discretization object
@@ -125,19 +126,19 @@ function initial_condition_discontinuous_perturbation(x, t, element_id,
 
     # For the mesh file version of the testing
     b = (1.75 / exp(0.6 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
-        +
-        0.8 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
-        -
-        0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
+         +
+         0.8 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
+         -
+         0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
 
     # Setup a discontinuous bottom topography using the element id number
     IDs = [collect(114:133); collect(138:141); collect(156:164); collect(208:300)]
     if element_id in IDs
         b = (0.75 / exp(0.5 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
-            +
-            0.4 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
-            -
-            0.25 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
+             +
+             0.4 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
+             -
+             0.25 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
     end
 
     # Put in a discontinuous perturbation using the element number
@@ -156,11 +157,13 @@ end
 u = Trixi.wrap_array(ode.u0, semi)
 # reset the initial condition
 for element in eachelement(semi.solver, semi.cache)
-  for j in eachnode(semi.solver), i in eachnode(semi.solver)
-      x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations, semi.solver, i, j, element)
-      u_node = initial_condition_discontinuous_perturbation(x_node, first(tspan), element, equations)
-      Trixi.set_node_vars!(u, u_node, equations, semi.solver, i, j, element)
-  end
+    for j in eachnode(semi.solver), i in eachnode(semi.solver)
+        x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations,
+                                       semi.solver, i, j, element)
+        u_node = initial_condition_discontinuous_perturbation(x_node, first(tspan), element,
+                                                              equations)
+        Trixi.set_node_vars!(u, u_node, equations, semi.solver, i, j, element)
+    end
 end
 
 ###############################################################################
@@ -180,7 +183,7 @@ save_solution = SaveSolutionCallback(dt = 0.2,
 
 # Define the water height as the variable for use in the AMR indicator
 @inline function total_water_height(u, equations::ShallowWaterEquationsWetDry2D)
-  return max(u[1], 0.0)
+    return max(u[1], 0.0)
 end
 
 # # Another possible AMR indicator function could be the velocity, such that it only fires
@@ -190,7 +193,8 @@ end
 #    return sqrt(v1^2 + v2^2)
 # end
 
-amr_controller = ControllerThreeLevel(semi, IndicatorMax(semi, variable = total_water_height),
+amr_controller = ControllerThreeLevel(semi,
+                                      IndicatorMax(semi, variable = total_water_height),
                                       base_level = 0,
                                       med_level = 1, med_threshold = 0.3,
                                       max_level = 4, max_threshold = 1.15)

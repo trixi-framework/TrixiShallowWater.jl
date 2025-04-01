@@ -41,7 +41,8 @@ boundary_condition = Dict(:x_neg => boundary_condition_slip_wall,
 
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 
-surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
+surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle,
+                                              hydrostatic_reconstruction_chen_noelle),
                 flux_nonconservative_chen_noelle)
 
 # Create the solver
@@ -83,8 +84,8 @@ end
 # Refine recursively until each bottom left quadrant of a tree has level 3
 # The mesh will be rebalanced before the simulation starts
 refine_fn_c = @cfunction(refine_fn, Cint,
-                       (Ptr{Trixi.p4est_t}, Ptr{Trixi.p4est_topidx_t},
-                        Ptr{Trixi.p4est_quadrant_t}))
+                         (Ptr{Trixi.p4est_t}, Ptr{Trixi.p4est_topidx_t},
+                          Ptr{Trixi.p4est_quadrant_t}))
 Trixi.refine_p4est!(mesh.p4est, true, refine_fn_c, C_NULL)
 
 # Create the semi discretization object
@@ -115,7 +116,8 @@ save_solution = SaveSolutionCallback(dt = 0.04,
     return u[1] + u[4]
 end
 
-amr_controller = ControllerThreeLevel(semi, IndicatorMax(semi, variable = total_water_height),
+amr_controller = ControllerThreeLevel(semi,
+                                      IndicatorMax(semi, variable = total_water_height),
                                       base_level = 1,
                                       med_level = 2, med_threshold = 2.01,
                                       max_level = 4, max_threshold = 2.15)

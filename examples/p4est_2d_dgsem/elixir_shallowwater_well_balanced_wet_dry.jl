@@ -39,7 +39,8 @@ boundary_condition = Dict(:all => boundary_condition_slip_wall)
 
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 
-surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
+surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle,
+                                              hydrostatic_reconstruction_chen_noelle),
                 flux_nonconservative_chen_noelle)
 
 # Create the solver
@@ -146,8 +147,10 @@ u = Trixi.wrap_array(ode.u0, semi)
 # reset the initial condition
 for element in eachelement(semi.solver, semi.cache)
     for j in eachnode(semi.solver), i in eachnode(semi.solver)
-        x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations, semi.solver, i, j, element)
-        u_node = initial_condition_discontinuous_well_balancedness(x_node, first(tspan), element, equations)
+        x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations,
+                                       semi.solver, i, j, element)
+        u_node = initial_condition_discontinuous_well_balancedness(x_node, first(tspan),
+                                                                   element, equations)
         Trixi.set_node_vars!(u, u_node, equations, semi.solver, i, j, element)
     end
 end

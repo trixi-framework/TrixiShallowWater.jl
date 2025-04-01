@@ -14,7 +14,7 @@ equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 2.0)
 # Note, this routine is used to compute errors in the analysis callback but the initialization is
 # overwritten by `initial_condition_discontinuous_well_balancedness` below.
 function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquationsWetDry2D)
-  # Calculate primitive variables
+    # Calculate primitive variables
     H = equations.H0
     v1 = 0.0
     v2 = 0.0
@@ -38,7 +38,8 @@ boundary_condition = Dict(:all => boundary_condition_slip_wall)
 
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 
-surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle, hydrostatic_reconstruction_chen_noelle),
+surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle,
+                                              hydrostatic_reconstruction_chen_noelle),
                 flux_nonconservative_chen_noelle)
 
 # Create the solver
@@ -69,7 +70,7 @@ mesh = P4estMesh{2}(mesh_file, polydeg = 3,
 function refine_fn(p4est, which_tree, quadrant)
     quadrant_obj = unsafe_load(quadrant)
     if quadrant_obj.x == 0 && quadrant_obj.y == 0 && quadrant_obj.level < 3
-          # return true (refine)
+        # return true (refine)
         return Cint(1)
     else
         # return false (don't refine)
@@ -132,11 +133,13 @@ end
 u = Trixi.wrap_array(ode.u0, semi)
 # reset the initial condition
 for element in eachelement(semi.solver, semi.cache)
-  for j in eachnode(semi.solver), i in eachnode(semi.solver)
-    x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations, semi.solver, i, j, element)
-    u_node = initial_condition_discontinuous_well_balancedness(x_node, first(tspan), element, equations)
-    Trixi.set_node_vars!(u, u_node, equations, semi.solver, i, j, element)
-  end
+    for j in eachnode(semi.solver), i in eachnode(semi.solver)
+        x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations,
+                                       semi.solver, i, j, element)
+        u_node = initial_condition_discontinuous_well_balancedness(x_node, first(tspan),
+                                                                   element, equations)
+        Trixi.set_node_vars!(u, u_node, equations, semi.solver, i, j, element)
+    end
 end
 ###############################################################################
 
@@ -149,7 +152,7 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback( dt = 5.0,
+save_solution = SaveSolutionCallback(dt = 5.0,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
@@ -167,4 +170,4 @@ callbacks = CallbackSet(summary_callback,
 sol = solve(ode, SSPRK43(),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             adaptive = false,
-            save_everystep = false, callback = callbacks,);
+            save_everystep = false, callback = callbacks);
