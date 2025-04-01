@@ -93,7 +93,12 @@ trees_per_dimension = (4, 4)
 mesh = P4estMesh(trees_per_dimension, polydeg = 3,
                  mapping = mapping_twist,
                  initial_refinement_level = 0,
-                 periodicity = true)
+                 periodicity = false)
+
+boundary_condition = Dict(:x_neg => boundary_condition_slip_wall,
+                          :y_neg => boundary_condition_slip_wall,
+                          :x_pos => boundary_condition_slip_wall,
+                          :y_pos => boundary_condition_slip_wall)
 
 # Refine bottom left quadrant of each tree to level 3
 function refine_fn(p4est, which_tree, quadrant)
@@ -115,8 +120,8 @@ refine_fn_c = @cfunction(refine_fn, Cint,
 Trixi.refine_p4est!(mesh.p4est, true, refine_fn_c, C_NULL)
 
 # Create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)#,
-                                    # boundary_conditions = boundary_condition)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_condition)
 
 ###############################################################################
 # ODE solvers, callbacks, etc.

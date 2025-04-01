@@ -94,8 +94,6 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 
 # mesh = P4estMesh{2}(mesh_file)
 
-boundary_condition = Dict(:all => boundary_condition_slip_wall)
-
 # Affine type mapping to take the [-1,1]^2 domain from the mesh file
 # and warp it as described in https://arxiv.org/abs/2012.12040
 # Warping with the coefficient 0.2 is even more extreme.
@@ -112,6 +110,19 @@ mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2e
 mesh = P4estMesh{2}(mesh_file, polydeg = 3,
                     mapping = mapping_twist,
                     initial_refinement_level = 0)
+
+boundary_condition = Dict(:all => boundary_condition_slip_wall)
+
+# trees_per_dimension = (8, 8)
+# mesh = P4estMesh(trees_per_dimension, polydeg = 3,
+#                     mapping = mapping_twist,
+#                     initial_refinement_level = 0,
+#                     periodicity = false)
+
+# boundary_condition = Dict(:x_neg => boundary_condition_slip_wall,
+#                           :y_neg => boundary_condition_slip_wall,
+#                           :x_pos => boundary_condition_slip_wall,
+#                           :y_pos => boundary_condition_slip_wall)
 
 # Refine bottom left quadrant of each tree to level 2
 function refine_fn(p4est, which_tree, quadrant)
@@ -160,6 +171,7 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id, equ
 
     x1, x2 = x
     b = (1.75 / exp(0.6 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
+    # b = (2.5 / exp(0.6 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
          +
          0.8 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
          -
@@ -174,14 +186,14 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id, equ
              0.25 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
     end
 
-    # H = max(equations.H0, b + equations.threshold_limiter)
+    H = max(equations.H0, b + equations.threshold_limiter)
 
-    # return prim2cons(SVector(H, v1, v2, b), equations)
-    # Clip the initialization to avoid negative water heights and division by zero
-    h = max(equations.threshold_limiter, H - b)
+    return prim2cons(SVector(H, v1, v2, b), equations)
+    # # Clip the initialization to avoid negative water heights and division by zero
+    # h = max(equations.threshold_limiter, H - b)
 
-    # Return the conservative variables
-    return SVector(h, h * v1, h * v2, b)
+    # # Return the conservative variables
+    # return SVector(h, h * v1, h * v2, b)
 end
 
 # point to the data we want to augment
@@ -209,7 +221,7 @@ save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stepsize_callback = StepsizeCallback(cfl = 1.0)
+stepsize_callback = StepsizeCallback(cfl = 0.6)
 
 callbacks = CallbackSet(summary_callback,
                         analysis_callback,

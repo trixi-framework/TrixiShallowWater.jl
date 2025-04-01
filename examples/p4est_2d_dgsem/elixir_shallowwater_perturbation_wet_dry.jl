@@ -31,7 +31,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a continuous
 # bottom topography function
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 1.235)#, threshold_partially_wet=1e-4)#, threshold_limiter=1e-6) #, threshold_limiter=1e-4) #5*eps())
+equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 1.235)
 
 function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWetDry2D)
     # Calculate primitive variables
@@ -40,7 +40,7 @@ function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWe
     v2 = 0.0
 
     x1, x2 = x
-    b = (1.5 / exp(0.5 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
+    b = (2.5 / exp(0.5 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
          +
          0.8 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
          -
@@ -115,6 +115,7 @@ end
 mesh = P4estMesh{2}(mesh_file, polydeg = 4,
                     mapping = mapping_twist,
                     initial_refinement_level = 0)
+                    # initial_refinement_level = 2)
 
 # Refine bottom left quadrant of each tree to level 2
 function refine_fn(p4est, which_tree, quadrant)
@@ -152,14 +153,19 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id, equ
     v2 = zero(H)
 
     x1, x2 = x
+
+    # For the mesh file version of the testing
     b = (1.75 / exp(0.6 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
+    # b = (2.5 / exp(0.6 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
         +
         0.8 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
         -
         0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
 
     # Setup a discontinuous bottom topography using the element id number
-    if element_id > 207 && element_id < 300 # for the forced hanging node grid with with < 3 in function above
+    # if (element_id > 207 && element_id < 301) || (element_id > 125 && element_id < 133) # for the forced hanging node grid with with < 3 in function above
+    IDs = [collect(114:133); collect(138:141); collect(156:164); collect(208:300)]
+    if element_id in IDs
         b = (0.75 / exp(0.5 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
             +
             0.4 / exp(0.5 * ((x1 + 1.0)^2 + (x2 - 1.0)^2))
@@ -167,9 +173,9 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id, equ
             0.25 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
     end
 
-    # Put in a discontinous purturbation using the element number
+    # Put in a discontinuous perturbation using the element number
     if element_id in [232, 224, 225, 226, 227, 228, 229, 230]
-        H = H + 1.3 # 1.8
+        H = H + 1.6 # 1.25
     end
 
     # Clip the initialization to avoid negative water heights and division by zero
@@ -201,33 +207,47 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(dt = 0.02, #interval=20,
+save_solution = SaveSolutionCallback(dt = 0.2, # dt = 0.02, # interval = 200,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-# # Define a better variable to use in the AMR indicator
-# @inline function total_water_height(u, equations::ShallowWaterEquationsWetDry2D)
-#   # return u[1]
+# Define a better variable to use in the AMR indicator
+@inline function total_water_height(u, equations::ShallowWaterEquationsWetDry2D)
+  return max(u[1], 0.0)
 #   return min(abs(u[1] + u[4] - equations.H0 - equations.threshold_limiter), abs(u[1] - equations.threshold_limiter)) + equations.H0
+end
+
+# # Another AMR indicator function could be the velocity, such that it only fires
+# # in regions where the water is moving
+# @inline function velocity_norm(u, equations::ShallowWaterEquationsWetDry2D)
+#    v1, v2 = velocity(u, equations)
+#    return sqrt(v1^2 + v2^2)
 # end
 
-# amr_controller = ControllerThreeLevel(semi, IndicatorMax(semi, variable = total_water_height),
+amr_controller = ControllerThreeLevel(semi, IndicatorMax(semi, variable = total_water_height),
+                                      base_level = 0,
+                                      med_level = 1, med_threshold = 0.3, # with adding back H0
+                                      max_level = 4, max_threshold = 1.15)
+                                    #   med_level = 1, med_threshold = 0.8, # with adding back H0
+                                    #   max_level = 4, max_threshold = 1.4)
+
+# amr_controller = ControllerThreeLevel(semi, IndicatorMax(semi, variable = velocity_norm),
 #                                       base_level = 0,
-#                                       med_level = 1, med_threshold = 1.1, # with adding back H0
-#                                       max_level = 2, max_threshold = 1.3)
+#                                       med_level = 2, med_threshold = 0.5,
+#                                       max_level = 4, max_threshold = 0.75)
 
-# amr_callback = AMRCallback(semi, amr_controller,
-#                            interval = 1,
-#                            adapt_initial_condition = false,
-#                            adapt_initial_condition_only_refine = false)
+amr_callback = AMRCallback(semi, amr_controller,
+                           interval = 3,
+                           adapt_initial_condition = false,
+                           adapt_initial_condition_only_refine = false)
 
-stepsize_callback = StepsizeCallback(cfl = 0.8)
+stepsize_callback = StepsizeCallback(cfl = 0.75)
 
 callbacks = CallbackSet(summary_callback,
                         analysis_callback,
                         alive_callback,
                         save_solution,
-                        # amr_callback,
+                        amr_callback,
                         stepsize_callback)
 
 stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
