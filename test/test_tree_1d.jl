@@ -484,7 +484,7 @@ end # SWE
                             linf=[0.586718937495144, 2.1215606128311584,
                                 0.5185911311186155,
                                 1.820382495072612, 0.5],
-                            surface_flux=(flux_lax_friedrichs,
+                            surface_flux=(FluxLaxFriedrichs(max_abs_speed),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
