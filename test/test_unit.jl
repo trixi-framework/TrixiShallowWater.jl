@@ -364,19 +364,19 @@ end
                                                                  rhos = [
                                                                      -1.0,
                                                                      0.1,
-                                                                     0.2,
+                                                                     0.2
                                                                  ])
     @test_throws ArgumentError ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
                                                                  rhos = [
                                                                      -1.0,
                                                                      0.1,
-                                                                     0.2,
+                                                                     0.2
                                                                  ])
     @test_throws ArgumentError ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
                                                                  rhos = [0.1, 0.3, 0.2])
     @test_throws ArgumentError ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
                                                                  rhos = [0.1, 0.3, 0.2])
-    # Ensure that both tuple and array input are equivalent    
+    # Ensure that both tuple and array input are equivalent
     @test ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
                                             rhos = [0.1, 0.2, 0.3]) ==
           ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
