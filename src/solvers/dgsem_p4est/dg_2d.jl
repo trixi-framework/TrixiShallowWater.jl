@@ -200,7 +200,10 @@ function Trixi.calc_mortar_flux!(surface_flux_values,
                                  surface_integral, dg::DG, cache)
     @unpack neighbor_ids, node_indices = cache.mortars
     @unpack contravariant_vectors = cache.elements
-    @unpack fstar_primary_upper_threaded, fstar_primary_lower_threaded, fstar_secondary_upper_threaded, fstar_secondary_lower_threaded, f_upper_threaded, f_lower_threaded = cache#, fchild1_threaded, fchild2_threaded, fchild1_original_threaded, fchild2_original_threaded = cache
+    @unpack (fstar_primary_upper_threaded, fstar_primary_lower_threaded,
+    fstar_secondary_upper_threaded, fstar_secondary_lower_threaded,
+    f_upper_threaded, f_lower_threaded) = cache
+
     surface_flux, nonconservative_flux = surface_integral.surface_flux
     index_range = eachnode(dg)
 
