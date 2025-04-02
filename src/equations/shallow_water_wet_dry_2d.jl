@@ -31,10 +31,10 @@ Also, there are two thresholds which prevent numerical problems as well as insta
 have to be passed, as default values are defined within the struct. The first one, `threshold_limiter`, is
 used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height, as a (small) shift on the initial
 condition and cutoff before the next time step. The second one, `threshold_wet`, is applied on the water height to
-define when the flow is "wet" before calculating the numerical flux. A third 
-`threshold_partially_wet` is applied on the water height to define "partially wet" elements in 
+define when the flow is "wet" before calculating the numerical flux. A third
+`threshold_partially_wet` is applied on the water height to define "partially wet" elements in
 [`IndicatorHennemannGassnerShallowWater`](@ref), that are then calculated with a pure FV method to
-ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are 
+ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are
 defined within the struct. For other number formats  `threshold_partially_wet` must be provided.
 
 The bottom topography function ``b(x,y)`` is set inside the initial condition routine
@@ -69,11 +69,11 @@ struct ShallowWaterEquationsWetDry2D{RealT <: Real} <:
     # before calculating the numerical flux.
     # Default is 5*eps() which in double precision is ≈1e-15.
     threshold_wet::RealT
-    # `threshold_partially_wet` used in `IndicatorHennemannGassnerShallowWater` on the water height 
-    # to define "partially wet" elements. Those elements are calculated with a pure FV method to 
-    # ensure well-balancedness. Default in double precision is 1e-4. 
+    # `threshold_partially_wet` used in `IndicatorHennemannGassnerShallowWater` on the water height
+    # to define "partially wet" elements. Those elements are calculated with a pure FV method to
+    # ensure well-balancedness. Default in double precision is 1e-4.
     threshold_partially_wet::RealT
-    # Standard shallow water equations for dispatch on Trixi.jl functions 
+    # Standard shallow water equations for dispatch on Trixi.jl functions
     basic_swe::ShallowWaterEquations2D{RealT}
 end
 
@@ -96,8 +96,8 @@ function ShallowWaterEquationsWetDry2D(; gravity_constant, H0 = zero(gravity_con
     if threshold_partially_wet === nothing
         threshold_partially_wet = default_threshold_partially_wet(T)
     end
-    # Construct the standard SWE for dispatch. Even though the `basic_swe` already store the 
-    # gravity constant and the total water height, we store an extra copy in 
+    # Construct the standard SWE for dispatch. Even though the `basic_swe` already store the
+    # gravity constant and the total water height, we store an extra copy in
     # `ShallowWaterEquationsWetDry2D` for convenience.
     basic_swe = ShallowWaterEquations2D(gravity_constant = gravity_constant, H0 = H0)
 
@@ -114,10 +114,10 @@ Trixi.varnames(::typeof(cons2cons), ::ShallowWaterEquationsWetDry2D) = ("h", "h_
 Trixi.varnames(::typeof(cons2prim), ::ShallowWaterEquationsWetDry2D) = ("H", "v1", "v2",
                                                                         "b")
 
-# This equation set extends the basic ShallowWaterEquations2D from Trixi.jl with additional 
-# functionality for wet/dry transitions. Since many functions correspond to the fully wet case, we 
+# This equation set extends the basic ShallowWaterEquations2D from Trixi.jl with additional
+# functionality for wet/dry transitions. Since many functions correspond to the fully wet case, we
 # make use of the existing functionality and introduce a number of wrapper functions, that dispatch
-# to the ShallowWaterEquations2D. 
+# to the ShallowWaterEquations2D.
 
 # Set initial conditions at physical location `x` for time `t`
 """
@@ -267,7 +267,7 @@ Further details are available in the papers:
   shallow water equations on unstructured curvilinear meshes with discontinuous bathymetry
   [DOI: 10.1016/j.jcp.2017.03.036](https://doi.org/10.1016/j.jcp.2017.03.036)
 - Patrick Ersing, Andrew R. Winters (2023)
-  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
+  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on
   curvilinear meshes
   [DOI: 10.48550/arXiv.2306.12699](https://doi.org/10.48550/arXiv.2306.12699)
 """
