@@ -1,6 +1,6 @@
 
 using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
