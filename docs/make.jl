@@ -1,10 +1,28 @@
 using TrixiShallowWater
 using Documenter
 using DocumenterInterLinks
+using Literate
 
 # Provide external links to the Trixi.jl docs (project root and inventory file)
 links = InterLinks("Trixi" => ("https://trixi-framework.github.io/Trixi.jl/stable/",
                                "https://trixi-framework.github.io/Trixi.jl/stable/objects.inv"))
+
+# Create tutorial section with Literature
+TUTORIAL_DIR = joinpath(@__DIR__, "src", "tutorials")
+OUTPUT_DIR = joinpath(@__DIR__, "src", "tutorials")
+
+tutorial_list = [
+    "elixir_shallowwater_dam_break_triangular.jl"
+]
+
+tutorial_pages = [
+    "Dam Break" => "tutorials/elixir_shallowwater_dam_break_triangular.md"
+]
+
+# Create markdown files
+for tutorial in tutorial_list
+    Literate.markdown(joinpath(TUTORIAL_DIR, tutorial), OUTPUT_DIR;)
+end
 
 # Copy list of authors to not need to synchronize it manually
 authors_text = read(joinpath(dirname(@__DIR__), "AUTHORS.md"), String)
@@ -15,41 +33,7 @@ write(joinpath(@__DIR__, "src", "authors.md"), authors_text)
 DocMeta.setdocmeta!(TrixiShallowWater, :DocTestSetup, :(using TrixiShallowWater);
                     recursive = true)
 
-# Copy some files from the repository root directory to the docs and modify them
-# as necessary
-# Based on: https://github.com/ranocha/SummationByPartsOperators.jl/blob/0206a74140d5c6eb9921ca5021cb7bf2da1a306d/docs/make.jl#L27-L41
-open(joinpath(@__DIR__, "src", "code_of_conduct.md"), "w") do io
-    # Point to source license file
-    println(io,
-            """
-            ```@meta
-            EditURL = "https://github.com/trixi-framework/TrixiShallowWater.jl/blob/main/CODE_OF_CONDUCT.md"
-            ```
-            """)
-    # Write the modified contents
-    println(io, "# [Code of Conduct](@id code-of-conduct)")
-    println(io, "")
-    for line in eachline(joinpath(dirname(@__DIR__), "CODE_OF_CONDUCT.md"))
-        line = replace(line, "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref)")
-        println(io, "> ", line)
-    end
-end
-
-open(joinpath(@__DIR__, "src", "contributing.md"), "w") do io
-    # Point to source license file
-    println(io,
-            """
-            ```@meta
-            EditURL = "https://github.com/trixi-framework/TrixiShallowWater.jl/blob/main/CONTRIBUTING.md"
-            ```
-            """)
-    # Write the modified contents
-    for line in eachline(joinpath(dirname(@__DIR__), "CONTRIBUTING.md"))
-        line = replace(line, "[LICENSE.md](LICENSE.md)" => "[License](@ref)")
-        line = replace(line, "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref)")
-        println(io, line)
-    end
-end
+# TODO: create changelog
 
 makedocs(;
          modules = [TrixiShallowWater],
@@ -63,7 +47,7 @@ makedocs(;
                                   assets = String[],),
          pages = ["Home" => "index.md",
              "Installation" => "installation.md",
-             "Tutorials" => "tutorial.md",
+             "Tutorials" => tutorial_pages,
              "Advanced topics & developers" => ["Development" => "development.md"
                                                 "Testing" => "testing.md"],
              "Authors" => "authors.md",
@@ -72,6 +56,6 @@ makedocs(;
              "License" => "license.md"],
          plugins = [links],)
 
-deploydocs(;
-           repo = "github.com/trixi-framework/TrixiShallowWater.jl",
-           devbranch = "main",)
+deploydocs(repo = "github.com/trixi-framework/TrixiShallowWater.jl",
+           devbranch = "main",
+           push_preview = true)
