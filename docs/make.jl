@@ -30,13 +30,27 @@ authors_text = replace(authors_text,
                        "in the [LICENSE.md](LICENSE.md) file" => "under [License](@ref)")
 write(joinpath(@__DIR__, "src", "authors.md"), authors_text)
 
+# Copy contributing information to not need to synchronize it manually
+contributing_text = read(joinpath(dirname(@__DIR__), "CONTRIBUTING.md"), String)
+contributing_text = replace(contributing_text,
+                            "[LICENSE.md](LICENSE.md)" => "[License](@ref)",
+                            "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref)")
+write(joinpath(@__DIR__, "src", "contributing.md"), contributing_text)
+
+# Copy code of conduct to not need to synchronize it manually
+code_of_conduct_text = read(joinpath(dirname(@__DIR__), "CODE_OF_CONDUCT.md"), String)
+code_of_conduct_text = replace(code_of_conduct_text,
+                                "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref)")
+write(joinpath(@__DIR__, "src", "code_of_conduct.md"), code_of_conduct_text)
+
 # Copy contents form README to the starting page to not need to synchronize it manually
 readme_text = read(joinpath(dirname(@__DIR__), "README.md"), String)
 readme_text = replace(readme_text,
                        "[LICENSE.md](LICENSE.md)" => "[License](@ref)",
                        "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref)",
                        "<p" => "```@raw html\n<p",
-                       "p>" => "p>\n```")
+                       "p>" => "p>\n```",
+                       r"\[comment\].*\n" => "")    # remove comments
 write(joinpath(@__DIR__, "src", "home.md"), readme_text)
 
 DocMeta.setdocmeta!(TrixiShallowWater, :DocTestSetup, :(using TrixiShallowWater);
