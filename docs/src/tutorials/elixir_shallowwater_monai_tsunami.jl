@@ -1,9 +1,11 @@
-# Okushiri Tsunami
-# Note: This tutorial is still under construction.
-# Also, the embedded youtube link is currently incorrect because the Monai video has yet to be uploaded
+# # Okushiri Tsunami
 
 # In this tutorial, we will use the shallow water equations with wetting and drying
-# on an unstructured quadrilateral mesh to model the Okushiri tsunami experiment.
+# on an unstructured quadrilateral mesh to numerically approximate the Okushiri tsunami experiment
+# that models the wave runup near the village of Monai on Okushiri Island.
+# This benchmark problem comes from a 1/400 scale laboratory experiment that used a wave tank
+# at the Central Research Institute for Electric Power Industry (CRIEPI) in Abiko, Japan.
+#
 # This is an application that exercises the ability of TrixiShallowWater.jl to model
 # tsunami runup onto a complex three-dimensional coastline.
 # The bathymetry data for this test case is approximated with bicubic splines.
@@ -41,7 +43,7 @@ using TrixiBottomTopography
 using CairoMakie
 using Trixi2Vtk
 
-# # Visualize the original bathymetry
+# ## Visualize the original bathymetry
 # First, we obtain and plot the raw bathymetry data. An examination of the bathymetry
 # and its features will aid in designing an appropriate mesh for the discretization.
 # We download the raw bathymetry data to make it available locally
@@ -65,7 +67,9 @@ for j in 2:length(lines)
     z[j - 1] = -parse(Float64, current_line[3])
 end
 
-surface(x, y, z, axis = (type = Axis3,), colormap = :greenbrownterrain)
+surface(x, y, z,
+        axis = (type = Axis3, xlabel = "x [m]", ylabel = "y [m]", zlabel = "z [m]"),
+        colormap = :greenbrownterrain)
 
 # From the bathymetry visualization we can identify that there are several regions
 # of interest that require higher resolution to create an accurate approximation.
@@ -76,24 +80,30 @@ surface(x, y, z, axis = (type = Axis3,), colormap = :greenbrownterrain)
 # In HOHQMesh, we set a background grid and then specify targeted refinement regions to add
 # more elements where more resolution is required to resolve the bathymetry.
 
-# # Create an unstructured mesh
+# ## Create an unstructured mesh
 # To begin, we create a new mesh project.
 # The output files created by HOHQMesh will be saved into the "out" folder
 # and carry the same name as the project, in this case "monai_shore".
-monai = newProject("monai_shore", "out")
-HOHQMesh.getModelDict(monai); # Create an empty MODEL dictionary
+monai = newProject("monai_shore", "out");
 
 # Next, we set the polynomial order for the boundaries to be linear, i.e., polynomials of degree one.
-# The file format is set to ["ISM-V2"](https://trixi-framework.github.io/HOHQMesh/TheISMMeshFileFormats/#ism as it is compatible with `UnstructuredMesh2D` mesh type
+# The file format is set to ["ISM-V2"](https://trixi-framework.github.io/HOHQMesh/TheISMMeshFileFormats/#ism)
+# as it is compatible with `UnstructuredMesh2D` mesh type
 # that will be used later in the solver.
 setPolynomialOrder!(monai, 1)
 setMeshFileFormat!(monai, "ISM-V2");
 
+# The rectangular domain for this problem has no interior or exterior boundary curves.
+# To suppress extraneous output from HOHQMesh during the mesh generation process we create
+# an empty MODEL dictionary.
+HOHQMesh.getModelDict(monai);
+
 # Now we can set a background Cartesian box mesh required to define
 # the length scales in the mesh generation process.
 # The domain for this problem setup is $[0.0, 5.488] \times [0.0, 3.402]$.
-# To initialize the mesh, the domain boundaries have to be provided to `bounds` with order `[top, left, bottom, right]`.
-# The background grid is quite coarse with eight elements in the $x$-direction
+# To initialize the mesh, the domain boundary edges are provided in `bounds`
+# with order `[top, left, bottom, right]`.
+# The background grid is coarse with eight elements in the $x$-direction
 # and four elements in the $y$-direction.
 bounds = [3.402, 0.0, 0.0, 5.488]
 N = [8, 4, 0]
@@ -101,8 +111,10 @@ addBackgroundGrid!(monai, bounds, N)
 
 # From the inspection of the bathymetry visualization above we indicate regions
 # in the domain to target additional refinement during mesh generation.
-# One [`RefinementCenter`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementCenter-Tuple{String,%20String,%20Array{Float64},%20Float64,%20Float64}) is placed around the island near the center of the domain.
-# Three [`RefinementLine`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementLine-Tuple{String,%20String,%20Array{Float64},%20Array{Float64},%20Float64,%20Float64}) areas are placed in the wake region of said island and the coastline.
+# One [`RefinementCenter`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementCenter-Tuple{String,%20String,%20Array{Float64},%20Float64,%20Float64})
+# is placed around the island near the center of the domain.
+# Three [`RefinementLine`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementLine-Tuple{String,%20String,%20Array{Float64},%20Array{Float64},%20Float64,%20Float64})
+# areas are placed in the wake region of said island and the coastline.
 island = newRefinementCenter("island", "smooth", [3.36, 1.68, 0.0], 0.1, 0.15)
 wake = newRefinementLine("wake", "smooth", [3.75, 1.7, 0.0],
                          [4.75, 1.7, 0.0], 0.15, 0.2)
@@ -118,14 +130,14 @@ add!(monai, shoreline_top)
 add!(monai, shoreline_bottom)
 
 # One can plot the current project to inspect the background grid and refinement region locations using
-# the command `plotProject!(monai, GRID+REFINEMENTS)`.
-# This creates an image like the following
+# the command
+plotProject!(monai, GRID + REFINEMENTS);
 
 # ![mesh_before](https://github.com/user-attachments/assets/9666e5da-c8d6-42e5-be38-0c54f3e15d6c)
 
-# The locations of the refinement regions look good so that we can generate the mesh. 
+# The locations of the refinement regions look good so that we can generate the mesh.
 # The call to `generate_mesh` prints mesh also prints quality statistics and updates the visualization.
-generate_mesh(monai)
+generate_mesh(monai);
 
 # ![mesh_after](https://github.com/user-attachments/assets/6157a39c-e8ff-443a-b4d3-e0061188bea6)
 
@@ -134,7 +146,7 @@ generate_mesh(monai)
 # - monai_shore.tec: A TecPlot formatted file to visualize the mesh with other software, e.g., ParaView.
 # - monai_shore.mesh: A mesh file with format "ISM-V2".
 
-# # Discretize the problem setup
+# ## Discretize the problem setup
 # With the mesh in hand we can proceed to construct the solver components and callbacks
 # for the tsunami runup problem.
 
@@ -150,7 +162,7 @@ equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 0.0)
 # a [`BicubicBSpline`](https://trixi-framework.github.io/TrixiBottomTopography.jl/stable/reference/#TrixiBottomTopography.BicubicBSpline)
 # with the "not-a-knot" boundary closure.
 # For this we first download the bathymetry data that has been preprocessed to be in the format
-# required by TrixiBottomTopography, see [here](https://trixi-framework.github.io/TrixiBottomTopography.jl/stable/conversion/) for more information.
+# required by TrixiBottomTopography, see [here](https://trixi-framework.github.io/TrixiBottomTopography.jl/stable/conversion/#Data-format-of-TrixiBottomTopography.jl) for more information.
 spline_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/21255c980c4eda5294f91e8dfe6c7e33/raw/1afb73928892774dc3a902e0c46ffd882ef03ee3/monai_bathymetry_data.txt",
                                         joinpath(@__DIR__, "monai_bathymetry_data.txt"));
 
@@ -187,7 +199,7 @@ initial_condition = initial_condition_monai_tsunami;
 # For this tsunami test case a specialized wave maker type of boundary condition
 # is needed. It is used to model an incident wave that approaches from off-shore
 # with a water depth of $h = 13.535\,\text{cm}$. To create the incident wave information
-# that is valid over the time interval $t \in [0, 22.5]$ we use
+# that is valid over the time interval $t \in [0\,s, 22.5\,s]$ we use
 # a [`CubicBspline`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.CubicBspline) to interpolate
 # the given data from the reference data.
 
@@ -311,19 +323,22 @@ ode = semidiscretize(semi, tspan);
 # Below, we define several callbacks for different purposes.
 
 # ### Analysis Callback
-The [AnalysisCallback](https://trixi-framework.github.io/Trixi.jl/stable/reference-trixi/#Trixi.AnalysisCallback) is used to analyze the solution at regular intervals. Extra analysis quantities such as conservation errors can be added to the callback.
+# The [AnalysisCallback](https://trixi-framework.github.io/Trixi.jl/stable/reference-trixi/#Trixi.AnalysisCallback)
+# is used to analyze the solution at regular intervals.
+# Extra analysis quantities such as conservation errors can be added to the callback.
 analysis_interval = 1000
 analysis_callback = AnalysisCallback(semi, interval = analysis_interval)
 
 # ### Save Solution Callback
-# The [`SaveSolutionCallback`](@extref Trixi.SaveSolutionCallback) outputs solution data and other quantities like the shock capturing parameter
-# to `.h5` files for postprocessing
+# The [`SaveSolutionCallback`](@extref Trixi.SaveSolutionCallback) outputs solution data
+# and other quantities like the shock capturing parameter to `.h5` files for postprocessing
 save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
 # ### Stepsize Callback
-The [StepsizeCallback](https://trixi-framework.github.io/Trixi.jl/stable/reference-trixi/#Trixi.StepsizeCallback) calculates the time step based on a CFL condition.
+# The [StepsizeCallback](https://trixi-framework.github.io/Trixi.jl/stable/reference-trixi/#Trixi.StepsizeCallback)
+# calculates the time step based on a CFL condition.
 stepsize_callback = StepsizeCallback(cfl = 0.6)
 
 # ### Combine Callbacks
@@ -334,23 +349,25 @@ callbacks = CallbackSet(analysis_callback,
 
 # ## Run the simulation
 # Finally, we solve the ODE problem using a strong stability-preserving Runge-Kutta (SSPRK) method.
-# The [PositivityPreservingLimiterShallowWater](https://github.com/trixi-framework/TrixiShallowWater.jl/pull/index.html#TrixiShallowWater.PositivityPreservingLimiterShallowWater) is used as a stage limiter to ensure positivity
-# of the water height during the simulation. The [SSPRK43](https://docs.sciml.ai/OrdinaryDiffEq/stable/explicit/SSPRK/#OrdinaryDiffEqSSPRK.SSPRK43) integrator supports adaptive timestepping;
+# The [PositivityPreservingLimiterShallowWater](https://github.com/trixi-framework/TrixiShallowWater.jl/pull/index.html#TrixiShallowWater.PositivityPreservingLimiterShallowWater)
+# is used as a stage limiter to ensure positivity
+# of the water height during the simulation. The [SSPRK43](https://docs.sciml.ai/OrdinaryDiffEq/stable/explicit/SSPRK/#OrdinaryDiffEqSSPRK.SSPRK43)
+# integrator supports adaptive timestepping;
 # however, this is deactivated with `adaptive=false` as we use a CFL-based time step restriction.
 # ```julia
-# stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,)) 
+# stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
 # sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
 #           ode_default_options()..., callback = callbacks, adaptive = false);
 # ```
 
-# # Postprocessing the solution data
+# ## Postprocessing the solution data
 # It is useful to visualize and inspect the solution and bathymetry of the shallow water equations.
 # One option available is post-processing the Trixi.jl output file(s)
 # with the Trixi2Vtk.jl functionality and plotting them with ParaView.
 
 # To convert all the HDF5-formatted `.h5` output file(s) from TrixiShallowWater.jl
 # into VTK format execute the following
-# ```julia 
+# ```julia
 # trixi2vtk("out/solution_*.h5", output_directory = "out")
 # ```
 # then it is possible to open the `.pvd` file with ParaView and create a video of the simulation.
@@ -364,13 +381,12 @@ callbacks = CallbackSet(analysis_callback,
 
 # ![paraview_example](https://github.com/user-attachments/assets/84ba04fd-2f0b-4cbf-8ad2-7b12a2afaa55)
 
-# # Putting it all together
+# ## Putting it all together
 # Now the problem discretization components are assembled and working
 # with a postprocessing pipeline in place.
-# So, we adjust the run parameter to use `tspan = (0.0, 22.5)` and run the test case
-# to its prescribed final time.
-# This simulation takes approximately 12 minutes with solution files in the `SaveSolutionCallback`
-# written every `dt = 0.04` to obtain a high resolution of the solution output.
+# We run simulation, which takes approximately 12 minutes with solution files
+# in the `SaveSolutionCallback`
+# written every `dt = 0.04` to obtain a high temporal resolution of the solution output.
 # We then visualize the solution, bathymetry, and shock capturing using ParaView and create
 # a video of the [tsunami runup simulation](https://www.youtube.com/watch?v=Iei7e9oQ0hs).
 # ```@raw html
