@@ -1,10 +1,11 @@
+# Okushiri Tsunami
 # Note: This tutorial is still under construction.
 # Also, the embedded youtube link is currently incorrect because the Monai video has yet to be uploaded
 
 # In this tutorial, we will use the shallow water equations with wetting and drying
 # on an unstructured quadrilateral mesh to model the Okushiri tsunami experiment.
 # This is an application that exercises the ability of TrixiShallowWater.jl to model
-# tsunami runup onto a complex 3D beach.
+# tsunami runup onto a complex three-dimensional coastline.
 # The bathymetry data for this test case is approximated with bicubic splines.
 # A thorough description of this problem setup and the original data files are
 # available [here](https://isec.nacse.org/workshop/2004_cornell/bmark2.html).
@@ -28,10 +29,10 @@
 # Before we begin, we load the required packages. The core solver component is TrixiShallowWater.jl,
 # which requires [`Trixi.jl`](@extref Trixi.jl) for the underlying spatial discretization
 # and `OrdinaryDiffEqSSPRK.jl` for time integration.
-# HOHQMesh.jl is needed to generate an unstructured mesh for this problem.
-# TrixiBottomTopography.jl is needed to create a bathymetry approximation that is directly
+# `HOHQMesh.jl` is needed to generate an unstructured mesh for this problem.
+# `TrixiBottomTopography.jl` is needed to create a bathymetry approximation that is directly
 # usable by Trixi.jl.
-# Finally, we include `CairoMakie.jl` for insitu visualization and `Trixi2Vtk.jl` for postprocessing.
+# Finally, we include [`CairoMakie.jl`](https://docs.makie.org/stable/) for insitu visualization and `Trixi2Vtk.jl` for postprocessing.
 using HOHQMesh
 using OrdinaryDiffEqSSPRK
 using Trixi
@@ -73,25 +74,25 @@ surface(x, y, z, axis = (type = Axis3,), colormap = :greenbrownterrain)
 
 # This information is useful to guide the creation of an unstructured quadrilateral mesh.
 # In HOHQMesh, we set a background grid and then specify targeted refinement regions to add
-# more elements where more resolution is required due to the bathymetry.
+# more elements where more resolution is required to resolve the bathymetry.
 
 # # Create an unstructured mesh
 # To begin, we create a new mesh project.
 # The output files created by HOHQMesh will be saved into the "out" folder
 # and carry the same name as the project, in this case "monai_shore".
-monai = newProject("monai_shore", "out");
+monai = newProject("monai_shore", "out")
 HOHQMesh.getModelDict(monai); # Create an empty MODEL dictionary
 
 # Next, we set the polynomial order for the boundaries to be linear, i.e., polynomials of degree one.
-# The file format is set to "ISM-V2" as it is compatible with `UnstructuredMesh2D` mesh type
+# The file format is set to ["ISM-V2"](https://trixi-framework.github.io/HOHQMesh/TheISMMeshFileFormats/#ism as it is compatible with `UnstructuredMesh2D` mesh type
 # that will be used later in the solver.
-setPolynomialOrder!(monai, 1);
+setPolynomialOrder!(monai, 1)
 setMeshFileFormat!(monai, "ISM-V2");
 
 # Now we can set a background Cartesian box mesh required to define
 # the length scales in the mesh generation process.
 # The domain for this problem setup is $[0.0, 5.488] \times [0.0, 3.402]$.
-# We input the corners of the domain with the ordering `[top, left, bottom, right]`.
+# To initialize the mesh, the domain boundaries have to be provided to `bounds` with order `[top, left, bottom, right]`.
 # The background grid is quite coarse with eight elements in the $x$-direction
 # and four elements in the $y$-direction.
 bounds = [3.402, 0.0, 0.0, 5.488]
@@ -122,8 +123,9 @@ add!(monai, shoreline_bottom)
 
 # ![mesh_before](https://github.com/user-attachments/assets/9666e5da-c8d6-42e5-be38-0c54f3e15d6c)
 
-# The locations of the refinement regions look good so that we can generate the mesh.
-# The call to `generate_mesh` prints mesh quality statistics and updates the visualization.
+# The locations of the refinement regions look good so that we can generate the mesh. 
+# The call to `generate_mesh` prints mesh also prints quality statistics and updates the visualization.
+generate_mesh(monai)
 
 # ![mesh_after](https://github.com/user-attachments/assets/6157a39c-e8ff-443a-b4d3-e0061188bea6)
 
@@ -131,7 +133,6 @@ add!(monai, shoreline_bottom)
 # - monai_shore.control: A HOHQMesh control file for the current project.
 # - monai_shore.tec: A TecPlot formatted file to visualize the mesh with other software, e.g., ParaView.
 # - monai_shore.mesh: A mesh file with format "ISM-V2".
-generate_mesh(monai)
 
 # # Discretize the problem setup
 # With the mesh in hand we can proceed to construct the solver components and callbacks
