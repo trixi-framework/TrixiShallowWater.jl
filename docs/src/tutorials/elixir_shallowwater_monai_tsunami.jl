@@ -19,11 +19,11 @@
 #   [DOI: 10.1016/j.jcp.2014.09.027](https://doi.org/10.1016/j.jcp.2014.09.027)
 
 # The tutorial will cover:
-# - Create an unstructured quadrilateral mesh with [HOHQMesh.jl](@extref HOHQMesh.jl)
+# - Create an unstructured quadrilateral mesh with [HOHQMesh.jl](https://github.com/trixi-framework/HOHQMesh.jl)
 # - Set up a SWE solver for wet/dry transitions
-# - Approximate bathymetry data with [TrixiBottomTopography.jl](@extref TrixiBottomTopography.jl)
+# - Approximate bathymetry data with [TrixiBottomTopography.jl](https://github.com/trixi-framework/TrixiBottomTopography.jl)
 # - Create custom initial conditions, boundary conditions, and source terms
-# - Postprocess solution data with [Trixi2Vtk.jl](@extref Trixi2Vtk.jl)
+# - Postprocess solution data with [Trixi2Vtk.jl](https://github.com/trixi-framework/Trixi2Vtk.jl)
 # - Visualization with ParaView
 
 # Before we begin, we load the required packages. The core solver component is TrixiShallowWater.jl,
@@ -98,8 +98,8 @@ addBackgroundGrid!(monai, bounds, N)
 
 # From the inspection of the bathymetry visualization above we indicate regions
 # in the domain to target additional refinement during mesh generation.
-# One [`RefinementCenter`](@extref HOHQMesh.newRefinementCenter) is placed around the island near the center of the domain.
-# Three [`RefinementLine`](@extref HOHQMesh.newRefinementLine) areas are placed in the wake region of said island and the coastline.
+# One [`RefinementCenter`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementCenter) is placed around the island near the center of the domain.
+# Three [`RefinementLine`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementLine) areas are placed in the wake region of said island and the coastline.
 island = newRefinementCenter("island", "smooth", [3.36, 1.68, 0.0], 0.1, 0.15)
 wake = newRefinementLine("wake", "smooth", [3.75, 1.7, 0.0],
                                            [4.75, 1.7, 0.0], 0.15, 0.2)
@@ -138,7 +138,7 @@ generate_mesh(monai)
 equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 0.0)
 
 # Next, we construct an approximation to the bathymetry with TrixiBottomTopography.jl using
-# a [`BicubicBSpline`](@extref TrixiBottomToporgraphy.BicubicBSpline)
+# a [`BicubicBSpline`](https://trixi-framework.github.io/TrixiBottomTopography.jl/stable/reference/#TrixiBottomTopography.BicubicBSpline)
 # with the "not-a-knot" boundary closure.
 # For this we first download the bathymetry data that has been preprocessed to be in the format
 # required by TrixiBottomTopography.
@@ -178,7 +178,7 @@ initial_condition = initial_condition_monai_tsunami
 # is needed. It is used to model an incident wave that approaches from off-shore
 # with a water depth of $h = 13.535 cm$. To create the incident wave information
 # that is valid over the time interval $t \in [0, 22.5]$ we use
-# a [`CubicBspline`](@extref TrixiBottomTopography.CubicBspline) to interpolate
+# a [`CubicBspline`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.CubicBspline) to interpolate
 # the given data from the reference data.
 
 # We download the incident wave data that has been preprocessed to be in the format
@@ -241,7 +241,7 @@ boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
     n = 0.001 # friction coefficient
     sh = (h^2 + max(h^2, 1e-8)) / (2.0 * h) # desingularization procedure
 
-    # Compute the common friction term
+    ## Compute the common friction term
     Sf = -equations.gravity * n^2 * h^(-7 / 3) * sqrt(hv_1^2 + hv_2^2)
 
     return SVector(zero(eltype(x)),
@@ -307,7 +307,7 @@ analysis_callback = AnalysisCallback(semi, interval=analysis_interval)
 # ### Save Solution Callback
 # Output solution data and other quantites like the shock capturing parameter
 # to `.h5` files for postprocessing
-save_solution = SaveSolutionCallback(dt = 0.5
+save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution=true,
                                      save_final_solution=true)
 
