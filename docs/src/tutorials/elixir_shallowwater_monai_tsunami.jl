@@ -150,14 +150,14 @@ equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 0.0)
 # a [`BicubicBSpline`](https://trixi-framework.github.io/TrixiBottomTopography.jl/stable/reference/#TrixiBottomTopography.BicubicBSpline)
 # with the "not-a-knot" boundary closure.
 # For this we first download the bathymetry data that has been preprocessed to be in the format
-# required by TrixiBottomTopography.
+# required by TrixiBottomTopography, see [here](https://trixi-framework.github.io/TrixiBottomTopography.jl/stable/conversion/) for more information.
 spline_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/21255c980c4eda5294f91e8dfe6c7e33/raw/1afb73928892774dc3a902e0c46ffd882ef03ee3/monai_bathymetry_data.txt",
                                         joinpath(@__DIR__, "monai_bathymetry_data.txt"));
 
 # Create a bicubic B-spline interpolation of the bathymetry data, then create a function
 # to evaluate the resulting spline at a given point $(x,y)$.
 bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not-a-knot")
-bathymetry(x, y) = spline_interpolation(bath_spline_struct, x, y)
+bathymetry(x, y) = spline_interpolation(bath_spline_struct, x, y);
 
 # We then create a function to supply the initial condition for the simulation.
 @inline function initial_condition_monai_tsunami(x, t,
@@ -182,11 +182,11 @@ bathymetry(x, y) = spline_interpolation(bath_spline_struct, x, y)
     return SVector(h, h * v1, h * v2, b)
 end
 
-initial_condition = initial_condition_monai_tsunami
+initial_condition = initial_condition_monai_tsunami;
 
 # For this tsunami test case a specialized wave maker type of boundary condition
 # is needed. It is used to model an incident wave that approaches from off-shore
-# with a water depth of $h = 13.535$ cm. To create the incident wave information
+# with a water depth of $h = 13.535\,\text{cm}$. To create the incident wave information
 # that is valid over the time interval $t \in [0, 22.5]$ we use
 # a [`CubicBspline`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.CubicBspline) to interpolate
 # the given data from the reference data.
@@ -199,7 +199,7 @@ wavemaker_bc_file = Trixi.download("https://gist.githubusercontent.com/andrewwin
 # Similar to the bathymetry approximation, we construct a cubic B-spline interpolation
 # of the data, then create a function to evaluate the resulting spline at a given $t$ value.
 h_spline_struct = CubicBSpline(wavemaker_bc_file; end_condition = "not-a-knot")
-H_from_wave_maker(t) = spline_interpolation(h_spline_struct, t)
+H_from_wave_maker(t) = spline_interpolation(h_spline_struct, t);
 
 # Now we are equipped to define the specialized boundary condition for the incident
 # wave maker.
@@ -232,7 +232,7 @@ H_from_wave_maker(t) = spline_interpolation(h_spline_struct, t)
                                                  equations)
 
     return flux, noncons_flux
-end
+end;
 
 # We create the dictionary that assigns the different boundary conditions
 # to physical boundary names. The names for the rectangular domain, e.g. `Bottom`
@@ -257,7 +257,7 @@ boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
     Sf = -equations.gravity * n^2 * h^(-7 / 3) * sqrt(hv_1^2 + hv_2^2)
 
     return SVector(zero(eltype(x)), Sf * hv_1, Sf * hv_2, zero(eltype(x)))
-end
+end;
 
 # Now we construct the approximation space, where we use the discontinuous Galerkin spectral element
 # method ([`DGSEM`](@extref Trixi.DGSEM)), with a volume integral in flux differencing formulation.
@@ -266,12 +266,11 @@ end
 # `flux = (conservative flux, nonconservative_flux)`. To ensure well-balancedness and positivity a
 # reconstruction procedure is applied for the surface fluxes and a special shock-capturing scheme
 # is used to compute the volume integrals.
-volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
-
 # For the `surface_flux` we specify an HLL-type solver `flux_hll_chen_noelle` that uses the wave speed
 # estimate [`min_max_speed_chen_noelle`](@ref) together with the hydrostatic reconstruction procedure
 # [`hydrostatic_reconstruction_chen_noelle`](@ref) to ensure positivity and that
 # the approximation is well-balanced.
+volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle,
                                               hydrostatic_reconstruction_chen_noelle),
                 flux_nonconservative_chen_noelle)
@@ -305,27 +304,26 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver;
 
 # The semidiscretization is complemented with the time interval over which
 # the problem will be integrated and needed to define an ODE problem for time integration.
-# Note, for now we set the final time to be $0.5$ to valid the setup and its components.
-tspan = (0.0, 0.5) # Actual final time for this test case is 22.5
+tspan = (0.0, 22.5)
 ode = semidiscretize(semi, tspan);
 
 # Callbacks are used to monitor the simulation, save results, and control the time step size.
 # Below, we define several callbacks for different purposes.
 
 # ### Analysis Callback
-# Performs analysis at regular intervals, such as computing errors.
+The [AnalysisCallback](https://trixi-framework.github.io/Trixi.jl/stable/reference-trixi/#Trixi.AnalysisCallback) is used to analyze the solution at regular intervals. Extra analysis quantities such as conservation errors can be added to the callback.
 analysis_interval = 1000
 analysis_callback = AnalysisCallback(semi, interval = analysis_interval)
 
 # ### Save Solution Callback
-# Output solution data and other quantities like the shock capturing parameter
+# The [`SaveSolutionCallback`](@extref Trixi.SaveSolutionCallback) outputs solution data and other quantities like the shock capturing parameter
 # to `.h5` files for postprocessing
 save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
 # ### Stepsize Callback
-# Controls the time step size based on the CFL condition.
+The [StepsizeCallback](https://trixi-framework.github.io/Trixi.jl/stable/reference-trixi/#Trixi.StepsizeCallback) calculates the time step based on a CFL condition.
 stepsize_callback = StepsizeCallback(cfl = 0.6)
 
 # ### Combine Callbacks
@@ -336,12 +334,14 @@ callbacks = CallbackSet(analysis_callback,
 
 # ## Run the simulation
 # Finally, we solve the ODE problem using a strong stability-preserving Runge-Kutta (SSPRK) method.
-# The `PositivityPreservingLimiterShallowWater` is used as a stage limiter to ensure positivity
-# of the water height during the simulation. The `SSPRK43` integrator supports adaptive timestepping;
+# The [PositivityPreservingLimiterShallowWater](https://github.com/trixi-framework/TrixiShallowWater.jl/pull/index.html#TrixiShallowWater.PositivityPreservingLimiterShallowWater) is used as a stage limiter to ensure positivity
+# of the water height during the simulation. The [SSPRK43](https://docs.sciml.ai/OrdinaryDiffEq/stable/explicit/SSPRK/#OrdinaryDiffEqSSPRK.SSPRK43) integrator supports adaptive timestepping;
 # however, this is deactivated with `adaptive=false` as we use a CFL-based time step restriction.
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
-sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
-            ode_default_options()..., callback = callbacks, adaptive = false);
+# ```julia
+# stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,)) 
+# sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
+#           ode_default_options()..., callback = callbacks, adaptive = false);
+# ```
 
 # # Postprocessing the solution data
 # It is useful to visualize and inspect the solution and bathymetry of the shallow water equations.
@@ -350,9 +350,9 @@ sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
 
 # To convert all the HDF5-formatted `.h5` output file(s) from TrixiShallowWater.jl
 # into VTK format execute the following
-redirect_stdio(stdout = devnull, stderr = devnull) do # code that prints annoying stuff we don't want to see here #hide #md
-    trixi2vtk("out/solution_*.h5", output_directory = "out")
-end #hide #md
+# ```julia 
+# trixi2vtk("out/solution_*.h5", output_directory = "out")
+# ```
 # then it is possible to open the `.pvd` file with ParaView and create a video of the simulation.
 # In addition, the `trixi2vtk` call will create `celldata` files if one wishes to plot
 # the shock capturing parameter.
