@@ -12,8 +12,8 @@ information about helpful tools for package development in Julia can be found on
 - Comment `@JuliaRegistrator register` on the commit setting the version number.
 - `JuliaRegistrator` will create a PR with the new version in the General registry.
   Wait for it to be merged.
-- Increment the version number in `Project.toml` again with suffix `-pre`. For example,
-  if you have released version `v0.2.0`, use `v0.2.1-pre` as new version number.
+- Increment the version number in `Project.toml` again with suffix `-DEV`. For example,
+  if you have released version `v0.2.0`, use `v0.2.1-DEV` as new version number.
 
 
 

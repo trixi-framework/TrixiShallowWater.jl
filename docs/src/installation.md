@@ -8,7 +8,7 @@ TrixiShallowWater.jl is **not** a registered Julia package, and therefore needs 
 git clone https://github.com/trixi-framework/TrixiShallowWater.jl.git
 julia --project=@.
 ```
-In addition TrixiShallowWater.jl requires the numerical solver framework [Trixi.jl](https://github.com/trixi-framework/Trixi.jl), [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) for time integration, and [Plots.jl](https://github.com/JuliaPlots/Plots.jl) for visualization, which can be installed by executing the following in the Julia REPL:
+In addition TrixiShallowWater.jl requires the numerical solver framework [Trixi.jl](https://github.com/trixi-framework/Trixi.jl), relevant sub-packages of [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) for time integration, and [Plots.jl](https://github.com/JuliaPlots/Plots.jl) for visualization, which can be installed by executing the following in the Julia REPL:
 ```julia
 julia> using Pkg
 
