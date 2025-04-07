@@ -98,8 +98,8 @@ addBackgroundGrid!(monai, bounds, N)
 
 # From the inspection of the bathymetry visualization above we indicate regions
 # in the domain to target additional refinement during mesh generation.
-# One [`RefinementCenter`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementCenter) is placed around the island near the center of the domain.
-# Three [`RefinementLine`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementLine) areas are placed in the wake region of said island and the coastline.
+# One [`RefinementCenter`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementCenter-Tuple{String,%20String,%20Array{Float64},%20Float64,%20Float64}) is placed around the island near the center of the domain.
+# Three [`RefinementLine`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementLine-Tuple{String,%20String,%20Array{Float64},%20Array{Float64},%20Float64,%20Float64}) areas are placed in the wake region of said island and the coastline.
 island = newRefinementCenter("island", "smooth", [3.36, 1.68, 0.0], 0.1, 0.15)
 wake = newRefinementLine("wake", "smooth", [3.75, 1.7, 0.0],
                                            [4.75, 1.7, 0.0], 0.15, 0.2)
