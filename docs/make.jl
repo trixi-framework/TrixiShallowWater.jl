@@ -17,7 +17,7 @@ tutorial_list = [
 ]
 
 tutorial_pages = [
-    "Dam Break" => "tutorials/elixir_shallowwater_dam_break_triangular.md",
+    "Dam break over triangular bottom topograhy" => "tutorials/elixir_shallowwater_dam_break_triangular.md",
     "Okushiri tsunami" => "tutorials/elixir_shallowwater_monai_tsunami.md"
 ]
 
