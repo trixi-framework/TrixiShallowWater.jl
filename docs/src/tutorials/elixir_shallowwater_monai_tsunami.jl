@@ -59,12 +59,12 @@ z = zeros(Float64, length(lines) - 1)
 ## Skip the header of the file
 for j in 2:length(lines)
     current_line = split(lines[j])
-    x[j-1] = parse(Float64, current_line[1])
-    y[j-1] = parse(Float64, current_line[2])
-    z[j-1] = -parse(Float64, current_line[3])
+    x[j - 1] = parse(Float64, current_line[1])
+    y[j - 1] = parse(Float64, current_line[2])
+    z[j - 1] = -parse(Float64, current_line[3])
 end
 
-surface(x, y, z, axis=(type=Axis3,), colormap = :greenbrownterrain)
+surface(x, y, z, axis = (type = Axis3,), colormap = :greenbrownterrain)
 
 # From the bathymetry visualization we can identify that there are several regions
 # of interest that require higher resolution to create an accurate approximation.
@@ -104,11 +104,11 @@ addBackgroundGrid!(monai, bounds, N)
 # Three [`RefinementLine`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.newRefinementLine-Tuple{String,%20String,%20Array{Float64},%20Array{Float64},%20Float64,%20Float64}) areas are placed in the wake region of said island and the coastline.
 island = newRefinementCenter("island", "smooth", [3.36, 1.68, 0.0], 0.1, 0.15)
 wake = newRefinementLine("wake", "smooth", [3.75, 1.7, 0.0],
-                                           [4.75, 1.7, 0.0], 0.15, 0.2)
+                         [4.75, 1.7, 0.0], 0.15, 0.2)
 shoreline_top = newRefinementLine("shoreline", "smooth", [4.816, 3.374, 0.0],
-                                                         [4.83, 2.366, 0.0], 0.15, 0.168)
+                                  [4.83, 2.366, 0.0], 0.15, 0.168)
 shoreline_bottom = newRefinementLine("shoreline", "smooth", [4.97, 2.3, 0.0],
-                                                            [5.32, 1.4, 0.0], 0.075, 0.22);
+                                     [5.32, 1.4, 0.0], 0.075, 0.22);
 
 # These four refinement regions are then added into the `monai` mesh project.
 add!(monai, island)
@@ -159,7 +159,8 @@ bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not
 bathymetry(x, y) = spline_interpolation(bath_spline_struct, x, y)
 
 # We then create a function to supply the initial condition for the simulation.
-@inline function initial_condition_monai_tsunami(x, t, equations::ShallowWaterEquationsWetDry2D)
+@inline function initial_condition_monai_tsunami(x, t,
+                                                 equations::ShallowWaterEquationsWetDry2D)
     ## Initially water is at rest
     v1 = 0.0
     v2 = 0.0
@@ -238,9 +239,9 @@ end
 # three of the domain boundaries are walls and the incident wave maker boundary condition
 # implemented above is set at the `Left` domain
 boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
-                          :Top    => boundary_condition_slip_wall,
-                          :Right  => boundary_condition_slip_wall,
-                          :Left   => boundary_condition_wave_maker);
+                          :Top => boundary_condition_slip_wall,
+                          :Right => boundary_condition_slip_wall,
+                          :Left => boundary_condition_wave_maker);
 
 # For this application, we also need to model the bottom friction.
 # Thus, we create a new source term, which adds a Manning friction term to the momentum equations.
@@ -277,13 +278,13 @@ surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle,
 basis = LobattoLegendreBasis(7) # polynomial approximation space with degree 7
 
 indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
-                                                     alpha_max=0.5,
-                                                     alpha_min=0.001,
-                                                     alpha_smooth=true,
-                                                     variable=Trixi.waterheight)
+                                                     alpha_max = 0.5,
+                                                     alpha_min = 0.001,
+                                                     alpha_smooth = true,
+                                                     variable = Trixi.waterheight)
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
-                                                 volume_flux_dg=volume_flux,
-                                                 volume_flux_fv=surface_flux)
+                                                 volume_flux_dg = volume_flux,
+                                                 volume_flux_fv = surface_flux)
 
 solver = DGSEM(basis, surface_flux, volume_integral)
 
@@ -313,14 +314,14 @@ ode = semidiscretize(semi, tspan);
 # ### Analysis Callback
 # Performs analysis at regular intervals, such as computing errors.
 analysis_interval = 1000
-analysis_callback = AnalysisCallback(semi, interval=analysis_interval)
+analysis_callback = AnalysisCallback(semi, interval = analysis_interval)
 
 # ### Save Solution Callback
 # Output solution data and other quantites like the shock capturing parameter
 # to `.h5` files for postprocessing
 save_solution = SaveSolutionCallback(dt = 0.5,
-                                     save_initial_solution=true,
-                                     save_final_solution=true)
+                                     save_initial_solution = true,
+                                     save_final_solution = true)
 
 # ### Stepsize Callback
 # Controls the time step size based on the CFL condition.
