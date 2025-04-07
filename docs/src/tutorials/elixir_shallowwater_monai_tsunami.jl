@@ -1,5 +1,4 @@
 # Note: This tutorial is still under construction.
-# Still open how best to handle the figures and whether to execute all the code
 # Also, the embedded youtube link is currently incorrect because the Monai video has yet to be uploaded
 
 # In this tutorial, we will use the shallow water equations with wetting and drying
@@ -24,7 +23,7 @@
 # - Approximate bathymetry data with [TrixiBottomTopography.jl](https://github.com/trixi-framework/TrixiBottomTopography.jl)
 # - Create custom initial conditions, boundary conditions, and source terms
 # - Postprocess solution data with [Trixi2Vtk.jl](https://github.com/trixi-framework/Trixi2Vtk.jl)
-# - Visualization with ParaView
+# - Visualization with [ParaView](https://www.paraview.org/download/)
 
 # Before we begin, we load the required packages. The core solver component is TrixiShallowWater.jl,
 # which requires [`Trixi.jl`](@extref Trixi.jl) for the underlying spatial discretization
@@ -32,20 +31,21 @@
 # HOHQMesh.jl is needed to generate an unstructured mesh for this problem.
 # TrixiBottomTopography.jl is needed to create a bathymetry approximation that is directly
 # usable by Trixi.jl.
-# Finally, we include `CairoMakie.jl` for insitu visualization.
+# Finally, we include `CairoMakie.jl` for insitu visualization and `Trixi2Vtk.jl` for postprocessing.
 using HOHQMesh
 using OrdinaryDiffEqSSPRK
 using Trixi
 using TrixiShallowWater
 using TrixiBottomTopography
 using CairoMakie
+using Trixi2Vtk
 
 # # Visualize the original bathymetry
 # First, we obtain and plot the raw bathymetry data. An examination of the bathymetry
 # and its features will aid in designing an appropriate mesh for the discretization.
 # We download the raw bathymetry data to make it available locally
 raw_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/305d203c0409d26075aa2993ff367637/raw/df480a6ff63da1916a19820b060abfea83d40dbf/raw_monai_bathymetry.txt",
-                                     joinpath(@__DIR__, "raw_monai_bathymetry.txt"))
+                                     joinpath(@__DIR__, "raw_monai_bathymetry.txt"));
 
 # Next, we open and parse the bathymetry data to visualize it
 file = open(raw_bathymetry_file)
@@ -79,17 +79,19 @@ surface(x, y, z, axis=(type=Axis3,), colormap = :greenbrownterrain)
 # To begin, we create a new mesh project.
 # The output files created by HOHQMesh will be saved into the "out" folder
 # and carry the same name as the project, in this case "monai_shore".
-monai = newProject("monai_shore", "out")
+monai = newProject("monai_shore", "out");
+HOHQMesh.getModelDict(monai); # Create an empty MODEL dictionary
 
 # Next, we set the polynomial order for the boundaries to be linear, i.e., polynomials of degree one.
 # The file format is set to "ISM-V2" as it is compatible with `UnstructuredMesh2D` mesh type
 # that will be used later in the solver.
-setPolynomialOrder!(monai, 1)
-setMeshFileFormat!(monai, "ISM-V2")
+setPolynomialOrder!(monai, 1);
+setMeshFileFormat!(monai, "ISM-V2");
 
-# Create a background Cartesian box mesh.
-# Domain for this problem setup is $[0.0, 5.488] x [0.0, 3.402]$.
-# Send in the corners of the domain with order `[top, left, bottom, right]`.
+# Now we can set a background Cartesian box mesh required to define
+# the length scales in the mesh generation process.
+# The domain for this problem setup is $[0.0, 5.488] \times [0.0, 3.402]$.
+# We input the corners of the domain with the ordering `[top, left, bottom, right]`.
 # The background grid is quite coarse with eight elements in the $x$-direction
 # and four elements in the $y$-direction.
 bounds = [3.402, 0.0, 0.0, 5.488]
@@ -106,7 +108,7 @@ wake = newRefinementLine("wake", "smooth", [3.75, 1.7, 0.0],
 shoreline_top = newRefinementLine("shoreline", "smooth", [4.816, 3.374, 0.0],
                                                          [4.83, 2.366, 0.0], 0.15, 0.168)
 shoreline_bottom = newRefinementLine("shoreline", "smooth", [4.97, 2.3, 0.0],
-                                                            [5.32, 1.4, 0.0], 0.075, 0.22)
+                                                            [5.32, 1.4, 0.0], 0.075, 0.22);
 
 # These four refinement regions are then added into the `monai` mesh project.
 add!(monai, island)
@@ -114,18 +116,24 @@ add!(monai, wake)
 add!(monai, shoreline_top)
 add!(monai, shoreline_bottom)
 
-# We can plot the current project to inspect the background grid and refinement region locations.
-plotProject!(monai, GRID+REFINEMENTS)
+# One can plot the current project to inspect the background grid and refinement region locations using
+# the command `plotProject!(monai, GRID+REFINEMENTS)`.
+# This creates an image like the following
+
+# ![mesh_before](https://github.com/user-attachments/assets/9666e5da-c8d6-42e5-be38-0c54f3e15d6c)
 
 # The locations of the refinement regions look good so that we can generate the mesh.
 # The call to `generate_mesh` prints mesh quality statistics and updates the visualization.
+
+# ![mesh_after](https://github.com/user-attachments/assets/6157a39c-e8ff-443a-b4d3-e0061188bea6)
+
 # Additionally, this will output the following files to the `out` folder:
 # - monai_shore.control: A HOHQMesh control file for the current project.
 # - monai_shore.tec: A TecPlot formatted file to visualize the mesh with other software, e.g., ParaView.
 # - monai_shore.mesh: A mesh file with format "ISM-V2".
 generate_mesh(monai)
 
-# # Prepare and run the problem setup
+# # Discretize the problem setup
 # With the mesh in hand we can proceed to construct the solver components and callbacks
 # for the tsunami runup problem.
 
@@ -143,7 +151,7 @@ equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 0.0)
 # For this we first download the bathymetry data that has been preprocessed to be in the format
 # required by TrixiBottomTopography.
 spline_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/21255c980c4eda5294f91e8dfe6c7e33/raw/1afb73928892774dc3a902e0c46ffd882ef03ee3/monai_bathymetry_data.txt",
-                                        joinpath(@__DIR__, "monai_bathymetry_data.txt"))
+                                        joinpath(@__DIR__, "monai_bathymetry_data.txt"));
 
 # Create a bicubic B-spline interpolation of the bathymetry data, then create a function
 # to evaluate the resulting spline at a given point $(x,y)$.
@@ -176,7 +184,7 @@ initial_condition = initial_condition_monai_tsunami
 
 # For this tsunami test case a specialized wave maker type of boundary condition
 # is needed. It is used to model an incident wave that approaches from off-shore
-# with a water depth of $h = 13.535 cm$. To create the incident wave information
+# with a water depth of $h = 13.535$ cm. To create the incident wave information
 # that is valid over the time interval $t \in [0, 22.5]$ we use
 # a [`CubicBspline`](https://trixi-framework.github.io/HOHQMesh.jl/stable/reference/#HOHQMesh.CubicBspline) to interpolate
 # the given data from the reference data.
@@ -184,7 +192,7 @@ initial_condition = initial_condition_monai_tsunami
 # We download the incident wave data that has been preprocessed to be in the format
 # required by TrixiBottomTopography.
 wavemaker_bc_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/5b11f5f175bddb326d11d8e28398127e/raw/64980e0e4526e0fcd49589b34ee5458b9a1cebff/monai_wavemaker_bc.txt",
-                                   joinpath(@__DIR__, "monai_wavemaker_bc.txt"))
+                                   joinpath(@__DIR__, "monai_wavemaker_bc.txt"));
 
 # Similar to the bathymetry approximation, we construct a cubic B-spline interpolation
 # of the data, then create a function to evaluate the resulting spline at a given $t$ value.
@@ -193,8 +201,9 @@ H_from_wave_maker(t) = spline_interpolation(h_spline_struct, t)
 
 # Now we are equipped to define the specialized boundary condition for the incident
 # wave maker.
-@inline function boundary_condition_wave_maker(u_inner, normal_direction::AbstractVector, x, t,
-                                       surface_flux_functions, equations::ShallowWaterEquationsWetDry2D)
+@inline function boundary_condition_wave_maker(u_inner, normal_direction::AbstractVector,
+                                               x, t, surface_flux_functions,
+                                               equations::ShallowWaterEquationsWetDry2D)
     ## Extract the numerical flux functions to compute the conservative and nonconservative
     ## pieces of the approximation
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
@@ -231,23 +240,21 @@ end
 boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
                           :Top    => boundary_condition_slip_wall,
                           :Right  => boundary_condition_slip_wall,
-                          :Left   => boundary_condition_wave_maker)
+                          :Left   => boundary_condition_wave_maker);
 
 # For this application, we also need to model the bottom friction.
 # Thus, we create a new source term, which adds a Manning friction term to the momentum equations.
-@inline function source_terms_manning_friction(u, x, t, equations::ShallowWaterEquationsWetDry2D)
+@inline function source_terms_manning_friction(u, x, t,
+                                               equations::ShallowWaterEquationsWetDry2D)
     h, hv_1, hv_2, _ = u
 
     n = 0.001 # friction coefficient
-    sh = (h^2 + max(h^2, 1e-8)) / (2.0 * h) # desingularization procedure
+    h = (h^2 + max(h^2, 1e-8)) / (2.0 * h) # desingularization procedure
 
     ## Compute the common friction term
     Sf = -equations.gravity * n^2 * h^(-7 / 3) * sqrt(hv_1^2 + hv_2^2)
 
-    return SVector(zero(eltype(x)),
-                   Sf * hv_1,
-                   Sf * hv_2,
-                   zero(eltype(x)))
+    return SVector(zero(eltype(x)), Sf * hv_1, Sf * hv_2, zero(eltype(x)))
 end
 
 # Now we constuct the approximation space, where we use the discontinuous Galerkin spectral element
@@ -256,12 +263,13 @@ end
 # is setup in nonconservative form the fluxes need to provided in form of a tuple
 # `flux = (conservative flux, nonconservative_flux)`. To ensure well-balancedness and positivity a
 # reconstruction procedure is applied for the surface fluxes and a special shock-capturing scheme
-# is used to compute the volume integrals.volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
+# is used to compute the volume integrals.
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 
 # For the `surface_flux` we specify an HLL-type solver `flux_hll_chen_noelle` that uses the wave speed
 # estimate [`min_max_speed_chen_noelle`](@ref) together with the hydrostatic reconstruction procedure
-# [`hydrostatic_reconstruction_chen_noelle`](@ref) to ensure the approximation is well-balaneced.
+# [`hydrostatic_reconstruction_chen_noelle`](@ref) to ensure positivity and that
+# the approximation is well-balanced.
 surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle,
                                               hydrostatic_reconstruction_chen_noelle),
                 flux_nonconservative_chen_noelle)
@@ -288,12 +296,15 @@ mesh = UnstructuredMesh2D(mesh_file)
 
 # The semi-discretization object combines the mesh, equations, initial condition,
 # solver, boundary conditions, and source terms into a single object. This object
-# represents the spatial discretization of the problem and is complemented with the required
-# time interval to define an ODE problem for time integration.
+# represents the spatial discretization of the problem.
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver;
                                     boundary_conditions = boundary_condition,
-                                    source_terms = source_terms_manning_friction)
-tspan = (0.0, 0.5) # TODO: Final time should be 22.5 but that would make this brutally slow
+                                    source_terms = source_terms_manning_friction);
+
+# The semidiscretization is complemented with the time interval over which
+# the problem will be integrated and neede to define an ODE problem for time integration.
+# Note, for now we set the final time to be $0.5$ to valid the setup and its components.
+tspan = (0.0, 0.5) # Actual final time for this test case is 22.5
 ode = semidiscretize(semi, tspan);
 
 # Callbacks are used to monitor the simulation, save results, and control the time step size.
@@ -321,7 +332,7 @@ callbacks = CallbackSet(analysis_callback,
                         stepsize_callback,
                         save_solution);
 
-# ## Running the Simulation
+# ## Run the simulation
 # Finally, we solve the ODE problem using a strong stability-preserving Runge-Kutta (SSPRK) method.
 # The `PositivityPreservingLimiterShallowWater` is used as a stage limiter to ensure positivity
 # of the water height during the simulation. The `SSPRK43` integrator supports adaptive timestepping;
@@ -330,4 +341,43 @@ stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.wate
 sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
             ode_default_options()..., callback = callbacks, adaptive = false);
 
+# # Postprocessing the solution data
+# It is useful to visualize and inspect the solution and bathymetry of the shallow water equations.
+# One option available is post-processing the Trixi.jl output file(s)
+# with the Trixi2Vtk.jl functionality and plotting them with ParaView.
 
+# To convert all the HDF5-formatted `.h5` output file(s) from TrixiShallowWater.jl
+# into VTK format execute the following
+redirect_stdio(stdout = devnull, stderr = devnull) do # code that prints annoying stuff we don't want to see here #hide #md
+    trixi2vtk("out/solution_*.h5", output_directory = "out")
+end #hide #md
+# then it is possible to open the `.pvd` file with ParaView and create a video of the simulation.
+# In addition, the `trixi2vtk` call will create `celldata` files if one wishes to plot
+# the shock capturing parameter.
+
+# In ParaView, after opening the appropriate solution `.pvd` file, one can apply two instances
+# of the `Warp By Scalar` filter to visualize the water height and bathymetry in three dimensions.
+# Many additional customizations, e.g., color scaling, fonts, etc. are available in ParaView.
+# An example of the output at the (shortened) final time $0.5$ is given below.
+
+# ![paraview_example](https://github.com/user-attachments/assets/84ba04fd-2f0b-4cbf-8ad2-7b12a2afaa55)
+
+# # Putting it all together
+# Now the problem discretization components are assmebled and working
+# with a postprocessing pipeline in place.
+# So, we adjust the run parameter to use `tspan = (0.0, 22.5)` and run the test case
+# to its prescribed final time.
+# This simulation takes approximately 12 minutes with solution files in the `SaveSolutionCallback`
+# written every `dt = 0.04` to obtain a high resolution of the solution output.
+# We then visualize the solution, bathymetry, and shock capturing using ParaView and create
+# a video of the [tsunami runup simulation](https://www.youtube.com/watch?v=Iei7e9oQ0hs).
+# ```@raw html
+#   <!--
+#   Video details
+#   * Source: https://www.youtube.com/watch?v=Iei7e9oQ0hs
+#   * Author: Andrew R. Winters (https://liu.se/en/employee/andwi94)
+#   * Obtain responsive code by inserting link on https://embedresponsively.com
+#   -->
+#   <style>.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='https://www.youtube-nocookie.com/embed/Iei7e9oQ0hs' frameborder='0' allowfullscreen></iframe></div>
+# ```
+# Source: Trixi.jl's YouTube channel [`Trixi Framework`](https://www.youtube.com/channel/UCpd92vU2HjjTPup-AIN0pkg)
