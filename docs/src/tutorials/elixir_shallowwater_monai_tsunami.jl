@@ -258,7 +258,7 @@ boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
     return SVector(zero(eltype(x)), Sf * hv_1, Sf * hv_2, zero(eltype(x)))
 end
 
-# Now we constuct the approximation space, where we use the discontinuous Galerkin spectral element
+# Now we construct the approximation space, where we use the discontinuous Galerkin spectral element
 # method ([`DGSEM`](@extref Trixi.DGSEM)), with a volume integral in flux differencing formulation.
 # For this we first need to specify fluxes for both volume and surface integrals. Since the system
 # is setup in nonconservative form the fluxes need to provided in form of a tuple
@@ -303,7 +303,7 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver;
                                     source_terms = source_terms_manning_friction);
 
 # The semidiscretization is complemented with the time interval over which
-# the problem will be integrated and neede to define an ODE problem for time integration.
+# the problem will be integrated and needed to define an ODE problem for time integration.
 # Note, for now we set the final time to be $0.5$ to valid the setup and its components.
 tspan = (0.0, 0.5) # Actual final time for this test case is 22.5
 ode = semidiscretize(semi, tspan);
@@ -317,7 +317,7 @@ analysis_interval = 1000
 analysis_callback = AnalysisCallback(semi, interval = analysis_interval)
 
 # ### Save Solution Callback
-# Output solution data and other quantites like the shock capturing parameter
+# Output solution data and other quantities like the shock capturing parameter
 # to `.h5` files for postprocessing
 save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
@@ -364,7 +364,7 @@ end #hide #md
 # ![paraview_example](https://github.com/user-attachments/assets/84ba04fd-2f0b-4cbf-8ad2-7b12a2afaa55)
 
 # # Putting it all together
-# Now the problem discretization components are assmebled and working
+# Now the problem discretization components are assembled and working
 # with a postprocessing pipeline in place.
 # So, we adjust the run parameter to use `tspan = (0.0, 22.5)` and run the test case
 # to its prescribed final time.
