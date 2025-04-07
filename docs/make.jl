@@ -12,11 +12,13 @@ TUTORIAL_DIR = joinpath(@__DIR__, "src", "tutorials")
 OUTPUT_DIR = joinpath(@__DIR__, "src", "tutorials")
 
 tutorial_list = [
-    "elixir_shallowwater_dam_break_triangular.jl"
+    "elixir_shallowwater_dam_break_triangular.jl",
+    "elixir_shallowwater_monai_tsunami.jl"
 ]
 
 tutorial_pages = [
-    "Dam Break" => "tutorials/elixir_shallowwater_dam_break_triangular.md"
+    "Dam Break" => "tutorials/elixir_shallowwater_dam_break_triangular.md",
+    "Okushiri tsunami" => "tutorials/elixir_shallowwater_monai_tsunami.md"
 ]
 
 # Create markdown files

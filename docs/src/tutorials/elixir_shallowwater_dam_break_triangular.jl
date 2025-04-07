@@ -1,6 +1,6 @@
 # Note: This tutorial is still under construction
 
-# In this tutorial we will use the shallow water equations to simulate a dam break over triangular 
+# In this tutorial we will use the shallow water equations to simulate a dam break over triangular
 # bottom topography with wetting and drying.
 # More information about this test can be found in the papers:
 # - S. Gu et al. (2017)
@@ -24,10 +24,10 @@ using Trixi
 using TrixiShallowWater
 using CairoMakie
 
-# In the first step we will set up the equation system. In this example we want to solve the 
+# In the first step we will set up the equation system. In this example we want to solve the
 # one-dimensional shallow water equations, so we will use the [`ShallowWaterEquationsWetDry1D`](@ref ShallowWaterEquationsWetDry1D)
-# and specify the gravitational acceleration to `gravity_constant = 9.81`. In contrast to the
-# [`Trixi.ShallowWaterEquations1D`](@extref Trixi.ShallowWaterEquations1D) type, this equation type 
+# and specify the gravitational acceleration to `gravity_constant = 9.812`. In contrast to the
+# [`Trixi.ShallowWaterEquations1D`](@extref Trixi.ShallowWaterEquations1D) type, this equation type
 # allows contains additional parameters and methods needed to handle wetting and drying.
 equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.812)
 
@@ -48,7 +48,7 @@ function initial_condition_dam_break_triangular(x, t,
 
     H = h + b  # Total water height
     if x[1] > 28.5
-        H = max(H, 0.15)  # Water height in the right reservor
+        H = max(H, 0.15)  # Water height in the right reservoir
     end
 
     ## It is mandatory to shift the water level at dry areas to make sure the water height h
@@ -85,10 +85,10 @@ fig
 end
 
 # Now we can set up the approximation space, where we use the discontinuous Galerkin spectral element
-# method ([`DGSEM`](@extref Trixi.DGSEM)), with a volume integral in flux differencing formulation. 
-# For this we first need to specify fluxes for both volume and surface integrals. Since the system 
-# is setup in nonconservative form the fluxes need to provided in form of a tuple 
-# `flux = (conservative flux, nonconservative_flux)`. To ensure well-balancedness and positivity a 
+# method ([`DGSEM`](@extref Trixi.DGSEM)), with a volume integral in flux differencing formulation.
+# For this we first need to specify fluxes for both volume and surface integrals. Since the system
+# is setup in nonconservative form the fluxes need to provided in form of a tuple
+# `flux = (conservative flux, nonconservative_flux)`. To ensure well-balancedness and positivity a
 # reconstruction procedure is applied for the surface fluxes and a special shock-capturing scheme
 # is used to compute the volume integrals.
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
@@ -109,7 +109,7 @@ volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
 
 solver = DGSEM(basis, surface_flux, volume_integral)
 
-# The mesh is created using the `TreeMesh` type. 
+# The mesh is created using the `TreeMesh` type.
 # The computational domain spans from `coordinates_min` to `coordinates_max` and is initialized with
 # 2^7 = 128 elements. The domain is non-periodic.
 coordinates_min = 0.0
@@ -122,7 +122,7 @@ mesh = TreeMesh(coordinates_min, coordinates_max,
 
 # The semi-discretization object combines the mesh, equations, initial condition,
 # solver, boundary conditions, and source terms into a single object. This object
-# represents the spatial discretization of the problem and is complemented with the required 
+# represents the spatial discretization of the problem and is complemented with the required
 # time interval to define an ODE problem for time integration.
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
                                     boundary_conditions = boundary_condition_slip_wall,
