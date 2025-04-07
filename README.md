@@ -33,8 +33,6 @@ Below is a short summary of the available features:
   * Multi-layer flows
   * Sediment transport via an Exner model
 
-## Examples
-
 ## Installation
 If you have not yet installed Julia, please [follow the instructions for your
 operating system](https://julialang.org/downloads/platform/). TrixiShallowWater.jl works

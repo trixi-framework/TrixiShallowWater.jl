@@ -30,6 +30,15 @@ authors_text = replace(authors_text,
                        "in the [LICENSE.md](LICENSE.md) file" => "under [License](@ref)")
 write(joinpath(@__DIR__, "src", "authors.md"), authors_text)
 
+# Copy contents form README to the starting page to not need to synchronize it manually
+readme_text = read(joinpath(dirname(@__DIR__), "README.md"), String)
+readme_text = replace(readme_text,
+                       "[LICENSE.md](LICENSE.md)" => "[License](@ref)",
+                       "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref)",
+                       "<p" => "```@raw html\n<p",
+                       "p>" => "p>\n```")
+write(joinpath(@__DIR__, "src", "home.md"), readme_text)
+
 DocMeta.setdocmeta!(TrixiShallowWater, :DocTestSetup, :(using TrixiShallowWater);
                     recursive = true)
 
@@ -45,7 +54,7 @@ makedocs(;
                                   canonical = "https://trixi-framework.github.io/TrixiShallowWater.jl",
                                   edit_link = "main",
                                   assets = String[],),
-         pages = ["Home" => "index.md",
+         pages = ["Home" => "home.md",
              "Installation" => "installation.md",
              "Tutorials" => tutorial_pages,
              "Advanced topics & developers" => ["Development" => "development.md"
@@ -53,7 +62,8 @@ makedocs(;
              "Authors" => "authors.md",
              "Contributing" => "contributing.md",
              "Code of Conduct" => "code_of_conduct.md",
-             "License" => "license.md"],
+             "License" => "license.md",
+             "Index" => "index.md"],
          plugins = [links],)
 
 deploydocs(repo = "github.com/trixi-framework/TrixiShallowWater.jl",
