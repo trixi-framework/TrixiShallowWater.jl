@@ -16,7 +16,9 @@ provided substantial additions or modifications. Together, these two groups form
 The following people contributed major additions or modifications to TrixiShallowWater.jl and
 are listed in alphabetical order:
 
+* Maximilian D. Bertrand
 * Patrick Ersing
+* Sven Goldberg
 * Hendrik Ranocha
 * Michael Schlottke-Lakemper
 * Andrew Winters
