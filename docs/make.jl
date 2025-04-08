@@ -44,7 +44,7 @@ write(joinpath(@__DIR__, "src", "contributing.md"), contributing_text)
 # Copy code of conduct to not need to synchronize it manually
 code_of_conduct_text = read(joinpath(dirname(@__DIR__), "CODE_OF_CONDUCT.md"), String)
 code_of_conduct_text = replace(code_of_conduct_text,
-                               "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ trixi_sw_authors)")
+                               "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref trixi_sw_authors)")
 write(joinpath(@__DIR__, "src", "code_of_conduct.md"), code_of_conduct_text)
 
 # Copy contents form README to the starting page to not need to synchronize it manually
