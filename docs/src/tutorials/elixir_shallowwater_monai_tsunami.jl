@@ -378,13 +378,13 @@ callbacks = CallbackSet(analysis_callback,
 # In ParaView, after opening the appropriate solution `.pvd` file, one can apply two instances
 # of the `Warp By Scalar` filter to visualize the water height and bathymetry in three dimensions.
 # Many additional customizations, e.g., color scaling, fonts, etc. are available in ParaView.
-# An example of the output at the (shortened) final time $0.5$ is given below.
+# An example of the output at the final time $22.5$ is given below.
 
-# ![paraview_example](https://github.com/user-attachments/assets/3057d5ad-fc6b-4086-9cf4-6f5f779df6d6)
+# ![paraview_example](https://github.com/user-attachments/assets/bc676f3a-4673-4fd7-9385-a9b0415598af)
 
 # ## Putting it all together
 # Now the problem discretization components are assembled and working
-# with a postprocessing pipeline in place.
+# together with a postprocessing pipeline.
 # We run simulation, which takes approximately 12 minutes with solution files
 # in the `SaveSolutionCallback`
 # written every `dt = 0.04` to obtain a high temporal resolution of the solution output.
