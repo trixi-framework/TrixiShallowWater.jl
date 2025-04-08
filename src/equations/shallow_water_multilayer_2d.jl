@@ -772,7 +772,7 @@ end
     c_ll = sqrt(equations.gravity * sum(h_ll))
     c_rr = sqrt(equations.gravity * sum(h_rr))
 
-    return max(abs(v_m_ll), abs(v_m_rr)) + max(c_ll, c_rr)
+    return (max(abs(v_m_ll), abs(v_m_rr)) + max(c_ll, c_rr))
 end
 
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr,
@@ -801,6 +801,62 @@ end
     # The normal velocities are already scaled by the norm
     return (max(abs(v_dot_n_ll), abs(v_dot_n_rr)) +
             max(c_ll, c_rr) * norm(normal_direction))
+end
+
+# Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     orientation::Integer,
+                                     equations::ShallowWaterMultiLayerEquations2D)
+    # Unpack left and right state
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+
+    # Get the momentum quantities in the appropriate direction
+    if orientation == 1
+        h_v_ll, _ = momentum(u_ll, equations)
+        h_v_rr, _ = momentum(u_rr, equations)
+    else
+        _, h_v_ll = momentum(u_ll, equations)
+        _, h_v_rr = momentum(u_rr, equations)
+    end
+
+    # Get the averaged velocity
+    v_m_ll = sum(h_v_ll) / sum(h_ll)
+    v_m_rr = sum(h_v_rr) / sum(h_rr)
+
+    # Calculate the wave celerity on the left and right
+    c_ll = sqrt(equations.gravity * sum(h_ll))
+    c_rr = sqrt(equations.gravity * sum(h_rr))
+
+    return (max(abs(v_m_ll) + c_ll, abs(v_m_rr) + c_rr))
+end
+
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     normal_direction::AbstractVector,
+                                     equations::ShallowWaterMultiLayerEquations2D)
+    # Unpack left and right state
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    h_v1_ll, h_v2_ll = momentum(u_ll, equations)
+    h_v1_rr, h_v2_rr = momentum(u_rr, equations)
+
+    # Get the averaged velocity
+    v1_m_ll = sum(h_v1_ll) / sum(h_ll)
+    v2_m_ll = sum(h_v2_ll) / sum(h_ll)
+    v1_m_rr = sum(h_v1_rr) / sum(h_rr)
+    v2_m_rr = sum(h_v2_rr) / sum(h_rr)
+
+    # Compute velocity in the normal direction
+    v_dot_n_ll = v1_m_ll * normal_direction[1] + v2_m_ll * normal_direction[2]
+    v_dot_n_rr = v1_m_rr * normal_direction[1] + v2_m_rr * normal_direction[2]
+
+    # Calculate the wave celerity on the left and right
+    c_ll = sqrt(equations.gravity * sum(h_ll))
+    c_rr = sqrt(equations.gravity * sum(h_rr))
+
+    norm_ = norm(normal_direction)
+    # The normal velocities are already scaled by the norm
+    return (max(abs(v_dot_n_ll) + c_ll * norm_, abs(v_dot_n_rr) + c_rr * norm_))
 end
 
 # Convert conservative variables to primitive
