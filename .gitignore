@@ -18,7 +18,7 @@ docs/src/home.md
 docs/src/code_of_conduct.md
 docs/src/contributing.md
 docs/out/
-docs/src/tutorials/*.md
+docs/src/tutorials/elixir*.md
 docs/src/tutorials/*.csv
 public/
 coverage/
