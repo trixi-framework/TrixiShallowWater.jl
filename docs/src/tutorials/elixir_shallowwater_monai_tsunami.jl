@@ -397,6 +397,6 @@ callbacks = CallbackSet(analysis_callback,
 #   * Author: Andrew R. Winters (https://liu.se/en/employee/andwi94)
 #   * Obtain responsive code by inserting link on https://embedresponsively.com
 #   -->
-#   <style>.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='https://www.youtube.com/watch?v=osyx48Qn10U' frameborder='0' allowfullscreen></iframe></div>
+#   <style>.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='https://www.youtube.com/embed/osyx48Qn10U' frameborder='0' allowfullscreen></iframe></div>
 # ```
 # Source: Trixi.jl's YouTube channel [`Trixi Framework`](https://www.youtube.com/channel/UCpd92vU2HjjTPup-AIN0pkg)
