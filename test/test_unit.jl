@@ -292,6 +292,63 @@ end
     end
 end
 
+@timed_testset "Equivalent Wave Speed Estimates: max_abs_speed(naive)" begin
+    equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+                                                  rhos = (1.0, 4.2))
+
+    u_ll = SVector(1.0, 0.5, 0.6, 0.8)
+    u_rr = SVector(1.0, 0.5, 0.3, 0.4)
+
+    @assert max_abs_speed_naive(u_ll, u_rr, 1, equations) ≈
+            max_abs_speed(u_ll, u_rr, 1, equations)
+
+    equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
+                                                  rhos = (0.8, 1.2))
+
+    u_ll = SVector(1.0, 1.0, 0.6, 0.6, 0.8, 0.8)
+    u_rr = SVector(1.0, 1.0, 0.3, 0.3, 0.4, 0.4)
+
+    for orientation in [1, 2]
+        @test max_abs_speed_naive(u_ll, u_rr, orientation, equations) ≈
+              max_abs_speed(u_ll, u_rr, orientation, equations)
+    end
+
+    normal_directions = [SVector(1.0, 0.0),
+        SVector(0.0, 1.0),
+        SVector(0.5, -0.5),
+        SVector(-1.2, 0.3)]
+
+    for normal_direction in normal_directions
+        @test max_abs_speed_naive(u_ll, u_rr, normal_direction, equations) ≈
+              max_abs_speed(u_ll, u_rr, normal_direction, equations)
+    end
+
+    equations = ShallowWaterTwoLayerEquations1D(gravity_constant = 9.8,
+                                                rho_upper = 0.9, rho_lower = 1.0)
+
+    u_ll = SVector(1.0, 0.5, 0.6, 0.8, 42)
+    u_rr = SVector(1.0, 0.3, 0.6, 0.4, 42)
+
+    @assert max_abs_speed_naive(u_ll, u_rr, 1, equations) ≈
+            max_abs_speed(u_ll, u_rr, 1, equations)
+
+    equations = ShallowWaterTwoLayerEquations2D(gravity_constant = 9.81,
+                                                rho_upper = 0.9, rho_lower = 1.0)
+
+    u_ll = SVector(1.0, 1.0, 0.6, 0.6, 0.8, 0.8, 42)
+    u_rr = SVector(1.0, 0.5, 0.3, 0.6, 0.4, 0.4, 42)
+
+    for orientation in [1, 2]
+        @test max_abs_speed_naive(u_ll, u_rr, orientation, equations) ≈
+              max_abs_speed(u_ll, u_rr, orientation, equations)
+    end
+
+    for normal_direction in normal_directions
+        @test max_abs_speed_naive(u_ll, u_rr, normal_direction, equations) ≈
+              max_abs_speed(u_ll, u_rr, normal_direction, equations)
+    end
+end
+
 @timed_testset "Exception check for the 2LSWE" begin
     error_message = "Invalid input: Densities must be chosen such that rho_upper < rho_lower"
     @test_throws error_message ShallowWaterTwoLayerEquations1D(gravity_constant = 9.81,

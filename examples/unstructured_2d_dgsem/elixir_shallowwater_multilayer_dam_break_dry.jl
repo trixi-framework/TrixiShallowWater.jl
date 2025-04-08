@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -9,9 +9,9 @@ using TrixiShallowWater
 equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.0,
                                               rhos = (0.9, 0.95, 1.0))
 
-# This test case uses a special work around to setup a truly discontinuous bottom topography 
+# This test case uses a special work around to setup a truly discontinuous bottom topography
 # function and initial condition. First, a dummy initial_condition_dam_break is introduced to create
-# the semidiscretization. Then the initial condition is reset with the true discontinuous values 
+# the semidiscretization. Then the initial condition is reset with the true discontinuous values
 # from initial_condition_discontinuous_dam_break.
 
 function initial_condition_dam_break(x, t, equations::ShallowWaterMultiLayerEquations2D)
