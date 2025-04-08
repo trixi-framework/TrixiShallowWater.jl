@@ -656,9 +656,6 @@ surface numerical flux at the interface. The key idea is a piecewise linear reco
 bottom topography and water height interfaces using subcells, where the bottom topography is allowed 
 to be discontinuous. 
 Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
-
-!!! warning "Experimental code"
-    This is an experimental feature and may change in future releases.
 """
 @inline function hydrostatic_reconstruction_ersing_etal(u_ll, u_rr,
                                                         equations::ShallowWaterMultiLayerEquations2D)
