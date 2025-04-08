@@ -28,7 +28,8 @@
 # - Postprocess solution data with [Trixi2Vtk.jl](https://github.com/trixi-framework/Trixi2Vtk.jl)
 # - Visualization with [ParaView](https://www.paraview.org/download/)
 
-# Before we begin, we load the required packages. The core solver component is TrixiShallowWater.jl,
+# ## Load required packages
+# The core solver component is TrixiShallowWater.jl,
 # which requires [`Trixi.jl`](@extref Trixi.jl) for the underlying spatial discretization
 # and `OrdinaryDiffEqSSPRK.jl` for time integration.
 # `HOHQMesh.jl` is needed to generate an unstructured mesh for this problem.
@@ -142,9 +143,9 @@ generate_mesh(monai);
 # ![mesh_after](https://github.com/user-attachments/assets/6157a39c-e8ff-443a-b4d3-e0061188bea6)
 
 # Additionally, this will output the following files to the `out` folder:
-# - monai_shore.control: A HOHQMesh control file for the current project.
-# - monai_shore.tec: A TecPlot formatted file to visualize the mesh with other software, e.g., ParaView.
-# - monai_shore.mesh: A mesh file with format "ISM-V2".
+# - `monai_shore.control`: A HOHQMesh control file for the current project.
+# - `monai_shore.tec`: A TecPlot formatted file to visualize the mesh with other software, e.g., ParaView.
+# - `monai_shore.mesh`: A mesh file with format "ISM-V2".
 
 # ## Discretize the problem setup
 # With the mesh in hand we can proceed to construct the solver components and callbacks
@@ -379,7 +380,7 @@ callbacks = CallbackSet(analysis_callback,
 # Many additional customizations, e.g., color scaling, fonts, etc. are available in ParaView.
 # An example of the output at the (shortened) final time $0.5$ is given below.
 
-# ![paraview_example](https://github.com/user-attachments/assets/84ba04fd-2f0b-4cbf-8ad2-7b12a2afaa55)
+# ![paraview_example](https://github.com/user-attachments/assets/3057d5ad-fc6b-4086-9cf4-6f5f779df6d6)
 
 # ## Putting it all together
 # Now the problem discretization components are assembled and working
@@ -388,14 +389,14 @@ callbacks = CallbackSet(analysis_callback,
 # in the `SaveSolutionCallback`
 # written every `dt = 0.04` to obtain a high temporal resolution of the solution output.
 # We then visualize the solution, bathymetry, and shock capturing using ParaView and create
-# a video of the [tsunami runup simulation](https://www.youtube.com/watch?v=Iei7e9oQ0hs).
+# a video of the [tsunami runup simulation](https://www.youtube.com/watch?v=osyx48Qn10U).
 # ```@raw html
 #   <!--
 #   Video details
-#   * Source: https://www.youtube.com/watch?v=Iei7e9oQ0hs
+#   * Source: https://www.youtube.com/watch?v=osyx48Qn10U
 #   * Author: Andrew R. Winters (https://liu.se/en/employee/andwi94)
 #   * Obtain responsive code by inserting link on https://embedresponsively.com
 #   -->
-#   <style>.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='https://www.youtube-nocookie.com/embed/Iei7e9oQ0hs' frameborder='0' allowfullscreen></iframe></div>
+#   <style>.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='https://www.youtube.com/watch?v=osyx48Qn10U' frameborder='0' allowfullscreen></iframe></div>
 # ```
 # Source: Trixi.jl's YouTube channel [`Trixi Framework`](https://www.youtube.com/channel/UCpd92vU2HjjTPup-AIN0pkg)
