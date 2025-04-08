@@ -1,4 +1,3 @@
-# Note: This tutorial is still under construction
 # # Dam break over triangular bottom topography
 # In this tutorial we will use the shallow water equations to simulate a dam break over triangular 
 # bottom topography with wetting and drying and compare the results to experimental data. The test

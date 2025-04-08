@@ -2,7 +2,7 @@
 
 This page contains some helpful information for the development of TrixiShallowWater.jl. Further 
 information about helpful tools for package development in Julia can be found on the 
-[development page](https://trixi-framework.github.io/Trixi.jl/stable/development/) of the Trixi.jl docs
+[development page](https://trixi-framework.github.io/Trixi.jl/stable/development/) of the Trixi.jl docs.
 
 ## Releasing a new version of TrixiShallowWater
 
