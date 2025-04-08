@@ -195,19 +195,21 @@ f
 # first download the experimental data
 # for the first gauge location **G4** from an external source and load it into a `DataFrame` format.
 G4_data = Trixi.download("https://raw.githubusercontent.com/patrickersing/paper-2024-es_hydrostatic_reconstruction/refs/heads/main/code/DamBreakTriangularBottom/Reference/G4_Experimental.csv",
-                         joinpath(@__DIR__,"G4_Experimental.csv"))
+                         joinpath(@__DIR__, "G4_Experimental.csv"))
 pd_G4 = CSV.read(G4_data, DataFrame);
 
 # The simulation data at the gauge location has been saved to the `time_series` variable. To 
 # reformat the data for visualization, we use the [`PlotData1D`](@extref Trixi.PlotData1D) function.
-pd = PlotData1D(time_series,1);
+pd = PlotData1D(time_series, 1);
 
 # Create a figure and axis for the comparison plot
 f = Figure(size = (550, 550 / 2.5))
-ax = Axis(f[1,1], xlabel = "time / s", ylabel = "waterheight / m", limits = (0, 40, 0.0, 0.8));
+ax = Axis(f[1, 1], xlabel = "time / s", ylabel = "waterheight / m",
+          limits = (0, 40, 0.0, 0.8));
 
 # Add experimental and simulation data to the plot
-scatter!(ax, pd_G4.X, pd_G4.Y, color = :orange, strokewidth = 1, strokecolor = (:black, 0.5), label = "Experiment")
+scatter!(ax, pd_G4.X, pd_G4.Y, color = :orange, strokewidth = 1,
+         strokecolor = (:black, 0.5), label = "Experiment")
 lines!(ax, pd.x, pd.data[:, 1], label = "Simulation");
 
 # Add a legend to the plot

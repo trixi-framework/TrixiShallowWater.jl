@@ -26,33 +26,35 @@ for tutorial in tutorial_list
     Literate.markdown(joinpath(TUTORIAL_DIR, tutorial), OUTPUT_DIR;)
 end
 
-# Copy list of authors to not need to synchronize it manually
+# Copy list of authors to not need to synchronize it manually.
+# Since the authors header exists twice we create a unique identifier for the docs section.
 authors_text = read(joinpath(dirname(@__DIR__), "AUTHORS.md"), String)
 authors_text = replace(authors_text,
-                       "in the [LICENSE.md](LICENSE.md) file" => "under [License](@ref)")
+                       "in the [LICENSE.md](LICENSE.md) file" => "under [License](@ref)",
+                       "# Authors" => "# [Authors](@id trixi_sw_authors)")
 write(joinpath(@__DIR__, "src", "authors.md"), authors_text)
 
 # Copy contributing information to not need to synchronize it manually
 contributing_text = read(joinpath(dirname(@__DIR__), "CONTRIBUTING.md"), String)
 contributing_text = replace(contributing_text,
                             "[LICENSE.md](LICENSE.md)" => "[License](@ref)",
-                            "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref)")
+                            "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref trixi_sw_authors)")
 write(joinpath(@__DIR__, "src", "contributing.md"), contributing_text)
 
 # Copy code of conduct to not need to synchronize it manually
 code_of_conduct_text = read(joinpath(dirname(@__DIR__), "CODE_OF_CONDUCT.md"), String)
 code_of_conduct_text = replace(code_of_conduct_text,
-                                "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref)")
+                               "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ trixi_sw_authors)")
 write(joinpath(@__DIR__, "src", "code_of_conduct.md"), code_of_conduct_text)
 
 # Copy contents form README to the starting page to not need to synchronize it manually
 readme_text = read(joinpath(dirname(@__DIR__), "README.md"), String)
 readme_text = replace(readme_text,
-                       "[LICENSE.md](LICENSE.md)" => "[License](@ref)",
-                       "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref)",
-                       "<p" => "```@raw html\n<p",
-                       "p>" => "p>\n```",
-                       r"\[comment\].*\n" => "")    # remove comments
+                      "[LICENSE.md](LICENSE.md)" => "[License](@ref)",
+                      "[AUTHORS.md](AUTHORS.md)" => "[Authors](@ref trixi_sw_authors)",
+                      "<p" => "```@raw html\n<p",
+                      "p>" => "p>\n```",
+                      r"\[comment\].*\n" => "")    # remove comments
 write(joinpath(@__DIR__, "src", "home.md"), readme_text)
 
 DocMeta.setdocmeta!(TrixiShallowWater, :DocTestSetup, :(using TrixiShallowWater);
@@ -60,16 +62,20 @@ DocMeta.setdocmeta!(TrixiShallowWater, :DocTestSetup, :(using TrixiShallowWater)
 
 # TODO: create changelog
 
+# Make documentation
 makedocs(;
          modules = [TrixiShallowWater],
          authors = "Andrew R. Winters <andrew.ross.winters@liu.se>, Michael Schlottke-Lakemper <michael@sloede.com>",
          repo = "https://github.com/trixi-framework/TrixiShallowWater.jl/blob/{commit}{path}#{line}",
          sitename = "TrixiShallowWater.jl",
          format = Documenter.HTML(;
+                                  # Disable pretty URLs during manual testing
                                   prettyurls = get(ENV, "CI", "false") == "true",
+                                  # Set canonical URL to GitHub pages URL
                                   canonical = "https://trixi-framework.github.io/TrixiShallowWater.jl",
                                   edit_link = "main",
-                                  assets = String[],),
+                                  size_threshold_ignore = ["index.md"],),
+         # Explicitly specify documentation structure
          pages = ["Home" => "home.md",
              "Installation" => "installation.md",
              "Tutorials" => tutorial_pages,

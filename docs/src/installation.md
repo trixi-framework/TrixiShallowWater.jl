@@ -3,6 +3,10 @@ If you have not yet installed Julia, please [follow the instructions for your
 operating system](https://julialang.org/downloads/platform/). TrixiShallowWater.jl works
 with Julia v1.10 and newer. We recommend using the latest stable release of Julia.
 
+```@meta
+# (We can update this with a "for users" and "for developers" section once the package is registered)
+```
+
 TrixiShallowWater.jl is **not** a registered Julia package, and therefore needs to be downloaded manually and then run from within the cloned directory:
 ```bash
 git clone https://github.com/trixi-framework/TrixiShallowWater.jl.git
