@@ -1,13 +1,13 @@
 # Tutorials
 
 The tutorials on these pages will guide you through solving shallow water equations using TrixiShallowWater.jl. 
-Before diving into the TrixiShallowWater.jl specific tutorials, we recommend familiarizing yourself with 
-the core concepts of Trixi.jl by completing the recommended Trixi tutorials below.
 
 ## Prerequisites: Trixi.jl Tutorials
 
-To get the most out of the TrixiShallowWater tutorials, we recommend to get familiar with the [Trixi.jl
-documentation](https://trixi-framework.github.io/Trixi.jl/stable/) and first complete the following Trixi.jl tutorials:
+Before diving into the TrixiShallowWater.jl specific tutorials, we recommend familiarizing yourself with 
+the core concepts of Trixi.jl by reading through the [Trixi.jl
+documentation](https://trixi-framework.github.io/Trixi.jl/stable/) and first complete the following Trixi.jl
+tutorials below:
 
 - [First steps in Trixi.jl](https://trixi-framework.github.io/Trixi.jl/stable/tutorials/first_steps/getting_started/)
 - [Introduction to DG Methods](https://trixi-framework.github.io/Trixi.jl/stable/tutorials/scalar_linear_advection_1d/)
