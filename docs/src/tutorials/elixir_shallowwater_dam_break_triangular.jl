@@ -40,8 +40,8 @@ using CSV
 # contains additional parameters and methods that are needed to handle wetting and drying.
 equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.812)
 
-# We then create a function to supply the initial condition for the simulation. Note, how in the last
-# step the water height needs to be shifted by a small value to avoid division by zero.
+# We then create a function to supply the initial condition for the simulation. Note, in the last
+# step of this function the water height needs to be shifted by a small value to avoid division by zero.
 function initial_condition_dam_break_triangular(x, t,
                                                 equations::ShallowWaterEquationsWetDry1D)
     b = 0.0  # Bottom topography
@@ -74,7 +74,7 @@ end
 initial_condition = initial_condition_dam_break_triangular;
 
 # As we want to compare the results to experimental data, we also need to account for bottom friction.
-# For this we create a new source term, which adds a Manning friction term to the momentum equations.
+# For this we create a new source term, which adds a Manning friction term to the momentum equation.
 @inline function source_term_manning_friction(u, x, t,
                                               equations::ShallowWaterEquationsWetDry1D)
     h, hv, _ = u
@@ -112,7 +112,7 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 
 # Then the mesh is created using the [`TreeMesh`](@extref Trixi.TreeMesh) type.
 # The computational domain spans from `coordinates_min` to `coordinates_max` and is initialized with
-# 2^8 = 256 elements on a non-periodic domain..
+# 2^8 = 256 elements on a non-periodic domain.
 coordinates_min = 0.0
 coordinates_max = 38.0
 
@@ -168,7 +168,7 @@ sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
 # ## Visualization
 # After solving the ODE problem, we want to visualize the results. The first plot shows the water height
 # over the spatial domain at different times. The second plot compares the simulation results
-# to experimental data at a gauge point **G4** located at $x=19.5\,m$.
+# to experimental data at a gauge point **G4** located at $x=19.5\,\text{m}$.
 
 # ### Spatial plot
 # We first extract the solution data for each saved time using [`PlotData1D`](@extref Trixi.PlotData1D). This allows us
