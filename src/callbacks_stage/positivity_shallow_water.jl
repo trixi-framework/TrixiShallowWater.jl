@@ -78,7 +78,8 @@ function limiter_shallow_water!(u, variables::NTuple{N, Any},
                                 equations::Union{ShallowWaterEquationsWetDry1D,
                                                  ShallowWaterEquationsWetDry2D,
                                                  ShallowWaterMultiLayerEquations1D,
-                                                 ShallowWaterMultiLayerEquations2D},
+                                                 ShallowWaterMultiLayerEquations2D,
+                                                 ShallowWaterExnerEquations1D},
                                 solver, cache) where {N}
     variable = first(variables)
     remaining_variables = Base.tail(variables)
@@ -95,7 +96,8 @@ function limiter_shallow_water!(u, variables::Tuple{},
                                 equations::Union{ShallowWaterEquationsWetDry1D,
                                                  ShallowWaterEquationsWetDry2D,
                                                  ShallowWaterMultiLayerEquations1D,
-                                                 ShallowWaterMultiLayerEquations2D},
+                                                 ShallowWaterMultiLayerEquations2D,
+                                                 ShallowWaterExnerEquations1D},
                                 solver, cache)
     nothing
 end
