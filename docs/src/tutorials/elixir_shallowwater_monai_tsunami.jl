@@ -153,11 +153,11 @@ generate_mesh(monai);
 
 # For this example we solve the two-dimensional shallow water equations,
 # so we use the [`ShallowWaterEquationsWetDry2D`](@ref ShallowWaterEquationsWetDry2D)
-# and specify the gravitational acceleration to `gravity_constant = 9.812`
+# and specify the gravitational acceleration to `gravity = 9.812`
 # as well as a background water height `H0 = 0.0`.
 # In contrast to the [`Trixi.ShallowWaterEquations2D`](@extref Trixi.ShallowWaterEquations2D) type,
 # this equation type allows contains additional parameters and methods needed to handle wetting and drying.
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 0.0)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.81, H0 = 0.0)
 
 # Next, we construct an approximation to the bathymetry with TrixiBottomTopography.jl using
 # a [`BicubicBSpline`](https://trixi-framework.github.io/TrixiBottomTopography.jl/stable/reference/#TrixiBottomTopography.BicubicBSpline)

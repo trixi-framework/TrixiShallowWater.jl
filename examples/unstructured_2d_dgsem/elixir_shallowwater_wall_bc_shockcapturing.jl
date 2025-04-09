@@ -8,7 +8,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a continuous
 # bottom topography function
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 2.0)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 2.0)
 
 function initial_condition_stone_throw(x, t, equations::ShallowWaterEquationsWetDry2D)
     # Set up polar coordinates

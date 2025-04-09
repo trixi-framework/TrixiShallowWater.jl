@@ -8,7 +8,7 @@ using TrixiShallowWater
 # Semidiscretization of the multilayer shallow water equations with a discontinuous
 # bottom topography function (set in the initial conditions) and dry domains
 
-equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81, H0 = 1.5,
+equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, H0 = 1.5,
                                               rhos = (0.9, 0.95, 1.0))
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.

@@ -8,7 +8,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a continuous
 # bottom topography function (set in the initial conditions)
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 1.0, H0 = 3.0)
+equations = ShallowWaterEquationsWetDry2D(gravity = 1.0, H0 = 3.0)
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
 function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquationsWetDry2D)

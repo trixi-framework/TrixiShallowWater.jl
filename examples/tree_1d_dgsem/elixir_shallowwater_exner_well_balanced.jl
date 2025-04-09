@@ -8,7 +8,7 @@ using TrixiShallowWater
 # to test well-balancedness
 
 # Equations with Meyer-Peter-Mueller sedimentation model
-equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, H0 = 1.0,
+equations = ShallowWaterExnerEquations1D(gravity = 10.0, H0 = 1.0,
                                          rho_f = 0.5, rho_s = 1.0, porosity = 0.5,
                                          friction = ManningFriction(n = 0.01),
                                          sediment_model = MeyerPeterMueller(theta_c = 0.047,

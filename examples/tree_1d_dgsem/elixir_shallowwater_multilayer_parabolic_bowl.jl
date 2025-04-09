@@ -7,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the shallow water equations
 
 # By passing only a single value for rhos, the system recovers the standard shallow water equations
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81, rhos = 1.0)
+equations = ShallowWaterMultiLayerEquations1D(gravity = 9.81, rhos = 1.0)
 
 """
     initial_condition_parabolic_bowl(x, t, equations:: ShallowWaterMultiLayerEquations1D)

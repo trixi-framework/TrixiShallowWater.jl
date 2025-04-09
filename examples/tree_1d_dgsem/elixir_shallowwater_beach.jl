@@ -6,7 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.812)
+equations = ShallowWaterEquationsWetDry1D(gravity = 9.812)
 
 """
     initial_condition_beach(x, t, equations:: ShallowWaterEquationsWetDry1D)

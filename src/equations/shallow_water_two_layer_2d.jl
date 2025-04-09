@@ -40,7 +40,7 @@ Two-Layer Shallow water equations (2LSWE) in two space dimension. The equations 
 The unknown quantities of the 2LSWE are the water heights of the lower layer ``h_{lower}`` and the
 upper
 layer ``h_{upper}`` and the respective velocities in x-direction ``v_{1,lower}`` and ``v_{1,upper}`` and in y-direction
-``v_{2,lower}`` and ``v_{2,upper}``. The gravitational constant is denoted by `g`, the layer densitites by
+``v_{2,lower}`` and ``v_{2,upper}``. The gravitational acceleration is denoted by `g`, the layer densitites by
 ``\rho_{upper}``and ``\rho_{lower}`` and the (possibly) variable bottom topography function by ``b(x)``.
 Conservative variable water height ``h_{lower}`` is measured from the bottom topography ``b`` and ``h_{upper}``
 relative to ``h_{lower}``, therefore one also defines the total water heights as ``H_{lower} = h_{lower} + b`` and
@@ -74,19 +74,19 @@ A good introduction for the 2LSWE is available in Chapter 12 of the book:
 """
 struct ShallowWaterTwoLayerEquations2D{RealT <: Real} <:
        Trixi.AbstractShallowWaterEquations{2, 7}
-    gravity::RealT   # gravitational constant
+    gravity::RealT   # gravitational acceleration
     H0::RealT        # constant "lake-at-rest" total water height
     rho_upper::RealT # lower layer density
     rho_lower::RealT # upper layer density
     r::RealT         # ratio of rho_upper / rho_lower
 end
 
-# Allow for flexibility to set the gravitational constant within an elixir depending on the
-# application where `gravity_constant=1.0` or `gravity_constant=9.81` are common values.
+# Allow for flexibility to set the gravitational acceleration within an elixir depending on the
+# application where `gravity=1.0` or `gravity=9.81` are common values.
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
 # well-balancedness test cases. Densities must be specified such that rho_upper < rho_lower.
-function ShallowWaterTwoLayerEquations2D(; gravity_constant,
-                                         H0 = zero(gravity_constant), rho_upper,
+function ShallowWaterTwoLayerEquations2D(; gravity,
+                                         H0 = zero(gravity), rho_upper,
                                          rho_lower)
     # Assign density ratio if rho_upper <= rho_lower
     if rho_upper > rho_lower
@@ -94,7 +94,7 @@ function ShallowWaterTwoLayerEquations2D(; gravity_constant,
     else
         r = rho_upper / rho_lower
     end
-    ShallowWaterTwoLayerEquations2D(gravity_constant, H0, rho_upper, rho_lower, r)
+    ShallowWaterTwoLayerEquations2D(gravity, H0, rho_upper, rho_lower, r)
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterTwoLayerEquations2D) = True()

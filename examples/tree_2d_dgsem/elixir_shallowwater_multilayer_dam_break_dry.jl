@@ -6,7 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations for a dam break test over a dry domain
 # with a discontinuous bottom topography function.
-equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.0,
+equations = ShallowWaterMultiLayerEquations2D(gravity = 1.0,
                                               rhos = (0.9, 0.95, 1.0))
 
 function initial_condition_dam_break(x, t, equations::ShallowWaterMultiLayerEquations2D)

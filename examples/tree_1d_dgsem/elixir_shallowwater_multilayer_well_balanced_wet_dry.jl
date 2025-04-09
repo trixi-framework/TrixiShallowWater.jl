@@ -6,7 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the two-layer shallow water equations to test well-balancedness
 
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.0, H0 = 2.0,
+equations = ShallowWaterMultiLayerEquations1D(gravity = 1.0, H0 = 2.0,
                                               rhos = (1.0, 3.0))
 
 """

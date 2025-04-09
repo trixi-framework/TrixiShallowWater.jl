@@ -7,7 +7,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.812)
+equations = ShallowWaterEquationsWetDry1D(gravity = 9.812)
 
 """
     initial_condition_complex_bottom_well_balanced(x, t, equations:: ShallowWaterEquationsWetDry1D)

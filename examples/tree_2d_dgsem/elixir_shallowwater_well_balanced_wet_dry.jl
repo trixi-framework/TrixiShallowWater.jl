@@ -7,7 +7,7 @@ using Printf: @printf, @sprintf
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.812)
 
 """
     initial_condition_well_balanced_chen_noelle(x, t, equations:: ShallowWaterEquationsWetDry2D)
