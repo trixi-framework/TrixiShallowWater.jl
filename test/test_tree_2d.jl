@@ -342,7 +342,7 @@ isdir(outdir) && rm(outdir, recursive = true)
     @trixi_testset "elixir_shallowwater_parabolic_bowl.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_parabolic_bowl.jl"),
-                            ll2=[
+                            l2=[
                                 0.0002534446645366419,
                                 4.452398574250411e-5,
                                 0.0001599158029172979,
