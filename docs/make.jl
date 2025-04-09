@@ -75,9 +75,9 @@ makedocs(;
                                   # Set canonical URL to GitHub pages URL
                                   canonical = "https://trixi-framework.github.io/TrixiShallowWater.jl",
                                   edit_link = "main",
-                                  size_threshold_ignore = ["index.md"],),
+                                  size_threshold_ignore = ["reference.md"],),
          # Explicitly specify documentation structure
-         pages = ["Home" => "home.md",
+         pages = ["Home" => "index.md",
              "Installation" => "installation.md",
              "Tutorials" => tutorial_pages,
              "Advanced topics & developers" => ["Development" => "development.md"
@@ -86,7 +86,7 @@ makedocs(;
              "Contributing" => "contributing.md",
              "Code of Conduct" => "code_of_conduct.md",
              "License" => "license.md",
-             "Index" => "index.md"],
+             "Reference" => "reference.md"],
          plugins = [links],)
 
 deploydocs(repo = "github.com/trixi-framework/TrixiShallowWater.jl",
