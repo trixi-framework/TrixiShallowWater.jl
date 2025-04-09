@@ -27,14 +27,15 @@ also defines the total water height as ``H = h + b``.
 The additional quantity ``H_0`` is also available to store a reference value for the total water height that
 is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 
-Also, there are two thresholds which prevent numerical problems as well as instabilities. Both of them do not
+Also, there are four thresholds which prevent numerical problems as well as instabilities. None of them
 have to be passed, as default values are defined within the struct. The first one, `threshold_limiter`, is
 used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height, as a (small) shift on the initial
 condition and cutoff before the next time step. The second one, `threshold_wet`, is applied on the water height to
 define when the flow is "wet" before calculating the numerical flux. A third
 `threshold_partially_wet` is applied on the water height to define "partially wet" elements in
 [`IndicatorHennemannGassnerShallowWater`](@ref), that are then calculated with a pure FV method to
-ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are
+ensure well-balancedness. Lastly, `threshold_desingularization` is used in [`PositivityPreservingLimiterShallowWater`](@ref)
+for the velocity desingularization procedure. For `Float64` no threshold needs to be passed, as default values are 
 defined within the struct. For other number formats  `threshold_partially_wet` must be provided.
 
 The bottom topography function ``b(x,y)`` is set inside the initial condition routine
@@ -73,7 +74,10 @@ struct ShallowWaterEquationsWetDry2D{RealT <: Real} <:
     # to define "partially wet" elements. Those elements are calculated with a pure FV method to
     # ensure well-balancedness. Default in double precision is 1e-4.
     threshold_partially_wet::RealT
-    # Standard shallow water equations for dispatch on Trixi.jl functions
+    # `threshold_desingularization` used in the velocity desingularization procedure, to avoid 
+    # division by small numbers. Default in double precision is 1e-10.
+    threshold_desingularization::RealT
+    # Standard shallow water equations for dispatch on Trixi.jl functions 
     basic_swe::ShallowWaterEquations2D{RealT}
 end
 
@@ -85,7 +89,8 @@ end
 function ShallowWaterEquationsWetDry2D(; gravity_constant, H0 = zero(gravity_constant),
                                        threshold_limiter = nothing,
                                        threshold_wet = nothing,
-                                       threshold_partially_wet = nothing)
+                                       threshold_partially_wet = nothing,
+                                       threshold_desingularization = nothing)
     T = promote_type(typeof(gravity_constant), typeof(H0))
     if threshold_limiter === nothing
         threshold_limiter = 500 * eps(T)
@@ -96,13 +101,17 @@ function ShallowWaterEquationsWetDry2D(; gravity_constant, H0 = zero(gravity_con
     if threshold_partially_wet === nothing
         threshold_partially_wet = default_threshold_partially_wet(T)
     end
-    # Construct the standard SWE for dispatch. Even though the `basic_swe` already store the
-    # gravity constant and the total water height, we store an extra copy in
+    if threshold_desingularization === nothing
+        threshold_desingularization = default_threshold_desingularization(T)
+    end
+    # Construct the standard SWE for dispatch. Even though the `basic_swe` already store the 
+    # gravity constant and the total water height, we store an extra copy in 
     # `ShallowWaterEquationsWetDry2D` for convenience.
     basic_swe = ShallowWaterEquations2D(gravity_constant = gravity_constant, H0 = H0)
 
     ShallowWaterEquationsWetDry2D(gravity_constant, H0, threshold_limiter,
-                                  threshold_wet, threshold_partially_wet, basic_swe)
+                                  threshold_wet, threshold_partially_wet,
+                                  threshold_desingularization, basic_swe)
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterEquationsWetDry2D) = True()

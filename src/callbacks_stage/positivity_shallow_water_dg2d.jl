@@ -79,6 +79,12 @@ function limiter_shallow_water!(u, threshold::Real, variable,
 
             h, h_v1, h_v2, b = u_node
 
+            # Apply velocity desingularization
+            h_v1 = h * (2 * h * h_v1) /
+                   (h^2 + max(h^2, equations.threshold_desingularization))
+            h_v2 = h * (2 * h * h_v2) /
+                   (h^2 + max(h^2, equations.threshold_desingularization))
+
             if h <= threshold
                 h = threshold
                 h_v1 = zero(eltype(u))
@@ -158,10 +164,10 @@ function limiter_shallow_water!(u, threshold::Real, variable,
             h_v2 = MVector(momentum(u_node, equations)[2])
             b = u_node[end]
 
-            # Velocity desingularization
-            h_v1 = h .* (2.0 * h .* h_v1) ./
+            # Apply velocity desingularization
+            h_v1 = h .* (2 * h .* h_v1) ./
                    (h .^ 2 .+ max.(h .^ 2, equations.threshold_desingularization))
-            h_v2 = h .* (2.0 * h .* h_v2) ./
+            h_v2 = h .* (2 * h .* h_v2) ./
                    (h .^ 2 .+ max.(h .^ 2, equations.threshold_desingularization))
 
             for i in eachlayer(equations)
