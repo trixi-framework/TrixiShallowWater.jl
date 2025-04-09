@@ -2,7 +2,7 @@
 
 > MIT License
 > 
-> Copyright (c) 2020-present The TrixiShallowWater.jl Authors (see [Authors](@ref))
+> Copyright (c) 2020-present The TrixiShallowWater.jl Authors (see [Authors](@ref trixi_sw_authors))
 > 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
