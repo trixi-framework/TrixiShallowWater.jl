@@ -294,7 +294,7 @@ indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
                                                      alpha_max = 0.5,
                                                      alpha_min = 0.001,
                                                      alpha_smooth = true,
-                                                     variable = Trixi.waterheight)
+                                                     variable = waterheight)
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
                                                  volume_flux_dg = volume_flux,
                                                  volume_flux_fv = surface_flux)
@@ -356,7 +356,7 @@ callbacks = CallbackSet(analysis_callback,
 # integrator supports adaptive timestepping;
 # however, this is deactivated with `adaptive=false` as we use a CFL-based time step restriction.
 # ```julia
-# stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+# stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 # sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
 #           ode_default_options()..., callback = callbacks, adaptive = false);
 # ```

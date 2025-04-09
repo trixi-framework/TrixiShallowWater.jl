@@ -115,7 +115,7 @@ save_solution = SaveSolutionCallback(dt = 0.5,
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation

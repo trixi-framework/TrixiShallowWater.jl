@@ -208,13 +208,13 @@ end
     let equations = ShallowWaterEquationsWetDry1D(gravity = 9.8)
         cons_vars = prim2cons(SVector(H, v1, b), equations)
         @test waterheight_pressure(cons_vars, equations) ≈
-              Trixi.waterheight(cons_vars, equations) * pressure(cons_vars, equations)
+              waterheight(cons_vars, equations) * pressure(cons_vars, equations)
     end
 
     let equations = ShallowWaterEquationsWetDry2D(gravity = 9.8)
         cons_vars = prim2cons(SVector(H, v1, v2, b), equations)
         @test waterheight_pressure(cons_vars, equations) ≈
-              Trixi.waterheight(cons_vars, equations) * pressure(cons_vars, equations)
+              waterheight(cons_vars, equations) * pressure(cons_vars, equations)
     end
 end
 
