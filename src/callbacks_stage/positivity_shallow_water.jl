@@ -47,10 +47,6 @@ The specific implementation for the [`ShallowWaterMultiLayerEquations1D](@ref) i
   Positivity-preserving well-balanced discontinuous Galerkin methods for the shallow water equations
   on unstructured triangular meshes
   [doi: 10.1007/s10915-012-9644-4](https://doi.org/10.1007/s10915-012-9644-4)
-
-
-!!! warning "Experimental code"
-    This is an experimental feature and may change in future releases.
 """
 struct PositivityPreservingLimiterShallowWater{N, Variables <: NTuple{N, Any}}
     variables::Variables

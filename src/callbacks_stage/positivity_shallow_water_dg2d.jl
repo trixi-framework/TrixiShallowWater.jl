@@ -5,8 +5,6 @@
 @muladd begin
 #! format: noindent
 
-# !!! warning "Experimental code"
-#     This is an experimental feature and may change in future releases.
 function limiter_shallow_water!(u, threshold::Real, variable,
                                 mesh::Trixi.AbstractMesh{2},
                                 equations::ShallowWaterEquationsWetDry2D, dg::DGSEM,
@@ -100,8 +98,6 @@ function limiter_shallow_water!(u, threshold::Real, variable,
     return nothing
 end
 
-# !!! warning "Experimental code"
-#     This is an experimental feature and may change in future releases.
 function limiter_shallow_water!(u, threshold::Real, variable,
                                 mesh::Trixi.AbstractMesh{2},
                                 equations::ShallowWaterMultiLayerEquations2D, dg::DGSEM,
