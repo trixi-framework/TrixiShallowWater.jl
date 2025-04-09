@@ -385,7 +385,7 @@ callbacks = CallbackSet(analysis_callback,
 # ## Putting it all together
 # Now the problem discretization components are assembled and working
 # together with a postprocessing pipeline.
-# We run simulation, which takes approximately 12 minutes with solution files
+# We run the simulation, which takes approximately 12 minutes with solution files
 # in the `SaveSolutionCallback`
 # written every `dt = 0.04` to obtain a high temporal resolution of the solution output.
 # We then visualize the solution, bathymetry, and shock capturing using ParaView and create
