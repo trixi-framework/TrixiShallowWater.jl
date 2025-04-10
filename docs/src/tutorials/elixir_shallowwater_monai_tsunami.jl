@@ -294,7 +294,7 @@ indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
                                                      alpha_max = 0.5,
                                                      alpha_min = 0.001,
                                                      alpha_smooth = true,
-                                                     variable = Trixi.waterheight)
+                                                     variable = waterheight)
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
                                                  volume_flux_dg = volume_flux,
                                                  volume_flux_fv = surface_flux)
@@ -356,7 +356,7 @@ callbacks = CallbackSet(analysis_callback,
 # integrator supports adaptive timestepping;
 # however, this is deactivated with `adaptive=false` as we use a CFL-based time step restriction.
 # ```julia
-# stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+# stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 # sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
 #           ode_default_options()..., callback = callbacks, adaptive = false);
 # ```
@@ -385,7 +385,7 @@ callbacks = CallbackSet(analysis_callback,
 # ## Putting it all together
 # Now the problem discretization components are assembled and working
 # together with a postprocessing pipeline.
-# We run simulation, which takes approximately 12 minutes with solution files
+# We run the simulation, which takes approximately 12 minutes with solution files
 # in the `SaveSolutionCallback`
 # written every `dt = 0.04` to obtain a high temporal resolution of the solution output.
 # We then visualize the solution, bathymetry, and shock capturing using ParaView and create

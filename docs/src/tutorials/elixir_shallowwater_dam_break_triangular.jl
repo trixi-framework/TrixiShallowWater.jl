@@ -102,7 +102,7 @@ indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
                                                      alpha_max = 0.5,
                                                      alpha_min = 0.001,
                                                      alpha_smooth = true,
-                                                     variable = Trixi.waterheight)
+                                                     variable = waterheight)
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
                                                  volume_flux_dg = volume_flux,
                                                  volume_flux_fv = surface_flux)
@@ -158,7 +158,7 @@ callbacks = CallbackSet(analysis_callback,
 # positivity of the water height during the simulation. The [`SSPRK43`](https://docs.sciml.ai/OrdinaryDiffEq/stable/explicit/SSPRK/#OrdinaryDiffEqSSPRK.SSPRK43) integrator supports adaptive 
 # timestepping, but since we use a CFL-based time step we set (`adaptive = false`). For visualization
 # purposes, we also use the `saveat` option to the solution at specific times.
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
             ode_default_options()..., callback = callbacks, adaptive = false,

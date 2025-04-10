@@ -330,9 +330,6 @@ end
                                      normal_direction::AbstractVector,
                                      equations::ShallowWaterTwoLayerEquations2D)
 
-!!! warning "Experimental code"
-  This numerical flux is experimental and may change in any future release.
-
 Non-symmetric path-conservative two-point volume flux discretizing the nonconservative (source) term
 that contains the gradient of the bottom topography [`ShallowWaterTwoLayerEquations2D`](@ref) and an
 additional term that couples the momentum of both layers. 
