@@ -3,7 +3,7 @@
 using Trixi
 using TrixiShallowWater</code></pre><p>Packages for visualization</p><pre><code class="language-julia hljs">using CairoMakie
 using DataFrames
-using CSV</code></pre><h2 id="Prepare-and-run-the-problem-setup"><a class="docs-heading-anchor" href="#Prepare-and-run-the-problem-setup">Prepare and run the problem setup</a><a id="Prepare-and-run-the-problem-setup-1"></a><a class="docs-heading-anchor-permalink" href="#Prepare-and-run-the-problem-setup" title="Permalink"></a></h2><p>In the first step we will set up the equation system. In this example we want to solve the one-dimensional shallow water equations, so we will use the <a href="../../reference/#TrixiShallowWater.ShallowWaterEquationsWetDry1D"><code>ShallowWaterEquationsWetDry1D</code></a> and specify the gravitational acceleration to <code>gravity_constant = 9.812</code>. In contrast to the <a href="https://trixi-framework.github.io/Trixi.jl/stable/reference-trixi/#Trixi.ShallowWaterEquations1D"><code>Trixi.ShallowWaterEquations1D</code></a> type, this equation type contains additional parameters and methods that are needed to handle wetting and drying.</p><pre><code class="language-julia hljs">equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.812)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+using CSV</code></pre><h2 id="Prepare-and-run-the-problem-setup"><a class="docs-heading-anchor" href="#Prepare-and-run-the-problem-setup">Prepare and run the problem setup</a><a id="Prepare-and-run-the-problem-setup-1"></a><a class="docs-heading-anchor-permalink" href="#Prepare-and-run-the-problem-setup" title="Permalink"></a></h2><p>In the first step we will set up the equation system. In this example we want to solve the one-dimensional shallow water equations, so we will use the <a href="../../reference/#TrixiShallowWater.ShallowWaterEquationsWetDry1D"><code>ShallowWaterEquationsWetDry1D</code></a> and specify the gravitational acceleration to <code>gravity = 9.812</code>. In contrast to the <a href="https://trixi-framework.github.io/Trixi.jl/stable/reference-trixi/#Trixi.ShallowWaterEquations1D"><code>Trixi.ShallowWaterEquations1D</code></a> type, this equation type contains additional parameters and methods that are needed to handle wetting and drying.</p><pre><code class="language-julia hljs">equations = ShallowWaterEquationsWetDry1D(gravity = 9.812)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ ShallowWaterEquationsWetDry1D                                                                    │
 │ ═════════════════════════════                                                                    │
 │ #variables: ………………………………………………… 3                                                                │
@@ -131,11 +131,11 @@ sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
 ────────────────────────────────────────────────────────────────────────────────────────────────────
  Simulation running &#39;ShallowWaterEquationsWetDry1D&#39; with DGSEM(polydeg=4)
 ────────────────────────────────────────────────────────────────────────────────────────────────────
- #timesteps:                  0                run time:       9.01000000e-07 s
+ #timesteps:                  0                run time:       7.91000000e-07 s
  Δt:             1.00000000e+00                └── GC time:    0.00000000e+00 s (0.000%)
  sim. time:      0.00000000e+00 (0.000%)       time/DOF/rhs!:         NaN s
                                                PID:                   Inf s
- #DOFs per field:          1280                alloc&#39;d memory:        144.357 MiB
+ #DOFs per field:          1280                alloc&#39;d memory:        147.067 MiB
  #elements:                 256
 
  Variable:       h                h_v              b
@@ -149,11 +149,11 @@ sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
 ────────────────────────────────────────────────────────────────────────────────────────────────────
  Simulation running &#39;ShallowWaterEquationsWetDry1D&#39; with DGSEM(polydeg=4)
 ────────────────────────────────────────────────────────────────────────────────────────────────────
- #timesteps:               5000                run time:       2.19458868e+00 s
+ #timesteps:               5000                run time:       2.19562266e+00 s
  Δt:             5.36347773e-03                └── GC time:    0.00000000e+00 s (0.000%)
- sim. time:      1.96595521e+01 (49.149%)      time/DOF/rhs!:  6.39689601e-08 s
-                                               PID:            7.45707182e-08 s
- #DOFs per field:          1280                alloc&#39;d memory:        163.973 MiB
+ sim. time:      1.96595521e+01 (49.149%)      time/DOF/rhs!:  6.48364324e-08 s
+                                               PID:            7.53324001e-08 s
+ #DOFs per field:          1280                alloc&#39;d memory:        166.684 MiB
  #elements:                 256
 
  Variable:       h                h_v              b
@@ -167,11 +167,11 @@ sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
 ────────────────────────────────────────────────────────────────────────────────────────────────────
  Simulation running &#39;ShallowWaterEquationsWetDry1D&#39; with DGSEM(polydeg=4)
 ────────────────────────────────────────────────────────────────────────────────────────────────────
- #timesteps:               8691                run time:       3.61055489e+00 s
+ #timesteps:               8691                run time:       3.61747990e+00 s
  Δt:             5.00910517e-03                └── GC time:    0.00000000e+00 s (0.000%)
- sim. time:      4.00000000e+01 (100.000%)     time/DOF/rhs!:  6.41983193e-08 s
-                                               PID:            7.48955773e-08 s
- #DOFs per field:          1280                alloc&#39;d memory:        167.116 MiB
+ sim. time:      4.00000000e+01 (100.000%)     time/DOF/rhs!:  6.45949477e-08 s
+                                               PID:            7.52083403e-08 s
+ #DOFs per field:          1280                alloc&#39;d memory:        169.826 MiB
  #elements:                 256
 
  Variable:       h                h_v              b
@@ -191,4 +191,4 @@ ax = Axis(f[1, 1], xlabel = &quot;time / s&quot;, ylabel = &quot;waterheight / m
           limits = (0, 40, 0.0, 0.8));</code></pre><p>Add experimental and simulation data to the plot</p><pre><code class="language-julia hljs">scatter!(ax, pd_G4.X, pd_G4.Y, color = :orange, strokewidth = 1,
          strokecolor = (:black, 0.5), label = &quot;Experiment&quot;)
 lines!(ax, pd.x, pd.data[:, 1], label = &quot;Simulation&quot;);</code></pre><p>Add a legend to the plot</p><pre><code class="language-julia hljs">axislegend(ax, orientation = :horizontal)
-f</code></pre><img src="6934c2c3.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../introduction/">« Introduction</a><a class="docs-footer-nextpage" href="../elixir_shallowwater_monai_tsunami/">Okushiri tsunami »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.1 on <span class="colophon-date" title="Wednesday 9 April 2025 14:51">Wednesday 9 April 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+f</code></pre><img src="6934c2c3.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../introduction/">« Introduction</a><a class="docs-footer-nextpage" href="../elixir_shallowwater_monai_tsunami/">Okushiri tsunami »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.1 on <span class="colophon-date" title="Thursday 10 April 2025 15:19">Thursday 10 April 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
