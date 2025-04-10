@@ -7,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the two-layer shallow water equations with a discontinuous bottom
 # topography to test well-balancedness
 
-equations = ShallowWaterTwoLayerEquations2D(gravity_constant = 1.0, H0 = 0.6,
+equations = ShallowWaterTwoLayerEquations2D(gravity = 1.0, H0 = 0.6,
                                             rho_upper = 0.9, rho_lower = 1.0)
 
 # An initial condition with constant total water height, zero velocities and a bottom topography to

@@ -101,7 +101,7 @@ function MeyerPeterMueller(; theta_c, d_s)
 end
 
 @doc raw"""
-    ShallowWaterExnerEquations1D(;gravity_constant, H0 = 0.0,
+    ShallowWaterExnerEquations1D(;gravity, H0 = 0.0,
                                  friction = ManningFriction(n = 0.0),
                                  sediment_model,
                                  porosity,
@@ -120,7 +120,7 @@ The sediment discharge ``q_s(h, hv)`` is determined by the `sediment_model` and 
 the active sediment height ``h_s = q_s / v``.
 Furthermore ``\tau`` denotes the shear stress at the water-sediment interface and is determined by
 the `friction` model.
-The gravitational constant is denoted by ``g``, and ``\rho_f`` and ``\rho_s`` are the fluid and sediment
+The gravitational acceleration is denoted by ``g``, and ``\rho_f`` and ``\rho_s`` are the fluid and sediment
 densities, respectively. The density ratio is given by ``r = \rho_f / \rho_s``, where ``r`` lies between
 ``0 < r < 1`` as the fluid density ``\rho_f`` should be smaller than the sediment density ``\rho_s``.
 
@@ -142,7 +142,7 @@ struct ShallowWaterExnerEquations1D{RealT <: Real,
        Trixi.AbstractShallowWaterEquations{1, 3}
     # This structure ensures that friction and sediment models are concrete types
     # to prevent allocations
-    gravity::RealT # gravitational constant
+    gravity::RealT # gravitational acceleration
     H0::RealT      # constant "lake-at-rest" total water height
     friction::FrictionT
     sediment_model::SedimentT
@@ -152,18 +152,18 @@ struct ShallowWaterExnerEquations1D{RealT <: Real,
     r::RealT       # density ratio
 end
 
-# Allow for flexibility to set the gravitational constant within an elixir depending on the
-# application where `gravity_constant=1.0` or `gravity_constant=9.81` are common values.
+# Allow for flexibility to set the gravitational acceleration within an elixir depending on the
+# application where `gravity=1.0` or `gravity=9.81` are common values.
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
 # well-balancedness test cases.
-function ShallowWaterExnerEquations1D(; gravity_constant, H0 = zero(gravity_constant),
+function ShallowWaterExnerEquations1D(; gravity, H0 = zero(gravity),
                                       friction = ManningFriction(n = 0.0),
                                       sediment_model,
                                       porosity, rho_f, rho_s)
     # Precompute common expressions for the porosity and density ratio
     porosity_inv = inv(1 - porosity)
     r = rho_f / rho_s
-    return ShallowWaterExnerEquations1D(gravity_constant, H0, friction, sediment_model,
+    return ShallowWaterExnerEquations1D(gravity, H0, friction, sediment_model,
                                         porosity_inv, rho_f, rho_s, r)
 end
 
@@ -243,7 +243,7 @@ when using the the [`GrassModel`](@ref) model.
 
 To use this source term the equations must be set to:
 ```julia
-equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
+equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
                                             rho_s = 1.0, porosity = 0.5,
                                             friction = ManningFriction(n = 0.0),
                                             sediment_model = GrassModel(A_g = 0.01)
@@ -277,7 +277,7 @@ when using the [`MeyerPeterMueller`](@ref) model.
 
 To use this source term the equations must be set to:
 ```julia
-equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
+equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
                                          rho_s = 1.0, porosity = 0.5,
                                          friction = ManningFriction(n = 0.01),
                                          sediment_model = MeyerPeterMueller(theta_c = 0.0,
