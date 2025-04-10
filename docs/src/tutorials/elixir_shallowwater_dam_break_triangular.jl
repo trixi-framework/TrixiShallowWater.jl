@@ -34,10 +34,10 @@ using CSV
 
 # In the first step we will set up the equation system. In this example we want to solve the
 # one-dimensional shallow water equations, so we will use the [`ShallowWaterEquationsWetDry1D`](@ref ShallowWaterEquationsWetDry1D)
-# and specify the gravitational acceleration to `gravity_constant = 9.812`. In contrast to the
+# and specify the gravitational acceleration to `gravity = 9.812`. In contrast to the
 # [`Trixi.ShallowWaterEquations1D`](@extref Trixi.ShallowWaterEquations1D) type, this equation type
 # contains additional parameters and methods that are needed to handle wetting and drying.
-equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.812)
+equations = ShallowWaterEquationsWetDry1D(gravity = 9.812)
 
 # We then create a function to supply the initial condition for the simulation. Note, in the last
 # step of this function the water height needs to be shifted by a small value to avoid division by zero.

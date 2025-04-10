@@ -26,7 +26,7 @@ end
 @timed_testset "Shallow water conversion between conservative/entropy variables" begin
     H, v1, v2, b = 3.5, 0.25, 0.1, 0.4
 
-    let equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.8)
+    let equations = ShallowWaterEquationsWetDry1D(gravity = 9.8)
         # Test conversion between primitive and conservative variables
         prim_vars = SVector(H, v1, b)
         cons_vars = prim2cons(prim_vars, equations)
@@ -46,7 +46,7 @@ end
         @test cons_vars ≈ entropy2cons(entropy_vars, equations)
     end
 
-    let equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.8)
+    let equations = ShallowWaterEquationsWetDry2D(gravity = 9.8)
         # Test conversion between primitive and conservative variables
         prim_vars = SVector(H, v1, v2, b)
         cons_vars = prim2cons(prim_vars, equations)
@@ -69,7 +69,7 @@ end
     H_upper, v1_upper, v2_upper, H_lower, v1_lower, v2_lower, b = 3.5, 0.25, 0.13, 2.5,
                                                                   0.1, 0.37, 0.4
 
-    let equations = ShallowWaterTwoLayerEquations1D(gravity_constant = 9.8,
+    let equations = ShallowWaterTwoLayerEquations1D(gravity = 9.8,
                                                     rho_upper = 0.9, rho_lower = 1.0)
         # Test conversion between primitive and conservative variables
         prim_vars = SVector(H_upper, v1_upper, H_lower, v1_lower, b)
@@ -83,7 +83,7 @@ end
               energy_kinetic(cons_vars, equations)
     end
 
-    let equations = ShallowWaterTwoLayerEquations2D(gravity_constant = 9.8,
+    let equations = ShallowWaterTwoLayerEquations2D(gravity = 9.8,
                                                     rho_upper = 0.9, rho_lower = 1.0)
         # Test conversion between primitive and conservative variables
         prim_vars = SVector(H_upper, v1_upper, v2_upper, H_lower, v1_lower,
@@ -105,7 +105,7 @@ end
     v2 = (0.13, 0.2, 0.3)
     b = 0.4
 
-    let equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.8,
+    let equations = ShallowWaterMultiLayerEquations1D(gravity = 9.8,
                                                       rhos = (0.7, 0.8, 0.9))
         # test conservion between primitive and conservative variables
         prim_vars = SVector(H..., v1..., b)
@@ -119,7 +119,7 @@ end
               energy_kinetic(cons_vars, equations)
     end
 
-    let equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.8,
+    let equations = ShallowWaterMultiLayerEquations2D(gravity = 9.8,
                                                       rhos = (0.7, 0.8, 0.9))
         # test conservion between primitive and conservative variables
         prim_vars = SVector(H..., v1..., v2..., b)
@@ -137,7 +137,7 @@ end
 @timed_testset "SWE-Exner conversion between conservative/entropy variables" begin
     h, v, h_b = (1.0, 0.3, 0.1)
 
-    let equations = ShallowWaterExnerEquations1D(gravity_constant = 9.81, rho_f = 0.9,
+    let equations = ShallowWaterExnerEquations1D(gravity = 9.81, rho_f = 0.9,
                                                  rho_s = 1.0, porosity = 0.4,
                                                  sediment_model = GrassModel(A_g = 0.01))
         # Test conversion between primitive and conservative variables
@@ -155,7 +155,7 @@ end
 @timed_testset "SWE-Exner eigenvalue / eigenvector computation" begin
     h, v, h_b = (1.0, 0.3, 0.1)
 
-    let equations = ShallowWaterExnerEquations1D(gravity_constant = 9.81, rho_f = 0.9,
+    let equations = ShallowWaterExnerEquations1D(gravity = 9.81, rho_f = 0.9,
                                                  rho_s = 1.0, porosity = 0.4,
                                                  sediment_model = GrassModel(A_g = 0.01))
         u = SVector(h, h * v, h_b)
@@ -205,13 +205,13 @@ end
 @timed_testset "Consistency check for waterheight_pressure" begin
     H, v1, v2, b = 3.5, 0.25, 0.1, 0.4
 
-    let equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.8)
+    let equations = ShallowWaterEquationsWetDry1D(gravity = 9.8)
         cons_vars = prim2cons(SVector(H, v1, b), equations)
         @test waterheight_pressure(cons_vars, equations) ≈
               waterheight(cons_vars, equations) * pressure(cons_vars, equations)
     end
 
-    let equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.8)
+    let equations = ShallowWaterEquationsWetDry2D(gravity = 9.8)
         cons_vars = prim2cons(SVector(H, v1, v2, b), equations)
         @test waterheight_pressure(cons_vars, equations) ≈
               waterheight(cons_vars, equations) * pressure(cons_vars, equations)
@@ -220,7 +220,7 @@ end
 
 # Test consistency of the wrapper functions for the wave speed estimates
 @timed_testset "Consistency check for wave speed estimates of the SWE" begin
-    let equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.8)
+    let equations = ShallowWaterEquationsWetDry1D(gravity = 9.8)
         u_rr = SVector(1.2, 0.3, 0.7)
         u_ll = SVector(0.25, 0.1, 0.4)
         orientation = 1
@@ -243,7 +243,7 @@ end
                                   equations.basic_swe)
     end
 
-    let equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.8)
+    let equations = ShallowWaterEquationsWetDry2D(gravity = 9.8)
         u_rr = SVector(1.2, 0.3, 0.2, 0.7)
         u_ll = SVector(0.25, 0.1, 0.3, 0.4)
         orientations = [1, 2]
@@ -293,7 +293,7 @@ end
 end
 
 @timed_testset "Equivalent Wave Speed Estimates: max_abs_speed(naive)" begin
-    equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+    equations = ShallowWaterMultiLayerEquations1D(gravity = 9.81,
                                                   rhos = (1.0, 4.2))
 
     u_ll = SVector(1.0, 0.5, 0.6, 0.8)
@@ -302,7 +302,7 @@ end
     @assert max_abs_speed_naive(u_ll, u_rr, 1, equations) ≈
             max_abs_speed(u_ll, u_rr, 1, equations)
 
-    equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
+    equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81,
                                                   rhos = (0.8, 1.2))
 
     u_ll = SVector(1.0, 1.0, 0.6, 0.6, 0.8, 0.8)
@@ -323,7 +323,7 @@ end
               max_abs_speed(u_ll, u_rr, normal_direction, equations)
     end
 
-    equations = ShallowWaterTwoLayerEquations1D(gravity_constant = 9.8,
+    equations = ShallowWaterTwoLayerEquations1D(gravity = 9.8,
                                                 rho_upper = 0.9, rho_lower = 1.0)
 
     u_ll = SVector(1.0, 0.5, 0.6, 0.8, 42)
@@ -332,7 +332,7 @@ end
     @assert max_abs_speed_naive(u_ll, u_rr, 1, equations) ≈
             max_abs_speed(u_ll, u_rr, 1, equations)
 
-    equations = ShallowWaterTwoLayerEquations2D(gravity_constant = 9.81,
+    equations = ShallowWaterTwoLayerEquations2D(gravity = 9.81,
                                                 rho_upper = 0.9, rho_lower = 1.0)
 
     u_ll = SVector(1.0, 1.0, 0.6, 0.6, 0.8, 0.8, 42)
@@ -351,46 +351,46 @@ end
 
 @timed_testset "Exception check for the 2LSWE" begin
     error_message = "Invalid input: Densities must be chosen such that rho_upper < rho_lower"
-    @test_throws error_message ShallowWaterTwoLayerEquations1D(gravity_constant = 9.81,
+    @test_throws error_message ShallowWaterTwoLayerEquations1D(gravity = 9.81,
                                                                rho_upper = 1.0,
                                                                rho_lower = 0.9)
-    @test_throws error_message ShallowWaterTwoLayerEquations2D(gravity_constant = 9.81,
+    @test_throws error_message ShallowWaterTwoLayerEquations2D(gravity = 9.81,
                                                                rho_upper = 1.0,
                                                                rho_lower = 0.9)
 end
 
 @timed_testset "Input argument check for the ML-SWE" begin
-    @test_throws ArgumentError ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+    @test_throws ArgumentError ShallowWaterMultiLayerEquations1D(gravity = 9.81,
                                                                  rhos = [
                                                                      -1.0,
                                                                      0.1,
                                                                      0.2
                                                                  ])
-    @test_throws ArgumentError ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
+    @test_throws ArgumentError ShallowWaterMultiLayerEquations2D(gravity = 9.81,
                                                                  rhos = [
                                                                      -1.0,
                                                                      0.1,
                                                                      0.2
                                                                  ])
-    @test_throws ArgumentError ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+    @test_throws ArgumentError ShallowWaterMultiLayerEquations1D(gravity = 9.81,
                                                                  rhos = [0.1, 0.3, 0.2])
-    @test_throws ArgumentError ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
+    @test_throws ArgumentError ShallowWaterMultiLayerEquations2D(gravity = 9.81,
                                                                  rhos = [0.1, 0.3, 0.2])
     # Ensure that both tuple and array input are equivalent
-    @test ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+    @test ShallowWaterMultiLayerEquations1D(gravity = 9.81,
                                             rhos = [0.1, 0.2, 0.3]) ==
-          ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+          ShallowWaterMultiLayerEquations1D(gravity = 9.81,
                                             rhos = (0.1, 0.2, 0.3))
-    @test ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
+    @test ShallowWaterMultiLayerEquations2D(gravity = 9.81,
                                             rhos = [0.1, 0.2, 0.3]) ==
-          ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
+          ShallowWaterMultiLayerEquations2D(gravity = 9.81,
                                             rhos = (0.1, 0.2, 0.3))
 
     # Check for argument error if initial condition is called with wrong number of layers
-    equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+    equations = ShallowWaterMultiLayerEquations1D(gravity = 9.81,
                                                   rhos = (0.1, 0.2, 0.3, 0.4))
     @test_throws ArgumentError initial_condition_convergence_test(0.0, 0.0, equations)
-    equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81,
+    equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81,
                                                   rhos = (0.1, 0.2, 0.3, 0.4))
     @test_throws ArgumentError initial_condition_convergence_test(0.0, 0.0, equations)
 end

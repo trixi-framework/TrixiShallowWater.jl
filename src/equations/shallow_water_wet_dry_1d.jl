@@ -17,8 +17,8 @@ Shallow water equations (SWE) in one space dimension. The equations are given by
 \end{aligned}
 ```
 The unknown quantities of the SWE are the water height ``h`` and the velocity ``v``.
-The gravitational constant is denoted by `g` and the (possibly) variable bottom topography function ``b(x)``.
-Conservative variable water height ``h`` is measured from the bottom topography ``b``, therefore one
+The gravitational acceleration is denoted by `g` and the (possibly) variable bottom topography
+function ``b(x)``. Conservative variable water height ``h`` is measured from the bottom topography ``b``, therefore one
 also defines the total water height as ``H = h + b``.
 
 The additional quantity ``H_0`` is also available to store a reference value for the total water height that
@@ -57,7 +57,7 @@ References for the SWE are many but a good introduction is available in Chapter 
 """
 struct ShallowWaterEquationsWetDry1D{RealT <: Real} <:
        Trixi.AbstractShallowWaterEquations{1, 3}
-    gravity::RealT # gravitational constant
+    gravity::RealT # gravitational acceleration
     H0::RealT      # constant "lake-at-rest" total water height
     # `threshold_limiter` used in `PositivityPreservingLimiterShallowWater` on water height,
     # as a (small) shift on the initial condition and cutoff before the next time step.
@@ -78,17 +78,17 @@ struct ShallowWaterEquationsWetDry1D{RealT <: Real} <:
     basic_swe::ShallowWaterEquations1D{RealT}
 end
 
-# Allow for flexibility to set the gravitational constant within an elixir depending on the
-# application where `gravity_constant=1.0` or `gravity_constant=9.81` are common values.
+# Allow for flexibility to set the gravitational acceleration within an elixir depending on the
+# application where `gravity=1.0` or `gravity=9.81` are common values.
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
 # well-balancedness test cases.
 # Strict default values for thresholds that performed well in many numerical experiments
-function ShallowWaterEquationsWetDry1D(; gravity_constant, H0 = zero(gravity_constant),
+function ShallowWaterEquationsWetDry1D(; gravity, H0 = zero(gravity),
                                        threshold_limiter = nothing,
                                        threshold_wet = nothing,
                                        threshold_partially_wet = nothing,
                                        threshold_desingularization = nothing)
-    T = promote_type(typeof(gravity_constant), typeof(H0))
+    T = promote_type(typeof(gravity), typeof(H0))
     if threshold_limiter === nothing
         threshold_limiter = 500 * eps(T)
     end
@@ -102,11 +102,11 @@ function ShallowWaterEquationsWetDry1D(; gravity_constant, H0 = zero(gravity_con
         threshold_desingularization = default_threshold_desingularization(T)
     end
     # Construct the standard SWE for dispatch. Even though the `basic_swe` already store the 
-    # gravity constant and the total water height, we store an extra copy in 
+    # gravitational acceleration and the total water height, we store an extra copy in 
     # `ShallowWaterEquationsWetDry1D` for convenience.
-    basic_swe = ShallowWaterEquations1D(gravity_constant = gravity_constant, H0 = H0)
+    basic_swe = ShallowWaterEquations1D(gravity, H0)
 
-    ShallowWaterEquationsWetDry1D(gravity_constant, H0, threshold_limiter,
+    ShallowWaterEquationsWetDry1D(gravity, H0, threshold_limiter,
                                   threshold_wet, threshold_partially_wet,
                                   threshold_desingularization, basic_swe)
 end

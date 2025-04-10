@@ -1,7 +1,7 @@
 name = "TrixiShallowWater"
 uuid = "804cb1fc-5b08-4398-a671-a789bfe091b3"
 authors = ["Andrew R. Winters <andrew.ross.winters@liu.se>", "Michael Schlottke-Lakemper <michael@sloede.com>"]
-version = "0.1.0-DEV"
+version = "0.1.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"

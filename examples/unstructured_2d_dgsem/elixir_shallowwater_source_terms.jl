@@ -8,7 +8,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a periodic
 # bottom topography function (set in the initial conditions)
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.81)
 
 initial_condition = initial_condition_convergence_test
 

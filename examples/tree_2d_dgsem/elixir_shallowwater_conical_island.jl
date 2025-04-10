@@ -6,7 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 1.4)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.81, H0 = 1.4)
 
 """
     initial_condition_conical_island(x, t, equations::ShallowWaterEquationsWetDry2D)

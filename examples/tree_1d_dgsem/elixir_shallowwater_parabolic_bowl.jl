@@ -6,7 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.81)
+equations = ShallowWaterEquationsWetDry1D(gravity = 9.81)
 
 """
     initial_condition_parabolic_bowl(x, t, equations:: ShallowWaterEquationsWetDry1D)
