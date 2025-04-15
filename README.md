@@ -7,6 +7,7 @@
 [![Coverage](https://codecov.io/gh/trixi-framework/TrixiShallowWater.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/trixi-framework/TrixiShallowWater.jl)
 [![Coverage](https://coveralls.io/repos/github/trixi-framework/TrixiShallowWater.jl/badge.svg?branch=main)](https://coveralls.io/github/trixi-framework/TrixiShallowWater.jl?branch=main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-success.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15206520.svg)](https://doi.org/10.5281/zenodo.15206520)
 
 <p align="center">
   <img width="300px" src="https://trixi-framework.github.io/assets/logo_sw.png">
