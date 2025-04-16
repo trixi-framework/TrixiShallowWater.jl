@@ -786,7 +786,7 @@ end # 2LSWE
                                 0.1016120899921184
                             ],
                             tspan=(0.0, 0.25),
-                            # Increase iterations for coverage testing to trigger the 
+                            # Increase iterations for coverage testing to trigger the
                             # positivity limiter
                             coverage_override=(maxiters = 130, tspan = (0.0, 1.5)))
         # Ensure that we do not have excessive memory allocations
