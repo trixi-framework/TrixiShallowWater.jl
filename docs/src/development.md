@@ -1,7 +1,7 @@
 # Development
 
-This page contains some helpful information for the development of TrixiShallowWater.jl. Further 
-information about helpful tools for package development in Julia can be found on the 
+This page contains some helpful information for the development of TrixiShallowWater.jl. Further
+information about helpful tools for package development in Julia can be found on the
 [development page](https://trixi-framework.github.io/Trixi.jl/stable/development/) of the Trixi.jl docs.
 
 ## Releasing a new version of TrixiShallowWater
@@ -26,7 +26,12 @@ julia --project=docs --color=yes docs/make.jl
 ```
 from the TrixiShallowWater.jl main directory. Then, you can look at the html files generated in
 `docs/build`.
-
+For PRs triggered from branches inside the TrixiShallowWater.jl main repository previews of
+the new documentation are generated at
+`https://trixi-framework.github.io/TrixiShallowWater.jl/previews/PRXXX`,
+where `XXX` is the number of the PR.
+Note, this does not work for PRs from forks for security reasons (since anyone could otherwise push
+arbitrary stuff, including malicious code).
 
 
 ## Developing with a local Trixi.jl version
