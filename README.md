@@ -42,7 +42,7 @@ with Julia v1.10 and newer. We recommend using the latest stable release of Juli
 ### For users
 TrixiShallowWater.jl and its related tools are registered Julia packages. Hence, you
 can install TrixiShallowWater.jl, the numerical solver framework Trixi.jl,
-visualization tools [Trixi2Vtk](https://github.com/trixi-framework/Trixi2Vtk.jl), and
+visualization tools [Trixi2Vtk.jl](https://github.com/trixi-framework/Trixi2Vtk.jl), and
 [Plots.jl](https://github.com/JuliaPlots/Plots.jl)
 as well as relevant time integration sub-packages of
 [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl),
