@@ -112,12 +112,12 @@ save_solution = SaveSolutionCallback(dt = 0.04,
                                      save_final_solution = true)
 
 # Define the perturbation of water height as a  variable to use in the AMR indicator
-@inline function total_water_height(u, equations::ShallowWaterEquationsWetDry2D)
+@inline function waterheight_total(u, equations::ShallowWaterEquationsWetDry2D)
     return u[1] + u[4]
 end
 
 amr_controller = ControllerThreeLevel(semi,
-                                      IndicatorMax(semi, variable = total_water_height),
+                                      IndicatorMax(semi, variable = waterheight_total),
                                       base_level = 1,
                                       med_level = 2, med_threshold = 2.01,
                                       max_level = 4, max_threshold = 2.15)

@@ -189,11 +189,6 @@ save_solution = SaveSolutionCallback(dt = 0.2,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-# Define the water height as the variable for use in the AMR indicator
-@inline function total_water_height(u, equations::ShallowWaterEquationsWetDry2D)
-    return max(u[1], 0.0)
-end
-
 # Another possible AMR indicator function could be the velocity, such that it only fires
 # in regions where the water is moving
 # @inline function velocity_norm(u, equations::ShallowWaterEquationsWetDry2D)
@@ -202,7 +197,7 @@ end
 # end
 
 amr_controller = ControllerThreeLevel(semi,
-                                      IndicatorMax(semi, variable = total_water_height),
+                                      IndicatorMax(semi, variable = waterheight),
                                       base_level = 0,
                                       med_level = 1, med_threshold = 0.3,
                                       max_level = 4, max_threshold = 1.15)
