@@ -5,31 +5,27 @@
 @muladd begin
 #! format: noindent
 
-"""
-    P4estShallowWaterMortarContainer{NDIMS, uEltype <: Real, NDIMSP1, NDIMSP3}
+# Container data structure (structure-of-arrays style) for DG L2 mortars
+# Compared to  the standard version `Trixi.P4estMortarContainer`, extra storage is needed
+# for the unprojected parent solution data so that the flux penalty
+# can be computed on the mortars directly and then projected back to the parent.
+# This ensures that the shallow water solver remains well-balanced on non-conforming meshes.
+# For more details on this strategy see Section 3 of the paper
+# - Boris Bonev, Jan S. Hesthaven, Francis X. Giraldo, Michal A. Kopera (2018)
+#   Discontinuous Galerkin scheme for the spherical shallow water equations
+#   with applications to tsunami modeling and prediction
+#   [DOI: 10.1016/j.jcp.2018.02.008](https://doi.org/10.1016/j.jcp.2018.02.008)
 
-Container data structure (structure-of-arrays style) for DG L2 mortars
-Compared to  the standard version `Trixi.P4estMortarContainer`, extra storage is needed
-for the unprojected parent solution data so that the flux penalty
-can be computed on the mortars directly and then projected back to the parent.
-This ensures that the shallow water solver remains well-balanced on non-conforming meshes.
-For more details on this strategy see Section 3 of the paper
-- Boris Bonev, Jan S. Hesthaven, Francis X. Giraldo, Michal A. Kopera (2018)
-  Discontinuous Galerkin scheme for the spherical shallow water equations
-  with applications to tsunami modeling and prediction
-  [DOI: 10.1016/j.jcp.2018.02.008](https://doi.org/10.1016/j.jcp.2018.02.008)
+# The positions used in `neighbor_ids` are 1:3 (in 2D) or 1:5 (in 3D), where 1:2 (in 2D)
+# or 1:4 (in 3D) are the small elements numbered in z-order and 3 or 5 is the large element.
+# The solution values on the mortar element are saved in `u`, where `position` is the number
+# of the small element that corresponds to the respective part of the mortar element.
+# The first dimension `small/large side` and 2 for large side.
+# The unprojected parent solution values from the large side
+# are saved in `u_parent` on each mortar.
 
-The positions used in `neighbor_ids` are 1:3 (in 2D) or 1:5 (in 3D), where 1:2 (in 2D)
-or 1:4 (in 3D) are the small elements numbered in z-order and 3 or 5 is the large element.
-The solution values on the mortar element are saved in `u`, where `position` is the number
-of the small element that corresponds to the respective part of the mortar element.
-The first dimension `small/large side` and 2 for large side.
-The unprojected parent solution values from the large side
-are saved in `u_parent` on each mortar.
-
-!!! warning "Experimental code"
-    This is an experimental feature and may change in future releases.
-"""
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
 mutable struct P4estShallowWaterMortarContainer{NDIMS, uEltype <: Real, NDIMSP1,
                                                 NDIMSP3} <: Trixi.AbstractContainer
     u::Array{uEltype, NDIMSP3} # [small/large side, variable, position, i, mortar]
