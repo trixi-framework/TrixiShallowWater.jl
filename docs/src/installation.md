@@ -14,7 +14,7 @@ by executing the following commands in the Julia REPL:
 ```julia
 julia> using Pkg
 
-julia> Pkg.add(["TrixiShallowWater", "Trixi", "Trixi2Vtk", "Plots"
+julia> Pkg.add(["TrixiShallowWater", "Trixi", "Trixi2Vtk", "Plots",
                 "OrdinaryDiffEqLowStorageRK", "OrdinaryDiffEqSSPRK"])
 ```
 You can copy and paste all commands to the REPL *including* the leading
@@ -33,7 +33,7 @@ cd TrixiShallowWater.jl
 mkdir run
 cd run
 julia --project=. -e 'using Pkg; Pkg.develop(PackageSpec(path=".."))' # Install local TrixiShallowWater.jl clone
-julia --project=. -e 'using Pkg; Pkg.add(["Trixi", "OrdinaryDiffEq", "Trixi2Vtk", "Plots"])' # Install additional packages
+julia --project=. -e 'using Pkg; Pkg.add(["Trixi", "OrdinaryDiffEqLowStorageRK", "OrdinaryDiffEqSSPRK", "Trixi2Vtk", "Plots"])' # Install additional packages
 ```
 Note that the postprocessing tools Trixi2Vtk.jl and Plots.jl are optional and
 can be omitted.
