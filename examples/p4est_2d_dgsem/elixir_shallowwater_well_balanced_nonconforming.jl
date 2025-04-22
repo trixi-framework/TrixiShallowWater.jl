@@ -8,7 +8,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function for a fully wet configuration on a nonconforming mesh
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 2.0)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 2.0)
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
 # Note, this routine is used to compute errors in the analysis callback but the initialization is

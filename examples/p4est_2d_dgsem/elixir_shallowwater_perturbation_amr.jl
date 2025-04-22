@@ -8,7 +8,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a continuous
 # bottom topography function and a perturbation in the water height
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 2.1)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 2.1)
 
 function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWetDry2D)
     # Calculate primitive variables
