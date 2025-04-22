@@ -16,9 +16,9 @@ isdir(outdir) && rm(outdir, recursive = true)
 #! format: noindent
 
 @testset "Shallow Water Wet/Dry" begin
-    @trixi_testset "elixir_shallowwater_well_balanced.jl" begin
+    @trixi_testset "elixir_shallowwater_well_balanced_nonconforming.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_well_balanced.jl"),
+                                     "elixir_shallowwater_well_balanced_nonconforming.jl"),
                             l2=[
                                 0.2018723974651268,
                                 4.798334932564209e-14,
@@ -43,9 +43,9 @@ isdir(outdir) && rm(outdir, recursive = true)
         end
     end
 
-    @trixi_testset "elixir_shallowwater_perturbation.jl" begin
+    @trixi_testset "elixir_shallowwater_perturbation_amr.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_perturbation.jl"),
+                                     "elixir_shallowwater_perturbation_amr.jl"),
                             l2=[
                                 0.02263230105470324,
                                 0.09090425233020173,
@@ -69,9 +69,9 @@ isdir(outdir) && rm(outdir, recursive = true)
         end
     end
 
-    @trixi_testset "elixir_shallowwater_well_balanced_wet_dry.jl" begin
+    @trixi_testset "elixir_shallowwater_well_balanced_wet_dry_nonconforming.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_well_balanced_wet_dry.jl"),
+                                     "elixir_shallowwater_well_balanced_wet_dry_nonconforming.jl"),
                             l2=[
                                 0.17389058166483418,
                                 1.624323598540152e-14,
@@ -99,9 +99,9 @@ isdir(outdir) && rm(outdir, recursive = true)
     # Note, these values may change as the functionality of well-balanced mortars
     # with AMR and wet/dry are further developed according to the issue
     # https://github.com/trixi-framework/TrixiShallowWater.jl/issues/77
-    @trixi_testset "elixir_shallowwater_perturbation_wet_dry.jl" begin
+    @trixi_testset "elixir_shallowwater_perturbation_wet_dry_amr.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_perturbation_wet_dry.jl"),
+                                     "elixir_shallowwater_perturbation_wet_dry_amr.jl"),
                             l2=[
                                 0.3999075676039299,
                                 0.38998234225973377,
