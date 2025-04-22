@@ -55,7 +55,7 @@ mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2e
 
 # Affine type mapping to take the [-1,1]^2 domain from the mesh file
 # and warp it as described in https://arxiv.org/abs/2012.12040
-# Warping with the coefficient 0.2 is even more extreme.
+# Warping with the coefficient 0.15 is even more extreme.
 function mapping_twist(xi, eta)
     y = eta + 0.15 * cos(1.5 * pi * xi) * cos(0.5 * pi * eta)
     x = xi + 0.15 * cos(0.5 * pi * xi) * cos(2.0 * pi * y)

@@ -9,7 +9,7 @@
     P4estShallowWaterMortarContainer{NDIMS, uEltype <: Real, NDIMSP1, NDIMSP3}
 
 Container data structure (structure-of-arrays style) for DG L2 mortars
-specialized for the shallow water equations. Extra storage is needed
+Compared to  the standard version `Trixi.P4estMortarContainer`, extra storage is needed
 for the unprojected parent solution data so that the flux penalty
 can be computed on the mortars directly and then projected back to the parent.
 This ensures that the shallow water solver remains well-balanced on non-conforming meshes.

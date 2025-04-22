@@ -25,6 +25,12 @@ function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquati
          -
          0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
 
+    # It is mandatory to shift the water level at dry areas to make sure the water height h
+    # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
+    # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
+    # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
+    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(equations.H0, b + equations.threshold_limiter)
 
     return prim2cons(SVector(H, v1, v2, b), equations)
@@ -50,7 +56,7 @@ indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
                                                      alpha_max = 0.5,
                                                      alpha_min = 0.001,
                                                      alpha_smooth = true,
-                                                     variable = Trixi.waterheight) # waterheight_pressure)
+                                                     variable = Trixi.waterheight)
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
                                                  volume_flux_dg = volume_flux,
                                                  volume_flux_fv = surface_flux)
@@ -66,7 +72,7 @@ mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2e
 
 # Affine type mapping to take the [-1,1]^2 domain from the mesh file
 # and warp it as described in https://arxiv.org/abs/2012.12040
-# Warping with the coefficient 0.2 is even more extreme.
+# Warping with the coefficient 0.15 is even more extreme.
 function mapping_twist(xi, eta)
     y = eta + 0.15 * cos(1.5 * pi * xi) * cos(0.5 * pi * eta)
     x = xi + 0.15 * cos(0.5 * pi * xi) * cos(2.0 * pi * y)
@@ -137,6 +143,12 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id,
              0.25 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
     end
 
+    # It is mandatory to shift the water level at dry areas to make sure the water height h
+    # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
+    # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
+    # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
+    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(equations.H0, b + equations.threshold_limiter)
 
     return prim2cons(SVector(H, v1, v2, b), equations)

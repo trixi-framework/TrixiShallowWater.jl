@@ -6,7 +6,7 @@
 #! format: noindent
 
 # TODO: Once working the mortar methods could likely be extended to the other
-# equations types available in the package. Although for the multilayer equations
+# equation types available in the package. Although for the multilayer equations
 # care must be taken because the pressure term is separated from the physical flux
 # and directly placed in the nonconservative flux
 
@@ -89,7 +89,7 @@ function Trixi.prolong2mortars!(cache, u,
         element = neighbor_ids[3, mortar]
         for i in eachnode(dg)
             # This strategy from Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008) assumes that
-            # we know a constant background water height `H0` which we perturb around. may be restrictive
+            # we know a constant background water height `H0` which we perturb around. This may be restrictive
             # in practice but a good place to start with the development. We may need to consider more
             # sophisticated positivity preserving projections of the solution like those found
             # in the ALE-DG community for the Euler equations with gravity to remove this assumption.
@@ -103,7 +103,9 @@ function Trixi.prolong2mortars!(cache, u,
             else
                 u_buffer[1, i] = equations.H0
             end
-            u_buffer[2:4, i] = u[2:4, i_large, j_large, element]
+            for v in 2:4
+                u_buffer[v, i] = u[v, i_large, j_large, element]
+            end
 
             for v in eachvariable(equations)
                 # Save a copy of the (unprojected) parent solution on the mortar
@@ -153,12 +155,12 @@ function Trixi.prolong2mortars!(cache, u,
             tol = 1e-4
             for child in 1:2, side in 1:2
                 h = cache.mortars.u[side, 1, child, i, mortar]
-                cache.mortars.u[side, 2, child, i, mortar] = h * (2.0 * h *
+                cache.mortars.u[side, 2, child, i, mortar] = h * (2 * h *
                                                               cache.mortars.u[side, 2,
                                                                               child, i,
                                                                               mortar]) /
                                                              (h^2 + max(h^2, tol))
-                cache.mortars.u[side, 3, child, i, mortar] = h * (2.0 * h *
+                cache.mortars.u[side, 3, child, i, mortar] = h * (2 * h *
                                                               cache.mortars.u[side, 3,
                                                                               child, i,
                                                                               mortar]) /
@@ -173,10 +175,10 @@ function Trixi.prolong2mortars!(cache, u,
 
             # Unprojected parent solution copied into the mortar storage
             h = cache.mortars.u_parent[1, i, mortar]
-            cache.mortars.u_parent[2, i, mortar] = h * (2.0 * h *
+            cache.mortars.u_parent[2, i, mortar] = h * (2 * h *
                                                     cache.mortars.u_parent[2, i, mortar]) /
                                                    (h^2 + max(h^2, tol))
-            cache.mortars.u_parent[3, i, mortar] = h * (2.0 * h *
+            cache.mortars.u_parent[3, i, mortar] = h * (2 * h *
                                                     cache.mortars.u_parent[3, i, mortar]) /
                                                    (h^2 + max(h^2, tol))
             if cache.mortars.u_parent[1, i, mortar] <= equations.threshold_limiter
@@ -266,7 +268,7 @@ function Trixi.calc_mortar_flux!(surface_flux_values,
                 noncons = nonconservative_flux(u_rr, u_rr, normal_direction,
                                                equations)
 
-                flux_plus_noncons = flux + 0.5 * noncons
+                flux_plus_noncons = flux + 0.5f0 * noncons
 
                 # Copy to the physical flux buffer
                 set_node_vars!(f[position], flux_plus_noncons, equations, dg, node)
@@ -349,7 +351,7 @@ end
     large_indices = node_indices[2, mortar]
     large_direction = Trixi.indices2direction(large_indices)
 
-    # From the unprojected solution stored in the mortars we have access compute the flux
+    # From the unprojected solution stored in the mortars we have access to compute the flux
     # on the parent elements and remove the physical flux evaluated
     # at the unprojected solution state that is present from the volume integral computation
     # later in the computation.
@@ -381,7 +383,7 @@ end
                                        normal_direction,
                                        equations)
 
-        flux_plus_noncons = flux + 0.5 * noncons
+        flux_plus_noncons = flux + 0.5f0 * noncons
 
         set_node_vars!(flux_buffer, flux_plus_noncons, equations, dg, node)
 
