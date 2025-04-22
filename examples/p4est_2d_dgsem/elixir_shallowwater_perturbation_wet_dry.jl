@@ -32,6 +32,12 @@ function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWe
          -
          0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
 
+    # It is mandatory to shift the water level at dry areas to make sure the water height h
+    # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
+    # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
+    # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
+    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(equations.H0, b + equations.threshold_limiter)
 
     return prim2cons(SVector(H, v1, v2, b), equations)
@@ -75,7 +81,7 @@ mesh_file = Trixi.download("https://gist.githubusercontent.com/efaulhaber/63ff2e
 
 # Affine type mapping to take the [-1,1]^2 domain from the mesh file
 # and warp it as described in https://arxiv.org/abs/2012.12040
-# Warping with the coefficient 0.2 is even more extreme.
+# Warping with the coefficient 0.15 is even more extreme.
 function mapping_twist(xi, eta)
     y = eta + 0.15 * cos(1.5 * pi * xi) * cos(0.5 * pi * eta)
     x = xi + 0.15 * cos(0.5 * pi * xi) * cos(2.0 * pi * y)
@@ -132,6 +138,8 @@ function initial_condition_discontinuous_perturbation(x, t, element_id,
          0.5 / exp(3.5 * ((x1 - 0.4)^2 + (x2 - 0.325)^2)))
 
     # Setup a discontinuous bottom topography using the element id number
+    # Note that this requires to have the mesh exactly as created above,
+    # any additional refinement changes the initial condition,
     IDs = [collect(114:133); collect(138:141); collect(156:164); collect(208:300)]
     if element_id in IDs
         b = (0.75 / exp(0.5 * ((x1 - 1.0)^2 + (x2 + 1.0)^2))
@@ -146,11 +154,11 @@ function initial_condition_discontinuous_perturbation(x, t, element_id,
         H = H + 1.6
     end
 
-    # Clip the initialization to avoid negative water heights and division by zero
-    h = max(equations.threshold_limiter, H - b)
-
-    # Return the conservative variables
-    return SVector(h, h * v1, h * v2, b)
+    # Avoid division by zero by adjusting the initial condition with a small dry state threshold
+    # that defaults to 500*eps() ≈ 1e-13 in double precision and is set in the constructor above
+    # for the ShallowWaterEquationsWetDry struct.
+    H = max(H, b + equations.threshold_limiter)
+    return prim2cons(SVector(H, v1, v2, b), equations)
 end
 
 # point to the data we want to augment
@@ -186,8 +194,8 @@ save_solution = SaveSolutionCallback(dt = 0.2,
     return max(u[1], 0.0)
 end
 
-# # Another possible AMR indicator function could be the velocity, such that it only fires
-# # in regions where the water is moving
+# Another possible AMR indicator function could be the velocity, such that it only fires
+# in regions where the water is moving
 # @inline function velocity_norm(u, equations::ShallowWaterEquationsWetDry2D)
 #    v1, v2 = velocity(u, equations)
 #    return sqrt(v1^2 + v2^2)
