@@ -81,7 +81,9 @@ julia --project=.
 ```
 if already inside the `run` directory.
 Further details, of how to develop TrixiShallowWater.jl together with a local
-clone Trixi.jl, can be found in the Development section of the [documentation](#documentation).
+clone Trixi.jl, can be found in the
+[Development section](https://trixi-framework.github.io/TrixiShallowWater.jl/stable/development/)
+of the documentation.
 
 ## Authors
 TrixiShallowWater.jl is maintained by the
