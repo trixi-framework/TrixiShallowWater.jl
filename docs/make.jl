@@ -2,6 +2,7 @@ using TrixiShallowWater
 using Documenter
 using DocumenterInterLinks
 using Literate
+using Changelog: Changelog
 
 # Provide external links to the Trixi.jl docs (project root and inventory file)
 links = InterLinks("Trixi" => ("https://trixi-framework.github.io/Trixi.jl/stable/",
@@ -61,7 +62,23 @@ write(joinpath(@__DIR__, "src", "home.md"), readme_text)
 DocMeta.setdocmeta!(TrixiShallowWater, :DocTestSetup, :(using TrixiShallowWater);
                     recursive = true)
 
-# TODO: create changelog
+# Create changelog
+Changelog.generate(Changelog.Documenter(),                        # output type
+                   joinpath(@__DIR__, "..", "NEWS.md"),           # input file
+                   joinpath(@__DIR__, "src", "changelog_tmp.md"); # output file
+                   repo = "trixi-framework/TrixiShallowWater.jl",             # default repository for links
+                   branch = "main",)
+# Fix edit URL of changelog
+open(joinpath(@__DIR__, "src", "changelog.md"), "w") do io
+    for line in eachline(joinpath(@__DIR__, "src", "changelog_tmp.md"))
+        if startswith(line, "EditURL")
+            line = "EditURL = \"https://github.com/trixi-framework/TrixiShallowWater.jl/blob/main/NEWS.md\""
+        end
+        println(io, line)
+    end
+end
+# Remove temporary file
+rm(joinpath(@__DIR__, "src", "changelog_tmp.md"))
 
 # Make documentation
 makedocs(;
@@ -82,6 +99,7 @@ makedocs(;
              "Tutorials" => tutorial_pages,
              "Advanced topics & developers" => ["Development" => "development.md"
                                                 "Testing" => "testing.md"],
+             "Changelog" => "changelog.md",
              "Authors" => "authors.md",
              "Contributing" => "contributing.md",
              "Code of Conduct" => "code_of_conduct.md",
