@@ -1,4 +1,4 @@
-module TestExamplesUnstructuredMesh2D
+module TestExamplesP4estMesh2D
 
 using Test
 using Trixi
