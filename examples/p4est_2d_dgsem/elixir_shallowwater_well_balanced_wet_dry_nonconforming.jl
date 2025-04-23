@@ -1,5 +1,4 @@
 
-using Downloads: download
 using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
@@ -56,7 +55,7 @@ indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
                                                      alpha_max = 0.5,
                                                      alpha_min = 0.001,
                                                      alpha_smooth = true,
-                                                     variable = Trixi.waterheight)
+                                                     variable = waterheight)
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
                                                  volume_flux_dg = volume_flux,
                                                  volume_flux_fv = surface_flux)
@@ -189,7 +188,7 @@ callbacks = CallbackSet(summary_callback,
                         save_solution,
                         stepsize_callback)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation
