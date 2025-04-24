@@ -66,7 +66,7 @@ DocMeta.setdocmeta!(TrixiShallowWater, :DocTestSetup, :(using TrixiShallowWater)
 Changelog.generate(Changelog.Documenter(),                        # output type
                    joinpath(@__DIR__, "..", "NEWS.md"),           # input file
                    joinpath(@__DIR__, "src", "changelog_tmp.md"); # output file
-                   repo = "trixi-framework/TrixiShallowWater.jl",             # default repository for links
+                   repo = "trixi-framework/TrixiShallowWater.jl", # default repository for links
                    branch = "main",)
 # Fix edit URL of changelog
 open(joinpath(@__DIR__, "src", "changelog.md"), "w") do io
