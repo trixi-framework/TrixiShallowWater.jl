@@ -45,6 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # For authentication with SSH deploy key
           GKSwstype: 100 # To make GitHub Action work, disable showing a plot window with the GR backend of the Plots package
+        run: julia --project=docs --color=yes docs/make.jl
       - name: Run doctests
         run: |
           julia --project=docs --color=yes -e '
