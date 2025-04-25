@@ -81,6 +81,7 @@ makedocs(;
              "Installation" => "installation.md",
              "Tutorials" => tutorial_pages,
              "Advanced topics & developers" => ["Development" => "development.md"
+                                                "Style guide" => "styleguide.md",
                                                 "Testing" => "testing.md"],
              "Authors" => "authors.md",
              "Contributing" => "contributing.md",
