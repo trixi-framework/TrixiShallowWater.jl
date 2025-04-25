@@ -13,13 +13,13 @@ OUTPUT_DIR = joinpath(@__DIR__, "src", "tutorials")
 
 tutorial_list = [
     "elixir_shallowwater_dam_break_triangular.jl",
-    "elixir_shallowwater_monai_tsunami.jl"
+    "elixir_shallowwater_monai_tsunami.jl",
 ]
 
 tutorial_pages = [
     "Introduction" => "tutorials/introduction.md",
     "Dam break over triangular bottom topograhy" => "tutorials/elixir_shallowwater_dam_break_triangular.md",
-    "Okushiri tsunami" => "tutorials/elixir_shallowwater_monai_tsunami.md"
+    "Okushiri tsunami" => "tutorials/elixir_shallowwater_monai_tsunami.md",
 ]
 
 # Create markdown files
@@ -80,9 +80,9 @@ makedocs(;
          pages = ["Home" => "index.md",
              "Installation" => "installation.md",
              "Tutorials" => tutorial_pages,
-             "Advanced topics & developers" => ["Development" => "development.md"
-                                                "Style guide" => "styleguide.md",
-                                                "Testing" => "testing.md"],
+             "Advanced topics & developers" => ["Development" => "development.md",
+                 "Style guide" => "styleguide.md",
+                 "Testing" => "testing.md"],
              "Authors" => "authors.md",
              "Contributing" => "contributing.md",
              "Code of Conduct" => "code_of_conduct.md",
