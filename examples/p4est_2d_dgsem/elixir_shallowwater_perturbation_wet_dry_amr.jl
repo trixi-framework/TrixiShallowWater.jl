@@ -3,20 +3,22 @@ using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
-# Note, this elixir is still actively used for debugging purposes of the AMR + well-balanced mortars.
+# Note, this elixir is still actively used for debugging purposes of the AMR + wet/dry + well-balanced mortars.
 # Currently, this run remains sensitive to the limiting and/or desingularization of the water
-# height and velocities. For this configuration past a final time of ≈2.2 the explicit time step
+# height and velocities. For this configuration past a final time of ≈1.0 the explicit time step
 # might nose dives to around double precision roundoff (effectively crashing) depending
-# on the desingularization value taken at the mortar.
+# on the `threshold_desingularization`.
+# The values `threshold_desingularization = 1e-4` or `5e-5` run through, but `1e-5`, `1e-6`, or `1e-10` crash.
 # Also, there is an appreciable loss of conservation in the water height
 # as the flow evolves (on the order of 1e-4 or 1e-5).
-# Further investigation is needed to identify exactly why each aspect of this strange behavior occurs
+# Further investigation is needed to identify exactly why each aspect of this strange behavior occurs.
 
 ###############################################################################
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function for a perturbed water height on a nonconforming mesh with AMR
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 1.235)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 1.235,
+                                          threshold_desingularization = 1e-4)
 
 function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWetDry2D)
     # Calculate primitive variables

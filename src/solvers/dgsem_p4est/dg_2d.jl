@@ -97,7 +97,7 @@ function Trixi.prolong2mortars!(cache, u,
             # important steady-state solution behavior.
             # Note, a small shift is required to ensure we catch water heights close to the threshold
             if u[1, i_large, j_large, element] >=
-               2 * (equations.threshold_limiter + eps())
+               2 * (equations.threshold_limiter)
                 u_buffer[1, i] = u[1, i_large, j_large, element] +
                                  u[4, i_large, j_large, element]
             else
@@ -141,8 +141,8 @@ function Trixi.prolong2mortars!(cache, u,
                                                       equations.threshold_limiter)
 
             # Safety application of velocity desingularization and water height cutoff on the mortars.
-            # Here we use the rather conservative velocity desingularization tolerance of `1e-4`
-            # which works for the AMR testing. The more standard value of `1e-6` works
+            # Here a rather conservative velocity desingularization tolerance of `1e-4`
+            # works for the AMR testing. The more standard value of `1e-6` works
             # for well-balancedness testing, but crashes the AMR simulation elixir.
             #
             # For details on the motivation of the velocity desingularization see
@@ -152,39 +152,27 @@ function Trixi.prolong2mortars!(cache, u,
             #   [DOI: 10.1002/fld.4023](https://doi.org/10.1002/fld.4023)
 
             # Mortars with the copied or projected solution
-            tol = 1e-4
+            tol = equations.threshold_desingularization
             for child in 1:2, side in 1:2
-                h = cache.mortars.u[side, 1, child, i, mortar]
-                cache.mortars.u[side, 2, child, i, mortar] = h * (2 * h *
-                                                              cache.mortars.u[side, 2,
-                                                                              child, i,
-                                                                              mortar]) /
-                                                             (h^2 + max(h^2, tol))
-                cache.mortars.u[side, 3, child, i, mortar] = h * (2 * h *
-                                                              cache.mortars.u[side, 3,
-                                                                              child, i,
-                                                                              mortar]) /
-                                                             (h^2 + max(h^2, tol))
                 if cache.mortars.u[side, 1, child, i, mortar] <=
-                   equations.threshold_limiter
+                    equations.threshold_limiter
                     cache.mortars.u[side, 1, child, i, mortar] = equations.threshold_limiter
                     cache.mortars.u[side, 2, child, i, mortar] = zero(eltype(u))
                     cache.mortars.u[side, 3, child, i, mortar] = zero(eltype(u))
-                end
-            end
 
-            # Unprojected parent solution copied into the mortar storage
-            h = cache.mortars.u_parent[1, i, mortar]
-            cache.mortars.u_parent[2, i, mortar] = h * (2 * h *
-                                                    cache.mortars.u_parent[2, i, mortar]) /
-                                                   (h^2 + max(h^2, tol))
-            cache.mortars.u_parent[3, i, mortar] = h * (2 * h *
-                                                    cache.mortars.u_parent[3, i, mortar]) /
-                                                   (h^2 + max(h^2, tol))
-            if cache.mortars.u_parent[1, i, mortar] <= equations.threshold_limiter
-                cache.mortars.u_parent[1, i, mortar] = equations.threshold_limiter
-                cache.mortars.u_parent[2, i, mortar] = zero(eltype(u))
-                cache.mortars.u_parent[3, i, mortar] = zero(eltype(u))
+                else
+                    h = cache.mortars.u[side, 1, child, i, mortar]
+                    cache.mortars.u[side, 2, child, i, mortar] = h * (2 * h *
+                                                                cache.mortars.u[side, 2,
+                                                                                child, i,
+                                                                                mortar]) /
+                                                                (h^2 + max(h^2, tol))
+                    cache.mortars.u[side, 3, child, i, mortar] = h * (2 * h *
+                                                                cache.mortars.u[side, 3,
+                                                                                child, i,
+                                                                                mortar]) /
+                                                                (h^2 + max(h^2, tol))
+                end
             end
         end
     end
