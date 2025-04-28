@@ -23,8 +23,9 @@ initial_condition = initial_condition_channel_flow
 # Setup boundary conditions.
 # At the inlet, we prescribe constant momentum to simulate inflow. 
 # At the outlet, we prescribe the water height as a time-dependent cosine wave.
-boundary_condition_inflow = BoundaryConditionMomentum(0.4, 0.4)
-boundary_condition_outflow = BoundaryConditionWaterHeight(t -> 1.0 + 0.1 * cos(π / 2 * t))
+boundary_condition_inflow = BoundaryConditionMomentum(0.4, 0.4, equations)
+boundary_condition_outflow = BoundaryConditionWaterHeight(t -> 1.0 + 0.1 * cos(π / 2 * t),
+                                                          equations)
 
 boundary_conditions = Dict(:Bottom => boundary_condition_inflow,
                            :Top => boundary_condition_outflow,

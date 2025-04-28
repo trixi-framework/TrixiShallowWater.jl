@@ -25,9 +25,10 @@ initial_condition = initial_condition_channel_flow
 # the water height as a time-dependent cosine wave. This setup is designed to test the behavior
 # of the boundary conditions under both inflow and outflow scenarios.
 boundary_condition_inflow = BoundaryConditionMomentum(t -> -0.1 + 0.05 * t,
-                                                      t -> -0.1 + 0.05 * t)
-boundary_condition_outflow = BoundaryConditionWaterHeight(t -> 1.0 + 0.1 * cos(π / 2 * t))
-
+                                                      t -> -0.1 + 0.05 * t,
+                                                      equations)
+boundary_condition_outflow = BoundaryConditionWaterHeight(t -> 1.0 + 0.1 * cos(π / 2 * t),
+                                                          equations)
 boundary_conditions = (x_neg = boundary_condition_inflow,
                        x_pos = boundary_condition_outflow,
                        y_neg = boundary_condition_inflow,
