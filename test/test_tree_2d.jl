@@ -361,6 +361,67 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
         end
     end
+
+    @trixi_testset "elixir_shallowwater_inflow_outflow.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_inflow_outflow.jl"),
+                            l2=[
+                                0.164716617086721,
+                                0.5257126140039803,
+                                0.5257126140039803,
+                                0.0
+                            ],
+                            linf=[
+                                0.5595760580954796,
+                                1.3874204364467229,
+                                1.3874204364467246,
+                                0.0
+                            ])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_inflow_outflow_reverse.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_inflow_outflow.jl"),
+                            l2=[
+                                0.16471661708672095,
+                                0.52571261400398,
+                                0.5257126140039801,
+                                0.0
+                            ],
+                            linf=[
+                                0.5595760580954816,
+                                1.3874204364467226,
+                                1.3874204364467244,
+                                0.0
+                            ],
+                            v1=0.1, v2=0.1,
+                            boundary_condition_inflow=BoundaryConditionMomentum(t -> 0.1 -
+                                                                                     0.05 *
+                                                                                     t,
+                                                                                t -> 0.1 -
+                                                                                     0.05 *
+                                                                                     t),
+                            boundary_conditions=(x_neg = boundary_condition_outflow,
+                                                 x_pos = boundary_condition_inflow,
+                                                 y_neg = boundary_condition_outflow,
+                                                 y_pos = boundary_condition_inflow))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
 end # SWE
 
 @testset "Two-Layer Shallow Water" begin

@@ -5,6 +5,70 @@
 @muladd begin
 #! format: noindent
 
+# TODO: Right now this is only implemented for the SWE. Should we move it to the equation specific folder?
+# Should we have BC(h_boundary, equations) instead of BC(h_boundary)?
+"""
+    BoundaryConditionWaterHeight(h_boundary)
+
+Create a boundary condition that uses `h_boundary` to specify a fixed water height at the 
+boundary and extrapolates the velocity from the incoming Riemann invariant.
+
+The external water height `h_boundary` can be specified as a constant value or as a function of time, e.g.
+```julia
+   BoundaryConditionWaterHeight(2.0)
+   BoundaryConditionWaterHeight(t -> 2 + cos(t))
+```
+
+More details can be found in the paper:
+- Lixiang Song, Jianzhong Zhou, Jun Guo, Qiang Zou, Yi Liu (2011)
+  A robust well-balanced finite volume model for shallow water flows
+  with wetting and drying over irregular terrain
+  [doi: 10.1016/j.advwatres.2011.04.017](https://doi.org/10.1016/j.advwatres.2011.04.017)
+
+!!! warning "Experimental code"
+    This is an experimental feature and can change any time.
+"""
+struct BoundaryConditionWaterHeight{F}
+    h_boundary::F
+end
+
+# If `h_boundary` is provided as a constant create a function `h_boundary(t) = h_boundary`
+function BoundaryConditionWaterHeight(h_boundary::Real)
+    return BoundaryConditionWaterHeight(t -> h_boundary)
+end
+
+"""
+    BoundaryConditionMomentum(hv1_boundary, hv2_boundary)
+
+Create a boundary condition that sets a fixed momentum in x- and y- direction, `hv1_boundary`
+and `hv2_boundary`, at the boundary and extrapolates the water height `h_boundary` from the incoming
+Riemann invariant.
+
+The external momentum can be specified as a constant value or as a function of time, e.g.
+```julia
+   BoundaryConditionMomentum(2.0, 1.0)
+   BoundaryConditionMomentum(t -> 2 + cos(t), t -> 1 + sin(t))
+```
+
+More details can be found in the paper:
+- Lixiang Song, Jianzhong Zhou, Jun Guo, Qiang Zou, Yi Liu (2011)
+  A robust well-balanced finite volume model for shallow water flows
+  with wetting and drying over irregular terrain
+  [doi: 10.1016/j.advwatres.2011.04.017](https://doi.org/10.1016/j.advwatres.2011.04.017)
+
+!!! warning "Experimental code"
+    This is an experimental feature and can change any time.
+"""
+struct BoundaryConditionMomentum{F1, F2}
+    hv1_boundary::F1
+    hv2_boundary::F2
+end
+
+# If `hv_boundary` is provided as a constant create a function `hv_boundary(t) = hv_boundary``
+function BoundaryConditionMomentum(hv1_boundary::Real, hv2_boundary::Real)
+    return BoundaryConditionMomentum((t -> hv1_boundary), (t -> hv2_boundary))
+end
+
 ####################################################################################################
 # Include files with actual implementations for different systems of equations. 
 
