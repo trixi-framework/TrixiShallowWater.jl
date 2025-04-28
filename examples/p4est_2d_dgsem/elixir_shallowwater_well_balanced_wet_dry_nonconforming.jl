@@ -108,7 +108,7 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
 ###############################################################################
 # ODE solvers, callbacks, etc.
 
-tspan = (0.0, 100.0)
+tspan = (0.0, 50.0)
 ode = semidiscretize(semi, tspan)
 
 ###############################################################################
@@ -180,7 +180,7 @@ save_solution = SaveSolutionCallback(dt = 5.0,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stepsize_callback = StepsizeCallback(cfl = 1.0)
+stepsize_callback = StepsizeCallback(cfl = 0.5)
 
 callbacks = CallbackSet(summary_callback,
                         analysis_callback,
