@@ -47,7 +47,7 @@ solver = DGSEM(polydeg = polydeg,
 default_mesh_file = joinpath(@__DIR__, "mesh_wobbly_channel.mesh")
 isfile(default_mesh_file) ||
     Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/431baa423ce86aadba70d38a3194947b/raw/50914cb30e72e9a58d4723e161476435c6dea182/mesh_wobbly_channel.mesh",
-             default_mesh_file)
+                   default_mesh_file)
 mesh_file = default_mesh_file
 
 mesh = UnstructuredMesh2D(mesh_file, periodicity = false)
