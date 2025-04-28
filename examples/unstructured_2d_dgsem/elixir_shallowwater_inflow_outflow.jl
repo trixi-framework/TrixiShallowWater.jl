@@ -6,7 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # semidiscretization of the shallow water equations to test inflow/outflow boundary conditions
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.81)
 
 # Setup initial conditions for a smooth channel flow with constant water height and velocity
 function initial_condition_channel_flow(x, t, equations::ShallowWaterEquationsWetDry2D)
@@ -91,4 +91,3 @@ callbacks = CallbackSet(summary_callback,
 sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary

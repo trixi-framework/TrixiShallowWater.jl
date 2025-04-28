@@ -5,7 +5,7 @@ using TrixiShallowWater
 ###############################################################################
 # semidiscretization of the shallow water equations to test inflow/outflow boundary conditions
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.81)
 
 # Setup initial conditions for a smooth channel flow with constant water height and velocity
 function initial_condition_channel_flow(x, t, equations::ShallowWaterEquationsWetDry2D)
@@ -28,10 +28,10 @@ boundary_condition_inflow = BoundaryConditionMomentum(t -> -0.1 + 0.05 * t,
                                                       t -> -0.1 + 0.05 * t)
 boundary_condition_outflow = BoundaryConditionWaterHeight(t -> 1.0 + 0.1 * cos(π / 2 * t))
 
-boundary_conditions = (x_neg = boundary_condition_outflow,
-                       x_pos = boundary_condition_inflow,
-                       y_neg = boundary_condition_outflow,
-                       y_pos = boundary_condition_inflow)
+boundary_conditions = (x_neg = boundary_condition_inflow,
+                       x_pos = boundary_condition_outflow,
+                       y_neg = boundary_condition_inflow,
+                       y_pos = boundary_condition_outflow)
 
 ###############################################################################
 # Get the DG approximation space

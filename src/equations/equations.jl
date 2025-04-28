@@ -5,8 +5,6 @@
 @muladd begin
 #! format: noindent
 
-# TODO: Right now this is only implemented for the SWE. Should we move it to the equation specific folder?
-# Should we have BC(h_boundary, equations) instead of BC(h_boundary)?
 """
     BoundaryConditionWaterHeight(h_boundary)
 

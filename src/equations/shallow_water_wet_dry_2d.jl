@@ -61,9 +61,6 @@ struct ShallowWaterEquationsWetDry2D{RealT <: Real} <:
        Trixi.AbstractShallowWaterEquations{2, 4}
     gravity::RealT # gravitational acceleration
     H0::RealT      # constant "lake-at-rest" total water height
-    # Corriolis parameter coeffficients in the beta-plane approximation (f = f0 + beta * y)
-    f0::RealT
-    beta::RealT
     # `threshold_limiter` used in `PositivityPreservingLimiterShallowWater` on water height,
     # as a (small) shift on the initial condition and cutoff before the next time step.
     # Default is 500*eps() which in double precision is ≈1e-13.
@@ -140,8 +137,7 @@ function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
     g = equations.gravity
 
     # Get the water height and velocity from the inner state
-    # TODO: remove Trixi.waterheight after merging main
-    h_inner = Trixi.waterheight(u_inner, equations)
+    h_inner = waterheight(u_inner, equations)
     v1_inner, v2_inner = velocity(u_inner, equations)
 
     # Extract the external water height from the boundary condition
@@ -201,7 +197,7 @@ function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
     u_rotated = Trixi.rotate_to_x(u_inner, normal, equations)
 
     # Get the water height and velocity from the inner state
-    h_inner = Trixi.waterheight(u_rotated, equations)
+    h_inner = waterheight(u_rotated, equations)
     v_inner_normal, _ = velocity(u_rotated, equations)
 
     # Extract the external water height from the boundary condition
@@ -239,7 +235,7 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
     g = equations.gravity
 
     # Get the water height and velocity from the inner state
-    h_inner = Trixi.waterheight(u_inner, equations)
+    h_inner = waterheight(u_inner, equations)
     v1_inner, v2_inner = velocity(u_inner, equations)
 
     # Extract the external momentum from the boundary condition
@@ -317,7 +313,7 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
     u_rotated = Trixi.rotate_to_x(u_inner, normal, equations)
 
     # Get the water height and velocity from the inner state
-    h_inner = Trixi.waterheight(u_rotated, equations)
+    h_inner = waterheight(u_rotated, equations)
     v_inner_normal, _ = velocity(u_rotated, equations)
 
     # Extract the external momentum from the boundary condition
@@ -1121,7 +1117,7 @@ end
 end
 
 @inline function Trixi.waterheight_pressure(u, equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.waterheight(u, equations) * Trixi.pressure(u, equations)
+    return waterheight(u, equations) * Trixi.pressure(u, equations)
 end
 
 # Entropy function for the shallow water equations is the total energy
