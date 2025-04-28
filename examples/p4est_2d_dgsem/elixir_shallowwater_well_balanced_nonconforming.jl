@@ -169,4 +169,4 @@ callbacks = CallbackSet(summary_callback,
 sol = solve(ode, SSPRK43(),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             adaptive = false,
-            save_everystep = false, callback = callbacks, maxiters=2e5);
+            save_everystep = false, callback = callbacks, maxiters = 2e5);

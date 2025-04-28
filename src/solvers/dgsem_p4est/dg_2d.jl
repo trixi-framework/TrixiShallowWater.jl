@@ -155,7 +155,7 @@ function Trixi.prolong2mortars!(cache, u,
             tol = equations.threshold_desingularization
             for child in 1:2, side in 1:2
                 if cache.mortars.u[side, 1, child, i, mortar] <=
-                    equations.threshold_limiter
+                   equations.threshold_limiter
                     cache.mortars.u[side, 1, child, i, mortar] = equations.threshold_limiter
                     cache.mortars.u[side, 2, child, i, mortar] = zero(eltype(u))
                     cache.mortars.u[side, 3, child, i, mortar] = zero(eltype(u))
@@ -163,15 +163,19 @@ function Trixi.prolong2mortars!(cache, u,
                 else
                     h = cache.mortars.u[side, 1, child, i, mortar]
                     cache.mortars.u[side, 2, child, i, mortar] = h * (2 * h *
-                                                                cache.mortars.u[side, 2,
-                                                                                child, i,
-                                                                                mortar]) /
-                                                                (h^2 + max(h^2, tol))
+                                                                  cache.mortars.u[side,
+                                                                                  2,
+                                                                                  child,
+                                                                                  i,
+                                                                                  mortar]) /
+                                                                 (h^2 + max(h^2, tol))
                     cache.mortars.u[side, 3, child, i, mortar] = h * (2 * h *
-                                                                cache.mortars.u[side, 3,
-                                                                                child, i,
-                                                                                mortar]) /
-                                                                (h^2 + max(h^2, tol))
+                                                                  cache.mortars.u[side,
+                                                                                  3,
+                                                                                  child,
+                                                                                  i,
+                                                                                  mortar]) /
+                                                                 (h^2 + max(h^2, tol))
                 end
             end
         end
