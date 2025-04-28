@@ -1,12 +1,12 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations for a dam break test over a dry domain
 # with a discontinuous bottom topography function.
-equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.0,
+equations = ShallowWaterMultiLayerEquations2D(gravity = 1.0,
                                               rhos = (0.9, 0.95, 1.0))
 
 function initial_condition_dam_break(x, t, equations::ShallowWaterMultiLayerEquations2D)
@@ -88,10 +88,10 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
 tspan = (0.0, 2.0)
 ode = semidiscretize(semi, tspan)
 ###############################################################################
-#= 
-Workaround for TreeMesh2D to set true discontinuities for debugging and testing. 
+#=
+Workaround for TreeMesh2D to set true discontinuities for debugging and testing.
 Essentially, this is a slight augmentation of the `compute_coefficients` where the `x` node values
-passed here are slightly perturbed in order to set a true discontinuity that avoids the doubled 
+passed here are slightly perturbed in order to set a true discontinuity that avoids the doubled
 value of the LGL nodes at a particular element interface.
 =#
 
@@ -152,7 +152,7 @@ stepsize_callback = StepsizeCallback(cfl = 0.3)
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation

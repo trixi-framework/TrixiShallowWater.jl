@@ -1,13 +1,12 @@
 
-using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 1.875,
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.81, H0 = 1.875,
                                           threshold_limiter = 1e-12, threshold_wet = 1e-14)
 
 """
@@ -98,8 +97,8 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 default_meshfile = joinpath(@__DIR__, "mesh_three_mound.mesh")
 
 isfile(default_meshfile) ||
-    download("https://gist.githubusercontent.com/svengoldberg/c3c87fecb3fc6e46be7f0d1c7cb35f83/raw/e817ecd9e6c4686581d63c46128f9b6468d396d3/mesh_three_mound.mesh",
-             default_meshfile)
+    Trixi.download("https://gist.githubusercontent.com/svengoldberg/c3c87fecb3fc6e46be7f0d1c7cb35f83/raw/e817ecd9e6c4686581d63c46128f9b6468d396d3/mesh_three_mound.mesh",
+                   default_meshfile)
 
 meshfile = default_meshfile
 
@@ -134,7 +133,7 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 ###############################################################################
 # run the simulation
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()..., callback = callbacks);

@@ -1,12 +1,12 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the two-layer shallow water equations to test well-balancedness
 
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.0, H0 = 2.0,
+equations = ShallowWaterMultiLayerEquations1D(gravity = 1.0, H0 = 2.0,
                                               rhos = (1.0, 3.0))
 
 """
@@ -15,12 +15,12 @@ equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.0, H0 = 2.0,
 
 Initial condition with a complex (discontinuous) bottom topography to test well-balancedness for a
 two-layer shallow water system with dry states if `perturbation` is set to `false`.
-Additionally, it is possible to set a perturbation in the lower layer to test perturbations from the 
+Additionally, it is possible to set a perturbation in the lower layer to test perturbations from the
 lake-at-rest condition by setting the `perturbation` variable to `true`.
 
 The initial condition is taken from the paper:
   - S. Martínez-Aranda, A. Ramos-Pérez, P. García-Navarro (2020)
-    A 1D shallow-ﬂow model for two-layer ﬂows based on FORCE scheme with wet–dry treatment\n 
+    A 1D shallow-ﬂow model for two-layer ﬂows based on FORCE scheme with wet–dry treatment\n
     [DOI:10.2166/hydro.2020.002](https://doi.org/10.2166/hydro.2020.002)
 """
 function initial_condition_twolayer_well_balanced_wet_dry(perturbation::Bool,
@@ -78,7 +78,7 @@ function initial_condition_twolayer_well_balanced_wet_dry(perturbation::Bool,
         v1_upper = zero(H_upper)
         v1_lower = zero(H_upper)
 
-        #= 
+        #=
         It is mandatory to shift the water level at dry areas to make sure the water height h
         stays positive. The system would not be stable for h set to a hard 0 due to division by h in
         the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
@@ -122,7 +122,7 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 ###############################################################################
 # Get the TreeMesh and setup a periodic mesh
 
-# The domain of interest [0.0, 100.0] is extended towards -28.0 to match the positions of the 
+# The domain of interest [0.0, 100.0] is extended towards -28.0 to match the positions of the
 # disctontinuities with TreeMesh.
 coordinates_min = -28.0
 coordinates_max = 100.0
@@ -157,7 +157,7 @@ save_solution = SaveSolutionCallback(interval = 1000,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)

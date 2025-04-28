@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -7,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the shallow water equations
 
 # By passing only a single value for rhos, the system recovers the standard shallow water equations
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.812, rhos = 1.0)
+equations = ShallowWaterMultiLayerEquations1D(gravity = 9.812, rhos = 1.0)
 
 """
     initial_condition_beach(x, t, equations:: ShallowWaterMultiLayerEquationsWetDry1D)
@@ -115,7 +115,7 @@ save_solution = SaveSolutionCallback(dt = 0.5,
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation

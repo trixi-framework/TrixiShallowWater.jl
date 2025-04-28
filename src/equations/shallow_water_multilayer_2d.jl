@@ -52,7 +52,7 @@ This affects the implementation and use of these equations in various ways:
 * The flux values corresponding to the bottom topography must be zero.
 * The bottom topography values must be included when defining initial conditions, boundary
   conditions or source terms.
-* [`AnalysisCallback`](@ref) analyzes this variable.
+* [`Trixi.AnalysisCallback`](@extref) analyzes this variable.
 * Trixi's visualization tools will visualize the bottom topography by default.
 
 A good introduction for the MLSWE is available in Chapter 12 of the book:
@@ -63,7 +63,7 @@ A good introduction for the MLSWE is available in Chapter 12 of the book:
 """
 struct ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT <: Real} <:
        AbstractShallowWaterMultiLayerEquations{2, NVARS, NLAYERS}
-    gravity::RealT   # gravitational constant
+    gravity::RealT   # gravitational acceleration
     H0::RealT        # constant "lake-at-rest" total water height
     threshold_limiter::RealT    # threshold for the positivity-limiter
     threshold_desingularization::RealT  # threshold for velocity desingularization
@@ -92,12 +92,12 @@ struct ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT <: Real} <:
     end
 end
 
-# Allow for flexibility to set the gravitational constant within an elixir depending on the
-# application where `gravity_constant=1.0` or `gravity_constant=9.81` are common values.
+# Allow for flexibility to set the gravitational acceleration within an elixir depending on the
+# application where `gravity=1.0` or `gravity=9.81` are common values.
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
 # well-balancedness test cases. 
-function ShallowWaterMultiLayerEquations2D(; gravity_constant,
-                                           H0 = zero(gravity_constant),
+function ShallowWaterMultiLayerEquations2D(; gravity,
+                                           H0 = zero(gravity),
                                            threshold_limiter = nothing,
                                            threshold_desingularization = nothing,
                                            threshold_partially_wet = nothing,
@@ -105,7 +105,7 @@ function ShallowWaterMultiLayerEquations2D(; gravity_constant,
 
     # Promote all variables to a common type
     _rhos = promote(rhos...)
-    RealT = promote_type(eltype(_rhos), eltype(gravity_constant), eltype(H0))
+    RealT = promote_type(eltype(_rhos), eltype(gravity), eltype(H0))
     __rhos = SVector(map(RealT, _rhos))
 
     # Set default values for thresholds
@@ -123,7 +123,7 @@ function ShallowWaterMultiLayerEquations2D(; gravity_constant,
     NLAYERS = length(rhos)
     NVARS = 3 * NLAYERS + 1
 
-    return ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT}(gravity_constant,
+    return ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT}(gravity,
                                                                     H0,
                                                                     threshold_limiter,
                                                                     threshold_desingularization,
@@ -364,7 +364,7 @@ end
     boundary_condition_slip_wall(u_inner, orientation, direction, x, t,
                                  surface_flux_function, equations::ShallowWaterMultiLayerEquations2D)
 
-Should be used together with [`TreeMesh`](@ref).
+Should be used together with [`Trixi.TreeMesh`](@extref).
 """
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation,
                                                     direction, x, t,
@@ -656,9 +656,6 @@ surface numerical flux at the interface. The key idea is a piecewise linear reco
 bottom topography and water height interfaces using subcells, where the bottom topography is allowed 
 to be discontinuous. 
 Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
-
-!!! warning "Experimental code"
-    This is an experimental feature and may change in future releases.
 """
 @inline function hydrostatic_reconstruction_ersing_etal(u_ll, u_rr,
                                                         equations::ShallowWaterMultiLayerEquations2D)
@@ -775,7 +772,7 @@ end
     c_ll = sqrt(equations.gravity * sum(h_ll))
     c_rr = sqrt(equations.gravity * sum(h_rr))
 
-    return max(abs(v_m_ll), abs(v_m_rr)) + max(c_ll, c_rr)
+    return (max(abs(v_m_ll), abs(v_m_rr)) + max(c_ll, c_rr))
 end
 
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr,
@@ -804,6 +801,62 @@ end
     # The normal velocities are already scaled by the norm
     return (max(abs(v_dot_n_ll), abs(v_dot_n_rr)) +
             max(c_ll, c_rr) * norm(normal_direction))
+end
+
+# Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     orientation::Integer,
+                                     equations::ShallowWaterMultiLayerEquations2D)
+    # Unpack left and right state
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+
+    # Get the momentum quantities in the appropriate direction
+    if orientation == 1
+        h_v_ll, _ = momentum(u_ll, equations)
+        h_v_rr, _ = momentum(u_rr, equations)
+    else
+        _, h_v_ll = momentum(u_ll, equations)
+        _, h_v_rr = momentum(u_rr, equations)
+    end
+
+    # Get the averaged velocity
+    v_m_ll = sum(h_v_ll) / sum(h_ll)
+    v_m_rr = sum(h_v_rr) / sum(h_rr)
+
+    # Calculate the wave celerity on the left and right
+    c_ll = sqrt(equations.gravity * sum(h_ll))
+    c_rr = sqrt(equations.gravity * sum(h_rr))
+
+    return (max(abs(v_m_ll) + c_ll, abs(v_m_rr) + c_rr))
+end
+
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     normal_direction::AbstractVector,
+                                     equations::ShallowWaterMultiLayerEquations2D)
+    # Unpack left and right state
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    h_v1_ll, h_v2_ll = momentum(u_ll, equations)
+    h_v1_rr, h_v2_rr = momentum(u_rr, equations)
+
+    # Get the averaged velocity
+    v1_m_ll = sum(h_v1_ll) / sum(h_ll)
+    v2_m_ll = sum(h_v2_ll) / sum(h_ll)
+    v1_m_rr = sum(h_v1_rr) / sum(h_rr)
+    v2_m_rr = sum(h_v2_rr) / sum(h_rr)
+
+    # Compute velocity in the normal direction
+    v_dot_n_ll = v1_m_ll * normal_direction[1] + v2_m_ll * normal_direction[2]
+    v_dot_n_rr = v1_m_rr * normal_direction[1] + v2_m_rr * normal_direction[2]
+
+    # Calculate the wave celerity on the left and right
+    c_ll = sqrt(equations.gravity * sum(h_ll))
+    c_rr = sqrt(equations.gravity * sum(h_rr))
+
+    norm_ = norm(normal_direction)
+    # The normal velocities are already scaled by the norm
+    return (max(abs(v_dot_n_ll) + c_ll * norm_, abs(v_dot_n_rr) + c_rr * norm_))
 end
 
 # Convert conservative variables to primitive

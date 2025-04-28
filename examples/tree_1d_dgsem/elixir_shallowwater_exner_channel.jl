@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 using Roots
@@ -8,7 +8,7 @@ using Roots
 # Semidiscretization of the shallow water exner equations for a channel flow problem
 # with sediment transport
 
-equations = ShallowWaterExnerEquations1D(gravity_constant = 9.81, rho_f = 1.0, rho_s = 1.0,
+equations = ShallowWaterExnerEquations1D(gravity = 9.81, rho_f = 1.0, rho_s = 1.0,
                                          porosity = 0.4,
                                          sediment_model = GrassModel(A_g = 0.01))
 

@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -7,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the multilayer shallow water equations for a dam break
 # test over a dry domain with a discontinuous bottom topography function
 
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+equations = ShallowWaterMultiLayerEquations1D(gravity = 9.81,
                                               rhos = (0.8, 0.85, 0.9, 0.95, 1.0))
 
 # Initial condition of a dam break with a discontinuous water heights and bottom topography.
@@ -114,7 +114,7 @@ save_solution = SaveSolutionCallback(interval = 500,
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback,
                         stepsize_callback, save_solution)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation

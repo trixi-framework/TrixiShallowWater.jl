@@ -26,7 +26,7 @@ Two-Layer Shallow Water equations (2LSWE) in one space dimension. The equations 
 \end{alignat*}
 ```
 The unknown quantities of the 2LSWE are the water heights of the {lower} layer ``h_{lower}`` and the
-{upper} layer ``h_{upper}`` with respective velocities ``v_{1,upper}`` and ``v_{1,lower}``. The gravitational constant is
+{upper} layer ``h_{upper}`` with respective velocities ``v_{1,upper}`` and ``v_{1,lower}``. The gravitational acceleration is
 denoted by `g`, the layer densitites by ``\rho_{upper}``and ``\rho_{lower}`` and the (possibly) variable
 bottom topography function ``b(x)``. The conservative variable water height ``h_{lower}`` is measured
 from the bottom topography ``b`` and ``h_{upper}`` relative to ``h_{lower}``, therefore one also defines the
@@ -60,19 +60,19 @@ A good introduction for the 2LSWE is available in Chapter 12 of the book:
 """
 struct ShallowWaterTwoLayerEquations1D{RealT <: Real} <:
        Trixi.AbstractShallowWaterEquations{1, 5}
-    gravity::RealT   # gravitational constant
+    gravity::RealT   # gravitational acceleration
     H0::RealT        # constant "lake-at-rest" total water height
     rho_upper::RealT # lower layer density
     rho_lower::RealT # upper layer density
     r::RealT         # ratio of rho_upper / rho_lower
 end
 
-# Allow for flexibility to set the gravitational constant within an elixir depending on the
-# application where `gravity_constant=1.0` or `gravity_constant=9.81` are common values.
+# Allow for flexibility to set the gravitational acceleration within an elixir depending on the
+# application where `gravity=1.0` or `gravity=9.81` are common values.
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
 # well-balancedness test cases. Densities must be specified such that rho_upper <= rho_lower.
-function ShallowWaterTwoLayerEquations1D(; gravity_constant,
-                                         H0 = zero(gravity_constant), rho_upper,
+function ShallowWaterTwoLayerEquations1D(; gravity,
+                                         H0 = zero(gravity), rho_upper,
                                          rho_lower)
     # Assign density ratio if rho_upper <= rho_lower
     if rho_upper > rho_lower
@@ -80,7 +80,7 @@ function ShallowWaterTwoLayerEquations1D(; gravity_constant,
     else
         r = rho_upper / rho_lower
     end
-    ShallowWaterTwoLayerEquations1D(gravity_constant, H0, rho_upper, rho_lower, r)
+    ShallowWaterTwoLayerEquations1D(gravity, H0, rho_upper, rho_lower, r)
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterTwoLayerEquations1D) = True()
@@ -388,6 +388,27 @@ end
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr,
                                            orientation::Integer,
                                            equations::ShallowWaterTwoLayerEquations1D)
+    # Unpack left and right state
+    h_upper_ll, h_v_upper_ll, h_lower_ll, h_v_lower_ll, _ = u_ll
+    h_upper_rr, h_v_upper_rr, h_lower_rr, h_v_lower_rr, _ = u_rr
+
+    # Get the averaged velocity
+    v_m_ll = (h_v_upper_ll + h_v_lower_ll) / (h_upper_ll + h_lower_ll)
+    v_m_rr = (h_v_upper_rr + h_v_lower_rr) / (h_upper_rr + h_lower_rr)
+
+    # Calculate the wave celerity on the left and right
+    h_upper_ll, h_lower_ll = waterheight(u_ll, equations)
+    h_upper_rr, h_lower_rr = waterheight(u_rr, equations)
+    c_ll = sqrt(equations.gravity * (h_upper_ll + h_lower_ll))
+    c_rr = sqrt(equations.gravity * (h_upper_rr + h_lower_rr))
+
+    return (max(abs(v_m_ll), abs(v_m_rr))) + max(c_ll, c_rr)
+end
+
+# Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     orientation::Integer,
+                                     equations::ShallowWaterTwoLayerEquations1D)
     # Unpack left and right state
     h_upper_ll, h_v_upper_ll, h_lower_ll, h_v_lower_ll, _ = u_ll
     h_upper_rr, h_v_upper_rr, h_lower_rr, h_v_lower_rr, _ = u_rr

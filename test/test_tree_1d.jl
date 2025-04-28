@@ -132,14 +132,14 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_well_balanced_wet_dry.jl"),
                             l2=[
-                                0.009657871671690306,
-                                6.23878532543316e-14,
-                                0.03857583749209947
+                                0.00965787167169021,
+                                1.0137479248296405e-15,
+                                0.0385758374920998
                             ],
                             linf=[
                                 0.4999999999998892,
-                                4.4857500383821557e-13,
-                                1.9999999999999811
+                                5.058895586883428e-15,
+                                1.9999999999999984
                             ],
                             tspan=(0.0, 0.25),
                             # Soften the tolerance as test results vary between different CPUs
@@ -219,6 +219,33 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             surface_flux=(flux_wintermeyer_etal,
                                           flux_nonconservative_wintermeyer_etal),
+                            tspan=(0.0, 0.025))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_source_terms.jl with dissipation_roe" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_source_terms.jl"),
+                            l2=[
+                                0.0022753221755171396,
+                                0.01586710979333684,
+                                4.436491725583881e-5
+                            ],
+                            linf=[
+                                0.00845169177397409,
+                                0.05724613261658629,
+                                9.098379777405796e-5
+                            ],
+                            surface_flux=(FluxPlusDissipation(flux_central,
+                                                              dissipation_roe),
+                                          flux_nonconservative_fjordholm_etal),
                             tspan=(0.0, 0.025))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
@@ -361,14 +388,14 @@ isdir(outdir) && rm(outdir, recursive = true)
     @trixi_testset "elixir_shallowwater_beach.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR, "elixir_shallowwater_beach.jl"),
                             l2=[
-                                0.17979210479598923,
-                                1.2377495706611434,
-                                6.289818963361573e-8
+                                0.17979174594000627,
+                                1.2377486995596798,
+                                6.289518123322227e-8
                             ],
                             linf=[
-                                0.845938394800688,
-                                3.3740800777086575,
-                                4.4541473087633676e-7
+                                0.845938327915436,
+                                3.3740802438071302,
+                                4.451122173065869e-7
                             ],
                             tspan=(0.0, 0.05),
                             atol=1e-7) # see https://github.com/trixi-framework/Trixi.jl/issues/1617
@@ -386,14 +413,14 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_parabolic_bowl.jl"),
                             l2=[
-                                8.965981683033589e-5,
-                                1.8565707397810857e-5,
-                                4.1043039226164336e-17
+                                8.965980840817503e-5,
+                                1.8565522894204938e-5,
+                                5.13455103311237e-17
                             ],
                             linf=[
-                                0.00041080213807871235,
-                                0.00014823261488938177,
-                                2.220446049250313e-16
+                                0.0004107931811646961,
+                                0.00014823261676141718,
+                                3.3306690738754696e-16
                             ],
                             tspan=(0.0, 0.05))
         # Ensure that we do not have excessive memory allocations
@@ -457,7 +484,7 @@ end # SWE
                             linf=[0.586718937495144, 2.1215606128311584,
                                 0.5185911311186155,
                                 1.820382495072612, 0.5],
-                            surface_flux=(flux_lax_friedrichs,
+                            surface_flux=(FluxLaxFriedrichs(max_abs_speed),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations

@@ -1,6 +1,5 @@
 
-using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -8,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the multilayer shallow water equations with a discontinuous
 # bottom topography function (set in the initial conditions) and dry domains
 
-equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81, H0 = 1.5,
+equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, H0 = 1.5,
                                               rhos = (0.9, 0.95, 1.0))
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
@@ -73,8 +72,8 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 # Get the unstructured quad mesh from a file (downloads the file if not available locally)
 default_mesh_file = joinpath(@__DIR__, "mesh_alfven_wave_with_twist_and_flip.mesh")
 isfile(default_mesh_file) ||
-    download("https://gist.githubusercontent.com/andrewwinters5000/8f8cd23df27fcd494553f2a89f3c1ba4/raw/85e3c8d976bbe57ca3d559d653087b0889535295/mesh_alfven_wave_with_twist_and_flip.mesh",
-             default_mesh_file)
+    Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/8f8cd23df27fcd494553f2a89f3c1ba4/raw/85e3c8d976bbe57ca3d559d653087b0889535295/mesh_alfven_wave_with_twist_and_flip.mesh",
+                   default_mesh_file)
 mesh_file = default_mesh_file
 
 mesh = UnstructuredMesh2D(mesh_file, periodicity = true)
@@ -168,7 +167,7 @@ stepsize_callback = StepsizeCallback(cfl = 1.0)
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation

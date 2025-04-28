@@ -1,4 +1,4 @@
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -6,7 +6,7 @@ using TrixiShallowWater
 # Semidiscretization of the SWE-Exner equations with source terms for convergence testing
 
 # Equations with Grass model
-equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
+equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
                                          rho_s = 1.0, porosity = 0.5,
                                          friction = ManningFriction(n = 0.0),
                                          sediment_model = GrassModel(A_g = 0.01))

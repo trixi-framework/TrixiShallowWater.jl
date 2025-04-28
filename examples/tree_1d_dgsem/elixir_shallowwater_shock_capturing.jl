@@ -1,12 +1,12 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.812, H0 = 1.75)
+equations = ShallowWaterEquationsWetDry1D(gravity = 9.812, H0 = 1.75)
 
 # Initial condition with a truly discontinuous velocity and bottom topography.
 # Works as intended for TreeMesh1D with `initial_refinement_level=3`. If the mesh

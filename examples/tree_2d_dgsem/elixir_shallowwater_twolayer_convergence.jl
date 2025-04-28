@@ -1,12 +1,12 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the two-layer shallow water equations
 
-equations = ShallowWaterTwoLayerEquations2D(gravity_constant = 10.0, rho_upper = 0.9,
+equations = ShallowWaterTwoLayerEquations2D(gravity = 10.0, rho_upper = 0.9,
                                             rho_lower = 1.0)
 
 initial_condition = initial_condition_convergence_test

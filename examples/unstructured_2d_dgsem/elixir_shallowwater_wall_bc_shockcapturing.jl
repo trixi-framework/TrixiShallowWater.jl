@@ -1,6 +1,5 @@
 
-using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -8,7 +7,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a continuous
 # bottom topography function
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812, H0 = 2.0)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 2.0)
 
 function initial_condition_stone_throw(x, t, equations::ShallowWaterEquationsWetDry2D)
     # Set up polar coordinates
@@ -46,7 +45,7 @@ indicator_sc = IndicatorHennemannGassner(equations, basis,
                                          alpha_max = 0.5,
                                          alpha_min = 0.001,
                                          alpha_smooth = true,
-                                         variable = Trixi.waterheight)
+                                         variable = waterheight)
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
                                                  volume_flux_dg = volume_flux,
                                                  volume_flux_fv = surface_flux)
@@ -59,8 +58,8 @@ solver = DGSEM(polydeg = polydeg, surface_flux = surface_flux,
 
 default_mesh_file = joinpath(@__DIR__, "mesh_outer_circle.mesh")
 isfile(default_mesh_file) ||
-    download("https://gist.githubusercontent.com/andrewwinters5000/9beddd9cd00e2a0a15865129eeb24928/raw/be71e67fa48bc4e1e97f5f6cd77c3ed34c6ba9be/mesh_outer_circle.mesh",
-             default_mesh_file)
+    Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/9beddd9cd00e2a0a15865129eeb24928/raw/be71e67fa48bc4e1e97f5f6cd77c3ed34c6ba9be/mesh_outer_circle.mesh",
+                   default_mesh_file)
 mesh_file = default_mesh_file
 
 mesh = UnstructuredMesh2D(mesh_file)

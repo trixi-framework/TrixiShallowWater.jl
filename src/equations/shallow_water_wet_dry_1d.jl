@@ -17,21 +17,22 @@ Shallow water equations (SWE) in one space dimension. The equations are given by
 \end{aligned}
 ```
 The unknown quantities of the SWE are the water height ``h`` and the velocity ``v``.
-The gravitational constant is denoted by `g` and the (possibly) variable bottom topography function ``b(x)``.
-Conservative variable water height ``h`` is measured from the bottom topography ``b``, therefore one
+The gravitational acceleration is denoted by `g` and the (possibly) variable bottom topography
+function ``b(x)``. Conservative variable water height ``h`` is measured from the bottom topography ``b``, therefore one
 also defines the total water height as ``H = h + b``.
 
 The additional quantity ``H_0`` is also available to store a reference value for the total water height that
 is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 
-Also, there are two thresholds which prevent numerical problems as well as instabilities. Both of them do not
+Also, there are four thresholds which prevent numerical problems as well as instabilities. None of them
 have to be passed, as default values are defined within the struct. The first one, `threshold_limiter`, is
 used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height, as a (small) shift on the initial
 condition and cutoff before the next time step. The second one, `threshold_wet`, is applied on the water height to
 define when the flow is "wet" before calculating the numerical flux. A third 
 `threshold_partially_wet` is applied on the water height to define "partially wet" elements in 
 [`IndicatorHennemannGassnerShallowWater`](@ref), that are then calculated with a pure FV method to
-ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are 
+ensure well-balancedness. Lastly, `threshold_desingularization` is used in [`PositivityPreservingLimiterShallowWater`](@ref)
+for the velocity desingularization procedure. For `Float64` no threshold needs to be passed, as default values are 
 defined within the struct. For other number formats `threshold_partially_wet` must be provided.
 
 The bottom topography function ``b(x)`` is set inside the initial condition routine
@@ -56,7 +57,7 @@ References for the SWE are many but a good introduction is available in Chapter 
 """
 struct ShallowWaterEquationsWetDry1D{RealT <: Real} <:
        Trixi.AbstractShallowWaterEquations{1, 3}
-    gravity::RealT # gravitational constant
+    gravity::RealT # gravitational acceleration
     H0::RealT      # constant "lake-at-rest" total water height
     # `threshold_limiter` used in `PositivityPreservingLimiterShallowWater` on water height,
     # as a (small) shift on the initial condition and cutoff before the next time step.
@@ -70,20 +71,24 @@ struct ShallowWaterEquationsWetDry1D{RealT <: Real} <:
     # to define "partially wet" elements. Those elements are calculated with a pure FV method to 
     # ensure well-balancedness. Default in double precision is 1e-4. 
     threshold_partially_wet::RealT
+    # `threshold_desingularization` used in the velocity desingularization procedure, to avoid 
+    # division by small numbers. Default in double precision is 1e-10.
+    threshold_desingularization::RealT
     # Standard shallow water equations for dispatch on Trixi.jl functions 
     basic_swe::ShallowWaterEquations1D{RealT}
 end
 
-# Allow for flexibility to set the gravitational constant within an elixir depending on the
-# application where `gravity_constant=1.0` or `gravity_constant=9.81` are common values.
+# Allow for flexibility to set the gravitational acceleration within an elixir depending on the
+# application where `gravity=1.0` or `gravity=9.81` are common values.
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
 # well-balancedness test cases.
 # Strict default values for thresholds that performed well in many numerical experiments
-function ShallowWaterEquationsWetDry1D(; gravity_constant, H0 = zero(gravity_constant),
+function ShallowWaterEquationsWetDry1D(; gravity, H0 = zero(gravity),
                                        threshold_limiter = nothing,
                                        threshold_wet = nothing,
-                                       threshold_partially_wet = nothing)
-    T = promote_type(typeof(gravity_constant), typeof(H0))
+                                       threshold_partially_wet = nothing,
+                                       threshold_desingularization = nothing)
+    T = promote_type(typeof(gravity), typeof(H0))
     if threshold_limiter === nothing
         threshold_limiter = 500 * eps(T)
     end
@@ -93,13 +98,17 @@ function ShallowWaterEquationsWetDry1D(; gravity_constant, H0 = zero(gravity_con
     if threshold_partially_wet === nothing
         threshold_partially_wet = default_threshold_partially_wet(T)
     end
+    if threshold_desingularization === nothing
+        threshold_desingularization = default_threshold_desingularization(T)
+    end
     # Construct the standard SWE for dispatch. Even though the `basic_swe` already store the 
-    # gravity constant and the total water height, we store an extra copy in 
+    # gravitational acceleration and the total water height, we store an extra copy in 
     # `ShallowWaterEquationsWetDry1D` for convenience.
-    basic_swe = ShallowWaterEquations1D(gravity_constant = gravity_constant, H0 = H0)
+    basic_swe = ShallowWaterEquations1D(gravity, H0)
 
-    ShallowWaterEquationsWetDry1D(gravity_constant, H0, threshold_limiter,
-                                  threshold_wet, threshold_partially_wet, basic_swe)
+    ShallowWaterEquationsWetDry1D(gravity, H0, threshold_limiter,
+                                  threshold_wet, threshold_partially_wet,
+                                  threshold_desingularization, basic_swe)
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterEquationsWetDry1D) = True()
@@ -488,6 +497,56 @@ end
         return factor_ll * f_ll - factor_rr * f_rr +
                factor_diss * SVector(diss[1], diss[2], zero(eltype(u_ll)))
     end
+end
+
+"""
+    dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
+                                    equations::ShallowWaterEquationsWetDry1D)
+Roe-type dissipation term for the [`ShallowWaterEquationsWetDry1D`](@ref). To create the classical Roe solver,
+this dissipation term can be combined with [`Trixi.flux_central`](@extref) using [`Trixi.FluxPlusDissipation`](@extref).
+
+For details on the Roe linearization see Chapter 15.3.2 and Chapter 15.3.3 for the one-dimensional
+shallow water equations of the book:
+- Randall J. LeVeque (2002)
+  Finite Volume Methods for Hyperbolic Problems
+  [DOI: 10.1017/CBO9780511791253](https://doi.org/10.1017/CBO9780511791253)
+"""
+@inline function dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
+                                 equations::ShallowWaterEquationsWetDry1D)
+    g = equations.gravity
+    z = zero(eltype(u_ll))
+
+    # Get velocities and waterheights
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v_ll = velocity(u_ll, equations)
+    v_rr = velocity(u_rr, equations)
+
+    # Compute Roe averages
+    h_avg = 0.5f0 * (h_ll + h_rr)
+    v_avg = (sqrt(h_ll) * v_ll + sqrt(h_rr) * v_rr) /
+            (sqrt(h_ll) + sqrt(h_rr))
+    c_avg = (sqrt(g * h_avg))
+
+    # Compute the eigenvalues
+    λ1 = v_avg - c_avg
+    λ2 = v_avg + c_avg
+
+    # Eigenvector matrix
+    R = @SMatrix [[1 1]; [(v_avg - c_avg) (v_avg + c_avg)]]
+
+    # Inverse eigenvector matrix
+    R_inv = 1 / (2 * c_avg) * @SMatrix [[(v_avg + c_avg) -1]; [(c_avg - v_avg) 1]]
+
+    # Eigenvalue absolute value matrix
+    Λ_abs = @SMatrix [[abs(λ1) z]; [z abs(λ2)]]
+
+    # Compute the jump in conserved variables, excluding the bottom topography
+    u_jump = @views (u_rr - u_ll)[1:2]
+
+    diss = SVector(-0.5f0 * R * Λ_abs * R_inv * u_jump)
+
+    return SVector(diss[1], diss[2], z)
 end
 
 """

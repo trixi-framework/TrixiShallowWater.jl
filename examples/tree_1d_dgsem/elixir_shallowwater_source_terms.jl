@@ -1,12 +1,12 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the shallow water equations for a fully wet configuration
 
-equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.81)
+equations = ShallowWaterEquationsWetDry1D(gravity = 9.81)
 
 initial_condition = initial_condition_convergence_test
 

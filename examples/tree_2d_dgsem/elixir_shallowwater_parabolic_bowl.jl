@@ -1,12 +1,12 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81)
+equations = ShallowWaterEquationsWetDry2D(gravity = 9.81)
 
 """
     initial_condition_parabolic_bowl(x, t, equations:: ShallowWaterEquationsWetDry2D)
@@ -108,7 +108,7 @@ save_solution = SaveSolutionCallback(interval = 100,
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation

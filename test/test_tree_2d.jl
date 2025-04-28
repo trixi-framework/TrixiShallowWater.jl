@@ -284,19 +284,48 @@ isdir(outdir) && rm(outdir, recursive = true)
         end
     end
 
+    @trixi_testset "elixir_shallowwater_source_terms.jl with dissipation_roe" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_source_terms.jl"),
+                            l2=[
+                                0.00032946467230644263,
+                                0.017644710574401774,
+                                0.04741010918138461,
+                                6.274146767723582e-5
+                            ],
+                            linf=[
+                                0.0021016896757704018,
+                                0.06358320986874899,
+                                0.15285461591374805,
+                                0.0001819675955490041
+                            ],
+                            surface_flux=(FluxPlusDissipation(flux_central,
+                                                              dissipation_roe),
+                                          flux_nonconservative_fjordholm_etal),
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
     @trixi_testset "elixir_shallowwater_conical_island.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_conical_island.jl"),
                             l2=[
-                                0.0459315416430658,
-                                0.1644534881916991,
-                                0.16445348819169914,
+                                0.045928568956367245,
+                                0.16446498697148945,
+                                0.16446498697148945,
                                 0.0011537702354532694
                             ],
                             linf=[
-                                0.21100717610846464,
-                                0.9501592344310412,
-                                0.9501592344310417,
+                                0.21098104635388315,
+                                0.9501826412445212,
+                                0.9501826412445218,
                                 0.021790250683516282
                             ],
                             tspan=(0.0, 0.025))
@@ -314,16 +343,16 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_parabolic_bowl.jl"),
                             l2=[
-                                0.00025345501281482687,
-                                4.4525120338817177e-5,
-                                0.00015991819160294247,
-                                7.750412064917294e-15
+                                0.0002534446645366419,
+                                4.452398574250411e-5,
+                                0.0001599158029172979,
+                                1.0761492186651631e-16
                             ],
                             linf=[
-                                0.004664246019836723,
-                                0.0004972780116736669,
-                                0.0028735707270457628,
-                                6.866729407306593e-14
+                                0.00466424300648733,
+                                0.0004972785186291824,
+                                0.0028735682830073137,
+                                6.661338147750939e-16
                             ],
                             tspan=(0.0, 0.025),
                             basis=LobattoLegendreBasis(3))

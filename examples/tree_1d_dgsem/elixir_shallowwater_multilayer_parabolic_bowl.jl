@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -7,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the shallow water equations
 
 # By passing only a single value for rhos, the system recovers the standard shallow water equations
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81, rhos = 1.0)
+equations = ShallowWaterMultiLayerEquations1D(gravity = 9.81, rhos = 1.0)
 
 """
     initial_condition_parabolic_bowl(x, t, equations:: ShallowWaterMultiLayerEquations1D)
@@ -41,7 +41,7 @@ function initial_condition_parabolic_bowl(x, t,
 
     H = sigma * h_0 / a^2 * (2 * x[1] * cos(ω * t) - sigma) + h_0
 
-    #= 
+    #=
     It is mandatory to shift the water level at dry areas to make sure the water height h
     stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
@@ -113,7 +113,7 @@ save_solution = SaveSolutionCallback(interval = 1000,
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation
