@@ -401,18 +401,17 @@ end
 end
 
 @timed_testset "Consistency check for boundary condition arguments" begin
+    equations = ShallowWaterEquationsWetDry2D(gravity = 9.81)
     u_inner = SVector(1.0, 0.3, 0.3, 0.1)
     t = 1.0
 
-    boundary_condition = BoundaryConditionWaterHeight(1.0)
-    @test BoundaryConditionWaterHeight(t -> 1.0).h_boundary(t) ==
+    boundary_condition = BoundaryConditionWaterHeight(1.0, equations)
+    @test BoundaryConditionWaterHeight(t -> 1.0, equations).h_boundary(t) ==
           boundary_condition.h_boundary(t)
 
-    boundary_condition = BoundaryConditionMomentum(0.3, 0.1)
-    @test BoundaryConditionMomentum(t -> 0.3, t -> 0.1).hv1_boundary(t) ==
-          boundary_condition.hv1_boundary(t)
-    @test BoundaryConditionMomentum(t -> 0.3, t -> 0.1).hv2_boundary(t) ==
-          boundary_condition.hv2_boundary(t)
+    boundary_condition = BoundaryConditionMomentum(0.3, 0.1, equations)
+    @test BoundaryConditionMomentum(t -> 0.3, t -> 0.1, equations).hv_boundary(t) ==
+          boundary_condition.hv_boundary(t)
 end
 end # Unit tests
 

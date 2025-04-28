@@ -439,7 +439,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                                                                      t,
                                                                                 t -> 0.1 -
                                                                                      0.05 *
-                                                                                     t),
+                                                                                     t,
+                                                                                equations),
                             boundary_conditions=(x_neg = boundary_condition_outflow,
                                                  x_pos = boundary_condition_inflow,
                                                  y_neg = boundary_condition_outflow,
