@@ -80,8 +80,9 @@ makedocs(;
          pages = ["Home" => "index.md",
              "Installation" => "installation.md",
              "Tutorials" => tutorial_pages,
-             "Advanced topics & developers" => ["Development" => "development.md"
-                                                "Testing" => "testing.md"],
+             "Advanced topics & developers" => ["Development" => "development.md",
+                 "Style guide" => "styleguide.md",
+                 "Testing" => "testing.md"],
              "Authors" => "authors.md",
              "Contributing" => "contributing.md",
              "Code of Conduct" => "code_of_conduct.md",
