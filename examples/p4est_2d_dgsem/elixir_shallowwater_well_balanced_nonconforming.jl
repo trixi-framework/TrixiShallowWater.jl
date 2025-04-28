@@ -144,7 +144,7 @@ end
 
 summary_callback = SummaryCallback()
 
-analysis_interval = 1000
+analysis_interval = 10000
 analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
                                      extra_analysis_errors = (:conservation_error,),
                                      extra_analysis_integrals = (lake_at_rest_error,))
@@ -169,4 +169,4 @@ callbacks = CallbackSet(summary_callback,
 sol = solve(ode, SSPRK43(),
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
             adaptive = false,
-            save_everystep = false, callback = callbacks);
+            save_everystep = false, callback = callbacks, maxiters=2e5);
