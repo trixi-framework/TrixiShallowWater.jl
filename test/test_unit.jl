@@ -401,7 +401,7 @@ end
 end
 
 @timed_testset "Consistency check for boundary condition arguments" begin
-    equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81)
+    equations = ShallowWaterEquationsWetDry2D(gravity = 9.81)
     surface_flux_functions = (flux_wintermeyer_etal,
                               flux_nonconservative_wintermeyer_etal)
     u_inner = SVector(1.0, 0.3, 0.3, 0.1)
