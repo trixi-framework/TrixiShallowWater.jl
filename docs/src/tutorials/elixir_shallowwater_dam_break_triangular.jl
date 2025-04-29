@@ -33,16 +33,16 @@ using CSV
 # ## Prepare and run the problem setup
 
 # In the first step we will set up the equation system. In this example we want to solve the
-# one-dimensional shallow water equations, so we will use the [`ShallowWaterEquationsWetDry1D`](@ref ShallowWaterEquationsWetDry1D)
+# one-dimensional shallow water equations, so we will use the [`ShallowWaterEquations1D`](@ref)
 # and specify the gravitational acceleration to `gravity = 9.812`. In contrast to the
-# [`Trixi.ShallowWaterEquations1D`](@extref Trixi.ShallowWaterEquations1D) type, this equation type
+# [`ShallowWaterEquations1D`](@ref) type, this equation type
 # contains additional parameters and methods that are needed to handle wetting and drying.
-equations = ShallowWaterEquationsWetDry1D(gravity = 9.812)
+equations = ShallowWaterEquations1D(gravity = 9.812)
 
 # We then create a function to supply the initial condition for the simulation. Note, in the last
 # step of this function the water height needs to be shifted by a small value to avoid division by zero.
 function initial_condition_dam_break_triangular(x, t,
-                                                equations::ShallowWaterEquationsWetDry1D)
+                                                equations::ShallowWaterEquations1D)
     b = 0.0  # Bottom topography
     h = 0.0  # Water height
     v = 0.0  # Velocity
@@ -75,7 +75,7 @@ initial_condition = initial_condition_dam_break_triangular;
 # As we want to compare the results to experimental data, we also need to account for bottom friction.
 # For this we create a new source term, which adds a Manning friction term to the momentum equation.
 @inline function source_term_manning_friction(u, x, t,
-                                              equations::ShallowWaterEquationsWetDry1D)
+                                              equations::ShallowWaterEquations1D)
     h, hv, _ = u
 
     n = 0.0125  # friction coefficient

@@ -97,6 +97,9 @@ jobs:
           - tree_2d
           - structured_2d
           - unstructured_2d
+          - t8code_2d
+          - dgmulti
+          - p4est_2d
           - unit
     steps:
       - uses: actions/checkout@v4

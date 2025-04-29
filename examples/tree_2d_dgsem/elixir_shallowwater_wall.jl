@@ -5,11 +5,11 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.81, H0 = 3.25)
+equations = ShallowWaterEquations2D(gravity = 9.81, H0 = 3.25)
 
 # An initial condition with a bottom topography and a perturbation in the waterheight to test
 # boundary_condition_slip_wall
-function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_perturbation(x, t, equations::ShallowWaterEquations2D)
     # Set the background values
     H = equations.H0
     v1 = 0.0

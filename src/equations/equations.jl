@@ -8,6 +8,7 @@
 ####################################################################################################
 # Include files with actual implementations for different systems of equations. 
 
+include("shallow_water_quasi_1d.jl")
 include("shallow_water_wet_dry_1d.jl")
 include("shallow_water_wet_dry_2d.jl")
 

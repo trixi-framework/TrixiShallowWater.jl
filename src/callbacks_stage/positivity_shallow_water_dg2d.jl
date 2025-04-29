@@ -7,7 +7,7 @@
 
 function limiter_shallow_water!(u, threshold::Real, variable,
                                 mesh::Trixi.AbstractMesh{2},
-                                equations::ShallowWaterEquationsWetDry2D, dg::DGSEM,
+                                equations::ShallowWaterEquations2D, dg::DGSEM,
                                 cache)
     @unpack weights = dg.basis
     @unpack inverse_jacobian = cache.elements

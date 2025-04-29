@@ -6,10 +6,10 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations for a fully wet configuration
 
-equations = ShallowWaterEquationsWetDry1D(gravity = 1.0, H0 = 3.0)
+equations = ShallowWaterEquations1D(gravity = 1.0, H0 = 3.0)
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
-function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquationsWetDry1D)
+function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquations1D)
     # Set the background values
     H = equations.H0
     v = 0.0

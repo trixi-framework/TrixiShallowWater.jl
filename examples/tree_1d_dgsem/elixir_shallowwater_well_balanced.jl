@@ -7,7 +7,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function for a fully wet configuration
 
-equations = ShallowWaterEquationsWetDry1D(gravity = 9.81, H0 = 3.25)
+equations = ShallowWaterEquations1D(gravity = 9.81, H0 = 3.25)
 
 # Setup a truly discontinuous bottom topography function for this academic
 # testcase of well-balancedness. The errors from the analysis callback are
@@ -17,7 +17,7 @@ equations = ShallowWaterEquationsWetDry1D(gravity = 9.81, H0 = 3.25)
 # refinement level is changed the initial condition below may need changed as well to
 # ensure that the discontinuities lie on an element interface.
 function initial_condition_discontinuous_well_balancedness(x, t,
-                                                           equations::ShallowWaterEquationsWetDry1D)
+                                                           equations::ShallowWaterEquations1D)
     # Set the background values
     H = equations.H0
     v = 0.0

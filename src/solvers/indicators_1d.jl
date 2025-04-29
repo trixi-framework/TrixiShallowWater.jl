@@ -5,13 +5,13 @@
 @muladd begin
 #! format: noindent
 
-# Modified indicator for ShallowWaterEquationsWetDry1D and ShallowWaterMultiLayerEquations1D to 
+# Modified indicator for ShallowWaterEquations1D and ShallowWaterMultiLayerEquations1D to 
 # apply full FV method on elements containing some "dry" LGL nodes. That is, if an element is 
 # partially "wet" then it becomes a full FV element.
 function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{<:Any,
                                                                                 3},
                                                                mesh,
-                                                               equations::Union{ShallowWaterEquationsWetDry1D,
+                                                               equations::Union{ShallowWaterEquations1D,
                                                                                 ShallowWaterMultiLayerEquations1D},
                                                                dg::DGSEM, cache;
                                                                kwargs...)

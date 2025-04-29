@@ -1,28 +1,29 @@
-
 using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# semidiscretization of the shallow water equations
+# Semidiscretization of the quasi 1d shallow water equations
+# See Chan et al.  https://doi.org/10.48550/arXiv.2307.12089 for details
 
-equations = ShallowWaterEquations2D(gravity = 9.81)
+equations = ShallowWaterEquationsQuasi1D(gravity = 9.81)
 
-initial_condition = initial_condition_convergence_test # MMS EOC test
+initial_condition = initial_condition_convergence_test
 
 ###############################################################################
 # Get the DG approximation space
 
-volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
-solver = DGSEM(polydeg = 3,
-               surface_flux = (flux_lax_friedrichs, flux_nonconservative_fjordholm_etal),
+volume_flux = (flux_chan_etal, flux_nonconservative_chan_etal)
+surface_flux = (FluxPlusDissipation(flux_chan_etal, DissipationLocalLaxFriedrichs()),
+                flux_nonconservative_chan_etal)
+solver = DGSEM(polydeg = 3, surface_flux = surface_flux,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 ###############################################################################
 # Get the TreeMesh and setup a periodic mesh
 
-coordinates_min = (0.0, 0.0)
-coordinates_max = (sqrt(2.0), sqrt(2.0))
+coordinates_min = 0.0
+coordinates_max = sqrt(2.0)
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 3,
                 n_cells_max = 10_000,
