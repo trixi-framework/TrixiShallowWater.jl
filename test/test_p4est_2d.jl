@@ -114,7 +114,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 3.57665052029936,
                                 0.7495177590247986
                             ],
-                            tspan=(0.0, 0.025))
+                            tspan=(0.0, 0.025),
+                            coverage_override=(maxiters = 5,))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
