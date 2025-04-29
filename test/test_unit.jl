@@ -404,14 +404,32 @@ end
     equations = ShallowWaterEquationsWetDry2D(gravity = 9.81)
     u_inner = SVector(1.0, 0.3, 0.3, 0.1)
     t = 1.0
+    RealT = typeof(equations.gravity)
 
+    # Check that the boundary condition functions have the correct output type
     boundary_condition = BoundaryConditionWaterHeight(1.0, equations)
+    @test typeof(boundary_condition.h_boundary(t)) == RealT
     @test BoundaryConditionWaterHeight(t -> 1.0, equations).h_boundary(t) ==
           boundary_condition.h_boundary(t)
+    @test BoundaryConditionWaterHeight(1, equations).h_boundary(t) ==
+          boundary_condition.h_boundary(t)
+    @test BoundaryConditionWaterHeight(1.0f0, equations).h_boundary(t) ==
+          boundary_condition.h_boundary(t)
+
+    @test_throws ArgumentError BoundaryConditionWaterHeight(t -> 1, equations)
 
     boundary_condition = BoundaryConditionMomentum(0.3, 0.1, equations)
+    @test typeof(boundary_condition.hv_boundary(t)) == Tuple{RealT, RealT}
     @test BoundaryConditionMomentum(t -> 0.3, t -> 0.1, equations).hv_boundary(t) ==
           boundary_condition.hv_boundary(t)
+    # Here we only check the for the type since 0.1f0 != 0.1
+    @test typeof(BoundaryConditionMomentum(0.3, 0.1f0, equations).hv_boundary(t)) ==
+          typeof(boundary_condition.hv_boundary(t))
+
+    @test_throws ArgumentError BoundaryConditionMomentum(t -> 0.3 * t, t -> 1,
+                                                         equations)
+    @test_throws ArgumentError BoundaryConditionMomentum(t -> 0.3 * t, t -> 1.0f0,
+                                                         equations)
 end
 end # Unit tests
 

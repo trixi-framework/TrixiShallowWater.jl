@@ -263,12 +263,18 @@ More details can be found in the paper:
     This is an experimental feature and can change any time.
 """
 function BoundaryConditionWaterHeight(h_boundary::Real,
-                                      equations::ShallowWaterEquationsWetDry2D)
+                                      equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+    # Convert function output to the correct type
+    h_boundary = convert(RealT, h_boundary)
     return BoundaryConditionWaterHeight(t -> h_boundary)
 end
 
 function BoundaryConditionWaterHeight(h_boundary::Function,
-                                      equations::ShallowWaterEquationsWetDry2D)
+                                      equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+    # Check if the function output is of the correct type
+    if !(typeof(h_boundary(one(RealT))) == RealT)
+        throw(ArgumentError("Boundary value functions must return a value of type $(RealT)"))
+    end
     return BoundaryConditionWaterHeight(t -> h_boundary(t))
 end
 
@@ -393,12 +399,20 @@ More details can be found in the paper:
     This is an experimental feature and can change any time.
 """
 function BoundaryConditionMomentum(hv1_boundary::Real, hv2_boundary::Real,
-                                   equations::ShallowWaterEquationsWetDry2D)
+                                   equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+    # Convert function output to the correct type
+    hv1_boundary = convert(RealT, hv1_boundary)
+    hv2_boundary = convert(RealT, hv2_boundary)
     return BoundaryConditionMomentum((t -> (hv1_boundary, hv2_boundary)))
 end
 
 function BoundaryConditionMomentum(hv1_boundary::Function, hv2_boundary::Function,
-                                   equations::ShallowWaterEquationsWetDry2D)
+                                   equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+    # Check if the function output is of the correct type
+    if !(typeof(hv1_boundary(one(RealT))) == RealT &&
+         typeof(hv2_boundary(one(RealT))) == RealT)
+        throw(ArgumentError("Boundary value functions must return a value of type $(RealT)"))
+    end
     return BoundaryConditionMomentum(t -> (hv1_boundary(t), hv2_boundary(t)))
 end
 
