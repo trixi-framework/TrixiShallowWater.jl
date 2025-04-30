@@ -332,7 +332,7 @@ function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
     return (flux, zero(u_inner))
 end
 
-# Version for `StructuredMesh`, `UnstructuredMesh2D`, and `P4estMesh`
+# Version for `UnstructuredMesh2D` and `P4estMesh`
 function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
                                                             normal_direction,
                                                             x, t,
@@ -487,7 +487,7 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
     return (flux, zero(u_inner))
 end
 
-# Version for `StructuredMesh`, `UnstructuredMesh2D` and `P4estMesh`
+# Version for `UnstructuredMesh2D` and `P4estMesh`
 function (boundary_condition::BoundaryConditionMomentum)(u_inner,
                                                          normal_direction,
                                                          x, t,
