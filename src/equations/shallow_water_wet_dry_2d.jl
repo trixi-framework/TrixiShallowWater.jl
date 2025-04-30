@@ -338,7 +338,7 @@ function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
                                                             x, t,
                                                             surface_flux_functions,
                                                             equations::ShallowWaterEquationsWetDry2D)
-    # Extract the  gravitational acceleration
+    # Extract the gravitational acceleration
     g = equations.gravity
 
     # Normalized normal vector
@@ -379,7 +379,7 @@ end
 """
     BoundaryConditionMomentum(hv1_boundary, hv2_boundary, equations::ShallowWaterEquationsWetDry2D)
 
-Create a boundary condition that sets a fixed momentum in x- and y- direction, `hv1_boundary`
+Create a boundary condition that sets a fixed momentum in x- and y- directions, `hv1_boundary`
 and `hv2_boundary`, at the boundary and extrapolates the water height `h_boundary` from the incoming
 Riemann invariant.
 
@@ -422,7 +422,7 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
                                                          direction, x, t,
                                                          surface_flux_functions,
                                                          equations::ShallowWaterEquationsWetDry2D)
-    # Extract the  gravitational acceleration
+    # Extract the gravitational acceleration
     g = equations.gravity
 
     # Get the water height and velocity from the inner state
@@ -434,7 +434,8 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
 
     # Calculate the boundary state based on the direction.
     # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains 
-    # constant across the incoming characteristic. This requires to solve for the roots of a nonlinear function.
+    # constant across the incoming characteristic. 
+    # Requires one to solve for the roots of a nonlinear function, see Eq. (52) in the reference above.
     # For convenience we substitute x = h_boundary and solve for x.
     if direction == 1 # x-
         fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) +
@@ -493,7 +494,7 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
                                                          surface_flux_functions,
                                                          equations::ShallowWaterEquationsWetDry2D)
 
-    # Extract the  gravitational acceleration
+    # Extract the gravitational acceleration
     g = equations.gravity
 
     # Normalized normal vector
@@ -514,7 +515,8 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
 
     # Calculate the boundary state in the rotated coordinate system.
     # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains 
-    # constant across the incoming characteristic. This requires to solve for the roots of a nonlinear function.
+    # constant across the incoming characteristic. 
+    # Requires one to solve for the roots of a nonlinear function, see Eq. (52) in the reference above.
     # For convenience we substitute x = h_boundary and solve for x.
     fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) -
                           (v_inner_normal + 2 * sqrt(g * h_inner)) * x +

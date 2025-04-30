@@ -46,7 +46,7 @@ solver = DGSEM(polydeg = polydeg,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 ###############################################################################
-# Create the StructuredMesh
+# Create a non-periodic TreeMesh
 coordinates_min = (-10.0, -10.0)
 coordinates_max = (10.0, 10.0)
 mesh = TreeMesh(coordinates_min, coordinates_max,

@@ -422,7 +422,7 @@ end
     @test typeof(boundary_condition.hv_boundary(t)) == Tuple{RealT, RealT}
     @test BoundaryConditionMomentum(t -> 0.3, t -> 0.1, equations).hv_boundary(t) ==
           boundary_condition.hv_boundary(t)
-    # Here we only check the for the type since 0.1f0 != 0.1
+    # Here we only check the type since 0.1f0 != 0.1
     @test typeof(BoundaryConditionMomentum(0.3, 0.1f0, equations).hv_boundary(t)) ==
           typeof(boundary_condition.hv_boundary(t))
 
