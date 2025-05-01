@@ -60,7 +60,7 @@ end
 """
     initial_condition_moving_water_transonic(x, t, equations::ShallowWaterEquationsWetDry1D)
 
-Set the intitial condition for a smooth transonic moving water steady-state and a quadratic bottom 
+Set the initial condition for a smooth transonic moving water steady-state and a quadratic bottom 
 topography, to test the well-balancedness of the scheme.
 
 The test parameters are taken from Section 5 of the paper:

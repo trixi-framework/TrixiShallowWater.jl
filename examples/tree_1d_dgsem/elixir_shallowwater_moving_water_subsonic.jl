@@ -59,7 +59,7 @@ end
 """
     initial_condition_moving_water_subsonic(x, t, equations::ShallowWaterEquations1D)
 
-Set the intitial condition for a subsonic moving water steady-state and quadratic bottom topography,
+Set the initial condition for a subsonic moving water steady-state and quadratic bottom topography,
 to test the well-balancedness of the scheme.
 
 The test setup is taken from Section 4.1 of the paper:
