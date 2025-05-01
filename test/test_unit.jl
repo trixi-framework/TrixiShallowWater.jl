@@ -449,6 +449,8 @@ end
         @test BoundaryConditionWaterHeight(1.0f0, equations).h_boundary(t) ==
               boundary_condition.h_boundary(t)
 
+        @test_throws ArgumentError BoundaryConditionWaterHeight(t -> 1, equations)
+
         boundary_condition = BoundaryConditionMomentum(0.3, equations)
         @test typeof(boundary_condition.hv_boundary(t)) == RealT
         @test BoundaryConditionMomentum(t -> 0.3, equations).hv_boundary(t) ==
