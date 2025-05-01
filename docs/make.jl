@@ -5,8 +5,8 @@ using Literate
 using Changelog: Changelog
 
 # Provide external links to the Trixi.jl docs (project root and inventory file)
-links = InterLinks("Trixi" => ("https://trixi-framework.github.io/Trixi.jl/stable/",
-                               "https://trixi-framework.github.io/Trixi.jl/stable/objects.inv"))
+links = InterLinks("Trixi" => ("https://trixi-framework.github.io/TrixiDocumentation/stable/",
+                               "https://trixi-framework.github.io/TrixiDocumentation/stable/objects.inv"))
 
 # Create tutorial section with Literature
 TUTORIAL_DIR = joinpath(@__DIR__, "src", "tutorials")
