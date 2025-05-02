@@ -29,12 +29,13 @@ Also, there are four thresholds which prevent numerical problems as well as inst
 have to be passed, as default values are defined within the struct. The first one, `threshold_limiter`, is
 used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height, as a (small) shift on the initial
 condition and cutoff before the next time step. The second one, `threshold_wet`, is applied on the water height to
-define when the flow is "wet" before calculating the numerical flux. A third 
-`threshold_partially_wet` is applied on the water height to define "partially wet" elements in 
+define when the flow is "wet" before calculating the numerical flux. A third
+`threshold_partially_wet` is applied on the water height to define "partially wet" elements in
 [`IndicatorHennemannGassnerShallowWater`](@ref), that are then calculated with a pure FV method to
 ensure well-balancedness. Lastly, `threshold_desingularization` is used in [`PositivityPreservingLimiterShallowWater`](@ref)
-for the velocity desingularization procedure. For `Float64` no threshold needs to be passed, as default values are 
-defined within the struct. For other number formats `threshold_partially_wet` must be provided.
+for the velocity desingularization procedure. For `Float64` no threshold needs to be passed, as default values are
+defined within the struct. For other number formats `threshold_partially_wet`
+and `threshold_desingularization` must be provided.
 
 The bottom topography function ``b(x)`` is set inside the initial condition routine
 for a particular problem setup. To test the conservative form of the SWE one can set the bottom topography
@@ -68,11 +69,11 @@ struct ShallowWaterEquations1D{RealT <: Real} <:
     # before calculating the numerical flux.
     # Default is 5*eps() which in double precision is ≈1e-15.
     threshold_wet::RealT
-    # `threshold_partially_wet` used in `IndicatorHennemannGassnerShallowWater` on the water height 
-    # to define "partially wet" elements. Those elements are calculated with a pure FV method to 
-    # ensure well-balancedness. Default in double precision is 1e-4. 
+    # `threshold_partially_wet` used in `IndicatorHennemannGassnerShallowWater` on the water height
+    # to define "partially wet" elements. Those elements are calculated with a pure FV method to
+    # ensure well-balancedness. Default in double precision is 1e-4.
     threshold_partially_wet::RealT
-    # `threshold_desingularization` used in the velocity desingularization procedure, to avoid 
+    # `threshold_desingularization` used in the velocity desingularization procedure, to avoid
     # division by small numbers. Default in double precision is 1e-10.
     threshold_desingularization::RealT
 end
@@ -268,7 +269,7 @@ end
 Non-symmetric two-point volume flux discretizing the nonconservative (source) term
 that contains the gradient of the bottom topography [`ShallowWaterEquations1D`](@ref).
 
-Gives entropy conservation and well-balancedness on both the volume and surface when combined with 
+Gives entropy conservation and well-balancedness on both the volume and surface when combined with
 [`flux_wintermeyer_etal`](@ref).
 
 Further details are available in the papers:
@@ -277,7 +278,7 @@ Further details are available in the papers:
   shallow water equations on unstructured curvilinear meshes with discontinuous bathymetry
   [DOI: 10.1016/j.jcp.2017.03.036](https://doi.org/10.1016/j.jcp.2017.03.036)
 - Patrick Ersing, Andrew R. Winters (2023)
-  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
+  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on
   curvilinear meshes
   [DOI: 10.48550/arXiv.2306.12699](https://doi.org/10.48550/arXiv.2306.12699)
 """

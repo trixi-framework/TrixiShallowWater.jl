@@ -148,6 +148,32 @@ end
         @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
     end
 end
+# P4estMesh2D
+@trixi_testset "P4estMesh2D: elixir_shallowwater_perturbation_amr.jl" begin
+    @test_trixi_include(joinpath(EXAMPLES_DIR, "p4est_2d_dgsem",
+                                 "elixir_shallowwater_perturbation_amr.jl"),
+                        l2=[
+                            0.02263230105470324,
+                            0.09090425233020173,
+                            0.09124622065757255,
+                            0.0011045848311422332
+                        ],
+                        linf=[
+                            0.3118823726810007,
+                            0.7855402508435719,
+                            0.7401368273982774,
+                            0.011669083581857587
+                        ],
+                        tspan=(0.0, 0.025))
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
+    let
+        t = sol.t[end]
+        u_ode = sol.u[end]
+        du_ode = similar(u_ode)
+        @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+    end
+end
 
 # Clean up afterwards: delete output directory
 @test_nowarn rm(outdir, recursive = true)

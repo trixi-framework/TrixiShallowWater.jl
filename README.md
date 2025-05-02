@@ -19,7 +19,7 @@ simulation framework for conservation laws [Trixi.jl](https://github.com/trixi-f
 and provides several specialized models and features specific for shallow water applications.
 Below is a short summary of the available features:
 
-* 1D and 2D simulations on [line/quad meshes](https://trixi-framework.github.io/Trixi.jl/stable/overview/#Semidiscretizations)
+* 1D and 2D simulations on [line/quad meshes](https://trixi-framework.github.io/TrixiDocumentation/stable/overview/#Semidiscretizations)
   * Cartesian and curvilinear meshes
   * Conforming and non-conforming meshes
   * Hierarchical quadtree meshes with adaptive mesh refinement
@@ -81,7 +81,9 @@ julia --project=.
 ```
 if already inside the `run` directory.
 Further details, of how to develop TrixiShallowWater.jl together with a local
-clone Trixi.jl, can be found in the Development section of the [documentation](#documentation).
+clone Trixi.jl, can be found in the
+[Development section](https://trixi-framework.github.io/TrixiShallowWater.jl/stable/development/)
+of the documentation.
 
 ## Authors
 TrixiShallowWater.jl is maintained by the

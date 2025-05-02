@@ -324,7 +324,7 @@ ode = semidiscretize(semi, tspan);
 # Below, we define several callbacks for different purposes.
 
 # ### Analysis Callback
-# The [AnalysisCallback](https://trixi-framework.github.io/Trixi.jl/stable/reference-trixi/#Trixi.AnalysisCallback)
+# The [AnalysisCallback](https://trixi-framework.github.io/TrixiDocumentation/stable/reference-trixi/#Trixi.AnalysisCallback)
 # is used to analyze the solution at regular intervals.
 # Extra analysis quantities such as conservation errors can be added to the callback.
 analysis_interval = 1000
@@ -338,7 +338,7 @@ save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_final_solution = true)
 
 # ### Stepsize Callback
-# The [StepsizeCallback](https://trixi-framework.github.io/Trixi.jl/stable/reference-trixi/#Trixi.StepsizeCallback)
+# The [StepsizeCallback](https://trixi-framework.github.io/TrixiDocumentation/stable/reference-trixi/#Trixi.StepsizeCallback)
 # calculates the time step based on a CFL condition.
 stepsize_callback = StepsizeCallback(cfl = 0.6)
 

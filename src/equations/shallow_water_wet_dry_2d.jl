@@ -36,8 +36,9 @@ define when the flow is "wet" before calculating the numerical flux. A third
 `threshold_partially_wet` is applied on the water height to define "partially wet" elements in
 [`IndicatorHennemannGassnerShallowWater`](@ref), that are then calculated with a pure FV method to
 ensure well-balancedness. Lastly, `threshold_desingularization` is used in [`PositivityPreservingLimiterShallowWater`](@ref)
-for the velocity desingularization procedure. For `Float64` no threshold needs to be passed, as default values are 
-defined within the struct. For other number formats  `threshold_partially_wet` must be provided.
+for the velocity desingularization procedure. For `Float64` no threshold needs to be passed, as default values are
+defined within the struct. For other number formats  `threshold_partially_wet`
+and `threshold_desingularization` must be provided.
 
 The bottom topography function ``b(x,y)`` is set inside the initial condition routine
 for a particular problem setup. To test the conservative form of the SWE one can set the bottom topography
@@ -75,7 +76,7 @@ struct ShallowWaterEquations2D{RealT <: Real} <:
     # to define "partially wet" elements. Those elements are calculated with a pure FV method to
     # ensure well-balancedness. Default in double precision is 1e-4.
     threshold_partially_wet::RealT
-    # `threshold_desingularization` used in the velocity desingularization procedure, to avoid 
+    # `threshold_desingularization` used in the velocity desingularization procedure, to avoid
     # division by small numbers. Default in double precision is 1e-10.
     threshold_desingularization::RealT
 end
