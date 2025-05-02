@@ -12,4 +12,6 @@ OrdinaryDiffEqSSPRK = "1.2"
 Printf = "1"
 Roots = "2.1.6"
 Test = "1"
-Trixi = "0.11.10"
+
+[sources]
+Trixi = {url = "https://github.com/patrickersing/Trixi.jl/tree/swe_separation"}
