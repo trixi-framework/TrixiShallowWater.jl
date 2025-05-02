@@ -19,7 +19,7 @@
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
-                            equations::ShallowWaterEquationsWetDry2D,
+                            equations::ShallowWaterEquations2D,
                             mortar_l2::Trixi.LobattoLegendreMortarL2, uEltype)
     # TODO: Taal performance using different types
     MA2d = Trixi.MArray{Tuple{nvariables(equations), nnodes(mortar_l2)},
@@ -42,7 +42,7 @@ end
 
 function Trixi.prolong2mortars!(cache, u,
                                 mesh::Union{P4estMesh{2}, T8codeMesh{2}},
-                                equations::ShallowWaterEquationsWetDry2D,
+                                equations::ShallowWaterEquations2D,
                                 mortar_l2::Trixi.LobattoLegendreMortarL2,
                                 dg::DGSEM)
     @unpack neighbor_ids, node_indices = cache.mortars
@@ -189,7 +189,7 @@ end
 function Trixi.calc_mortar_flux!(surface_flux_values,
                                  mesh::Union{P4estMesh{2}, T8codeMesh{2}},
                                  nonconservative_terms,
-                                 equations::ShallowWaterEquationsWetDry2D,
+                                 equations::ShallowWaterEquations2D,
                                  mortar_l2::Trixi.LobattoLegendreMortarL2,
                                  surface_integral, dg::DG, cache)
     @unpack neighbor_ids, node_indices = cache.mortars
@@ -293,7 +293,7 @@ end
 @inline function Trixi.mortar_fluxes_to_elements!(surface_flux_values,
                                                   mesh::Union{P4estMesh{2},
                                                               T8codeMesh{2}},
-                                                  equations::ShallowWaterEquationsWetDry2D,
+                                                  equations::ShallowWaterEquations2D,
                                                   mortar_l2::Trixi.LobattoLegendreMortarL2,
                                                   dg::DGSEM, cache, mortar,
                                                   fstar_primary, fstar_secondary,
