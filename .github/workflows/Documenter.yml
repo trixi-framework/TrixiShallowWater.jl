@@ -47,10 +47,10 @@ jobs:
           ref: swe_separation
           path: Trixi-PR
       - name: Load Trixi version from PR
-        shell: julia --color=yes --project=@. {0}
+        shell: julia --color=yes --project=docs/ {0}
         run: |
           using Pkg
-          Pkg.develop(PackageSpec(path="Trixi-PR"))
+          Pkg.develop(PackageSpec(path="../Trixi-PR"))
           Pkg.update()
       # end of workaround
       - name: Build and deploy
