@@ -20,6 +20,3 @@ Roots = "2.1.6"
 Static = "1.1.1"
 StaticArrays = "1.9"
 julia = "1.10"
-
-[sources]
-Trixi = {url = "https://github.com/patrickersing/Trixi.jl/tree/swe_separation"}
