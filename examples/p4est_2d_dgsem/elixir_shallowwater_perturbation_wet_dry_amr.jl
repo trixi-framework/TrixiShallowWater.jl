@@ -37,7 +37,7 @@ function initial_condition_perturbation(x, t, equations::ShallowWaterEquations2D
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(equations.H0, b + equations.threshold_limiter)
 
@@ -157,7 +157,7 @@ function initial_condition_discontinuous_perturbation(x, t, element_id,
 
     # Avoid division by zero by adjusting the initial condition with a small dry state threshold
     # that defaults to 500*eps() ≈ 1e-13 in double precision and is set in the constructor above
-    # for the ShallowWaterEquationsWetDry struct.
+    # for the ShallowWaterEquations struct.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v1, v2, b), equations)
 end

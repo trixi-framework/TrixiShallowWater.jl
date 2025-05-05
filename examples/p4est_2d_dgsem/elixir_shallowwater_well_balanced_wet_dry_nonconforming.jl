@@ -28,7 +28,7 @@ function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquati
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(equations.H0, b + equations.threshold_limiter)
 
@@ -146,7 +146,7 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id,
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(equations.H0, b + equations.threshold_limiter)
 
