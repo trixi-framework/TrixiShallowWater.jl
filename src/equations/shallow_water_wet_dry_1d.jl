@@ -347,7 +347,7 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
     # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains 
     # constant across the incoming characteristic. 
     # Requires one to solve for the roots of a nonlinear function, see Eq. (52) in the reference above.
-    # For convenience we substitute x = h_boundary and solve for x.
+    # For convenience we substitute x = h_boundary and solve for x, using the Steffensen method.
     if direction == 1 # x-
         fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) +
                               (v_inner - 2 * sqrt(g * h_inner)) * x - hv_boundary,

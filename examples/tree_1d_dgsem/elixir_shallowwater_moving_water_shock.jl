@@ -5,17 +5,17 @@ using TrixiShallowWater
 using Roots
 
 ###############################################################################
-# semidiscretization of the shallow water equations for a transonic moving water steady-state with 
-# a shock.
+# semidiscretization of the shallow water equations for a transonic moving water 
+# steady-state with a standing shock.
 
 equations = ShallowWaterEquationsWetDry1D(gravity = 9.812, H0 = 3.25)
 
 """
     inverse_transform(E, hv, sigma, b)
 
-Inverse transformation from equilibrium variables (E,hv) to conservative variables (h,hv). Besides the
+Inverse transformation from equilibrium variables (E, hv) to conservative variables (h, hv). Besides the
 equilibrium variables, which are the total energy `E` and momentum `hv`, the function also depends 
-on the bottom topography `b` and the flow regime `sigma`(supersonic = 1 , sonic = 0 or subsonic = -1).
+on the bottom topography `b` and the flow regime `sigma` (supersonic = 1 , sonic = 0 or subsonic = -1).
 
 The implementation follows the procedure described in Section 2.1 of the paper:
 - Sebastian Noelle, Yulong Xing and Chi-Wang Shu (2007)
@@ -33,14 +33,14 @@ function inverse_transform(E, hv, sigma, b)
     # normalized total energy
     E_hat = (E - g * b) / phi_0
 
-    # Check if the state is admissible and compute the water height from equation (2.9).
-    if (sigma == 0) && (E_hat ≈ 1) # sonic state
+    # Check if the state is admissible and compute the water height
+    # as in equation (2.19) of the reference in the docstring.
+    if sigma == 0 && E_hat ≈ 1 # sonic state
         h_hat = 1
     elseif abs(sigma) == 1 && E_hat > 1 # supersonic / subsonic state
-        # Pick an initial guess for the root finding problem based on the flow regime
-        if sigma == 1   # supersonic
+        if sigma == 1 # supersonic
             h_hat_init = 0.5 # needs to be < 1
-        else    # subsonic
+        else # subsonic
             h_hat_init = 2.0 # needs to be > 1
         end
 
@@ -54,7 +54,7 @@ function inverse_transform(E, hv, sigma, b)
         throw(error("The given state is not admissible: E_hat = $E_hat, sigma = $sigma"))
     end
 
-    # Return the water height `h = h_hat * h_0`.
+    # Compute and return the water height `h` from the normalized water height `h_hat = h / h_0`.
     return h_hat * h_0
 end
 
@@ -84,8 +84,8 @@ function initial_condition_moving_water_shock(x, t,
     end
 
     # # Set the quadratic bottom topography function
-    if 8 ≤ x[1] ≤ 12
-        b = 0.2 - 0.05(x[1] - 10.0)^2
+    if 8 <= x[1] <= 12
+        b = 0.2 - 0.05 * (x[1] - 10.0)^2
     else
         b = 0.0
     end
@@ -136,7 +136,7 @@ volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
 solver = DGSEM(basis, surface_flux, volume_integral)
 
 ###############################################################################
-# Get the TreeMesh and setup a periodic mesh
+# Get the TreeMesh and setup a non-periodic mesh
 
 coordinates_min = 0.0
 coordinates_max = 32.0  # This needs to be a multiple of 2 to match the corners of the bottom topography
