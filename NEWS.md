@@ -11,7 +11,7 @@ for human readability.
 #### Added
 
 - Experimental support for well-balanced mortars together with AMR [#45]
-- New boundary conditions `BoundaryConditionWaterHeight` and `BoundaryConditionMomentum` are now 
+- New boundary conditions `BoundaryConditionWaterHeight` and `BoundaryConditionMomentum` now 
   available for the `ShallowWaterEquationsWetDry` to impose either the water height or the momentum 
   at the boundary. [#91]
 
