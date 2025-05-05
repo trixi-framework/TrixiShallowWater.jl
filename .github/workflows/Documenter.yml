@@ -46,10 +46,17 @@ jobs:
           repository: patrickersing/Trixi.jl
           ref: swe_separation
           path: docs/Trixi-PR
+      # For debugging purposes
+      - name: Print working directory
+        run: pwd
+      - name: List files in current folder
+        run: ls -ll
+      ######
       - name: Load Trixi version from PR
         shell: julia --color=yes --project=docs/ {0}
         run: |
           using Pkg
+          pwd()
           Pkg.develop(PackageSpec(path="Trixi-PR"))
           Pkg.update()
       # end of workaround
