@@ -633,7 +633,7 @@ end
     dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
                                     equations::ShallowWaterEquations1D)
 Roe-type dissipation term for the [`ShallowWaterEquations1D`](@ref). To create the classical Roe solver,
-this dissipation term can be combined with [`Trixi.flux_central`](@extref) using [`Trixi.FluxPlusDissipation`](@extref).
+this dissipation term can be combined with [`Trixi.flux_central`](@extref) using [`FluxPlusDissipation`](@ref).
 
 For details on the Roe linearization see Chapter 15.3.2 and Chapter 15.3.3 for the one-dimensional
 shallow water equations of the book:

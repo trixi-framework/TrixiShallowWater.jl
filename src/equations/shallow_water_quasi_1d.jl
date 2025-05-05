@@ -67,7 +67,7 @@ Trixi.varnames(::typeof(cons2prim), ::ShallowWaterEquationsQuasi1D) = ("H", "v",
 
 A smooth initial condition used for convergence tests in combination with
 [`source_terms_convergence_test`](@ref)
-(and [`BoundaryConditionDirichlet(initial_condition_convergence_test)`](@ref) in non-periodic domains).
+(and [`Trixi.BoundaryConditionDirichlet(initial_condition_convergence_test)`](@extref) in non-periodic domains).
 """
 function Trixi.initial_condition_convergence_test(x, t,
                                                   equations::ShallowWaterEquationsQuasi1D)
@@ -87,7 +87,7 @@ end
 
 Source terms used for convergence tests in combination with
 [`initial_condition_convergence_test`](@ref)
-(and [`BoundaryConditionDirichlet(initial_condition_convergence_test)`](@ref) in non-periodic domains).
+(and [`Trixi.BoundaryConditionDirichlet(initial_condition_convergence_test)`](@extref) in non-periodic domains).
 
 This manufactured solution source term is specifically designed for the bottom topography function
 `b(x) = 0.2 - 0.05 * sinpi(sqrt(2) * x[1])` and channel width 'a(x)= 1 + 0.1 * cospi(sqrt(2) * x[1])'
