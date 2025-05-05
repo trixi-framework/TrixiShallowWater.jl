@@ -50,14 +50,13 @@ jobs:
       - name: Print working directory
         run: pwd
       - name: List files in current folder
-        run: ls -ll
+        run: ls -ll docs
       ######
       - name: Load Trixi version from PR
         shell: julia --color=yes --project=docs/ {0}
         run: |
           using Pkg
-          pwd()
-          Pkg.develop(PackageSpec(path="Trixi-PR"))
+          Pkg.develop(PackageSpec(path="docs/Trixi-PR"))
           Pkg.update()
       # end of workaround
       - name: Build and deploy
