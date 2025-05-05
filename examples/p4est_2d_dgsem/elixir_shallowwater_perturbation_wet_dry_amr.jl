@@ -18,7 +18,7 @@ using TrixiShallowWater
 # bottom topography function for a perturbed water height on a nonconforming mesh with AMR
 
 equations = ShallowWaterEquations2D(gravity = 9.812, H0 = 1.235,
-                                          threshold_desingularization = 1e-4)
+                                    threshold_desingularization = 1e-4)
 
 function initial_condition_perturbation(x, t, equations::ShallowWaterEquations2D)
     # Calculate primitive variables

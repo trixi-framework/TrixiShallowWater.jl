@@ -17,7 +17,8 @@ isdir(outdir) && rm(outdir, recursive = true)
 
 @testset "Shallow Water Wet/Dry" begin
     @trixi_testset "elixir_shallowwater_source_terms.jl" begin
-        @test_trixi_include(joinpath(EXAMPLES_DIR, "elixir_shallowwater_source_terms.jl"),
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_source_terms.jl"),
                             l2=[
                                 9.168126407325352e-5,
                                 0.0009795410115453788,
@@ -39,8 +40,8 @@ isdir(outdir) && rm(outdir, recursive = true)
             du_ode = similar(u_ode)
             @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
         end
-end
-    
+    end
+
     @trixi_testset "elixir_shallowwater_well_balanced_nonconforming.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_well_balanced_nonconforming.jl"),
