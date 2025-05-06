@@ -732,6 +732,22 @@ Further details on this hydrostatic reconstruction and its motivation can be fou
     return u_ll_star, u_rr_star
 end
 
+# Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr, orientation::Integer,
+    equations::ShallowWaterEquations1D)
+    # Get the velocity quantities
+    v_ll = velocity(u_ll, equations)
+    v_rr = velocity(u_rr, equations)
+
+    # Calculate the wave celerity on the left and right
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    c_ll = sqrt(equations.gravity * h_ll)
+    c_rr = sqrt(equations.gravity * h_rr)
+
+    return max(abs(v_ll) + c_ll, abs(v_rr) + c_rr)
+end
+
 # Calculate maximum wave speed for local Lax-Friedrichs-type dissipation as the
 # maximum velocity magnitude plus the maximum speed of sound
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr, orientation::Integer,
@@ -913,8 +929,10 @@ end
     c_ll = sqrt(equations.gravity * h_ll)
     c_rr = sqrt(equations.gravity * h_rr)
 
-    λ_min = min(v_ll - c_ll, v_rr - c_rr)
-    λ_max = max(v_ll + c_ll, v_rr + c_rr)
+    v_roe, c_roe = calc_wavespeed_roe(u_ll, u_rr, orientation, equations)
+
+    λ_min = min(v_ll - c_ll, v_roe - c_roe)
+    λ_max = max(v_rr + c_rr, v_roe + c_roe)
 
     return λ_min, λ_max
 end
