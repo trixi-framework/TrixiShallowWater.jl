@@ -522,7 +522,7 @@ end
 
 @timed_testset "Consistency check for boundary condition arguments" begin
     let
-        equations = ShallowWaterEquationsWetDry2D(gravity = 9.81)
+        equations = ShallowWaterEquations2D(gravity = 9.81)
         u_inner = SVector(1.0, 0.3, 0.3, 0.1)
         t = 1.0
         RealT = typeof(equations.gravity)
@@ -554,7 +554,7 @@ end
     end
 
     let
-        equations = ShallowWaterEquationsWetDry1D(gravity = 9.81)
+        equations = ShallowWaterEquations1D(gravity = 9.81)
         u_inner = SVector(1.0, 0.3, 0.1)
         t = 1.0
         RealT = typeof(equations.gravity)

@@ -248,7 +248,7 @@ For details see Section 9.2.5 of the book:
 end
 
 """
-    BoundaryConditionWaterHeight(h_boundary, equations::ShallowWaterEquationsWetDry1D)
+    BoundaryConditionWaterHeight(h_boundary, equations::ShallowWaterEquations1D)
 
 Create a boundary condition that uses `h_boundary` to specify a fixed water height at the 
 boundary and extrapolates the velocity from the incoming Riemann invariant.
@@ -269,14 +269,14 @@ More details can be found in the paper:
     This is an experimental feature and can change any time.
 """
 function BoundaryConditionWaterHeight(h_boundary::Real,
-                                      equations::ShallowWaterEquationsWetDry1D{RealT}) where {RealT}
+                                      equations::ShallowWaterEquations1D{RealT}) where {RealT}
     # Convert function output to the correct type
     h_boundary = convert(RealT, h_boundary)
     return BoundaryConditionWaterHeight(t -> h_boundary)
 end
 
 function BoundaryConditionWaterHeight(h_boundary::Function,
-                                      equations::ShallowWaterEquationsWetDry1D{RealT}) where {RealT}
+                                      equations::ShallowWaterEquations1D{RealT}) where {RealT}
     # Check if the function output is of the correct type
     if !(typeof(h_boundary(one(RealT))) == RealT)
         throw(ArgumentError("Boundary value functions must return a value of type $(RealT)"))
@@ -289,7 +289,7 @@ function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
                                                             orientation,
                                                             direction, x, t,
                                                             surface_flux_functions,
-                                                            equations::ShallowWaterEquationsWetDry1D)
+                                                            equations::ShallowWaterEquations1D)
     # Extract the gravitational acceleration
     g = equations.gravity
 
@@ -321,7 +321,7 @@ function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
 end
 
 """
-    BoundaryConditionMomentum(hv_boundary, equations::ShallowWaterEquationsWetDry1D)
+    BoundaryConditionMomentum(hv_boundary, equations::ShallowWaterEquations1D)
 
 Create a boundary condition that sets a fixed momentum `hv_boundary` at the boundary and 
 extrapolates the water height `h_boundary` from the incoming Riemann invariant.
@@ -342,14 +342,14 @@ More details can be found in the paper:
     This is an experimental feature and can change any time.
 """
 function BoundaryConditionMomentum(hv_boundary::Real,
-                                   equations::ShallowWaterEquationsWetDry1D{RealT}) where {RealT}
+                                   equations::ShallowWaterEquations1D{RealT}) where {RealT}
     # Convert function output to the correct type
     hv_boundary = convert(RealT, hv_boundary)
     return BoundaryConditionMomentum(t -> hv_boundary)
 end
 
 function BoundaryConditionMomentum(hv_boundary::Function,
-                                   equations::ShallowWaterEquationsWetDry1D{RealT}) where {RealT}
+                                   equations::ShallowWaterEquations1D{RealT}) where {RealT}
     # Check if the function output is of the correct type
     if !(typeof(hv_boundary(one(RealT))) == RealT)
         throw(ArgumentError("Boundary value functions must return a value of type $(RealT)"))
@@ -362,7 +362,7 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
                                                          orientation,
                                                          direction, x, t,
                                                          surface_flux_functions,
-                                                         equations::ShallowWaterEquationsWetDry1D)
+                                                         equations::ShallowWaterEquations1D)
     # Extract the gravitational acceleration
     g = equations.gravity
 

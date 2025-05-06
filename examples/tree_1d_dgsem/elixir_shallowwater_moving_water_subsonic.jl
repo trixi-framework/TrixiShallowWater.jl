@@ -6,7 +6,7 @@ using Roots
 ###############################################################################
 # semidiscretization of the shallow water equations for a subsonic moving water steady-state
 
-equations = ShallowWaterEquationsWetDry1D(gravity = 9.812, H0 = 3.25)
+equations = ShallowWaterEquations1D(gravity = 9.812, H0 = 3.25)
 
 """
     inverse_transform(E, hv, sigma, b)
@@ -69,7 +69,7 @@ The test setup is taken from Section 4.1 of the paper:
     [DOI: 10.1016/j.jcp.2007.03.031](https://doi.org/10.1016/j.jcp.2007.03.031).
 """
 function initial_condition_moving_water_subsonic(x, t,
-                                                 equations::ShallowWaterEquationsWetDry1D)
+                                                 equations::ShallowWaterEquations1D)
     # Set initial conditions
     hv = 4.42 # momentum
     E = 22.06605 # total energy
