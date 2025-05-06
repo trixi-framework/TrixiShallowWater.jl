@@ -4,7 +4,6 @@
 # See https://ranocha.de/blog/Optimizing_EC_Trixi for further details.
 @muladd begin
 #! format: noindent
-
 @doc raw"""
     ShallowWaterEquationsWetDry2D(; gravity, H0 = 0, threshold_limiter = nothing, threshold_wet = nothing)
 
@@ -241,6 +240,304 @@ Should be used together with [`Trixi.TreeMesh`](@extref).
     end
 
     return flux, noncons_flux
+end
+
+"""
+    BoundaryConditionWaterHeight(h_boundary, equations::ShallowWaterEquationsWetDry2D)
+
+Create a boundary condition that uses `h_boundary` to specify a fixed water height at the 
+boundary and extrapolates the velocity from the incoming Riemann invariant.
+
+The external water height `h_boundary` can be specified as a constant value or as a function of time, e.g.
+```julia
+   BoundaryConditionWaterHeight(h_boundary, equations))
+   BoundaryConditionWaterHeight(t -> h_boundary(t), equations))
+```
+
+More details can be found in the paper:
+- Lixiang Song, Jianzhong Zhou, Jun Guo, Qiang Zou, Yi Liu (2011)
+  A robust well-balanced finite volume model for shallow water flows
+  with wetting and drying over irregular terrain
+  [doi: 10.1016/j.advwatres.2011.04.017](https://doi.org/10.1016/j.advwatres.2011.04.017)
+
+!!! warning "Experimental code"
+    This is an experimental feature and can change any time.
+"""
+function BoundaryConditionWaterHeight(h_boundary::Real,
+                                      equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+    # Convert function output to the correct type
+    h_boundary = convert(RealT, h_boundary)
+    return BoundaryConditionWaterHeight(t -> h_boundary)
+end
+
+function BoundaryConditionWaterHeight(h_boundary::Function,
+                                      equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+    # Check if the function output is of the correct type
+    if !(typeof(h_boundary(one(RealT))) == RealT)
+        throw(ArgumentError("Boundary value functions must return a value of type $(RealT)"))
+    end
+    return BoundaryConditionWaterHeight(t -> h_boundary(t))
+end
+
+# Version for `TreeMesh`
+function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
+                                                            orientation,
+                                                            direction, x, t,
+                                                            surface_flux_functions,
+                                                            equations::ShallowWaterEquationsWetDry2D)
+    # Extract the gravitational acceleration
+    g = equations.gravity
+
+    # Get the water height and velocity from the inner state
+    h_inner = waterheight(u_inner, equations)
+    v1_inner, v2_inner = velocity(u_inner, equations)
+
+    # Extract the external water height from the boundary condition
+    h_boundary = boundary_condition.h_boundary(t)
+
+    # Calculate the boundary state based on the direction.
+    # To extrapolate the external velocity assume that the Riemann invariant remains constant across
+    # the incoming characteristic. In the case of inflow we assume that the tangential velocity at
+    # the boundary is zero.
+    if direction == 1 # x-
+        v1_boundary = v1_inner +
+                      2 * (sqrt(g * h_boundary) - sqrt(g * h_inner))
+        v1_boundary > 0 ? hv2_boundary = zero(u_inner[3]) : hv2_boundary = u_inner[3]
+        u_boundary = SVector(h_boundary, h_boundary * v1_boundary, hv2_boundary,
+                             u_inner[4])
+    elseif direction == 2 # x+
+        v1_boundary = v1_inner -
+                      2 * (sqrt(g * h_boundary) - sqrt(g * h_inner))
+        v1_boundary < 0 ? hv2_boundary = zero(u_inner[3]) : hv2_boundary = u_inner[3]
+        u_boundary = SVector(h_boundary, h_boundary * v1_boundary, hv2_boundary,
+                             u_inner[4])
+    elseif direction == 3 # y-
+        v2_boundary = v2_inner +
+                      2 * (sqrt(g * h_boundary) - sqrt(g * h_inner))
+        v2_boundary > 0 ? hv1_boundary = zero(u_inner[2]) : hv1_boundary = u_inner[2]
+        u_boundary = SVector(h_boundary, hv1_boundary, h_boundary * v2_boundary,
+                             u_inner[4])
+    elseif direction == 4 # y+
+        v2_boundary = v2_inner -
+                      2 * (sqrt(g * h_boundary) - sqrt(g * h_inner))
+        v2_boundary < 0 ? hv1_boundary = zero(u_inner[2]) : hv1_boundary = u_inner[2]
+        u_boundary = SVector(h_boundary, hv1_boundary, h_boundary * v2_boundary,
+                             u_inner[4])
+    end
+
+    # Evaluate the conservative flux at the boundary
+    flux = Trixi.flux(u_boundary, orientation, equations)
+
+    # Return the conservative and nonconservative fluxes. 
+    # The nonconservative part is zero as we assume a constant bottom topography at the boundary.
+    return (flux, zero(u_inner))
+end
+
+# Version for `UnstructuredMesh2D` and `P4estMesh`
+function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
+                                                            normal_direction,
+                                                            x, t,
+                                                            surface_flux_functions,
+                                                            equations::ShallowWaterEquationsWetDry2D)
+    # Extract the gravitational acceleration
+    g = equations.gravity
+
+    # Normalized normal vector
+    normal = normal_direction / Trixi.norm(normal_direction)
+
+    # Apply the rotation that maps `normal` onto the x-axis to `u_inner`.
+    u_rotated = Trixi.rotate_to_x(u_inner, normal, equations)
+
+    # Get the water height and velocity from the inner state
+    h_inner = waterheight(u_rotated, equations)
+    v_inner_normal, _ = velocity(u_rotated, equations)
+
+    # Extract the external water height from the boundary condition
+    h_boundary = boundary_condition.h_boundary(t)
+
+    # Calculate the boundary state in the rotated coordinate system.
+    # To extrapolate the external velocity assume that the Riemann invariant remains constant across
+    # the incoming characteristic. In the case of inflow we assume that the tangential velocity at
+    # the boundary is zero.
+    v_boundary_normal = v_inner_normal - 2 * (sqrt(g * h_boundary) - sqrt(g * h_inner))
+    v_boundary_normal < 0 ? hv_boundary_tangential = zero(u_rotated[3]) :
+    hv_boundary_tangential = u_rotated[3]
+
+    u_boundary = SVector(h_boundary, h_boundary * v_boundary_normal,
+                         hv_boundary_tangential, u_rotated[4])
+
+    # Compute the boundary flux in the rotated coordinate system.
+    flux = Trixi.flux(u_boundary, 1, equations)
+
+    # Apply the back-rotation that maps the x-axis onto `normal` to the boundary flux.
+    flux = Trixi.rotate_from_x(flux, normal, equations) * Trixi.norm(normal_direction)
+
+    # Return the conservative and nonconservative fluxes. The nonconservative part is zero as we assume
+    # a constant bottom topography at the boundary.
+    return (flux, zero(u_inner))
+end
+
+"""
+    BoundaryConditionMomentum(hv1_boundary, hv2_boundary, equations::ShallowWaterEquationsWetDry2D)
+
+Create a boundary condition that sets a fixed momentum in x- and y- directions, `hv1_boundary`
+and `hv2_boundary`, at the boundary and extrapolates the water height `h_boundary` from the incoming
+Riemann invariant.
+
+The external momentum can be specified as a constant value or as a function of time, e.g.
+```julia
+   BoundaryConditionMomentum(hv1_boundary, hv2_boundary, equations)
+   BoundaryConditionMomentum(t -> hv1_boundary(t), t -> hv2_boundary(t), equations)
+```
+
+More details can be found in the paper:
+- Lixiang Song, Jianzhong Zhou, Jun Guo, Qiang Zou, Yi Liu (2011)
+  A robust well-balanced finite volume model for shallow water flows
+  with wetting and drying over irregular terrain
+  [doi: 10.1016/j.advwatres.2011.04.017](https://doi.org/10.1016/j.advwatres.2011.04.017)
+
+!!! warning "Experimental code"
+    This is an experimental feature and can change any time.
+"""
+function BoundaryConditionMomentum(hv1_boundary::Real, hv2_boundary::Real,
+                                   equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+    # Convert function output to the correct type
+    hv1_boundary = convert(RealT, hv1_boundary)
+    hv2_boundary = convert(RealT, hv2_boundary)
+    return BoundaryConditionMomentum((t -> (hv1_boundary, hv2_boundary)))
+end
+
+function BoundaryConditionMomentum(hv1_boundary::Function, hv2_boundary::Function,
+                                   equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+    # Check if the function output is of the correct type
+    if !(typeof(hv1_boundary(one(RealT))) == RealT &&
+         typeof(hv2_boundary(one(RealT))) == RealT)
+        throw(ArgumentError("Boundary value functions must return a value of type $(RealT)"))
+    end
+    return BoundaryConditionMomentum(t -> (hv1_boundary(t), hv2_boundary(t)))
+end
+
+# Version for `TreeMesh`
+function (boundary_condition::BoundaryConditionMomentum)(u_inner,
+                                                         orientation,
+                                                         direction, x, t,
+                                                         surface_flux_functions,
+                                                         equations::ShallowWaterEquationsWetDry2D)
+    # Extract the gravitational acceleration
+    g = equations.gravity
+
+    # Get the water height and velocity from the inner state
+    h_inner = waterheight(u_inner, equations)
+    v1_inner, v2_inner = velocity(u_inner, equations)
+
+    # Extract the external momentum from the boundary condition
+    hv1_boundary, hv2_boundary = boundary_condition.hv_boundary(t)
+
+    # Calculate the boundary state based on the direction.
+    # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains 
+    # constant across the incoming characteristic. 
+    # Requires one to solve for the roots of a nonlinear function, see Eq. (52) in the reference above.
+    # For convenience we substitute x = h_boundary and solve for x, using the Steffensen method.
+    if direction == 1 # x-
+        fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) +
+                              (v1_inner - 2 * sqrt(g * h_inner)) * x - hv1_boundary,
+                         h_inner)
+        h_boundary = solve(fx, Order2())
+        if hv1_boundary > 0
+            u_boundary = SVector(h_boundary, hv1_boundary, hv2_boundary, u_inner[4])
+        else
+            u_boundary = SVector(h_boundary, hv1_boundary, u_inner[3], u_inner[4])
+        end
+    elseif direction == 2 # x+
+        fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) -
+                              (v1_inner + 2 * sqrt(g * h_inner)) * x + hv1_boundary,
+                         h_inner)
+        h_boundary = solve(fx, Order2())
+        if hv1_boundary < 0
+            u_boundary = SVector(h_boundary, hv1_boundary, hv2_boundary, u_inner[4])
+        else
+            u_boundary = SVector(h_boundary, hv1_boundary, u_inner[3], u_inner[4])
+        end
+    elseif direction == 3 # y-
+        fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) +
+                              (v2_inner - 2 * sqrt(g * h_inner)) * x - hv2_boundary,
+                         h_inner)
+        h_boundary = solve(fx, Order2())
+        if hv2_boundary > 0
+            u_boundary = SVector(h_boundary, hv1_boundary, hv2_boundary, u_inner[4])
+        else
+            u_boundary = SVector(h_boundary, u_inner[2], hv2_boundary, u_inner[4])
+        end
+    elseif direction == 4 # y+
+        fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) -
+                              (v2_inner + 2 * sqrt(g * h_inner)) * x + hv2_boundary,
+                         h_inner)
+        h_boundary = solve(fx, Order2())
+        if hv2_boundary < 0
+            u_boundary = SVector(h_boundary, hv1_boundary, hv2_boundary, u_inner[4])
+        else
+            u_boundary = SVector(h_boundary, u_inner[2], hv2_boundary, u_inner[4])
+        end
+    end
+
+    # Evaluate the conservative flux at the boundary
+    flux = Trixi.flux(u_boundary, orientation, equations)
+
+    # Return the conservative and nonconservative fluxes. 
+    # The nonconservative part is zero as we assume a constant bottom topography at the boundary.
+    return (flux, zero(u_inner))
+end
+
+# Version for `UnstructuredMesh2D` and `P4estMesh`
+function (boundary_condition::BoundaryConditionMomentum)(u_inner,
+                                                         normal_direction,
+                                                         x, t,
+                                                         surface_flux_functions,
+                                                         equations::ShallowWaterEquationsWetDry2D)
+
+    # Extract the gravitational acceleration
+    g = equations.gravity
+
+    # Normalized normal vector
+    normal = normal_direction / Trixi.norm(normal_direction)
+
+    # Apply the rotation that maps `normal` onto the x-axis to `u_inner` and `hv_boundary``.
+    u_rotated = Trixi.rotate_to_x(u_inner, normal, equations)
+
+    # Get the water height and velocity from the inner state
+    h_inner = waterheight(u_rotated, equations)
+    v_inner_normal, _ = velocity(u_rotated, equations)
+
+    # Extract the external momentum from the boundary condition
+    hv1_boundary, hv2_boundary = boundary_condition.hv_boundary(t)
+
+    hv_boundary_normal = hv1_boundary * normal[1] + hv2_boundary * normal[2]
+    hv_boundary_tangential = -hv1_boundary * normal[2] + hv2_boundary * normal[1]
+
+    # Calculate the boundary state in the rotated coordinate system.
+    # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains 
+    # constant across the incoming characteristic. 
+    # Requires one to solve for the roots of a nonlinear function, see Eq. (52) in the reference above.
+    # For convenience we substitute x = h_boundary and solve for x.
+    fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) -
+                          (v_inner_normal + 2 * sqrt(g * h_inner)) * x +
+                          hv_boundary_normal, h_inner)
+    h_boundary = solve(fx, Order2())
+
+    hv_boundary_normal < 0 ? nothing : hv_boundary_tangential = u_rotated[3]
+
+    u_boundary = SVector(h_boundary, hv_boundary_normal, hv_boundary_tangential,
+                         u_inner[4])
+
+    # Compute the boundary flux in the rotated coordinate system.
+    flux = Trixi.flux(u_boundary, 1, equations)
+
+    # Apply the back-rotation that maps the x-axis onto `normal` to the boundary flux.
+    flux = Trixi.rotate_from_x(flux, normal, equations) * Trixi.norm(normal_direction)
+
+    # Return the conservative and nonconservative fluxes. The nonconservative part is zero as we assume
+    # a constant bottom topography at the boundary.
+    return (flux, zero(u_inner))
 end
 
 # Calculate 1D flux for a single point
@@ -818,6 +1115,46 @@ end
                                         equations.basic_swe)
 end
 
+@inline function Trixi.rotate_to_x(u, normal_vector,
+                                   equations::ShallowWaterEquationsWetDry2D)
+    # cos and sin of the angle between the x-axis and the normalized normal_vector are
+    # the normalized vector's x and y coordinates respectively (see unit circle).
+    c = normal_vector[1]
+    s = normal_vector[2]
+
+    # Apply the 2D rotation matrix with normal and tangent directions of the form
+    # [ 1    0    0   0;
+    #   0   n_1  n_2  0;
+    #   0   t_1  t_2  0;
+    #   0    0    0   1 ]
+    # where t_1 = -n_2 and t_2 = n_1
+
+    return SVector(u[1],
+                   c * u[2] + s * u[3],
+                   -s * u[2] + c * u[3],
+                   u[4])
+end
+
+@inline function Trixi.rotate_from_x(u, normal_vector,
+                                     equations::ShallowWaterEquationsWetDry2D)
+    # cos and sin of the angle between the x-axis and the normalized normal_vector are
+    # the normalized vector's x and y coordinates respectively (see unit circle).
+    c = normal_vector[1]
+    s = normal_vector[2]
+
+    # Apply the 2D back-rotation matrix with normal and tangent directions of the form
+    # [ 1    0    0   0;
+    #   0   n_1  t_1  0;
+    #   0   n_2  t_2  0;
+    #   0    0    0   1 ]
+    # where t_1 = -n_2 and t_2 = n_1
+
+    return SVector(u[1],
+                   c * u[2] - s * u[3],
+                   s * u[2] + c * u[3],
+                   u[4])
+end
+
 # Helper function to extract the velocity vector from the conservative variables
 @inline function Trixi.velocity(u, equations::ShallowWaterEquationsWetDry2D)
     return Trixi.velocity(u, equations.basic_swe)
@@ -858,7 +1195,7 @@ end
 end
 
 @inline function Trixi.waterheight_pressure(u, equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.waterheight(u, equations) * Trixi.pressure(u, equations)
+    return waterheight(u, equations) * Trixi.pressure(u, equations)
 end
 
 # Entropy function for the shallow water equations is the total energy

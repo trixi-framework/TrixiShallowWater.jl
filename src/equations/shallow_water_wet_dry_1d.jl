@@ -217,6 +217,159 @@ For details see Section 9.2.5 of the book:
     return flux, noncons_flux
 end
 
+"""
+    BoundaryConditionWaterHeight(h_boundary, equations::ShallowWaterEquationsWetDry1D)
+
+Create a boundary condition that uses `h_boundary` to specify a fixed water height at the 
+boundary and extrapolates the velocity from the incoming Riemann invariant.
+
+The external water height `h_boundary` can be specified as a constant value or as a function of time, e.g.
+```julia
+   BoundaryConditionWaterHeight(h_boundary, equations))
+   BoundaryConditionWaterHeight(t -> h_boundary(t), equations))
+```
+
+More details can be found in the paper:
+- Lixiang Song, Jianzhong Zhou, Jun Guo, Qiang Zou, Yi Liu (2011)
+  A robust well-balanced finite volume model for shallow water flows
+  with wetting and drying over irregular terrain
+  [doi: 10.1016/j.advwatres.2011.04.017](https://doi.org/10.1016/j.advwatres.2011.04.017)
+
+!!! warning "Experimental code"
+    This is an experimental feature and can change any time.
+"""
+function BoundaryConditionWaterHeight(h_boundary::Real,
+                                      equations::ShallowWaterEquationsWetDry1D{RealT}) where {RealT}
+    # Convert function output to the correct type
+    h_boundary = convert(RealT, h_boundary)
+    return BoundaryConditionWaterHeight(t -> h_boundary)
+end
+
+function BoundaryConditionWaterHeight(h_boundary::Function,
+                                      equations::ShallowWaterEquationsWetDry1D{RealT}) where {RealT}
+    # Check if the function output is of the correct type
+    if !(typeof(h_boundary(one(RealT))) == RealT)
+        throw(ArgumentError("Boundary value functions must return a value of type $(RealT)"))
+    end
+    return BoundaryConditionWaterHeight(t -> h_boundary(t))
+end
+
+# Version for `TreeMesh`
+function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
+                                                            orientation,
+                                                            direction, x, t,
+                                                            surface_flux_functions,
+                                                            equations::ShallowWaterEquationsWetDry1D)
+    # Extract the gravitational acceleration
+    g = equations.gravity
+
+    # Get the water height and velocity from the inner state
+    h_inner = waterheight(u_inner, equations)
+    v_inner = velocity(u_inner, equations)
+
+    # Extract the external water height from the boundary condition
+    h_boundary = boundary_condition.h_boundary(t)
+
+    # Calculate the boundary state based on the direction.
+    # To extrapolate the external velocity assume that the Riemann invariant remains constant across
+    # the incoming characteristic. In the case of inflow we assume that the tangential velocity at
+    # the boundary is zero.
+    if direction == 1 # x-
+        v_boundary = v_inner + 2 * (sqrt(g * h_boundary) - sqrt(g * h_inner))
+        u_boundary = SVector(h_boundary, h_boundary * v_boundary, u_inner[3])
+    elseif direction == 2 # x+
+        v_boundary = v_inner - 2 * (sqrt(g * h_boundary) - sqrt(g * h_inner))
+        u_boundary = SVector(h_boundary, h_boundary * v_boundary, u_inner[3])
+    end
+
+    # Evaluate the conservative flux at the boundary
+    flux = Trixi.flux(u_boundary, orientation, equations)
+
+    # Return the conservative and nonconservative fluxes. 
+    # The nonconservative part is zero as we assume a constant bottom topography at the boundary.
+    return (flux, zero(u_inner))
+end
+
+"""
+    BoundaryConditionMomentum(hv_boundary, equations::ShallowWaterEquationsWetDry1D)
+
+Create a boundary condition that sets a fixed momentum `hv_boundary` at the boundary and 
+extrapolates the water height `h_boundary` from the incoming Riemann invariant.
+
+The external momentum can be specified as a constant value or as a function of time, e.g.
+```julia
+   BoundaryConditionMomentum(hv_boundary, equations)
+   BoundaryConditionMomentum(t -> hv_boundary(t), equations)
+```
+
+More details can be found in the paper:
+- Lixiang Song, Jianzhong Zhou, Jun Guo, Qiang Zou, Yi Liu (2011)
+  A robust well-balanced finite volume model for shallow water flows
+  with wetting and drying over irregular terrain
+  [doi: 10.1016/j.advwatres.2011.04.017](https://doi.org/10.1016/j.advwatres.2011.04.017)
+
+!!! warning "Experimental code"
+    This is an experimental feature and can change any time.
+"""
+function BoundaryConditionMomentum(hv_boundary::Real,
+                                   equations::ShallowWaterEquationsWetDry1D{RealT}) where {RealT}
+    # Convert function output to the correct type
+    hv_boundary = convert(RealT, hv_boundary)
+    return BoundaryConditionMomentum(t -> hv_boundary)
+end
+
+function BoundaryConditionMomentum(hv_boundary::Function,
+                                   equations::ShallowWaterEquationsWetDry1D{RealT}) where {RealT}
+    # Check if the function output is of the correct type
+    if !(typeof(hv_boundary(one(RealT))) == RealT)
+        throw(ArgumentError("Boundary value functions must return a value of type $(RealT)"))
+    end
+    return BoundaryConditionMomentum(t -> hv_boundary(t))
+end
+
+# Version for `TreeMesh`
+function (boundary_condition::BoundaryConditionMomentum)(u_inner,
+                                                         orientation,
+                                                         direction, x, t,
+                                                         surface_flux_functions,
+                                                         equations::ShallowWaterEquationsWetDry1D)
+    # Extract the gravitational acceleration
+    g = equations.gravity
+
+    # Get the water height and velocity from the inner state
+    h_inner = waterheight(u_inner, equations)
+    v_inner = velocity(u_inner, equations)
+
+    # Extract the external momentum from the boundary condition
+    hv_boundary = boundary_condition.hv_boundary(t)
+
+    # Calculate the boundary state based on the direction.
+    # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains 
+    # constant across the incoming characteristic. 
+    # Requires one to solve for the roots of a nonlinear function, see Eq. (52) in the reference above.
+    # For convenience we substitute x = h_boundary and solve for x, using the Steffensen method.
+    if direction == 1 # x-
+        fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) +
+                              (v_inner - 2 * sqrt(g * h_inner)) * x - hv_boundary,
+                         h_inner)
+        h_boundary = solve(fx, Order2())
+        u_boundary = SVector(h_boundary, hv_boundary, u_inner[3])
+    elseif direction == 2 # x+
+        fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) -
+                              (v_inner + 2 * sqrt(g * h_inner)) * x + hv_boundary,
+                         h_inner)
+        h_boundary = solve(fx, Order2())
+        u_boundary = SVector(h_boundary, hv_boundary, u_inner[3])
+    end
+
+    # Evaluate the conservative flux at the boundary
+    flux = Trixi.flux(u_boundary, orientation, equations)
+
+    # Return the conservative and nonconservative fluxes. 
+    # The nonconservative part is zero as we assume a constant bottom topography at the boundary.
+    return (flux, zero(u_inner))
+end
+
 # Calculate 1D flux for a single point
 # Note, the bottom topography has no flux
 @inline function Trixi.flux(u, orientation::Integer,

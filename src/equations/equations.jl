@@ -5,6 +5,16 @@
 @muladd begin
 #! format: noindent
 
+# Struct used for multiple dispatch on boundary conditions that set the water height at the boundary.
+struct BoundaryConditionWaterHeight{F <: Function}
+    h_boundary::F
+end
+
+# Struct used for multiple dispatch on boundary conditions that set the momentum at the boundary.
+struct BoundaryConditionMomentum{F <: Function}
+    hv_boundary::F
+end
+
 ####################################################################################################
 # Include files with actual implementations for different systems of equations. 
 
