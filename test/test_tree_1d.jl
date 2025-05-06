@@ -361,6 +361,104 @@ isdir(outdir) && rm(outdir, recursive = true)
         end
     end
 
+    @trixi_testset "elixir_shallowwater_moving_water_subsonic" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_moving_water_subsonic.jl"),
+                            l2=[
+                                8.417228364425849e-8,
+                                1.2192883088824584e-7,
+                                5.18813898298437e-17
+                            ],
+                            linf=[
+                                1.0690909364452494e-6,
+                                1.031855541455684e-6,
+                                5.195496810550537e-16
+                            ],
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_moving_water_subsonic (pressure inflow / momentum outflow)" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_moving_water_subsonic.jl"),
+                            l2=[
+                                8.417228365380916e-8,
+                                1.2192883078461691e-7,
+                                5.18813898298437e-17
+                            ],
+                            linf=[
+                                1.0690909364452494e-6,
+                                1.031855541455684e-6,
+                                5.195496810550537e-16
+                            ],
+                            boundary_conditions=(x_neg = boundary_condition_outflow,
+                                                 x_pos = boundary_condition_inflow),
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_moving_water_transonic" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_moving_water_transonic.jl"),
+                            l2=[
+                                1.4350478061746362e-8,
+                                2.7182491041365426e-8,
+                                5.18813898298437e-17
+                            ],
+                            linf=[
+                                2.0158945446269172e-7,
+                                2.638769658336315e-7,
+                                5.195496810550537e-16
+                            ],
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_moving_water_shock" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_moving_water_shock.jl"),
+                            l2=[
+                                0.005085389784760944,
+                                0.0035188809785392672,
+                                5.18813898298437e-17
+                            ],
+                            linf=[
+                                0.1072385165561712,
+                                0.045157748898879274,
+                                5.195496810550537e-16
+                            ],
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
     @trixi_testset "elixir_shallowwater_shock_capturing.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_shock_capturing.jl"),

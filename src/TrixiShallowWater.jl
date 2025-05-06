@@ -6,11 +6,12 @@ module TrixiShallowWater
 # https://github.com/trixi-framework/TrixiShallowWater.jl/pull/10#discussion_r1433720559
 using Trixi
 # Import additional symbols that are not exported by Trixi.jl
-using Trixi: get_node_vars, set_node_vars!, waterheight
+using Trixi: get_node_vars, set_node_vars!
 using MuladdMacro: @muladd
 using StaticArrays: SVector, @SMatrix, MVector
 using Static: True, False
 using LinearAlgebra: norm
+using Roots: Order2, solve, ZeroProblem
 
 include("equations/equations.jl")
 include("equations/numerical_fluxes.jl")
@@ -35,6 +36,8 @@ export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle,
 
 export ManningFriction, MeyerPeterMueller, GrassModel, ShieldsStressModel,
        dissipation_roe, water_sediment_height, source_term_bottom_friction
+
+export BoundaryConditionWaterHeight, BoundaryConditionMomentum
 
 export nlayers, eachlayer
 
