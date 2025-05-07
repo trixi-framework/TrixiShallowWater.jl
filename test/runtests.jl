@@ -1,6 +1,7 @@
 using Trixi
 using TrixiShallowWater
 using Test
+using MPI: mpiexec
 
 # We run tests with CI jobs setting the `TRIXI_TEST` environment
 # variable to determine the subset of tests to execute.

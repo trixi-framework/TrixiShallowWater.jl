@@ -64,6 +64,14 @@ jobs:
             os: windows-latest
             arch: x64
             trixi_test: upstream
+          - version: '1.10'
+            os: macos-13
+            arch: x64
+            trixi_test: mpi
+          - version: '1.10'
+            os: windows-latest
+            arch: x64
+            trixi_test: mpi
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
