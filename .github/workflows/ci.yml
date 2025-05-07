@@ -54,6 +54,7 @@ jobs:
           - p4est_2d
           - unit
           - upstream
+          - mpi
         include:
           - version: '1.10'
             os: macos-latest
