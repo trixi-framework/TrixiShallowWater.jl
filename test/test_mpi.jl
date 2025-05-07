@@ -6,7 +6,7 @@ using TrixiShallowWater
 
 include("test_trixi.jl")
 
-# Start with a clean environment: remove Trixi.jl output directory if it exists
+# Start with a clean environment: remove TrixiShallowWater.jl output directory if it exists
 outdir = "out"
 Trixi.mpi_isroot() && isdir(outdir) && rm(outdir, recursive = true)
 Trixi.MPI.Barrier(Trixi.mpi_comm())
@@ -32,7 +32,7 @@ end # MPI
     end
 end # MPI supporting functionality
 
-# Clean up afterwards: delete Trixi.jl output directory
+# Clean up afterwards: delete TrixiShallowWater.jl output directory
 Trixi.mpi_isroot() && @test_nowarn rm(outdir, recursive = true)
 Trixi.MPI.Barrier(Trixi.mpi_comm())
 

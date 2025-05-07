@@ -2,6 +2,7 @@ module TestExamplesMPIP4estMesh2D
 
 using Test
 using Trixi
+using TrixiShallowWater
 
 include("test_trixi.jl")
 
