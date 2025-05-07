@@ -47,7 +47,7 @@ function Trixi.refine!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
         for old_element_id in 1:old_n_elements
             for v in eachvariable(equations)
                 old_u[v, .., old_element_id] .= (old_u[v, .., old_element_id] ./
-                                                    old_inverse_jacobian[..,
+                                                 old_inverse_jacobian[..,
                                                                       old_element_id])
             end
         end
@@ -55,7 +55,7 @@ function Trixi.refine!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
         Trixi.reinitialize_containers!(mesh, equations, dg, cache)
 
         resize!(u_ode,
-                      nvariables(equations) * nnodes(dg)^ndims(mesh) * nelements(dg, cache))
+                nvariables(equations) * nnodes(dg)^ndims(mesh) * nelements(dg, cache))
         u = Trixi.wrap_array(u_ode, mesh, equations, dg, cache)
 
         # Loop over all elements in old container and either copy them or refine them
@@ -71,7 +71,7 @@ function Trixi.refine!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
                 for m in 0:3 # loop over the children
                     for v in eachvariable(equations)
                         u[v, .., element_id + m] .*= (0.25f0 .*
-                                                        cache.elements.inverse_jacobian[..,
+                                                      cache.elements.inverse_jacobian[..,
                                                                                       element_id + m])
                     end
                 end
@@ -147,7 +147,7 @@ function Trixi.coarsen!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
         for old_element_id in 1:old_n_elements
             for v in eachvariable(equations)
                 old_u[v, .., old_element_id] .= (old_u[v, .., old_element_id] ./
-                                                    old_inverse_jacobian[..,
+                                                 old_inverse_jacobian[..,
                                                                       old_element_id])
             end
         end
@@ -155,7 +155,7 @@ function Trixi.coarsen!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
         Trixi.reinitialize_containers!(mesh, equations, dg, cache)
 
         resize!(u_ode,
-                      nvariables(equations) * nnodes(dg)^ndims(mesh) * nelements(dg, cache))
+                nvariables(equations) * nnodes(dg)^ndims(mesh) * nelements(dg, cache))
         u = Trixi.wrap_array(u_ode, mesh, equations, dg, cache)
 
         # Loop over all elements in old container and either copy them or coarsen them
@@ -182,7 +182,8 @@ function Trixi.coarsen!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
                 # the result in the parent element
                 for v in eachvariable(equations)
                     u[v, .., element_id] .*= (4 .*
-                                              cache.elements.inverse_jacobian[.., element_id])
+                                              cache.elements.inverse_jacobian[..,
+                                                                              element_id])
                 end
 
                 # Increment `element_id` on the coarsened mesh by one and `skip` = 3 in 2D
