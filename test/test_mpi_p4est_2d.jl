@@ -4,6 +4,8 @@ using Test
 using Trixi
 using TrixiShallowWater
 
+import Trixi: calc_mpi_interface_flux!, calc_mpi_mortar_flux!
+
 include("test_trixi.jl")
 
 const EXAMPLES_DIR = pkgdir(TrixiShallowWater, "examples", "p4est_2d_dgsem")
