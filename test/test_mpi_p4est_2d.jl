@@ -11,7 +11,6 @@ const EXAMPLES_DIR = pkgdir(TrixiShallowWater, "examples", "p4est_2d_dgsem")
 @testset "P4estMesh MPI 2D" begin
 #! format: noindent
 
-# Run basic tests
 @testset "Examples 2D" begin
     @trixi_testset "elixir_shallowwater_perturbation_amr.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
