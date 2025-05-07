@@ -1071,11 +1071,7 @@ end
     return λ_min, λ_max
 end
 
-# @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterEquationsWetDry2D)
-#     # println(Trixi.max_abs_speeds(u, equations.basic_swe))
-#     return Trixi.max_abs_speeds(u,
-#                                 equations.basic_swe)
-# end
+# Wave speed estimates used in the CFL based time step selection
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterEquationsWetDry2D)
     h = waterheight(u, equations)
     v1, v2 = velocity(u, equations)

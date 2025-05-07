@@ -11,8 +11,13 @@
 # element is then recovered by dividing by the new element Jacobians.
 # After refinement, projections may introduce inadmissible solution states like negative
 # water heights. So the limiter is called to remedy this.
-function Trixi.refine!(u_ode::AbstractVector, adaptor,
-                       mesh::Union{TreeMesh{2}, P4estMesh{2}},
+#
+# TODO: Requires modification for use with `TreeMesh`. However, the well-balanced
+# mortar implementation would need added to `TreeMesh` first.
+#
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
+function Trixi.refine!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
                        equations::ShallowWaterEquationsWetDry2D,
                        dg::DGSEM, cache, elements_to_refine)
     # Return early if there is nothing to do
@@ -37,21 +42,19 @@ function Trixi.refine!(u_ode::AbstractVector, adaptor,
     GC.@preserve old_u_ode old_inverse_jacobian begin
         old_u = Trixi.wrap_array(old_u_ode, mesh, equations, dg, cache)
 
-        if mesh isa P4estMesh
-            # Loop over all elements in old container and scale the old solution by the Jacobian
-            # prior to projection
-            for old_element_id in 1:old_n_elements
-                for v in eachvariable(equations)
-                    old_u[v, .., old_element_id] .= (old_u[v, .., old_element_id] ./
-                                                     old_inverse_jacobian[..,
-                                                                          old_element_id])
-                end
+        # Loop over all elements in old container and scale the old solution by the Jacobian
+        # prior to projection
+        for old_element_id in 1:old_n_elements
+            for v in eachvariable(equations)
+                old_u[v, .., old_element_id] .= (old_u[v, .., old_element_id] ./
+                                                    old_inverse_jacobian[..,
+                                                                      old_element_id])
             end
         end
 
         Trixi.reinitialize_containers!(mesh, equations, dg, cache)
 
-        Trixi.resize!(u_ode,
+        resize!(u_ode,
                       nvariables(equations) * nnodes(dg)^ndims(mesh) * nelements(dg, cache))
         u = Trixi.wrap_array(u_ode, mesh, equations, dg, cache)
 
@@ -63,15 +66,13 @@ function Trixi.refine!(u_ode::AbstractVector, adaptor,
                 Trixi.refine_element!(u, element_id, old_u, old_element_id,
                                       adaptor, equations, dg)
 
-                if mesh isa P4estMesh
-                    # Before `element_id` is incremented, divide by the new Jacobians on each
-                    # child element and save the result
-                    for m in 0:3 # loop over the children
-                        for v in eachvariable(equations)
-                            u[v, .., element_id + m] .*= (0.25f0 .*
-                                                          cache.elements.inverse_jacobian[..,
-                                                                                          element_id + m])
-                        end
+                # Before `element_id` is incremented, divide by the new Jacobians on each
+                # child element and save the result
+                for m in 0:3 # loop over the children
+                    for v in eachvariable(equations)
+                        u[v, .., element_id + m] .*= (0.25f0 .*
+                                                        cache.elements.inverse_jacobian[..,
+                                                                                      element_id + m])
                     end
                 end
 
@@ -79,16 +80,13 @@ function Trixi.refine!(u_ode::AbstractVector, adaptor,
                 # of children, i.e., 4 in 2D
                 element_id += 2^ndims(mesh)
             else
-                if mesh isa P4estMesh
-                    # Copy old element data to new element container and remove Jacobian scaling
-                    for v in eachvariable(equations)
-                        u[v, .., element_id] .= (old_u[v, .., old_element_id] .*
-                                                 old_inverse_jacobian[..,
-                                                                      old_element_id])
-                    end
-                else # isa TreeMesh
-                    @views u[:, .., element_id] .= old_u[:, .., old_element_id]
+                # Copy old element data to new element container and remove Jacobian scaling
+                for v in eachvariable(equations)
+                    u[v, .., element_id] .= (old_u[v, .., old_element_id] .*
+                                             old_inverse_jacobian[..,
+                                                                  old_element_id])
                 end
+
                 # No refinement occurred, so increment `element_id` on the new mesh by one
                 element_id += 1
             end
@@ -101,23 +99,9 @@ function Trixi.refine!(u_ode::AbstractVector, adaptor,
                 1||element_id == nelements(dg, cache) + 2^ndims(mesh) "element_id = $element_id, nelements(dg, cache) = $(nelements(dg, cache))"
     end # GC.@preserve old_u_ode old_inverse_jacobian
 
-    # Sanity check
-    if mesh isa TreeMesh && isperiodic(mesh.tree) && nmortars(cache.mortars) == 0 &&
-       !Trixi.mpi_isparallel()
-        @assert ninterfaces(cache.interfaces)==ndims(mesh) * nelements(dg, cache) ("For $(ndims(mesh))D and periodic domains and conforming elements, the number of interfaces must be $(ndims(mesh)) times the number of elements")
-    end
-
     # Apply limiter to ensure admissible solution states
-    # TODO: if this works figure out how to NOT hardcode the limiter `variable`
-    # limiter_shallow_water!(u, equations.threshold_limiter, waterheight,
-    #                        mesh, equations, dg, cache)
-    for j in 1:nelements(dg, cache)
-        for i in 1:nnodes(dg), k in 1:nnodes(dg)
-            if (u[1,i,k,j]) < 0
-                println((u[1:3,i,k,j]))
-            end
-        end
-    end
+    limiter_shallow_water!(u, equations.threshold_limiter, waterheight,
+                           mesh, equations, dg, cache)
     return nothing
 end
 
@@ -127,8 +111,13 @@ end
 # element is then recovered by dividing by the new element Jacobian.
 # After coarsening, projections may introduce inadmissible solution states like negative
 # water heights. So the limiter is called to remedy this.
-function Trixi.coarsen!(u_ode::AbstractVector, adaptor,
-                        mesh::Union{TreeMesh{2}, P4estMesh{2}},
+#
+# TODO: Requires modification for use with `TreeMesh`. However, the well-balanced
+# mortar implementation would need added to `TreeMesh` first.
+#
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
+function Trixi.coarsen!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
                         equations::ShallowWaterEquationsWetDry2D,
                         dg::DGSEM, cache, elements_to_remove)
     # Return early if there is nothing to do
@@ -153,21 +142,19 @@ function Trixi.coarsen!(u_ode::AbstractVector, adaptor,
     GC.@preserve old_u_ode old_inverse_jacobian begin
         old_u = Trixi.wrap_array(old_u_ode, mesh, equations, dg, cache)
 
-        if mesh isa P4estMesh
-            # Loop over all elements in old container and scale the old solution by the Jacobian
-            # prior to projection
-            for old_element_id in 1:old_n_elements
-                for v in eachvariable(equations)
-                    old_u[v, .., old_element_id] .= (old_u[v, .., old_element_id] ./
-                                                     old_inverse_jacobian[..,
-                                                                          old_element_id])
-                end
+        # Loop over all elements in old container and scale the old solution by the Jacobian
+        # prior to projection
+        for old_element_id in 1:old_n_elements
+            for v in eachvariable(equations)
+                old_u[v, .., old_element_id] .= (old_u[v, .., old_element_id] ./
+                                                    old_inverse_jacobian[..,
+                                                                      old_element_id])
             end
         end
 
         Trixi.reinitialize_containers!(mesh, equations, dg, cache)
 
-        Trixi.resize!(u_ode,
+        resize!(u_ode,
                       nvariables(equations) * nnodes(dg)^ndims(mesh) * nelements(dg, cache))
         u = Trixi.wrap_array(u_ode, mesh, equations, dg, cache)
 
@@ -191,14 +178,11 @@ function Trixi.coarsen!(u_ode::AbstractVector, adaptor,
                 Trixi.coarsen_elements!(u, element_id, old_u, old_element_id,
                                         adaptor, equations, dg)
 
-                if mesh isa P4estMesh
-                    # Before `element_id` is incremented, divide by the new Jacobian and save
-                    # the result in the parent element
-                    for v in eachvariable(equations)
-                        u[v, .., element_id] .*= (4 .*
-                                                  cache.elements.inverse_jacobian[..,
-                                                                                  element_id])
-                    end
+                # Before `element_id` is incremented, divide by the new Jacobian and save
+                # the result in the parent element
+                for v in eachvariable(equations)
+                    u[v, .., element_id] .*= (4 .*
+                                              cache.elements.inverse_jacobian[.., element_id])
                 end
 
                 # Increment `element_id` on the coarsened mesh by one and `skip` = 3 in 2D
@@ -206,15 +190,11 @@ function Trixi.coarsen!(u_ode::AbstractVector, adaptor,
                 element_id += 1
                 skip = 2^ndims(mesh) - 1
             else
-                if mesh isa P4estMesh
-                    # Copy old element data to new element container and remove Jacobian scaling
-                    for v in eachvariable(equations)
-                        u[v, .., element_id] .= (old_u[v, .., old_element_id] .*
-                                                 old_inverse_jacobian[..,
-                                                                      old_element_id])
-                    end
-                else # isa TreeMesh
-                    @views u[:, .., element_id] .= old_u[:, .., old_element_id]
+                # Copy old element data to new element container and remove Jacobian scaling
+                for v in eachvariable(equations)
+                    u[v, .., element_id] .= (old_u[v, .., old_element_id] .*
+                                             old_inverse_jacobian[..,
+                                                                  old_element_id])
                 end
                 # No coarsening occurred, so increment `element_id` on the new mesh by one
                 element_id += 1
@@ -224,23 +204,9 @@ function Trixi.coarsen!(u_ode::AbstractVector, adaptor,
         @assert element_id==nelements(dg, cache) + 1 "element_id = $element_id, nelements(dg, cache) = $(nelements(dg, cache))"
     end # GC.@preserve old_u_ode old_inverse_jacobian
 
-    # Sanity check
-    if mesh isa TreeMesh && isperiodic(mesh.tree) && nmortars(cache.mortars) == 0 &&
-       !Trixi.mpi_isparallel()
-        @assert ninterfaces(cache.interfaces)==ndims(mesh) * nelements(dg, cache) ("For $(ndims(mesh))D and periodic domains and conforming elements, the number of interfaces must be $(ndims(mesh)) times the number of elements")
-    end
-
-    # # # Apply limiter to ensure admissible solution states
-    # # # TODO: if this works figure out how to NOT hardcode the limiter `variable`
-    # limiter_shallow_water!(u, equations.threshold_limiter, waterheight,
-    #                        mesh, equations, dg, cache)
-    for j in 1:nelements(dg, cache)
-        for i in 1:nnodes(dg), k in 1:nnodes(dg)
-            if (u[1,i,k,j]) < 0
-                println((u[1:3,i,k,j]))
-            end
-        end
-    end
+    # Apply limiter to ensure admissible solution states
+    limiter_shallow_water!(u, equations.threshold_limiter, waterheight,
+                           mesh, equations, dg, cache)
     return nothing
 end
 end # @muladd
