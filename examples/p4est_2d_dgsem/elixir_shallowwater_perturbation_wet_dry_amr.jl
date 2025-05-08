@@ -17,9 +17,9 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function for a perturbed water height on a nonconforming mesh with AMR
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 1.235,
-                                          threshold_limiter = 1e-12,
-                                          threshold_desingularization = 1e-4)
+equations = ShallowWaterEquations2D(gravity = 9.812, H0 = 1.235,
+                                    threshold_limiter = 1e-12,
+                                    threshold_desingularization = 1e-4)
 
 function initial_condition_perturbation(x, t, equations::ShallowWaterEquations2D)
     # Calculate primitive variables
