@@ -17,7 +17,6 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function for a perturbed water height on a nonconforming mesh with AMR
 
-# This configuration gives an interesting result. where the initial coarsening seems to be the problem...
 equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 1.235,
                                           threshold_limiter = 1e-12,
                                           threshold_desingularization = 1e-4)
