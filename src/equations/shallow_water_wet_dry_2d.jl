@@ -245,7 +245,7 @@ end
 """
     BoundaryConditionWaterHeight(h_boundary, equations::ShallowWaterEquationsWetDry2D)
 
-Create a boundary condition that uses `h_boundary` to specify a fixed water height at the 
+Create a boundary condition that uses `h_boundary` to specify a fixed water height at the
 boundary and extrapolates the velocity from the incoming Riemann invariant.
 
 The external water height `h_boundary` can be specified as a constant value or as a function of time, e.g.
@@ -328,7 +328,7 @@ function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
     # Evaluate the conservative flux at the boundary
     flux = Trixi.flux(u_boundary, orientation, equations)
 
-    # Return the conservative and nonconservative fluxes. 
+    # Return the conservative and nonconservative fluxes.
     # The nonconservative part is zero as we assume a constant bottom topography at the boundary.
     return (flux, zero(u_inner))
 end
@@ -434,8 +434,8 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
     hv1_boundary, hv2_boundary = boundary_condition.hv_boundary(t)
 
     # Calculate the boundary state based on the direction.
-    # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains 
-    # constant across the incoming characteristic. 
+    # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains
+    # constant across the incoming characteristic.
     # Requires one to solve for the roots of a nonlinear function, see Eq. (52) in the reference above.
     # For convenience we substitute x = h_boundary and solve for x, using the Steffensen method.
     if direction == 1 # x-
@@ -483,7 +483,7 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
     # Evaluate the conservative flux at the boundary
     flux = Trixi.flux(u_boundary, orientation, equations)
 
-    # Return the conservative and nonconservative fluxes. 
+    # Return the conservative and nonconservative fluxes.
     # The nonconservative part is zero as we assume a constant bottom topography at the boundary.
     return (flux, zero(u_inner))
 end
@@ -515,8 +515,8 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
     hv_boundary_tangential = -hv1_boundary * normal[2] + hv2_boundary * normal[1]
 
     # Calculate the boundary state in the rotated coordinate system.
-    # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains 
-    # constant across the incoming characteristic. 
+    # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains
+    # constant across the incoming characteristic.
     # Requires one to solve for the roots of a nonlinear function, see Eq. (52) in the reference above.
     # For convenience we substitute x = h_boundary and solve for x.
     fx = ZeroProblem(x -> 2 * sqrt(g) * x^(3 / 2) -
@@ -1071,9 +1071,13 @@ end
     return λ_min, λ_max
 end
 
+# Wave speed estimates used in the CFL based time step selection
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.max_abs_speeds(u,
-                                equations.basic_swe)
+    h = waterheight(u, equations)
+    v1, v2 = velocity(u, equations)
+
+    c = sqrt(equations.gravity * h)
+    return abs(v1) + c, abs(v2) + c
 end
 
 # Calculate estimates for minimum and maximum wave speeds for HLL-type fluxes
