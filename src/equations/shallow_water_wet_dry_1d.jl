@@ -734,7 +734,7 @@ end
 
 # Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
 @inline function Trixi.max_abs_speed(u_ll, u_rr, orientation::Integer,
-    equations::ShallowWaterEquations1D)
+                                     equations::ShallowWaterEquations1D)
     # Get the velocity quantities
     v_ll = velocity(u_ll, equations)
     v_rr = velocity(u_rr, equations)
