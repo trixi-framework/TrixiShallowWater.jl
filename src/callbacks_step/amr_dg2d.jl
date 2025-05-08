@@ -12,8 +12,9 @@
 # After refinement, projections may introduce inadmissible solution states like negative
 # water heights. So the limiter is called to remedy this.
 #
-# TODO: Requires modification for use with `TreeMesh`. However, the well-balanced
-# mortar implementation would need added to `TreeMesh` first.
+# TODO: Requires modification for use with `TreeMesh` because the Jacobian is constant.
+# A generic version is available in Trixi.jl in `src/callbacks_step/amr_dg2d.jl`.
+# However, the well-balanced mortar implementation would need added to `TreeMesh` first.
 #
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
@@ -22,11 +23,14 @@ function Trixi.refine!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
                        dg::DGSEM, cache, elements_to_refine)
     # Return early if there is nothing to do
     if isempty(elements_to_refine)
-        if Trixi.mpi_isparallel()
-            # MPICache init uses all-to-all communication -> reinitialize even if there is nothing to do
-            # locally (there still might be other MPI ranks that have refined elements)
-            Trixi.reinitialize_containers!(mesh, equations, dg, cache)
-        end
+        # TODO: MPI parallel runs unavailable. Requires analogous implementations
+        # of `calc_mpi_interface_flux!` and `calc_mpi_mortar_flux!` in Trixi.jl
+        # `src/solvers/dgsem_p4est/dg_2d_parallel.jl`.
+        # if Trixi.mpi_isparallel()
+        #     # MPICache init uses all-to-all communication -> reinitialize even if there is nothing to do
+        #     # locally (there still might be other MPI ranks that have refined elements)
+        #     Trixi.reinitialize_containers!(mesh, equations, dg, cache)
+        # end
         return
     end
 
@@ -112,8 +116,9 @@ end
 # After coarsening, projections may introduce inadmissible solution states like negative
 # water heights. So the limiter is called to remedy this.
 #
-# TODO: Requires modification for use with `TreeMesh`. However, the well-balanced
-# mortar implementation would need added to `TreeMesh` first.
+# TODO: Requires modification for use with `TreeMesh` because the Jacobian is constant.
+# A generic version is available in Trixi.jl in `src/callbacks_step/amr_dg2d.jl`
+# However, the well-balanced mortar implementation would need added to `TreeMesh` first.
 #
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
@@ -122,11 +127,14 @@ function Trixi.coarsen!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
                         dg::DGSEM, cache, elements_to_remove)
     # Return early if there is nothing to do
     if isempty(elements_to_remove)
-        if Trixi.mpi_isparallel()
-            # MPICache init uses all-to-all communication -> reinitialize even if there is nothing to do
-            # locally (there still might be other MPI ranks that have coarsened elements)
-            Trixi.reinitialize_containers!(mesh, equations, dg, cache)
-        end
+        # TODO: MPI parallel runs unavailable. Requires analogous implementations
+        # of `calc_mpi_interface_flux!` and `calc_mpi_mortar_flux!` in Trixi.jl
+        # `src/solvers/dgsem_p4est/dg_2d_parallel.jl`.
+        # if Trixi.mpi_isparallel()
+        #     # MPICache init uses all-to-all communication -> reinitialize even if there is nothing to do
+        #     # locally (there still might be other MPI ranks that have coarsened elements)
+        #     Trixi.reinitialize_containers!(mesh, equations, dg, cache)
+        # end
         return
     end
 
