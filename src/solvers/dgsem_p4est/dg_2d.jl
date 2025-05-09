@@ -18,7 +18,7 @@
 #
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
-function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+function Trixi.create_cache(mesh::P4estMesh{2},
                             equations::ShallowWaterEquations2D,
                             mortar_l2::Trixi.LobattoLegendreMortarL2, uEltype)
     # TODO: Taal performance using different types
@@ -41,7 +41,7 @@ function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
 end
 
 function Trixi.prolong2mortars!(cache, u,
-                                mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+                                mesh::P4estMesh{2},
                                 equations::ShallowWaterEquations2D,
                                 mortar_l2::Trixi.LobattoLegendreMortarL2,
                                 dg::DGSEM)
@@ -187,7 +187,7 @@ end
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 function Trixi.calc_mortar_flux!(surface_flux_values,
-                                 mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+                                 mesh::P4estMesh{2},
                                  nonconservative_terms,
                                  equations::ShallowWaterEquations2D,
                                  mortar_l2::Trixi.LobattoLegendreMortarL2,
@@ -291,8 +291,7 @@ end
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 @inline function Trixi.mortar_fluxes_to_elements!(surface_flux_values,
-                                                  mesh::Union{P4estMesh{2},
-                                                              T8codeMesh{2}},
+                                                  mesh::P4estMesh{2},
                                                   equations::ShallowWaterEquations2D,
                                                   mortar_l2::Trixi.LobattoLegendreMortarL2,
                                                   dg::DGSEM, cache, mortar,

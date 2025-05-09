@@ -17,7 +17,7 @@ The quasi-1D shallow water equations (SWE). The equations are given by
 \end{aligned}
 ```
 The unknown quantities of the Quasi-1D SWE are the water height ``h`` and the scaled velocity ``v``.
-The gravitational_acceleration is denoted by `g`, the (possibly) variable bottom topography function ``b(x)``, and (possibly) variable channel width ``a(x)``. The water height ``h`` is measured from the bottom topography ``b``, therefore one also defines the total water height as ``H = h + b``.
+The gravitational acceleration is denoted by `g`, the (possibly) variable bottom topography function ``b(x)``, and (possibly) variable channel width ``a(x)``. The water height ``h`` is measured from the bottom topography ``b``, therefore one also defines the total water height as ``H = h + b``.
 
 The additional quantity ``H_0`` is also available to store a reference value for the total water height that
 is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
@@ -26,7 +26,7 @@ The bottom topography function ``b(x)`` and channel width ``a(x)`` are set insid
 for a particular problem setup. To test the conservative form of the SWE one can set the bottom topography
 variable `b` to zero and ``a`` to one. 
 
-In addition to the unknowns, Trixi.jl currently stores the bottom topography and channel width values at the approximation points 
+In addition to the unknowns, TrixiShallowWater.jl stores the bottom topography and channel width values at the approximation points 
 despite being fixed in time. This is done for convenience of computing the bottom topography gradients
 on the fly during the approximation as well as computing auxiliary quantities like the total water height ``H``
 or the entropy variables.
@@ -163,7 +163,7 @@ end
 # While `normal_direction` isn't strictly necessary in 1D, certain solvers assume that 
 # the normal component is incorporated into the numerical flux. 
 # 
-# See `flux(u, normal_direction::AbstractVector, equations::AbstractEquations{1})` for a 
+# See `Trixi.flux(u, normal_direction::AbstractVector, equations::AbstractEquations{1})` for a 
 # similar implementation.
 @inline function Trixi.flux_nonconservative_chan_etal(u_ll, u_rr,
                                                       normal_direction::AbstractVector,
@@ -211,7 +211,7 @@ end
 # While `normal_direction` isn't strictly necessary in 1D, certain solvers assume that 
 # the normal component is incorporated into the numerical flux. 
 # 
-# See `flux(u, normal_direction::AbstractVector, equations::AbstractEquations{1})` for a 
+# See `Trixi.flux(u, normal_direction::AbstractVector, equations::AbstractEquations{1})` for a 
 # similar implementation.
 @inline function Trixi.flux_chan_etal(u_ll, u_rr, normal_direction::AbstractVector,
                                       equations::ShallowWaterEquationsQuasi1D)

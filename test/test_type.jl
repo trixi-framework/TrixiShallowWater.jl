@@ -92,7 +92,7 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test eltype(@inferred prim2cons(u, equations)) == RealT
             @test eltype(@inferred cons2entropy(u, equations)) == RealT
             @test eltype(@inferred entropy2cons(u, equations)) == RealT
-            @test typeof(@inferred Trixi.waterheight(u, equations)) == RealT
+            @test typeof(@inferred waterheight(u, equations)) == RealT
             @test typeof(@inferred pressure(u, equations)) == RealT
             @test typeof(@inferred waterheight_pressure(u, equations)) == RealT
 
@@ -229,7 +229,7 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test eltype(@inferred prim2cons(u, equations)) == RealT
             @test eltype(@inferred cons2entropy(u, equations)) == RealT
             @test eltype(@inferred entropy2cons(u, equations)) == RealT
-            @test typeof(@inferred Trixi.waterheight(u, equations)) == RealT
+            @test typeof(@inferred waterheight(u, equations)) == RealT
             @test typeof(@inferred pressure(u, equations)) == RealT
             @test typeof(@inferred waterheight_pressure(u, equations)) == RealT
 
@@ -286,7 +286,7 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test eltype(@inferred cons2prim(u, equations)) == RealT
             @test eltype(@inferred prim2cons(u, equations)) == RealT
             @test eltype(@inferred cons2entropy(u, equations)) == RealT
-            @test typeof(@inferred Trixi.waterheight(u, equations)) == RealT
+            @test typeof(@inferred waterheight(u, equations)) == RealT
 
             @test typeof(@inferred entropy(cons, equations)) == RealT
             @test typeof(@inferred energy_total(cons, equations)) == RealT

@@ -478,10 +478,7 @@ and for curvilinear 2D case in the paper:
     h_average = 0.5f0 * (h_ll + h_rr)
     b_jump = b_rr - b_ll
 
-    # Includes two parts:
-    #  (i)  Diagonal (consistent) term from the volume flux that uses `b_ll` to avoid
-    #       cross-averaging across a discontinuous bottom topography
-    #  (ii) True surface part that uses `h_average` and `b_jump` to handle discontinuous bathymetry
+    #  Surface contribution that uses `h_average` and `b_jump` to handle discontinuous bathymetry
     f = SVector(0,
                 equations.gravity * h_average * b_jump,
                 0)

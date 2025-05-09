@@ -157,8 +157,8 @@ as defined in [`initial_condition_convergence_test`](@ref).
 """
 @inline function Trixi.source_terms_convergence_test(u, x, t,
                                                      equations::ShallowWaterEquations2D)
-    # Same settings as in `initial_condition_convergence_test`. Some derivative simplify because
-    # this manufactured solution velocities are taken to be constants
+    # Same settings as in `initial_condition_convergence_test`. Some derivatives simplify because
+    # for this manufactured solution velocities are taken to be constants
     RealT = eltype(u)
     c = 7
     omega_x = 2 * convert(RealT, pi) * sqrt(convert(RealT, 2))
