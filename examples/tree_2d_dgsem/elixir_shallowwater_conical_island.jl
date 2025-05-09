@@ -6,12 +6,12 @@ using TrixiShallowWater
 ###############################################################################
 # semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.81, H0 = 1.4)
+equations = ShallowWaterEquations2D(gravity = 9.81, H0 = 1.4)
 
 """
-    initial_condition_conical_island(x, t, equations::ShallowWaterEquationsWetDry2D)
+    initial_condition_conical_island(x, t, equations::ShallowWaterEquations2D)
 
-Initial condition for the [`ShallowWaterEquationsWetDry2D`](@ref) to test the [`hydrostatic_reconstruction_chen_noelle`](@ref)
+Initial condition for the [`ShallowWaterEquations2D`](@ref) to test the [`hydrostatic_reconstruction_chen_noelle`](@ref)
 and its handling of discontinuous water heights at the start in combination with wetting and
 drying. The bottom topography is given by a conical island in the middle of the domain. Around that
 island, there is a cylindrical water column at t=0 and the rest of the domain is dry. This
@@ -19,7 +19,7 @@ discontinuous water height is smoothed by a logistic function. This simulation u
 boundary condition with the initial values. Due to the dry cells at the boundary, this has the
 effect of an outflow which can be seen in the simulation.
 """
-function initial_condition_conical_island(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_conical_island(x, t, equations::ShallowWaterEquations2D)
     # Set the background values
 
     v1 = 0.0
@@ -39,7 +39,7 @@ function initial_condition_conical_island(x, t, equations::ShallowWaterEquations
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v1) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v1, v2, b), equations)

@@ -7,12 +7,12 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function for a fully wet configuration on a nonconforming mesh
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 2.0)
+equations = ShallowWaterEquations2D(gravity = 9.812, H0 = 2.0)
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
 # Note, this routine is used to compute errors in the analysis callback but the initialization is
 # overwritten by `initial_condition_discontinuous_well_balancedness` below.
-function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquations2D)
     # Calculate primitive variables
     H = equations.H0
     v1 = 0.0
@@ -102,7 +102,7 @@ ode = semidiscretize(semi, tspan)
 # `element_id` explicitly. In particular, this initial conditions works as intended
 # only for the specific mesh loaded above!
 function initial_condition_discontinuous_well_balancedness(x, t, element_id,
-                                                           equations::ShallowWaterEquationsWetDry2D)
+                                                           equations::ShallowWaterEquations2D)
     # Set the background values
     H = equations.H0
     v1 = 0.0

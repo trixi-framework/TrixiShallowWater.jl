@@ -7,7 +7,7 @@
 
 function limiter_shallow_water!(u, threshold::Real, variable,
                                 mesh::Trixi.AbstractMesh{1},
-                                equations::ShallowWaterEquationsWetDry1D,
+                                equations::ShallowWaterEquations1D,
                                 dg::DGSEM, cache)
     @unpack weights = dg.basis
 

@@ -532,6 +532,86 @@ isdir(outdir) && rm(outdir, recursive = true)
     end
 end # SWE
 
+@testset "Shallow Water Quasi-1D" begin
+    @trixi_testset "elixir_shallow_water_quasi_1d_source_terms.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallow_water_quasi_1d_source_terms.jl"),
+                            l2=[
+                                6.37048760275098e-5,
+                                0.0002745658116815704,
+                                4.436491725647962e-6,
+                                8.872983451152218e-6
+                            ],
+                            linf=[
+                                0.00026747526881631956,
+                                0.0012106730729152249,
+                                9.098379777500165e-6,
+                                1.8196759554278685e-5
+                            ],
+                            tspan=(0.0, 0.05))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_quasi_1d_well_balanced.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_quasi_1d_well_balanced.jl"),
+                            l2=[
+                                1.4250229186905198e-14,
+                                2.495109919406496e-12,
+                                7.408599286788738e-17,
+                                2.7205812409138776e-16
+                            ],
+                            linf=[
+                                5.284661597215745e-14,
+                                2.74056233065078e-12,
+                                2.220446049250313e-16,
+                                8.881784197001252e-16
+                            ],
+                            tspan=(0.0, 100.0),
+                            atol=1e-12)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    @trixi_testset "elixir_shallowwater_quasi_1d_discontinuous.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_quasi_1d_discontinuous.jl"),
+                            l2=[
+                                0.02843233740533314,
+                                0.14083324483705398,
+                                0.0054554472558998,
+                                0.005455447255899814
+                            ],
+                            linf=[
+                                0.26095842440037487,
+                                0.45919004549253795,
+                                0.09999999999999983,
+                                0.10000000000000009
+                            ],)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+end
+
 @testset "Two-Layer Shallow Water" begin
     @trixi_testset "elixir_shallowwater_twolayer_convergence.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,

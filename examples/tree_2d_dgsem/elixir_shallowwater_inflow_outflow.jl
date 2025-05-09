@@ -5,10 +5,10 @@ using TrixiShallowWater
 ###############################################################################
 # semidiscretization of the shallow water equations to test inflow/outflow boundary conditions
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.81)
+equations = ShallowWaterEquations2D(gravity = 9.81)
 
 # Setup initial conditions for a smooth channel flow with constant water height and velocity
-function initial_condition_channel_flow(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_channel_flow(x, t, equations::ShallowWaterEquations2D)
     H = 1.0
     v1 = -0.1
     v2 = -0.1

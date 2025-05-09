@@ -6,14 +6,14 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry1D(gravity = 9.812, H0 = 1.75)
+equations = ShallowWaterEquations1D(gravity = 9.812, H0 = 1.75)
 
 # Initial condition with a truly discontinuous velocity and bottom topography.
 # Works as intended for TreeMesh1D with `initial_refinement_level=3`. If the mesh
 # refinement level is changed the initial condition below may need changed as well to
 # ensure that the discontinuities lie on an element interface.
 function initial_condition_stone_throw_discontinuous_bottom(x, t,
-                                                            equations::ShallowWaterEquationsWetDry1D)
+                                                            equations::ShallowWaterEquations1D)
 
     # Calculate primitive variables
 
