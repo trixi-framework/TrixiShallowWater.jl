@@ -100,8 +100,7 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test typeof(@inferred energy_total(cons, equations)) == RealT
             @test typeof(@inferred energy_kinetic(u, equations)) == RealT
             @test typeof(@inferred energy_internal(cons, equations)) == RealT
-            # TODO: remove this?
-            #@test typeof(@inferred lake_at_rest_error(u, equations)) == RealT
+            @test typeof(@inferred lake_at_rest_error(u, equations)) == RealT
         end
     end
 
@@ -237,8 +236,7 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test typeof(@inferred energy_total(cons, equations)) == RealT
             @test typeof(@inferred energy_kinetic(u, equations)) == RealT
             @test typeof(@inferred energy_internal(cons, equations)) == RealT
-            # TODO: remove this?
-            #@test typeof(@inferred lake_at_rest_error(u, equations)) == RealT
+            @test typeof(@inferred lake_at_rest_error(u, equations)) == RealT
         end
     end
 
@@ -290,8 +288,7 @@ isdir(outdir) && rm(outdir, recursive = true)
 
             @test typeof(@inferred entropy(cons, equations)) == RealT
             @test typeof(@inferred energy_total(cons, equations)) == RealT
-            # TODO: remove this?
-            #@test typeof(@inferred lake_at_rest_error(u, equations)) == RealT
+            @test typeof(@inferred lake_at_rest_error(u, equations)) == RealT
         end
     end
 end
