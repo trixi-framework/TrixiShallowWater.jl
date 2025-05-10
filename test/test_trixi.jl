@@ -129,7 +129,7 @@ macro test_nowarn_mod(expr, additional_ignore_content = [])
             # We need to ignore steady state information reported by our callbacks
             r"┌ Info:   Steady state tolerance reached\n│   steady_state_callback .+\n└   t = .+\n",
             # NOTE: These warnings arose from Julia 1.10 onwards
-            r"WARNING: Method definition .* in module .* at .* overwritten .*.\n",
+            r"WARNING: Method definition .* in module .* at .* overwritten .*.\n"
         ]
         append!($additional_ignore_content, add_to_additional_ignore_content)
         @trixi_test_nowarn $(esc(expr)) $additional_ignore_content
