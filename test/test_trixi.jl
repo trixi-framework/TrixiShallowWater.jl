@@ -17,20 +17,10 @@ as absolute/relative tolerance.
 macro test_trixi_include(elixir, args...)
     local l2 = get_kwarg(args, :l2, nothing)
     local linf = get_kwarg(args, :linf, nothing)
-    local RealT = get_kwarg(args, :RealT, :Float64)
-    if RealT === :Float64
-        atol_default = 500 * eps(Float64)
-        rtol_default = sqrt(eps(Float64))
-    elseif RealT === :Float32
-        atol_default = 500 * eps(Float32)
-        rtol_default = sqrt(eps(Float32))
-    elseif RealT === :Float128
-        atol_default = 500 * eps(Float128)
-        rtol_default = sqrt(eps(Float128))
-    elseif RealT === :Double64
-        atol_default = 500 * eps(Double64)
-        rtol_default = sqrt(eps(Double64))
-    end
+    local RealT_symbol = get_kwarg(args, :RealT, :Float64)
+    RealT = getfield(@__MODULE__, RealT_symbol)
+    atol_default = 500 * eps(RealT)
+    rtol_default = sqrt(eps(RealT))
     local atol = get_kwarg(args, :atol, atol_default)
     local rtol = get_kwarg(args, :rtol, rtol_default)
     local skip_coverage = get_kwarg(args, :skip_coverage, false)
