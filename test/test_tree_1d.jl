@@ -1074,14 +1074,14 @@ end # MLSWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_exner_channel.jl"),
                             l2=[
-                                0.061254947613784645,
-                                0.0042920880585939165,
-                                0.06170746499938789
+                                0.0612549484022613,
+                                0.004292092111911898,
+                                0.06170746566027052
                             ],
                             linf=[
-                                0.5552555774807875,
-                                0.009352028888004682,
-                                0.549962205546136
+                                0.555255659544283,
+                                0.009352017074210295,
+                                0.5499622869285822
                             ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
