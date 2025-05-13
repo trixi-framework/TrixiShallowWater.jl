@@ -81,7 +81,8 @@ struct GrassModel{RealT} <: SedimentModel{RealT}
 end
 
 function GrassModel(; A_g, m_g = 3)
-    return GrassModel(A_g, m_g)
+    RealT = promote_type(typeof(A_g), typeof(m_g))
+    return GrassModel(RealT(A_g), RealT(m_g))
 end
 
 @doc raw"""
@@ -97,7 +98,8 @@ An overview of different formulations to compute the sediment discharge can be f
   [DOI:10.1016/j.compfluid.2007.07.017](https://doi.org/10.1016/j.compfluid.2007.07.017)
 """
 function MeyerPeterMueller(; theta_c, d_s)
-    return ShieldsStressModel(0.0, 1.5, 0.0, 8.0, 1.0, 0.0, theta_c, d_s)
+    RealT = promote_type(typeof(theta_c), typeof(d_s))
+    return ShieldsStressModel(RealT(0.0), RealT(1.5), RealT(0.0), RealT(8.0), RealT(1.0), RealT(0.0), RealT(theta_c), RealT(d_s))
 end
 
 @doc raw"""
