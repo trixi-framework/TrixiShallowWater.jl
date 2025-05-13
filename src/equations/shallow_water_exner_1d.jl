@@ -436,22 +436,24 @@ for the sediment discharge `q_s`.
     v_rr = velocity(u_rr, equations)
 
     # Compute approximate Roe averages.
-    # The actual Roe average for the sediment discharge `q_s` would depend on the sediment and
-    # friction model and can be difficult to compute analytically.
+    # The actual Roe average for the sediment height `h_b` depends on the sediment and
+    # friction model and an explicit formula is not always available.
     # Therefore we only use an approximation here.
     h_avg = 0.5f0 * (u_ll[1] + u_rr[1])
     v_avg = (sqrt(u_ll[1]) * v_ll + sqrt(u_rr[1]) * v_rr) /
             (sqrt(u_ll[1]) + sqrt(u_rr[1]))
+    h_b_avg = 0.5f0 * (u_ll[3] + u_rr[3])
+
     # Workaround to avoid division by zero, when computing the effective sediment height
     if abs(v_avg) < eps(typeof(h_avg))
         h_s_avg = 0
     else
-        h_s_avg = (q_s(SVector(h_avg, h_avg * v_avg, zero(typeof(h_avg))), equations) /
+        h_s_avg = (q_s(SVector(h_avg, h_avg * v_avg, h_b_avg), equations) /
                    v_avg)
     end
 
     # Compute the eigenvalues using Cardano's formula
-    λ1, λ2, λ3 = eigvals_cardano(SVector(h_avg, h_avg * v_avg, h_s_avg), equations)
+    λ1, λ2, λ3 = eigvals_cardano(SVector(h_avg, h_avg * v_avg, h_b_avg), equations)
 
     # Precompute some common expressions
     c1 = g * (h_avg + h_s_avg)
