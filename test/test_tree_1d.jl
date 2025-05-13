@@ -1117,6 +1117,21 @@ end # MLSWE
             @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
         end
     end
+
+    @trixi_testset "elixir_shallowwater_exner_dam_break_symmetric.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_dam_break_symmetric.jl"),
+                            l2 = [0.2965046413567244, 0.41070730713108367, 0.025179300052016823],
+                            linf = [0.7785005894122902, 0.9193314051729015, 0.06639643395379602])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
 end # SWE-Exner
 end # TreeMesh1D
 
