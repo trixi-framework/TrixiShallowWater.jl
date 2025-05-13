@@ -18,7 +18,7 @@
 #
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
-function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+function Trixi.create_cache(mesh::P4estMesh{2},
                             equations::ShallowWaterEquationsWetDry2D,
                             mortar_l2::Trixi.LobattoLegendreMortarL2, uEltype)
     # TODO: Taal performance using different types
@@ -40,8 +40,16 @@ function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
      f_upper_threaded, f_lower_threaded, u_threaded, f_threaded)
 end
 
+# Specialized strategy to project the solution to the mortars and preserve
+# well-balancedness from the work of Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008).
+# This version is for the `ShallowWaterEquations2D` where one also must save a copy
+# of the unprojected parent solution on the mortars (for convenience) in the later
+# back projection of the flux.
+#
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
 function Trixi.prolong2mortars!(cache, u,
-                                mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+                                mesh::P4estMesh{2},
                                 equations::ShallowWaterEquationsWetDry2D,
                                 mortar_l2::Trixi.LobattoLegendreMortarL2,
                                 dg::DGSEM)
@@ -184,10 +192,158 @@ function Trixi.prolong2mortars!(cache, u,
     return nothing
 end
 
+# Specialized strategy to project the solution to the mortars and preserve
+# well-balancedness from the work of Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008).
+# This version is for the `ShallowWaterMultiLayerEquations2D` which "peels" the pressure
+# contribution into the nonconservative term for easier well-balancing,
+# see Ersing et al. (https://doi.org/10.1016/j.jcp.2025.113802).
+# Thus, this can use the original `P4estMortarContainer`, `calc_mortar_flux!`,
+# and `mortar_fluxes_to_elements!` from Trixi.jl.
+#
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
+function Trixi.prolong2mortars!(cache, u,
+                                mesh::P4estMesh{2},
+                                equations::ShallowWaterMultiLayerEquations2D,
+                                mortar_l2::Trixi.LobattoLegendreMortarL2,
+                                dg::DGSEM)
+    @unpack neighbor_ids, node_indices = cache.mortars
+    index_range = eachnode(dg)
+
+    Trixi.@threaded for mortar in Trixi.eachmortar(dg, cache)
+        # Copy solution data from the small elements using "delayed indexing" with
+        # a start value and a step size to get the correct face and orientation.
+        small_indices = node_indices[1, mortar]
+
+        i_small_start, i_small_step = Trixi.index_to_start_step_2d(small_indices[1],
+                                                                   index_range)
+        j_small_start, j_small_step = Trixi.index_to_start_step_2d(small_indices[2],
+                                                                   index_range)
+
+        for position in 1:2
+            i_small = i_small_start
+            j_small = j_small_start
+            element = neighbor_ids[position, mortar]
+            for i in eachnode(dg)
+                for v in eachvariable(equations)
+                    cache.mortars.u[1, v, position, i, mortar] = u[v, i_small, j_small,
+                                                                   element]
+                end
+                i_small += i_small_step
+                j_small += j_small_step
+            end
+        end
+
+        # Buffer to copy solution values of the large element in the correct orientation
+        # before projection
+        u_buffer = cache.u_threaded[Threads.threadid()]
+
+        # Copy solution of large element face to buffer in the correct orientation
+        large_indices = node_indices[2, mortar]
+
+        i_large_start, i_large_step = Trixi.index_to_start_step_2d(large_indices[1],
+                                                                   index_range)
+        j_large_start, j_large_step = Trixi.index_to_start_step_2d(large_indices[2],
+                                                                   index_range)
+
+        i_large = i_large_start
+        j_large = j_large_start
+        element = neighbor_ids[3, mortar]
+        for i in eachnode(dg)
+            # This strategy from Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008) assumes that
+            # we know a constant background water height `H0` which we perturb around. This may be restrictive
+            # in practice but a good place to start with the development. We may need to consider more
+            # sophisticated positivity preserving projections of the solution like those found
+            # in the ALE-DG community for the Euler equations with gravity to remove this assumption.
+            # That is, we might be able to directly project the water height `h` instead while maintaining
+            # important steady-state solution behavior.
+            # Note, a small shift is required to ensure we catch water heights close to the threshold
+            if u[1, i_large, j_large, element] >=
+               2 * (equations.threshold_limiter)
+                u_buffer[1, i] = u[1, i_large, j_large, element] +
+                                 u[4, i_large, j_large, element]
+            else
+                u_buffer[1, i] = equations.H0
+            end
+            for v in 2:4
+                u_buffer[v, i] = u[v, i_large, j_large, element]
+            end
+
+            i_large += i_large_step
+            j_large += j_large_step
+        end
+
+        # Interpolate large element face data from buffer to small face locations
+        Trixi.multiply_dimensionwise!(view(cache.mortars.u, 2, :, 1, :, mortar),
+                                      mortar_l2.forward_lower,
+                                      u_buffer)
+        Trixi.multiply_dimensionwise!(view(cache.mortars.u, 2, :, 2, :, mortar),
+                                      mortar_l2.forward_upper,
+                                      u_buffer)
+
+        # After the projection of the constant solution we modify the values
+        # in the first solution variable to no longer be the total water height H = h+b
+        # and instead recover the conservative water height variable `h`.
+        # Basically, unpacking the total water height variable to create the projected local water
+        # height `h` from Eq. 41 in Benov et al.
+        for i in eachnode(dg)
+            cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i,
+                                                                      mortar] -
+                                                      cache.mortars.u[2, 4, 1, i,
+                                                                      mortar],
+                                                      equations.threshold_limiter)
+            cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i,
+                                                                      mortar] -
+                                                      cache.mortars.u[2, 4, 2, i,
+                                                                      mortar],
+                                                      equations.threshold_limiter)
+
+            # Safety application of velocity desingularization and water height cutoff on the mortars.
+            # TODO: Experiment with `threshold_desingularization` and `threshold_limiter`
+            #
+            # For details on the motivation of the velocity desingularization see
+            # - A. Chertock, S. Cui, A. Kurganov, T. Wu (2015)
+            #   Well-balanced positivity preserving central-upwind scheme for
+            #   the shallow water system with friction terms
+            #   [DOI: 10.1002/fld.4023](https://doi.org/10.1002/fld.4023)
+
+            # Mortars with the copied or projected solution
+            tol = equations.threshold_desingularization
+            for child in 1:2, side in 1:2
+                if cache.mortars.u[side, 1, child, i, mortar] <=
+                   equations.threshold_limiter
+                    cache.mortars.u[side, 1, child, i, mortar] = equations.threshold_limiter
+                    cache.mortars.u[side, 2, child, i, mortar] = zero(eltype(u))
+                    cache.mortars.u[side, 3, child, i, mortar] = zero(eltype(u))
+
+                else
+                    h = cache.mortars.u[side, 1, child, i, mortar]
+                    cache.mortars.u[side, 2, child, i, mortar] = h * (2 * h *
+                                                                  cache.mortars.u[side,
+                                                                                  2,
+                                                                                  child,
+                                                                                  i,
+                                                                                  mortar]) /
+                                                                 (h^2 + max(h^2, tol))
+                    cache.mortars.u[side, 3, child, i, mortar] = h * (2 * h *
+                                                                  cache.mortars.u[side,
+                                                                                  3,
+                                                                                  child,
+                                                                                  i,
+                                                                                  mortar]) /
+                                                                 (h^2 + max(h^2, tol))
+                end
+            end
+        end
+    end
+
+    return nothing
+end
+
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 function Trixi.calc_mortar_flux!(surface_flux_values,
-                                 mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+                                 mesh::P4estMesh{2},
                                  nonconservative_terms,
                                  equations::ShallowWaterEquationsWetDry2D,
                                  mortar_l2::Trixi.LobattoLegendreMortarL2,
@@ -291,8 +447,7 @@ end
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 @inline function Trixi.mortar_fluxes_to_elements!(surface_flux_values,
-                                                  mesh::Union{P4estMesh{2},
-                                                              T8codeMesh{2}},
+                                                  mesh::P4estMesh{2},
                                                   equations::ShallowWaterEquationsWetDry2D,
                                                   mortar_l2::Trixi.LobattoLegendreMortarL2,
                                                   dg::DGSEM, cache, mortar,
