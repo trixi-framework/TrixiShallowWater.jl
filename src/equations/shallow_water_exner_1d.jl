@@ -80,7 +80,7 @@ struct GrassModel{RealT} <: SedimentModel{RealT}
     m_g::RealT
 end
 
-function GrassModel(; A_g, m_g = 3.0)
+function GrassModel(; A_g, m_g = 3)
     return GrassModel(A_g, m_g)
 end
 
@@ -228,9 +228,9 @@ A smooth initial condition used for convergence tests in combination with
                                                           equations::ShallowWaterExnerEquations1D)
     ω = sqrt(2) * pi
 
-    h = 2.0 + cos(ω * x[1]) * cos(ω * t)
-    v = 0.5
-    h_b = 2.0 + sin(ω * x[1]) * cos(ω * t)
+    h = 2 + cos(ω * x[1]) * cos(ω * t)
+    v = 0.5f0
+    h_b = 2 + sin(ω * x[1]) * cos(ω * t)
 
     return SVector(h, h * v, h_b)
 end
@@ -256,20 +256,20 @@ equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
                                                                                                                     T,
                                                                                                                     S
                                                                                                                     }
-    ω = sqrt(2.0) * pi
+    ω = sqrt(2) * pi
     A_g = equations.sediment_model.A_g
 
-    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5 * sin(x[1] * ω) * cos(t * ω) * ω
-    hv = -0.5 * cos(x[1] * ω) * sin(t * ω) * ω - 0.25 * sin(x[1] * ω) * cos(t * ω) * ω +
-         10.0 * A_g *
-         (cos(x[1] * ω) * cos(t * ω) * ω - 0.5 * sin(x[1] * ω) * cos(t * ω) * ω) +
-         10.0 * (2.0 + cos(x[1] * ω) * cos(t * ω)) *
+    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0* sin(x[1] * ω) * cos(t * ω) * ω
+    hv = -0.5f0 * cos(x[1] * ω) * sin(t * ω) * ω - 0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
+         10 * A_g *
+         (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0* sin(x[1] * ω) * cos(t * ω) * ω) +
+         10 * (2 + cos(x[1] * ω) * cos(t * ω)) *
          (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω)
     h_b = -sin(x[1] * ω) * sin(t * ω) * ω
     return SVector(h, hv, h_b)
 end
 
-"""
+""" 
     source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations1D{T, S, ShieldsStressModel{T}}) where {T, S}
 
 Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref)
@@ -291,27 +291,27 @@ equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
                                                                                                                             T,
                                                                                                                             S
                                                                                                                             }
-    ω = sqrt(2.0) * pi
+    ω = sqrt(2) * pi
     (; gravity, porosity_inv, rho_f, rho_s, r) = equations
 
     n = equations.friction.n
 
     # Constant expression from the MPM model
-    c = sqrt(gravity * (1 / r - 1)) * 8.0 * porosity_inv *
+    c = sqrt(gravity * (1 / r - 1)) * 8 * porosity_inv *
         (rho_f / (rho_s - rho_f))^(3 / 2) * n^3
 
-    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5 * sin(x[1] * ω) * cos(t * ω) * ω
+    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0* sin(x[1] * ω) * cos(t * ω) * ω
 
-    hv = ((5.0 * c *
-           (cos(x[1] * ω) * cos(t * ω) * ω - 0.5 * sin(x[1] * ω) * cos(t * ω) * ω)) /
-          ((2.0 + cos(x[1] * ω) * cos(t * ω))^0.5) -
-          0.5 * cos(x[1] * ω) * sin(t * ω) * ω -
-          0.25 * sin(x[1] * ω) * cos(t * ω) * ω +
-          10.0 * (2.0 + cos(x[1] * ω) * cos(t * ω)) *
+    hv = ((5 * c *
+           (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0* sin(x[1] * ω) * cos(t * ω) * ω)) /
+          ((2 + cos(x[1] * ω) * cos(t * ω))^0.5) -
+          0.5f0* cos(x[1] * ω) * sin(t * ω) * ω -
+          0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
+          10 * (2 + cos(x[1] * ω) * cos(t * ω)) *
           (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω))
 
-    h_b = ((0.5 * ((0.125 * c) / (2.0 + cos(x[1] * ω) * cos(t * ω))) * sin(x[1] * ω) *
-            cos(t * ω) * ω) / ((2.0 + cos(x[1] * ω) * cos(t * ω))^0.5) -
+    h_b = ((0.5f0* ((0.125f0 * c) / (2 + cos(x[1] * ω) * cos(t * ω))) * sin(x[1] * ω) *
+            cos(t * ω) * ω) / ((2 + cos(x[1] * ω) * cos(t * ω))^0.5) -
            sin(x[1] * ω) * sin(t * ω) * ω)
 
     return SVector(h, hv, h_b)
@@ -367,8 +367,8 @@ scheme that is entropy conservative and well-balanced.
     h_b_jump = h_b_rr - h_b_ll
 
     # Workaround to avoid division by zero, when computing the effective sediment height
-    if velocity(u_ll, equations) < eps()
-        h_s_ll = 0.0
+    if abs(velocity(u_ll, equations)) < eps(typeof(h_ll))
+        h_s_ll = 0
     else
         h_s_ll = q_s(u_ll, equations) / velocity(u_ll, equations)
     end
@@ -405,12 +405,12 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
     v_rr = velocity(u_rr, equations)
 
     # Average each factor of products in flux
-    v_avg = 0.5 * (v_ll + v_rr)
+    v_avg = 0.5f0 * (v_ll + v_rr)
 
     # Calculate fluxes depending on orientation
-    f1 = 0.5 * (h_v_ll + h_v_rr)
+    f1 = 0.5f0 * (h_v_ll + h_v_rr)
     f2 = f1 * v_avg
-    f3 = 0.5 * (q_s(u_ll, equations) + q_s(u_rr, equations))
+    f3 = 0.5f0 * (q_s(u_ll, equations) + q_s(u_rr, equations))
 
     return SVector(f1, f2, f3)
 end
@@ -435,14 +435,14 @@ for the sediment discharge `q_s`.
     # The actual Roe average for the sediment discharge `q_s` would depend on the sediment and
     # friction model and can be difficult to compute analytically.
     # Therefore we only use an approximation here.
-    h_avg = 0.5 * (u_ll[1] + u_rr[1])
+    h_avg = 0.5f0 * (u_ll[1] + u_rr[1])
     v_avg = (sqrt(u_ll[1]) * v_ll + sqrt(u_rr[1]) * v_rr) /
             (sqrt(u_ll[1]) + sqrt(u_rr[1]))
     # Workaround to avoid division by zero, when computing the effective sediment height
-    if v_avg < eps()
-        h_s_avg = 0.0
+    if abs(v_avg) < eps(typeof(h_avg))
+        h_s_avg = 0
     else
-        h_s_avg = 0.5 * (q_s(u_ll, equations) / v_ll + q_s(u_rr, equations) / v_rr)
+        h_s_avg = (q_s(SVector(h_avg, h_avg * v_avg, zero(eltype(h_avg))), equations) / v_avg)
     end
 
     # Compute the eigenvalues using Cardano's formula
@@ -470,7 +470,7 @@ for the sediment discharge `q_s`.
     Λ_abs = @SMatrix [abs(λ1) z z; z abs(λ2) z; z z abs(λ3)]
 
     # Compute dissipation
-    diss = SVector(-0.5 * R * Λ_abs * R_inv * (u_rr - u_ll))
+    diss = SVector(-0.5f0 * R * Λ_abs * R_inv * (u_rr - u_ll))
 
     return SVector(diss[1], diss[2], diss[3])
 end
@@ -506,11 +506,11 @@ end
 
     theta = rho_f * abs(shear_stress(u, equations)) / (gravity * (rho_s - rho_f) * d_s)  # Shields stress
 
-    Q = d_s * sqrt(gravity * (rho_s / rho_f - 1.0) * d_s) # Characteristic discharge
+    Q = d_s * sqrt(gravity * (rho_s / rho_f - 1) * d_s) # Characteristic discharge
 
     return (porosity_inv * Q * sign(theta) * k_1 * theta^m_1 *
-            (max(theta - k_2 * theta_c, 0.0))^m_2 *
-            (max(sqrt(theta) - k_3 * sqrt(theta_c), 0.0))^m_3)
+            (max(theta - k_2 * theta_c, 0))^m_2 *
+            (max(sqrt(theta) - k_3 * sqrt(theta_c), 0))^m_3)
 end
 
 # Compute the sediment discharge for the Grass model
@@ -553,7 +553,7 @@ end
 
     v = velocity(u, equations)
 
-    w1 = r * (gravity * (h + h_b) - 0.5 * v^2)
+    w1 = r * (gravity * (h + h_b) - 0.5f0* v^2)
     w2 = r * v
     w3 = gravity * (r * h + h_b)
 
@@ -585,7 +585,7 @@ end
     v = velocity(u, equations)
     (; gravity, r) = equations
 
-    return 0.5 * r * h * v^2 + 0.5 * gravity * (r * h^2 + h_b^2) + r * gravity * h * h_b
+    return 0.5f0 * r * h * v^2 + 0.5f0 * gravity * (r * h^2 + h_b^2) + r * gravity * h * h_b
 end
 
 # Calculate the error for the "lake-at-rest" test case where H = h + h_b should
@@ -605,16 +605,16 @@ end
     r = equations.r
 
     # Workaround to avoid division by zero, when computing the effective sediment height
-    if v > eps()
+    if abs(v) > eps(typeof(h))
         h_s = q_s(u, equations) / v
         # Compute gradients of q_s using automatic differentiation.
         # Introduces a closure to make q_s a function of u only. This is necessary since the
         # gradient function only accepts functions of one variable.
         dq_s_dh, dq_s_dhv, _ = Trixi.ForwardDiff.gradient(u -> q_s(u, equations), u)
     else
-        h_s = 0.0
-        dq_s_dh = 0.0
-        dq_s_dhv = 0.0
+        h_s = 0
+        dq_s_dh = 0
+        dq_s_dhv = 0
     end
 
     # Coefficient for the original cubic equation ax^3 + bx^2 + cx + d
