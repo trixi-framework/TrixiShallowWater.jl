@@ -99,7 +99,8 @@ An overview of different formulations to compute the sediment discharge can be f
 """
 function MeyerPeterMueller(; theta_c, d_s)
     RealT = promote_type(typeof(theta_c), typeof(d_s))
-    return ShieldsStressModel(RealT(0.0), RealT(1.5), RealT(0.0), RealT(8.0), RealT(1.0), RealT(0.0), RealT(theta_c), RealT(d_s))
+    return ShieldsStressModel(RealT(0.0), RealT(1.5), RealT(0.0), RealT(8.0),
+                              RealT(1.0), RealT(0.0), RealT(theta_c), RealT(d_s))
 end
 
 @doc raw"""
@@ -261,10 +262,11 @@ equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
     ω = sqrt(2) * pi
     A_g = equations.sediment_model.A_g
 
-    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0* sin(x[1] * ω) * cos(t * ω) * ω
-    hv = -0.5f0 * cos(x[1] * ω) * sin(t * ω) * ω - 0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
+    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω
+    hv = -0.5f0 * cos(x[1] * ω) * sin(t * ω) * ω -
+         0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
          10 * A_g *
-         (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0* sin(x[1] * ω) * cos(t * ω) * ω) +
+         (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω) +
          10 * (2 + cos(x[1] * ω) * cos(t * ω)) *
          (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω)
     h_b = -sin(x[1] * ω) * sin(t * ω) * ω
@@ -302,17 +304,17 @@ equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
     c = sqrt(gravity * (1 / r - 1)) * 8 * porosity_inv *
         (rho_f / (rho_s - rho_f))^(3 / 2) * n^3
 
-    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0* sin(x[1] * ω) * cos(t * ω) * ω
+    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω
 
     hv = ((5 * c *
-           (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0* sin(x[1] * ω) * cos(t * ω) * ω)) /
+           (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω)) /
           ((2 + cos(x[1] * ω) * cos(t * ω))^0.5) -
-          0.5f0* cos(x[1] * ω) * sin(t * ω) * ω -
+          0.5f0 * cos(x[1] * ω) * sin(t * ω) * ω -
           0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
           10 * (2 + cos(x[1] * ω) * cos(t * ω)) *
           (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω))
 
-    h_b = ((0.5f0* ((0.125f0 * c) / (2 + cos(x[1] * ω) * cos(t * ω))) * sin(x[1] * ω) *
+    h_b = ((0.5f0 * ((0.125f0 * c) / (2 + cos(x[1] * ω) * cos(t * ω))) * sin(x[1] * ω) *
             cos(t * ω) * ω) / ((2 + cos(x[1] * ω) * cos(t * ω))^0.5) -
            sin(x[1] * ω) * sin(t * ω) * ω)
 
@@ -444,7 +446,8 @@ for the sediment discharge `q_s`.
     if abs(v_avg) < eps(typeof(h_avg))
         h_s_avg = 0
     else
-        h_s_avg = (q_s(SVector(h_avg, h_avg * v_avg, zero(eltype(h_avg))), equations) / v_avg)
+        h_s_avg = (q_s(SVector(h_avg, h_avg * v_avg, zero(typeof(h_avg))), equations) /
+                   v_avg)
     end
 
     # Compute the eigenvalues using Cardano's formula
@@ -555,7 +558,7 @@ end
 
     v = velocity(u, equations)
 
-    w1 = r * (gravity * (h + h_b) - 0.5f0* v^2)
+    w1 = r * (gravity * (h + h_b) - 0.5f0 * v^2)
     w2 = r * v
     w3 = gravity * (r * h + h_b)
 
@@ -587,7 +590,8 @@ end
     v = velocity(u, equations)
     (; gravity, r) = equations
 
-    return 0.5f0 * r * h * v^2 + 0.5f0 * gravity * (r * h^2 + h_b^2) + r * gravity * h * h_b
+    return 0.5f0 * r * h * v^2 + 0.5f0 * gravity * (r * h^2 + h_b^2) +
+           r * gravity * h * h_b
 end
 
 # Calculate the error for the "lake-at-rest" test case where H = h + h_b should

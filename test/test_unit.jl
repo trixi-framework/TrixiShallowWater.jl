@@ -397,17 +397,22 @@ end
 
 @timed_testset "Input argument check for SWE-Exner" begin
     # Type tests for GrassModel
-    @test typeof(GrassModel(A_g = 0.1)) === typeof(GrassModel(A_g = 0.1, m_g = 3)) === GrassModel{Float64}
-    @test typeof(GrassModel(A_g = 0.1f0)) === typeof(GrassModel(A_g = 0.1f0, m_g = 3)) === GrassModel{Float32}
+    @test typeof(GrassModel(A_g = 0.1)) === typeof(GrassModel(A_g = 0.1, m_g = 3)) ===
+          GrassModel{Float64}
+    @test typeof(GrassModel(A_g = 0.1f0)) ===
+          typeof(GrassModel(A_g = 0.1f0, m_g = 3)) === GrassModel{Float32}
 
     # Type tests for MeyerPeterMueller
-    @test typeof(MeyerPeterMueller(theta_c = 0, d_s = 1e-3)) === ShieldsStressModel{Float64}
-    @test typeof(MeyerPeterMueller(theta_c = 0, d_s = 1f-3)) === ShieldsStressModel{Float32}
+    @test typeof(MeyerPeterMueller(theta_c = 0, d_s = 1e-3)) ===
+          ShieldsStressModel{Float64}
+    @test typeof(MeyerPeterMueller(theta_c = 0, d_s = 1.0f-3)) ===
+          ShieldsStressModel{Float32}
 
     # Type tests for general ShieldsStressModel
-    @test typeof(ShieldsStressModel(0.0, 1.5, 0.0, 8.0, 1.0, 0.0,  0.0, 1e-3)) === ShieldsStressModel{Float64}
-    @test typeof(ShieldsStressModel(0f0, 1.5f0, 0f0, 8f0, 1f0, 0f0, 0f0,
-                                    1f-3)) === ShieldsStressModel{Float32}
+    @test typeof(ShieldsStressModel(0.0, 1.5, 0.0, 8.0, 1.0, 0.0, 0.0, 1e-3)) ===
+          ShieldsStressModel{Float64}
+    @test typeof(ShieldsStressModel(0.0f0, 1.5f0, 0.0f0, 8.0f0, 1.0f0, 0.0f0, 0.0f0,
+                                    1.0f-3)) === ShieldsStressModel{Float32}
     @test_throws MethodError ShieldsStressModel(0, 1.5, 0, 8, 1, 0, 0, 1e-3)
 end
 

@@ -17,7 +17,7 @@ equations = ShallowWaterExnerEquations1D(gravity = 9.81, rho_f = 0.3, rho_s = 1.
 #    Roe approach"
 #   [DOI: 10.1016/j.advwatres.2021.103931](https://doi.org/10.1016/j.advwatres.2021.103931)
 function initial_condition_dam_break_symmetric(x, t,
-                                   equations::ShallowWaterExnerEquations1D)
+                                               equations::ShallowWaterExnerEquations1D)
     # Setup initial perturbation of the water height
     if -0.5 <= x[1] <= 0.5
         h = 1.0
@@ -27,7 +27,7 @@ function initial_condition_dam_break_symmetric(x, t,
 
     # Set constant values for the sediment height and zero momentum
     hv = 0.0
-    h_b  = 1.0
+    h_b = 1.0
 
     return SVector(h, hv, h_b)
 end
@@ -39,7 +39,7 @@ initial_condition = initial_condition_dam_break_symmetric
 
 volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
 surface_flux = (FluxPlusDissipation(flux_ersing_etal, dissipation_roe),
-                 flux_nonconservative_ersing_etal)
+                flux_nonconservative_ersing_etal)
 
 basis = LobattoLegendreBasis(3)
 
