@@ -70,6 +70,9 @@ surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_et
 # Create the solver
 basis = LobattoLegendreBasis(3)
 
+# TODO: Write a generic function so that I can use `waterheight` in the limiter.
+# That way this part of the elixir is identical to the `ShallowWater2D` counterpart
+
 indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
                                                      alpha_max = 0.5,
                                                      alpha_min = 0.001,
@@ -206,7 +209,7 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(dt = 10.0,
+save_solution = SaveSolutionCallback(dt = 0.1, # 10.0,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 

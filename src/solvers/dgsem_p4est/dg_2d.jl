@@ -290,50 +290,50 @@ function Trixi.prolong2mortars!(cache, u,
             cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i,
                                                                       mortar] -
                                                       cache.mortars.u[2, 4, 1, i,
-                                                                      mortar],
-                                                      equations.threshold_limiter)
+                                                                      mortar], 0)
+                                                    #   equations.threshold_limiter)
             cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i,
                                                                       mortar] -
                                                       cache.mortars.u[2, 4, 2, i,
-                                                                      mortar],
-                                                      equations.threshold_limiter)
+                                                                      mortar], 0)
+                                                    #   equations.threshold_limiter)
 
-            # Safety application of velocity desingularization and water height cutoff on the mortars.
-            # TODO: Experiment with `threshold_desingularization` and `threshold_limiter`
-            #
-            # For details on the motivation of the velocity desingularization see
-            # - A. Chertock, S. Cui, A. Kurganov, T. Wu (2015)
-            #   Well-balanced positivity preserving central-upwind scheme for
-            #   the shallow water system with friction terms
-            #   [DOI: 10.1002/fld.4023](https://doi.org/10.1002/fld.4023)
+        #     # Safety application of velocity desingularization and water height cutoff on the mortars.
+        #     # TODO: Experiment with `threshold_desingularization` and `threshold_limiter`
+        #     #
+        #     # For details on the motivation of the velocity desingularization see
+        #     # - A. Chertock, S. Cui, A. Kurganov, T. Wu (2015)
+        #     #   Well-balanced positivity preserving central-upwind scheme for
+        #     #   the shallow water system with friction terms
+        #     #   [DOI: 10.1002/fld.4023](https://doi.org/10.1002/fld.4023)
 
-            # Mortars with the copied or projected solution
-            tol = equations.threshold_desingularization
-            for child in 1:2, side in 1:2
-                if cache.mortars.u[side, 1, child, i, mortar] <=
-                   equations.threshold_limiter
-                    cache.mortars.u[side, 1, child, i, mortar] = equations.threshold_limiter
-                    cache.mortars.u[side, 2, child, i, mortar] = zero(eltype(u))
-                    cache.mortars.u[side, 3, child, i, mortar] = zero(eltype(u))
+        #     # Mortars with the copied or projected solution
+        #     tol = equations.threshold_desingularization
+        #     for child in 1:2, side in 1:2
+        #         if cache.mortars.u[side, 1, child, i, mortar] <=
+        #            equations.threshold_limiter
+        #             cache.mortars.u[side, 1, child, i, mortar] = equations.threshold_limiter
+        #             cache.mortars.u[side, 2, child, i, mortar] = zero(eltype(u))
+        #             cache.mortars.u[side, 3, child, i, mortar] = zero(eltype(u))
 
-                else
-                    h = cache.mortars.u[side, 1, child, i, mortar]
-                    cache.mortars.u[side, 2, child, i, mortar] = h * (2 * h *
-                                                                  cache.mortars.u[side,
-                                                                                  2,
-                                                                                  child,
-                                                                                  i,
-                                                                                  mortar]) /
-                                                                 (h^2 + max(h^2, tol))
-                    cache.mortars.u[side, 3, child, i, mortar] = h * (2 * h *
-                                                                  cache.mortars.u[side,
-                                                                                  3,
-                                                                                  child,
-                                                                                  i,
-                                                                                  mortar]) /
-                                                                 (h^2 + max(h^2, tol))
-                end
-            end
+        #         else
+        #             h = cache.mortars.u[side, 1, child, i, mortar]
+        #             cache.mortars.u[side, 2, child, i, mortar] = h * (2 * h *
+        #                                                           cache.mortars.u[side,
+        #                                                                           2,
+        #                                                                           child,
+        #                                                                           i,
+        #                                                                           mortar]) /
+        #                                                          (h^2 + max(h^2, tol))
+        #             cache.mortars.u[side, 3, child, i, mortar] = h * (2 * h *
+        #                                                           cache.mortars.u[side,
+        #                                                                           3,
+        #                                                                           child,
+        #                                                                           i,
+        #                                                                           mortar]) /
+        #                                                          (h^2 + max(h^2, tol))
+        #         end
+        #     end
         end
     end
 
