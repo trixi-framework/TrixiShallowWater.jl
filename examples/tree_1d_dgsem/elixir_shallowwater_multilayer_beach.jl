@@ -10,7 +10,7 @@ using TrixiShallowWater
 equations = ShallowWaterMultiLayerEquations1D(gravity = 9.812, rhos = 1.0)
 
 """
-    initial_condition_beach(x, t, equations:: ShallowWaterMultiLayerEquationsWetDry1D)
+    initial_condition_beach(x, t, equations:: ShallowWaterMultiLayerEquations1D)
 
 Initial condition to simulate a wave running towards a beach and crashing. Difficult test
 including both wetting and drying in the domain using slip wall boundary conditions.

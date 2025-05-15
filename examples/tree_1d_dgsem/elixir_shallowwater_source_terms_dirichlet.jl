@@ -6,7 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry1D(gravity = 9.81)
+equations = ShallowWaterEquations1D(gravity = 9.81)
 
 initial_condition = initial_condition_convergence_test
 

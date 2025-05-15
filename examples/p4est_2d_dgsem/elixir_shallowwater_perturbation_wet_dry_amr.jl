@@ -17,11 +17,11 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function for a perturbed water height on a nonconforming mesh with AMR
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 1.235,
-                                          threshold_limiter = 1e-12,
-                                          threshold_desingularization = 1e-4)
+equations = ShallowWaterEquations2D(gravity = 9.812, H0 = 1.235,
+                                    threshold_limiter = 1e-12,
+                                    threshold_desingularization = 1e-4)
 
-function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_perturbation(x, t, equations::ShallowWaterEquations2D)
     # Calculate primitive variables
     H = equations.H0
     v1 = 0.0
@@ -38,7 +38,7 @@ function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWe
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(equations.H0, b + equations.threshold_limiter)
 
@@ -124,7 +124,7 @@ tspan = (0.0, 4.0)
 ode = semidiscretize(semi, tspan)
 
 function initial_condition_discontinuous_perturbation(x, t, element_id,
-                                                      equations::ShallowWaterEquationsWetDry2D)
+                                                      equations::ShallowWaterEquations2D)
     # Set the background values for velocity
     H = equations.H0
     v1 = zero(H)
@@ -158,7 +158,7 @@ function initial_condition_discontinuous_perturbation(x, t, element_id,
 
     # Avoid division by zero by adjusting the initial condition with a small dry state threshold
     # that defaults to 500*eps() ≈ 1e-13 in double precision and is set in the constructor above
-    # for the ShallowWaterEquationsWetDry struct.
+    # for the ShallowWaterEquations struct.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v1, v2, b), equations)
 end
@@ -193,7 +193,7 @@ save_solution = SaveSolutionCallback(dt = 0.2,
 
 # Another possible AMR indicator function could be the velocity, such that it only fires
 # in regions where the water is moving
-# @inline function velocity_norm(u, equations::ShallowWaterEquationsWetDry2D)
+# @inline function velocity_norm(u, equations::ShallowWaterEquations2D)
 #    v1, v2 = velocity(u, equations)
 #    return sqrt(v1^2 + v2^2)
 # end
