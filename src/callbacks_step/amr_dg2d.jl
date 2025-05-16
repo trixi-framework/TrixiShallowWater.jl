@@ -19,7 +19,8 @@
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 function Trixi.refine!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
-                       equations::Union{ShallowWaterEquationsWetDry2D,ShallowWaterMultiLayerEquations2D},
+                       equations::Union{ShallowWaterEquationsWetDry2D,
+                                        ShallowWaterMultiLayerEquations2D},
                        dg::DGSEM, cache, elements_to_refine)
     # Return early if there is nothing to do
     if isempty(elements_to_refine)
@@ -123,7 +124,8 @@ end
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 function Trixi.coarsen!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
-                        equations::Union{ShallowWaterEquationsWetDry2D,ShallowWaterMultiLayerEquations2D},
+                        equations::Union{ShallowWaterEquationsWetDry2D,
+                                         ShallowWaterMultiLayerEquations2D},
                         dg::DGSEM, cache, elements_to_remove)
     # Return early if there is nothing to do
     if isempty(elements_to_remove)

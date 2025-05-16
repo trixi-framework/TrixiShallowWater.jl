@@ -268,8 +268,8 @@ function Trixi.prolong2mortars!(cache, u,
             # errors to be close to double precision roundoff for longer.
             # if u[1, i_large, j_large, element] >= 500 * equations.threshold_limiter # ≈ 5.5e-13 by default
             if u[1, i_large, j_large, element] >= equations.threshold_desingularization # 1e-10 by default
-                    u_buffer[1, i] = u[1, i_large, j_large, element] +
-                                 u[4, i_large, j_large, element]
+                u_buffer[1, i] = (u[1, i_large, j_large, element] +
+                                  u[4, i_large, j_large, element])
             else
                 u_buffer[1, i] = equations.H0
             end
@@ -297,8 +297,10 @@ function Trixi.prolong2mortars!(cache, u,
         # Note, no desingularization or water height cutoff is needed here as these steps are done
         # later in the hydrostatic reconstruction and stage limiter, respectively.
         for i in eachnode(dg)
-            cache.mortars.u[2, 1, 1, i, mortar] = cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar]
-            cache.mortars.u[2, 1, 2, i, mortar] = cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar]
+            cache.mortars.u[2, 1, 1, i, mortar] = (cache.mortars.u[2, 1, 1, i, mortar] -
+                                                   cache.mortars.u[2, 4, 1, i, mortar])
+            cache.mortars.u[2, 1, 2, i, mortar] = (cache.mortars.u[2, 1, 2, i, mortar] -
+                                                   cache.mortars.u[2, 4, 2, i, mortar])
         end
     end
 
