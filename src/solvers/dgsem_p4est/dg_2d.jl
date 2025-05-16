@@ -197,7 +197,7 @@ end
 # This version is for the `ShallowWaterMultiLayerEquations2D` which "peels" the pressure
 # contribution into the nonconservative term for easier well-balancing,
 # see Ersing et al. (https://doi.org/10.1016/j.jcp.2025.113802).
-# Thus, this can use the original `P4estMortarContainer`, `calc_mortar_flux!`,
+# Thus, this uses the original `P4estMortarContainer`, `calc_mortar_flux!`
 # and `mortar_fluxes_to_elements!` from Trixi.jl.
 #
 # !!! warning "Experimental code"
@@ -257,10 +257,18 @@ function Trixi.prolong2mortars!(cache, u,
             # in the ALE-DG community for the Euler equations with gravity to remove this assumption.
             # That is, we might be able to directly project the water height `h` instead while maintaining
             # important steady-state solution behavior.
-            # Note, a small shift is required to ensure we catch water heights close to the threshold
-            if u[1, i_large, j_large, element] >=
-               2 * (equations.threshold_limiter)
-                u_buffer[1, i] = u[1, i_large, j_large, element] +
+            #
+            # Further, worth noting that for fully wet portions of the domain, the logic below
+            # is unnecessary and the "classic" mortar method is well-balanced and fully conservative
+            # for the `ShallowWaterMultiLayerEquations2D`. Could be exploited to design a better
+            # approach to the AMR refinement / coarsening.
+            #
+            # Note, some shift is required to ensure we catch water heights close to the threshold
+            # and maintain well-balancedness. The larger this shift we also maintain the conservation
+            # errors to be close to double precision roundoff for longer.
+            # if u[1, i_large, j_large, element] >= 500 * equations.threshold_limiter # ≈ 5.5e-13 by default
+            if u[1, i_large, j_large, element] >= equations.threshold_desingularization # 1e-10 by default
+                    u_buffer[1, i] = u[1, i_large, j_large, element] +
                                  u[4, i_large, j_large, element]
             else
                 u_buffer[1, i] = equations.H0
@@ -286,54 +294,11 @@ function Trixi.prolong2mortars!(cache, u,
         # and instead recover the conservative water height variable `h`.
         # Basically, unpacking the total water height variable to create the projected local water
         # height `h` from Eq. 41 in Benov et al.
+        # Note, no desingularization or water height cutoff is needed here as these steps are done
+        # later in the hydrostatic reconstruction and stage limiter, respectively.
         for i in eachnode(dg)
-            cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i,
-                                                                      mortar] -
-                                                      cache.mortars.u[2, 4, 1, i,
-                                                                      mortar], 0)
-                                                    #   equations.threshold_limiter)
-            cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i,
-                                                                      mortar] -
-                                                      cache.mortars.u[2, 4, 2, i,
-                                                                      mortar], 0)
-                                                    #   equations.threshold_limiter)
-
-        #     # Safety application of velocity desingularization and water height cutoff on the mortars.
-        #     # TODO: Experiment with `threshold_desingularization` and `threshold_limiter`
-        #     #
-        #     # For details on the motivation of the velocity desingularization see
-        #     # - A. Chertock, S. Cui, A. Kurganov, T. Wu (2015)
-        #     #   Well-balanced positivity preserving central-upwind scheme for
-        #     #   the shallow water system with friction terms
-        #     #   [DOI: 10.1002/fld.4023](https://doi.org/10.1002/fld.4023)
-
-        #     # Mortars with the copied or projected solution
-        #     tol = equations.threshold_desingularization
-        #     for child in 1:2, side in 1:2
-        #         if cache.mortars.u[side, 1, child, i, mortar] <=
-        #            equations.threshold_limiter
-        #             cache.mortars.u[side, 1, child, i, mortar] = equations.threshold_limiter
-        #             cache.mortars.u[side, 2, child, i, mortar] = zero(eltype(u))
-        #             cache.mortars.u[side, 3, child, i, mortar] = zero(eltype(u))
-
-        #         else
-        #             h = cache.mortars.u[side, 1, child, i, mortar]
-        #             cache.mortars.u[side, 2, child, i, mortar] = h * (2 * h *
-        #                                                           cache.mortars.u[side,
-        #                                                                           2,
-        #                                                                           child,
-        #                                                                           i,
-        #                                                                           mortar]) /
-        #                                                          (h^2 + max(h^2, tol))
-        #             cache.mortars.u[side, 3, child, i, mortar] = h * (2 * h *
-        #                                                           cache.mortars.u[side,
-        #                                                                           3,
-        #                                                                           child,
-        #                                                                           i,
-        #                                                                           mortar]) /
-        #                                                          (h^2 + max(h^2, tol))
-        #         end
-        #     end
+            cache.mortars.u[2, 1, 1, i, mortar] = cache.mortars.u[2, 1, 1, i, mortar] - cache.mortars.u[2, 4, 1, i, mortar]
+            cache.mortars.u[2, 1, 2, i, mortar] = cache.mortars.u[2, 1, 2, i, mortar] - cache.mortars.u[2, 4, 2, i, mortar]
         end
     end
 
