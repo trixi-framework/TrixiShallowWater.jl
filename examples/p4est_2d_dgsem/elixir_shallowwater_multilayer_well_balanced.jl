@@ -4,18 +4,11 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the shallow water equations with a discontinuous
-# bottom topography function and wet/dry transition elements on a nonconforming mesh
+# Semidiscretization of the multilayer shallow water equations with one layer
+# to fallback to the standard shallow water equations.
+# Test case for well-balancedness with wet/dry transition elements on a nonconforming mesh.
 
-###############################################################################
-# Semidiscretization of the multilayer shallow water equations with one layers
-
-equations = ShallowWaterMultiLayerEquations2D(gravity = 9.812,
-                                            #   H0 = 2.0, # for fully wet testing
-                                              H0 = 1.235, # for wet/dry transition testing
-                                              # To have the same thresholds as the `ShallowWater2D`
-                                              threshold_desingularization = 1e-4,
-                                              threshold_limiter = 500*eps(),
+equations = ShallowWaterMultiLayerEquations2D(gravity = 9.812, H0 = 1.235,
                                               rhos = (1.0))
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
@@ -70,19 +63,17 @@ surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_et
 # Create the solver
 basis = LobattoLegendreBasis(3)
 
-# TODO: Write a generic function so that I can use `waterheight` in the limiter.
-# That way this part of the elixir is identical to the `ShallowWater2D` counterpart
+# Cannot simply use `waterheight` here for multilayer equations.
+# Need a helper function to extract the relevant variable.
+@inline function main_waterheight(u, equations)
+    return waterheight(u, equations)[1]
+end
 
 indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
                                                      alpha_max = 0.5,
                                                      alpha_min = 0.001,
                                                      alpha_smooth = true,
-                                                     # OBS! One cannot simply use `waterheight`
-                                                     # here for multilayer equations.
-                                                     # Throws a conversion error.
-                                                     # Would need another function that returns sum(h)
-                                                     # after the `waterheight` call.
-                                                     variable = waterheight_pressure)
+                                                     variable = main_waterheight)
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
                                                  volume_flux_dg = volume_flux,
                                                  volume_flux_fv = surface_flux)
@@ -209,11 +200,11 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(dt = 0.1, # 10.0,
+save_solution = SaveSolutionCallback(dt = 10.0,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stepsize_callback = StepsizeCallback(cfl = 0.5)
+stepsize_callback = StepsizeCallback(cfl = 1.0)
 
 callbacks = CallbackSet(summary_callback,
                         analysis_callback,
