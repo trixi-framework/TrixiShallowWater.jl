@@ -185,9 +185,9 @@ end # SWE
     # bathymetry and wave maker boundary condition. Tests several components
     # of the TrixiShallowWater.jl toolchain. Note, does not run long enough
     # for the AMR to fire.
-    @trixi_testset "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl" begin
+    @trixi_testset "elixir_shallowwater_multilayer_monai_flood_amr.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl"),
+                                     "elixir_shallowwater_multilayer_monai_flood_amr.jl"),
                             l2=[
                                 0.0003068569689525136,
                                 3.869268640941544e-6,
