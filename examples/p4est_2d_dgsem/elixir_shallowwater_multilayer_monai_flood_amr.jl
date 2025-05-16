@@ -25,7 +25,7 @@ spline_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andr
                                         joinpath(@__DIR__, "monai_bathymetry_data.txt"));
 
 # B-spline interpolation of the underlying data
-bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition="not-a-knot")
+bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not-a-knot")
 bathymetry(x, y) = spline_interpolation(bath_spline_struct, x, y)
 
 # Initial condition is a constant background state
@@ -78,8 +78,8 @@ H_from_wave_maker(t) = spline_interpolation(h_spline_struct, t)
 
 # Now we can define the specialized boundary condition for the incident wave maker.
 function boundary_condition_wave_maker(u_inner, normal_direction::AbstractVector, x, t,
-                                       surface_flux_functions, equations::ShallowWaterMultiLayerEquations2D)
-
+                                       surface_flux_functions,
+                                       equations::ShallowWaterMultiLayerEquations2D)
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
 
     # Compute the water height from the wave maker input file data
@@ -106,13 +106,14 @@ function boundary_condition_wave_maker(u_inner, normal_direction::AbstractVector
     return flux, noncons_flux
 end
 
-boundary_condition = Dict(:Bottom  => boundary_condition_slip_wall,
-                          :Top     => boundary_condition_slip_wall,
-                          :Right   => boundary_condition_slip_wall,
-                          :Left    => boundary_condition_wave_maker)
+boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
+                          :Top => boundary_condition_slip_wall,
+                          :Right => boundary_condition_slip_wall,
+                          :Left => boundary_condition_wave_maker)
 
 # Manning friction source term
-@inline function source_terms_manning_friction(u, x, t, equations::ShallowWaterMultiLayerEquations2D)
+@inline function source_terms_manning_friction(u, x, t,
+                                               equations::ShallowWaterMultiLayerEquations2D)
     # Grab the conservative variables
     h, hv_1, hv_2, b = u
 
@@ -151,13 +152,13 @@ basis = LobattoLegendreBasis(3)
 end
 
 indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
-                                                     alpha_max=0.5,
-                                                     alpha_min=0.001,
-                                                     alpha_smooth=true,
-                                                     variable=main_waterheight)
+                                                     alpha_max = 0.5,
+                                                     alpha_min = 0.001,
+                                                     alpha_smooth = true,
+                                                     variable = main_waterheight)
 volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
-                                                 volume_flux_dg=volume_flux,
-                                                 volume_flux_fv=surface_flux)
+                                                 volume_flux_dg = volume_flux,
+                                                 volume_flux_fv = surface_flux)
 
 solver = DGSEM(basis, surface_flux, volume_integral)
 
@@ -165,14 +166,14 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 # Get the unstructured quad mesh from a file (downloads the file if not available locally)
 
 mesh_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/d26356bdc8e8d742a3035b3f71c71a68/raw/9d6ceedb844e92313d1dac2318a28c87ffbb9de2/mesh_monai_shore.inp",
-                            joinpath(@__DIR__, "mesh_monai_shore.inp"));
+                           joinpath(@__DIR__, "mesh_monai_shore.inp"));
 
 mesh = P4estMesh{2}(mesh_file)
 
 # create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver;
-                                   boundary_conditions=boundary_condition,
-                                   source_terms=source_terms_manning_friction)
+                                    boundary_conditions = boundary_condition,
+                                    source_terms = source_terms_manning_friction)
 
 ###############################################################################
 # ODE solvers, callbacks etc.
@@ -186,15 +187,15 @@ ode = semidiscretize(semi, tspan)
 summary_callback = SummaryCallback()
 
 analysis_interval = 1000
-analysis_callback = AnalysisCallback(semi, interval=analysis_interval,
+analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
                                      extra_analysis_errors = (:conservation_error,),
                                      save_analysis = false)
 
-alive_callback = AliveCallback(analysis_interval=analysis_interval)
+alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
 save_solution = SaveSolutionCallback(dt = 0.2,
-                                     save_initial_solution=true,
-                                     save_final_solution=true)
+                                     save_initial_solution = true,
+                                     save_final_solution = true)
 
 # TimeSeries Callback is currently unavailable on `P4estMesh`
 # time_series = TimeSeriesCallback(semi, [(4.521, 1.196),  # G5
@@ -229,9 +230,9 @@ amr_controller = ControllerThreeLevel(semi,
                                       base_level = 0,
                                       med_level = 1, med_threshold = 0.012,
                                       max_level = 3, max_threshold = 0.015)
-                                      # velocity is very sensitive to use as an indicator
-                                    #   med_level = 1, med_threshold = 0.25,
-                                    #   max_level = 2, max_threshold = 0.475)
+# velocity is very sensitive to use as an indicator
+#   med_level = 1, med_threshold = 0.25,
+#   max_level = 2, max_threshold = 0.475)
 
 amr_callback = AMRCallback(semi, amr_controller,
                            interval = 5,
@@ -255,5 +256,4 @@ sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()...,
             callback = callbacks,
             adaptive = false,
-            dt = 1.0 # solve needs some value here; overwritten by the `stepsize_callback`
-            );
+            dt = 1.0);
