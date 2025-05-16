@@ -127,7 +127,7 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
 ###############################################################################
 # ODE solvers, callbacks, etc.
 
-tspan = (0.0, 4.0)
+tspan = (0.0, 5.0)
 ode = semidiscretize(semi, tspan)
 
 function initial_condition_discontinuous_perturbation(x, t, element_id,
