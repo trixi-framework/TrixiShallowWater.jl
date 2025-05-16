@@ -126,6 +126,90 @@ isdir(outdir) && rm(outdir, recursive = true)
         end
     end
 end # SWE
+
+@testset "Multilayer Shallow Water" begin
+    @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry_nonconforming.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_well_balanced_wet_dry_nonconforming.jl"),
+                            l2=[
+                                0.17389058166483545,
+                                1.3442539891317369e-15,
+                                1.390606878462557e-15,
+                                0.18415049792609314],
+                            linf=[
+                                0.4160052818017864,
+                                1.0894983713455818e-14,
+                                1.132829841145215e-14,
+                                0.41600528180178625],
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    # Note, these values may change as the functionality of well-balanced mortars
+    # with AMR and wet/dry are further developed according to the issue
+    # https://github.com/trixi-framework/TrixiShallowWater.jl/issues/77
+    @trixi_testset "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl"),
+                            l2=[
+                                0.3997030663722126,
+                                0.38644026433480094,
+                                0.4362923911447016,
+                                0.4564350570616195],
+                            linf=[
+                                1.372326981328246,
+                                3.3262654799249893,
+                                3.6541077514853653,
+                                0.7495177590247986],
+                            tspan=(0.0, 0.025),
+                            coverage_override=(maxiters = 5,))
+
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+
+    # Note, complex example that uses TrixiBottomTopography.jl to approximate
+    # bathymetry and wave maker boundary condition. Tests several components
+    # of the TrixiShallowWater.jl toolchain. Note, does not run long enough
+    # for the AMR to fire.
+    @trixi_testset "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl"),
+                            l2=[
+                                0.0003068569689525136,
+                                3.869268640941544e-6,
+                                6.345700409103784e-11,
+                                0.0003087516514830762],
+                            linf=[
+                                0.004387570753720829,
+                                3.562731640300165e-5,
+                                1.190336978580838e-9,
+                                0.004387569562413193],
+                            tspan=(0.0, 0.25))
+
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
+end # MLSWE
 end # P4estMesh2D
 
 # Clean up afterwards: delete TrixiShallowWater.jl output directory
