@@ -209,6 +209,32 @@ end # SWE
             @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
         end
     end
+
+    @trixi_testset "elixir_shallowwater_multilayer_three_mound_dam_break_amr.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_three_mound_dam_break_amr.jl"),
+                            l2=[
+                                0.13676802860182155,
+                                0.38852715519450065,
+                                1.8293078549048694e-13,
+                                0.0019606480801663806],
+                            linf=[
+                                1.0877121083544241,
+                                2.5590836440248874,
+                                1.7456605305379413e-11,
+                                0.044079775502972124],
+                            tspan=(0.0, 0.025),
+                            coverage_override=(maxiters = 5,))
+
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+        end
+    end
 end # MLSWE
 end # P4estMesh2D
 
