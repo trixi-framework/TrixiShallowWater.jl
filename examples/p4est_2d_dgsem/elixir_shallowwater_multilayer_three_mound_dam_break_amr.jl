@@ -140,7 +140,7 @@ save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stepsize_callback = StepsizeCallback(cfl = 0.5)
+stepsize_callback = StepsizeCallback(cfl = 0.4)
 
 # Cannot simply use `waterheight` here for multilayer equations.
 # Need a helper function to extract the relevant variable.
@@ -153,8 +153,8 @@ amr_indicator = IndicatorLöhner(semi, variable = main_waterheight)
 
 amr_controller = ControllerThreeLevel(semi, amr_indicator,
                                       base_level = 0,
-                                      med_level = 1, med_threshold = 0.1,
-                                      max_level = 3, max_threshold = 0.25)
+                                      med_level = 1, med_threshold = 0.25,
+                                      max_level = 3, max_threshold = 0.5)
 
 amr_callback = AMRCallback(semi, amr_controller,
                            interval = 5,
