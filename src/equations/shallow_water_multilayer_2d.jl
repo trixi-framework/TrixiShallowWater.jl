@@ -11,7 +11,7 @@
 Multi-Layer Shallow Water equations (MLSWE) in two space dimension. The equations are given by
 ```math
 \left\{
-	\begin{aligned}			
+	\begin{aligned}
 		&\partial_t h_m + \partial_x h_mv_m = 0,\\
 		&\partial h_mv1_m + \partial_x h_mv1_m^2 + \partial_y h_mv1_mv2_m = -gh_m\partial_x \bigg(b + \sum\limits_{k\geq j}h_k + \sum\limits_{k<m}\frac{\rho_k}{\rho_m}h_k \bigg)
         &\partial h_mv2_m + \partial_x h_mv1_mv2_m + \partial_y h_mv2_m^2 = -gh_m\partial_y \bigg(b + \sum\limits_{k\geq j}h_k + \sum\limits_{k<m}\frac{\rho_k}{\rho_m}h_k \bigg)
@@ -20,25 +20,25 @@ Multi-Layer Shallow Water equations (MLSWE) in two space dimension. The equation
 ```
 
 where ``m = 1, 2, ..., M`` is the layer index and the unknown variables are the water height ``h`` and
-the velocities ``v1, v2`` in both spatial dimensions .  Furthermore, ``g`` denotes the gravitational 
-constant, ``b(x)`` the bottom topography and ``\rho_m`` the m-th layer density, that must be chosen such that 
-``\rho_1 < \rho_2 < ... < \rho_M``, to ensure that different layers are ordered from top to bottom, with 
+the velocities ``v1, v2`` in both spatial dimensions .  Furthermore, ``g`` denotes the gravitational
+constant, ``b(x)`` the bottom topography and ``\rho_m`` the m-th layer density, that must be chosen such that
+``\rho_1 < \rho_2 < ... < \rho_M``, to ensure that different layers are ordered from top to bottom, with
 increasing density.
 
-We use a specific formulation of the system, where the pressure term is reformulated as a 
+We use a specific formulation of the system, where the pressure term is reformulated as a
 nonconservative term, which has some benefits for the design of well-balanced schemes.
 
 The additional quantity ``H_0`` is also available to store a reference value for the total water
 height that is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 
-Also, there are two thresholds which prevent numerical problems as well as instabilities. The limiters are 
-used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height. `threshold_limiter` 
-acts as a (small) shift on the initial condition and cutoff before the next time step, whereas 
-`threshold_desingularization` is used in the velocity desingularization. A third 
-`threshold_partially_wet` is applied on the water height to define "partially wet" elements in 
+Also, there are two thresholds which prevent numerical problems as well as instabilities. The limiters are
+used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height. `threshold_limiter`
+acts as a (small) shift on the initial condition and cutoff before the next time step, whereas
+`threshold_desingularization` is used in the velocity desingularization. A third
+`threshold_partially_wet` is applied on the water height to define "partially wet" elements in
 [`IndicatorHennemannGassnerShallowWater`](@ref), that are then calculated with a pure FV method to
-ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are 
-defined within the struct. For other number formats `threshold_desingularization` and `threshold_partially_wet` 
+ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are
+defined within the struct. For other number formats `threshold_desingularization` and `threshold_partially_wet`
 must be provided.
 
 The bottom topography function ``b(x)`` is set inside the initial condition routine
@@ -95,7 +95,7 @@ end
 # Allow for flexibility to set the gravitational acceleration within an elixir depending on the
 # application where `gravity=1.0` or `gravity=9.81` are common values.
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
-# well-balancedness test cases. 
+# well-balancedness test cases.
 function ShallowWaterMultiLayerEquations2D(; gravity,
                                            H0 = zero(gravity),
                                            threshold_limiter = nothing,
@@ -472,7 +472,7 @@ When the bottom topography is nonzero this scheme will be well-balanced when use
 
 In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
-  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
+  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on
   curvilinear meshes
   [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
 """
@@ -494,7 +494,7 @@ In the two-layer setting this combination is equivalent to the fluxes in:
     f = zero(MVector{3 * nlayers(equations) + 1, real(equations)})
 
     # Compute the nonconservative flux in each layer
-    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the
     # density ratio of different layers
     for i in eachlayer(equations)
         f_hv = g * h_ll[i] * b_jump
@@ -560,7 +560,7 @@ end
 
 Total energy conservative (mathematical entropy for MLSWE) split form,
 without the hydrostatic pressure.
-When the bottom topography is nonzero this scheme will be well-balanced when used with the 
+When the bottom topography is nonzero this scheme will be well-balanced when used with the
 nonconservative [`flux_nonconservative_ersing_etal`](@ref).
 
 To obtain an entropy stable formulation the `surface_flux` can be set as
@@ -568,7 +568,7 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
 
 In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
-  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
+  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on
   curvilinear meshes
   [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
 """
@@ -648,14 +648,18 @@ end
 """
     hydrostatic_reconstruction_ersing_etal(u_ll, u_rr, equations::ShallowWaterMultiLayerEquations2D)
 
-A particular type of hydrostatic reconstruction of the water height and bottom topography to 
-guarantee well-balancedness in the presence of wet/dry transitions and entropy stability for the 
-[`ShallowWaterMultiLayerEquations2D`](@ref). 
-The reconstructed solution states `u_ll_star` and `u_rr_star` variables are used to evaluate the 
-surface numerical flux at the interface. The key idea is a piecewise linear reconstruction of the 
-bottom topography and water height interfaces using subcells, where the bottom topography is allowed 
-to be discontinuous. 
+A particular type of hydrostatic reconstruction of the water height and bottom topography to
+guarantee well-balancedness in the presence of wet/dry transitions and entropy stability for the
+[`ShallowWaterMultiLayerEquations2D`](@ref).
+The reconstructed solution states `u_ll_star` and `u_rr_star` variables are used to evaluate the
+surface numerical flux at the interface. The key idea is a piecewise linear reconstruction of the
+bottom topography and water height interfaces using subcells, where the bottom topography is allowed
+to be discontinuous.
 Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
+
+- Patrick Ersing, Sven Goldberg, and Andrew R. Winters (2025)
+  Entropy stable hydrostatic reconstruction schemes for shallow water systems
+  [DOI: 10.1016/j.jcp.2025.113802](https://doi.org/10.1016/j.jcp.2025.113802)
 """
 @inline function hydrostatic_reconstruction_ersing_etal(u_ll, u_rr,
                                                         equations::ShallowWaterMultiLayerEquations2D)
@@ -881,7 +885,7 @@ end
 
 # Convert primitive to conservative variables
 @inline function Trixi.prim2cons(prim, equations::ShallowWaterMultiLayerEquations2D)
-    # To extract the total layer height and velocity we reuse the waterheight and momentum functions 
+    # To extract the total layer height and velocity we reuse the waterheight and momentum functions
     # from the conservative variables.
     H = waterheight(prim, equations)    # For primitive variables this extracts the total layer height
     v1, v2 = momentum(prim, equations)  # For primitive variables this extracts the velocities
@@ -923,7 +927,7 @@ end
 
     # Calculate entropy variables in each layer
     for i in eachlayer(equations)
-        # Compute w1[i] = ρ[i] * g * (b + ∑h[k] + ∑σ[k] * h[k]) - 0.5 * ρ[i] * (v1[i]^2 + v2[i]^2), 
+        # Compute w1[i] = ρ[i] * g * (b + ∑h[k] + ∑σ[k] * h[k]) - 0.5 * ρ[i] * (v1[i]^2 + v2[i]^2),
         # where σ[k] = ρ[k] / ρ[i] denotes the density ratio of different layers
         w1 = equations.rhos[i] * (g * b) - 0.5 * equations.rhos[i] * (v1[i]^2 + v2[i]^2)
         for j in eachlayer(equations)
@@ -1018,7 +1022,7 @@ end
 end
 
 # Calculate the error for the "lake-at-rest" test case where H = ∑h + b should
-# be a constant value over time. 
+# be a constant value over time.
 # Note, assumes there is a single reference water height `H0` with which to compare.
 @inline function Trixi.lake_at_rest_error(u,
                                           equations::ShallowWaterMultiLayerEquations2D)
