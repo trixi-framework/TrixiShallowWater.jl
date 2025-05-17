@@ -214,16 +214,16 @@ end # SWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_three_mound_dam_break_amr.jl"),
                             l2=[
-                                0.13676802860182155,
-                                0.38852715519450065,
-                                1.8293078549048694e-13,
-                                0.0019606480801663806],
+                                0.13142461271166225,
+                                0.35364621879644254,
+                                4.778520542281107e-13,
+                                0.0019606480801664917],
                             linf=[
-                                1.0877121083544241,
-                                2.5590836440248874,
-                                1.7456605305379413e-11,
+                                1.1338438044790615,
+                                2.416846787140322,
+                                6.256251416535554e-11,
                                 0.044079775502972124],
-                            tspan=(0.0, 0.025),
+                            tspan=(0.0, 0.3),
                             coverage_override=(maxiters = 5,))
 
         # Ensure that we do not have excessive memory allocations
