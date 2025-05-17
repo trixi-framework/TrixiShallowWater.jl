@@ -25,7 +25,6 @@ The initial conditions is taken from Section 6.3 of the paper:
   [DOI: 10.1016/j.jcp.2018.08.038](https://doi.org/10.1016/j.jcp.2018.08.038)
 """
 function initial_condition_three_mounds(x, t, equations::ShallowWaterMultiLayerEquations2D)
-
     x1, x2 = x
     M_1 = 1 - 0.1 * sqrt((x1 - 30.0)^2 + (x2 - 22.5)^2)
     M_2 = 1 - 0.1 * sqrt((x1 - 30.0)^2 + (x2 - 7.5)^2)
@@ -178,5 +177,4 @@ sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()...,
             callback = callbacks,
             adaptive = false,
-            dt = 1.0 # solve needs some value here; overwritten by the `stepsize_callback`
-            );
+            dt = 1.0);
