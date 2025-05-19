@@ -17,16 +17,18 @@ using TrixiBottomTopography
 equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, H0 = 0.0,
                                               rhos = (1.0))
 
-# Setup the bottom topography data and cubic spline interpolant
+# Get the precision type for type stable dispatch on the helper spline functions
+RealT = typeof(equations.gravity)
 
 # Create a bicubic B-spline interpolation of the bathymetry data, then create a function
 # to evaluate the resulting spline at a given point $(x,y)$.
 spline_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/21255c980c4eda5294f91e8dfe6c7e33/raw/1afb73928892774dc3a902e0c46ffd882ef03ee3/monai_bathymetry_data.txt",
                                         joinpath(@__DIR__, "monai_bathymetry_data.txt"));
 
-# B-spline interpolation of the underlying data
-bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not-a-knot")
-bathymetry(x, y) = spline_interpolation(bath_spline_struct, x, y)
+# B-spline interpolation of the underlying data.
+# The type of struct is fixed to be `BicubicBSpline` for type stability
+const bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not-a-knot")
+bathymetry(x::RealT, y::RealT) = spline_interpolation(bath_spline_struct, x, y)
 
 # Initial condition is a constant background state
 function initial_condition_monai_tsunami(x, t, equations::ShallowWaterMultiLayerEquations2D)
@@ -73,13 +75,14 @@ water_height_data = Trixi.download("https://gist.githubusercontent.com/andrewwin
 
 # Similar to the bathymetry approximation, we construct a cubic B-spline interpolation
 # of the data, then create a function to evaluate the resulting spline at a given $t$ value.
-h_spline_struct = CubicBSpline(water_height_data; end_condition = "not-a-knot")
-H_from_wave_maker(t) = spline_interpolation(h_spline_struct, t)
+# The type of struct is fixed to be `CubicBSpline` for type stability
+const h_spline_struct = CubicBSpline(water_height_data; end_condition = "not-a-knot")
+H_from_wave_maker(t::RealT) = spline_interpolation(h_spline_struct, t)
 
 # Now we can define the specialized boundary condition for the incident wave maker.
-function boundary_condition_wave_maker(u_inner, normal_direction::AbstractVector, x, t,
-                                       surface_flux_functions,
-                                       equations::ShallowWaterMultiLayerEquations2D)
+@inline function boundary_condition_wave_maker(u_inner, normal_direction::AbstractVector, x, t,
+                                               surface_flux_functions,
+                                               equations::ShallowWaterMultiLayerEquations2D)
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
 
     # Compute the water height from the wave maker input file data
@@ -95,7 +98,7 @@ function boundary_condition_wave_maker(u_inner, normal_direction::AbstractVector
     v1_ext = 2 * (sqrt(equations.gravity * h_ext) - sqrt(equations.gravity * h0))
 
     # Create the external solution state in the conservative variables
-    u_outer = SVector([h_ext]..., [h_ext * v1_ext]..., [zero(eltype(x))]..., u_inner[4])
+    u_outer = SVector(h_ext, h_ext * v1_ext, zero(eltype(x)), u_inner[4])
 
     # Calculate the boundary flux and nonconservative contributions
     flux = surface_flux_function(u_inner, u_outer, normal_direction, equations)
