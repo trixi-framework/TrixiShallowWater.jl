@@ -169,7 +169,7 @@ spline_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andr
 
 # Create a bicubic B-spline interpolation of the bathymetry data, then create a function
 # to evaluate the resulting spline at a given point $(x,y)$.
-# The type of this struct is fixed to be `BicubicBSpline`.
+# The type of this struct is fixed as `BicubicBSpline`.
 const bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not-a-knot")
 bathymetry(x::Float64, y::Float64) = spline_interpolation(bath_spline_struct, x, y);
 
@@ -212,7 +212,7 @@ wavemaker_bc_file = Trixi.download("https://gist.githubusercontent.com/andrewwin
 
 # Similar to the bathymetry approximation, we construct a cubic B-spline interpolation
 # of the data, then create a function to evaluate the resulting spline at a given $t$ value.
-# The type of this struct is fixed to be `CubicBSpline`.
+# The type of this struct is fixed as `CubicBSpline`.
 const h_spline_struct = CubicBSpline(wavemaker_bc_file; end_condition = "not-a-knot")
 H_from_wave_maker(t::Float64) = spline_interpolation(h_spline_struct, t);
 

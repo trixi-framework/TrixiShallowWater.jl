@@ -26,7 +26,7 @@ spline_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andr
                                         joinpath(@__DIR__, "monai_bathymetry_data.txt"));
 
 # B-spline interpolation of the underlying data.
-# The type of struct is fixed to be `BicubicBSpline` for type stability
+# The type of this struct is fixed as `BicubicBSpline`.
 const bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not-a-knot")
 bathymetry(x::RealT, y::RealT) = spline_interpolation(bath_spline_struct, x, y)
 
@@ -75,7 +75,7 @@ water_height_data = Trixi.download("https://gist.githubusercontent.com/andrewwin
 
 # Similar to the bathymetry approximation, we construct a cubic B-spline interpolation
 # of the data, then create a function to evaluate the resulting spline at a given $t$ value.
-# The type of struct is fixed to be `CubicBSpline` for type stability
+# The type of this struct is fixed as `CubicBSpline`.
 const h_spline_struct = CubicBSpline(water_height_data; end_condition = "not-a-knot")
 H_from_wave_maker(t::RealT) = spline_interpolation(h_spline_struct, t)
 
