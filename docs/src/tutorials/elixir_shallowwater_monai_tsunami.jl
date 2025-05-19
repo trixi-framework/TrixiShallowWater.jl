@@ -156,7 +156,7 @@ generate_mesh(monai);
 # and specify the gravitational acceleration to `gravity = 9.812`
 # as well as a background water height `H0 = 0.0`.
 # In contrast to the [`Trixi.ShallowWaterEquations2D`](@extref Trixi.ShallowWaterEquations2D) type,
-# this equation type allows contains additional parameters and methods needed to handle wetting and drying.
+# this equation type contains additional parameters and methods needed to handle wetting and drying.
 equations = ShallowWaterEquationsWetDry2D(gravity = 9.81, H0 = 0.0)
 
 # Next, we construct an approximation to the bathymetry with TrixiBottomTopography.jl using
@@ -169,8 +169,9 @@ spline_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andr
 
 # Create a bicubic B-spline interpolation of the bathymetry data, then create a function
 # to evaluate the resulting spline at a given point $(x,y)$.
-bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not-a-knot")
-bathymetry(x, y) = spline_interpolation(bath_spline_struct, x, y);
+# The type of this struct is fixed to be `BicubicBSpline`.
+const bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not-a-knot")
+bathymetry(x::Float64, y::Float64) = spline_interpolation(bath_spline_struct, x, y);
 
 # We then create a function to supply the initial condition for the simulation.
 @inline function initial_condition_monai_tsunami(x, t,
@@ -211,8 +212,9 @@ wavemaker_bc_file = Trixi.download("https://gist.githubusercontent.com/andrewwin
 
 # Similar to the bathymetry approximation, we construct a cubic B-spline interpolation
 # of the data, then create a function to evaluate the resulting spline at a given $t$ value.
-h_spline_struct = CubicBSpline(wavemaker_bc_file; end_condition = "not-a-knot")
-H_from_wave_maker(t) = spline_interpolation(h_spline_struct, t);
+# The type of this struct is fixed to be `CubicBSpline`.
+const h_spline_struct = CubicBSpline(wavemaker_bc_file; end_condition = "not-a-knot")
+H_from_wave_maker(t::Float64) = spline_interpolation(h_spline_struct, t);
 
 # Now we are equipped to define the specialized boundary condition for the incident
 # wave maker.
