@@ -9,7 +9,7 @@ using TrixiShallowWater
 
 equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, H0 = 0.0,
                                               threshold_limiter = 1e-12,
-                                              rhos = (1.0))
+                                              rhos = 1.0)
 
 """
     initial_condition_three_mounds(x, t, equations::ShallowWaterMultiLayerEquations2D)
@@ -37,7 +37,7 @@ function initial_condition_three_mounds(x, t, equations::ShallowWaterMultiLayerE
     x0 = 8  # center point of function
     k = -75.0 # sharpness of transfer
 
-    H = [max(b, L / (1.0 + exp(-k * (x1 - x0))))]
+    H = max(b, L / (1.0 + exp(-k * (x1 - x0))))
 
     # Everything is initially not moving
     v1 = zero(H)
@@ -49,16 +49,10 @@ function initial_condition_three_mounds(x, t, equations::ShallowWaterMultiLayerE
     # with a default value of 5*eps() ≈ 1e-15 in double precision, is set in the constructor above
     # for the ShallowWaterMultiLayerEquations2D and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
-    for i in reverse(eachlayer(equations))
-        if i == nlayers(equations)
-            H[i] = max(H[i], b + equations.threshold_limiter)
-        else
-            H[i] = max(H[i], H[i + 1] + equations.threshold_limiter)
-        end
-    end
+    H = max(H, b + equations.threshold_limiter)
 
     # Return the conservative variables
-    return prim2cons(SVector(H..., v1..., v2..., b), equations)
+    return prim2cons(SVector(H, v1, v2, b), equations)
 end
 
 initial_condition = initial_condition_three_mounds

@@ -194,7 +194,7 @@ end
 
 # Specialized strategy to project the solution to the mortars and preserve
 # well-balancedness from the work of Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008).
-# This version is for the `ShallowWaterMultiLayerEquations2D` which "peels" the pressure
+# This version is for the `ShallowWaterMultiLayerEquations2D` with a single layer, which "peels" the pressure
 # contribution into the nonconservative term for easier well-balancing,
 # see Ersing et al. (https://doi.org/10.1016/j.jcp.2025.113802).
 # Thus, this uses the original `P4estMortarContainer`, `calc_mortar_flux!`
@@ -210,6 +210,11 @@ function Trixi.prolong2mortars!(cache, u,
     @unpack neighbor_ids, node_indices = cache.mortars
     index_range = eachnode(dg)
 
+    # Raise an error if `prolong2mortars!` is called with multiple layers.
+    if nlayers(equations) != 1
+        error("Non-conforming meshes are only supported for a single layer!")
+    end
+    
     Trixi.@threaded for mortar in Trixi.eachmortar(dg, cache)
         # Copy solution data from the small elements using "delayed indexing" with
         # a start value and a step size to get the correct face and orientation.
@@ -266,7 +271,6 @@ function Trixi.prolong2mortars!(cache, u,
             # Note, some shift is required to ensure we catch water heights close to the threshold
             # and maintain well-balancedness. The larger this shift we also maintain the conservation
             # errors to be close to double precision roundoff for longer.
-            # if u[1, i_large, j_large, element] >= 500 * equations.threshold_limiter # ≈ 5.5e-13 by default
             if u[1, i_large, j_large, element] >= equations.threshold_desingularization # 1e-10 by default
                 u_buffer[1, i] = (u[1, i_large, j_large, element] +
                                   u[4, i_large, j_large, element])

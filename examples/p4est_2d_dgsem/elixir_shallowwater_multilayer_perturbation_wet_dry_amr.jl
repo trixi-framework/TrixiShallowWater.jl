@@ -12,11 +12,11 @@ using TrixiShallowWater
 # on a nonconforming mesh with AMR
 
 equations = ShallowWaterMultiLayerEquations2D(gravity = 9.812, H0 = 1.235,
-                                              rhos = (1.0))
+                                              rhos = 1.0)
 
 function initial_condition_perturbation(x, t, equations::ShallowWaterMultiLayerEquations2D)
     # Calculate primitive variables
-    H = [equations.H0]
+    H = equations.H0
     v1 = zero(H)
     v2 = zero(H)
 
@@ -33,15 +33,9 @@ function initial_condition_perturbation(x, t, equations::ShallowWaterMultiLayerE
     # with a default value of 5*eps() ≈ 1e-15 in double precision, is set in the constructor above
     # for the ShallowWaterMultiLayerEquations2D and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
-    for i in reverse(eachlayer(equations))
-        if i == nlayers(equations)
-            H[i] = max(H[i], b + equations.threshold_limiter)
-        else
-            H[i] = max(H[i], H[i + 1] + equations.threshold_limiter)
-        end
-    end
+    H = max(H, b + equations.threshold_limiter)
 
-    return prim2cons(SVector(H..., v1..., v2..., b), equations)
+    return prim2cons(SVector(H, v1, v2, b), equations)
 end
 
 initial_condition = initial_condition_perturbation
@@ -133,7 +127,7 @@ ode = semidiscretize(semi, tspan)
 function initial_condition_discontinuous_perturbation(x, t, element_id,
                                                       equations::ShallowWaterMultiLayerEquations2D)
     # Set the background values for velocity
-    H = [equations.H0]
+    H = equations.H0
     v1 = zero(H)
     v2 = zero(H)
 
@@ -160,7 +154,7 @@ function initial_condition_discontinuous_perturbation(x, t, element_id,
 
     # Put in a discontinuous perturbation using the element number
     if element_id in [232, 224, 225, 226, 227, 228, 229, 230]
-        H = H .+ 1.6
+        H = H + 1.6
     end
 
     # It is mandatory to shift the water level at dry areas to make sure the water height h
@@ -169,15 +163,9 @@ function initial_condition_discontinuous_perturbation(x, t, element_id,
     # with a default value of 5*eps() ≈ 1e-15 in double precision, is set in the constructor above
     # for the ShallowWaterMultiLayerEquations2D and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
-    for i in reverse(eachlayer(equations))
-        if i == nlayers(equations)
-            H[i] = max(H[i], b + equations.threshold_limiter)
-        else
-            H[i] = max(H[i], H[i + 1] + equations.threshold_limiter)
-        end
-    end
+    H = max(H, b + equations.threshold_limiter)
 
-    return prim2cons(SVector(H..., v1..., v2..., b), equations)
+    return prim2cons(SVector(H, v1, v2, b), equations)
 end
 
 # point to the data we want to augment

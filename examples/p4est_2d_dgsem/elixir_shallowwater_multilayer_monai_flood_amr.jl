@@ -15,7 +15,7 @@ using TrixiBottomTopography
 # to fallback to be the standard shallow water equations
 
 equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, H0 = 0.0,
-                                              rhos = (1.0))
+                                              rhos = 1.0)
 
 # Get the precision type for type stable dispatch on the helper spline functions
 RealT = typeof(equations.gravity)
@@ -33,7 +33,7 @@ bathymetry(x::RealT, y::RealT) = spline_interpolation(bath_spline_struct, x, y)
 # Initial condition is a constant background state
 function initial_condition_monai_tsunami(x, t, equations::ShallowWaterMultiLayerEquations2D)
     # Set the background water height
-    H = [equations.H0]
+    H = equations.H0
 
     # Initially water is at rest
     v1 = zero(H)
@@ -49,16 +49,10 @@ function initial_condition_monai_tsunami(x, t, equations::ShallowWaterMultiLayer
     # with a default value of 5*eps() ≈ 1e-15 in double precision, is set in the constructor above
     # for the ShallowWaterMultiLayerEquations2D and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
-    for i in reverse(eachlayer(equations))
-        if i == nlayers(equations)
-            H[i] = max(H[i], b + equations.threshold_limiter)
-        else
-            H[i] = max(H[i], H[i + 1] + equations.threshold_limiter)
-        end
-    end
+    H = max(H, b + equations.threshold_limiter)
 
     # Return the conservative variables
-    return prim2cons(SVector(H..., v1..., v2..., b), equations)
+    return prim2cons(SVector(H, v1, v2, b), equations)
 end
 
 initial_condition = initial_condition_monai_tsunami
@@ -118,20 +112,20 @@ boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
 @inline function source_terms_manning_friction(u, x, t,
                                                equations::ShallowWaterMultiLayerEquations2D)
     # Grab the conservative variables
-    h, hv_1, hv_2, b = u
+    h, hv_1, hv_2, _ = u
 
     # Desingularization
-    sh = (2.0 * h[1]) / (h[1]^2 + max(h[1]^2, 1e-8))
+    h = (h^2 + max(h^2, 1e-8)) / (2.0 * h)
 
     # friction coefficient
     n = 0.001
 
     # Compute the common friction term
-    Sf = -equations.gravity * n^2 * sh^(7.0 / 3.0) * sqrt(hv_1[1]^2 + hv_2[1]^2)
+    Sf = -equations.gravity * n^2 * h^(-7 / 3) * sqrt(hv_1^2 + hv_2^2)
 
     return SVector(zero(h)...,
-                   Sf * hv_1[1]...,
-                   Sf * hv_2[1]...,
+                   Sf * hv_1,
+                   Sf * hv_2,
                    zero(b))
 end
 
@@ -245,7 +239,6 @@ amr_callback = AMRCallback(semi, amr_controller,
 callbacks = CallbackSet(summary_callback,
                         analysis_callback,
                         alive_callback,
-                        # time_series,
                         amr_callback,
                         save_solution,
                         stepsize_callback)
