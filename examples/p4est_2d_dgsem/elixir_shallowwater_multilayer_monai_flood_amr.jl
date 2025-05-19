@@ -115,7 +115,7 @@ boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
     h, hv_1, hv_2, _ = u
 
     # Desingularization
-    h = (h^2 + max(h^2, 1e-8)) / (2.0 * h)
+    h = (h^2 + max(h^2, 1e-8)) / (2 * h)
 
     # friction coefficient
     n = 0.001
@@ -123,10 +123,10 @@ boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
     # Compute the common friction term
     Sf = -equations.gravity * n^2 * h^(-7 / 3) * sqrt(hv_1^2 + hv_2^2)
 
-    return SVector(zero(h)...,
+    return SVector(zero(h),
                    Sf * hv_1,
                    Sf * hv_2,
-                   zero(b))
+                   zero(h))
 end
 
 ###############################################################################
@@ -194,32 +194,12 @@ save_solution = SaveSolutionCallback(dt = 0.2,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-# TimeSeries Callback is currently unavailable on `P4estMesh`
-# time_series = TimeSeriesCallback(semi, [(4.521, 1.196),  # G5
-#                                         (4.521, 1.696),  # G7
-#                                         (4.521, 2.196)]; # G9
-#                                  interval = 2,
-#                                  solution_variables=cons2prim)
-
 stepsize_callback = StepsizeCallback(cfl = 0.5)
 
-# Another possible AMR indicator function could be the velocity, such that it only fires
-# in regions where the water is moving
+# Another possible AMR indicator function could be the water height with IndicatorLoehner
 @inline function momentum_norm(u, equations::ShallowWaterMultiLayerEquations2D)
     _, h_v1, h_v2, _ = u
-    return sqrt(h_v1[1]^2 + h_v2[1]^2)
-    # h, h_v1, h_v2, _ = u
-    # v1 = (2 * h[1] * h_v1[1]) / (h[1]^2 + max(h[1]^2, 1e-8))
-    # v2 = (2 * h[1] * h_v2[1]) / (h[1]^2 + max(h[1]^2, 1e-8))
-    # if h[1] <= 1e-8
-    #     v1 = 0.0
-    #     v2 = 0.0
-    # end
-    # if v1 > 0.525 || v2 > 0.525
-    #     v1 = 0.0
-    #     v2 = 0.0
-    # end
-    # return sqrt(v1^2 + v2^2)
+    return sqrt(h_v1^2 + h_v2^2)
 end
 
 amr_controller = ControllerThreeLevel(semi,
@@ -227,9 +207,6 @@ amr_controller = ControllerThreeLevel(semi,
                                       base_level = 0,
                                       med_level = 1, med_threshold = 0.012,
                                       max_level = 3, max_threshold = 0.015)
-# velocity is very sensitive to use as an indicator
-#   med_level = 1, med_threshold = 0.25,
-#   max_level = 2, max_threshold = 0.475)
 
 amr_callback = AMRCallback(semi, amr_controller,
                            interval = 5,

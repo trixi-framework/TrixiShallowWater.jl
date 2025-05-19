@@ -214,7 +214,7 @@ function Trixi.prolong2mortars!(cache, u,
     if nlayers(equations) != 1
         error("Non-conforming meshes are only supported for a single layer!")
     end
-    
+
     Trixi.@threaded for mortar in Trixi.eachmortar(dg, cache)
         # Copy solution data from the small elements using "delayed indexing" with
         # a start value and a step size to get the correct face and orientation.
@@ -301,10 +301,16 @@ function Trixi.prolong2mortars!(cache, u,
         # Note, no desingularization or water height cutoff is needed here as these steps are done
         # later in the hydrostatic reconstruction and stage limiter, respectively.
         for i in eachnode(dg)
-            cache.mortars.u[2, 1, 1, i, mortar] = (cache.mortars.u[2, 1, 1, i, mortar] -
-                                                   cache.mortars.u[2, 4, 1, i, mortar])
-            cache.mortars.u[2, 1, 2, i, mortar] = (cache.mortars.u[2, 1, 2, i, mortar] -
-                                                   cache.mortars.u[2, 4, 2, i, mortar])
+            cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i,
+                                                                      mortar] -
+                                                      cache.mortars.u[2, 4, 1, i,
+                                                                      mortar],
+                                                      equations.threshold_limiter)
+            cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i,
+                                                                      mortar] -
+                                                      cache.mortars.u[2, 4, 2, i,
+                                                                      mortar],
+                                                      equations.threshold_limiter)
         end
     end
 
