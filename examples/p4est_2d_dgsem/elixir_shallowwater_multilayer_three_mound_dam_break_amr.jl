@@ -130,7 +130,7 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(dt = 0.5,
+save_solution = SaveSolutionCallback(dt = 0.04, #dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
@@ -147,8 +147,10 @@ amr_indicator = IndicatorLöhner(semi, variable = main_waterheight)
 
 amr_controller = ControllerThreeLevel(semi, amr_indicator,
                                       base_level = 0,
-                                      med_level = 1, med_threshold = 0.25,
-                                      max_level = 3, max_threshold = 0.5)
+                                    #   med_level = 1, med_threshold = 0.25,
+                                    #   max_level = 3, max_threshold = 0.5)
+                                      med_level = 1, med_threshold = 0.1,
+                                      max_level = 3, max_threshold = 0.25)
 
 amr_callback = AMRCallback(semi, amr_controller,
                            interval = 5,
