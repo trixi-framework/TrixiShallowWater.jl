@@ -34,7 +34,8 @@ spline_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andr
 
 # B-spline interpolation of the underlying data.
 # The type of this struct is fixed as `BicubicBSpline`.
-const bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not-a-knot")
+const bath_spline_struct = BicubicBSpline(spline_bathymetry_file,
+                                          end_condition = "not-a-knot")
 bathymetry(x::RealT, y::RealT) = spline_interpolation(bath_spline_struct, x, y)
 
 # Initial condition is a constant background state
@@ -81,8 +82,8 @@ const h_spline_struct = CubicBSpline(water_height_data; end_condition = "not-a-k
 H_from_wave_maker(t::RealT) = spline_interpolation(h_spline_struct, t)
 
 # Now we can define the specialized boundary condition for the incident wave maker.
-@inline function boundary_condition_wave_maker(u_inner, normal_direction::AbstractVector, x, t,
-                                               surface_flux_functions,
+@inline function boundary_condition_wave_maker(u_inner, normal_direction::AbstractVector,
+                                               x, t, surface_flux_functions,
                                                equations::ShallowWaterMultiLayerEquations2D)
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
 
