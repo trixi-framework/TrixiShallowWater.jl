@@ -170,7 +170,8 @@ spline_bathymetry_file = Trixi.download("https://gist.githubusercontent.com/andr
 # Create a bicubic B-spline interpolation of the bathymetry data, then create a function
 # to evaluate the resulting spline at a given point $(x,y)$.
 # The type of this struct is fixed as `BicubicBSpline`.
-const bath_spline_struct = BicubicBSpline(spline_bathymetry_file, end_condition = "not-a-knot")
+const bath_spline_struct = BicubicBSpline(spline_bathymetry_file,
+                                          end_condition = "not-a-knot")
 bathymetry(x::Float64, y::Float64) = spline_interpolation(bath_spline_struct, x, y);
 
 # We then create a function to supply the initial condition for the simulation.
