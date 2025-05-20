@@ -5,11 +5,6 @@
 @muladd begin
 #! format: noindent
 
-# TODO: Once working the mortar methods could likely be extended to the other
-# equation types available in the package. Although for the multilayer equations
-# care must be taken because the pressure term is separated from the physical flux
-# and directly placed in the nonconservative flux
-
 # The methods below are specialized on the `P4estShallowWaterMortarContainer`
 # mortar type. Extra storage is necessary for the numerical flux plus nonconservative term
 # on either side of the parent (large) element mortars. It also requires a work
@@ -194,8 +189,8 @@ end
 
 # Specialized strategy to project the solution to the mortars and preserve
 # well-balancedness from the work of Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008).
-# This version is for the `ShallowWaterMultiLayerEquations2D` with a single layer, which "peels" the pressure
-# contribution into the nonconservative term for easier well-balancing,
+# This version is for the `ShallowWaterMultiLayerEquations2D` with a single layer
+# that "peels" the pressure contribution into the nonconservative term for easier well-balancing,
 # see Ersing et al. (https://doi.org/10.1016/j.jcp.2025.113802).
 # Thus, this uses the original `P4estMortarContainer`, `calc_mortar_flux!`
 # and `mortar_fluxes_to_elements!` from Trixi.jl.
@@ -263,9 +258,9 @@ function Trixi.prolong2mortars!(cache, u,
             # That is, we might be able to directly project the water height `h` instead while maintaining
             # important steady-state solution behavior.
             #
-            # Further, worth noting that for fully wet portions of the domain, the logic below
+            # Further, it is worth noting that for fully wet portions of the domain, the logic below
             # is unnecessary and the "classic" mortar method is well-balanced and fully conservative
-            # for the `ShallowWaterMultiLayerEquations2D`. Could be exploited to design a better
+            # for the `ShallowWaterMultiLayerEquations2D`. This could be exploited to design a better
             # approach to the AMR refinement / coarsening.
             #
             # Note, some shift is required to ensure we catch water heights close to the threshold
@@ -298,19 +293,20 @@ function Trixi.prolong2mortars!(cache, u,
         # and instead recover the conservative water height variable `h`.
         # Basically, unpacking the total water height variable to create the projected local water
         # height `h` from Eq. 41 in Benov et al.
-        # Note, no desingularization or water height cutoff is needed here as these steps are done
+        # Note, no desingularization or water height cutoff is done here as these steps are performed
         # later in the hydrostatic reconstruction and stage limiter, respectively.
+        #
+        # In testing, spurious waves are generated if one instead uses
+        # `max(H - b, equations.threshold_limiter)` on the mortars and using a velocity
+        # desingularization on the mortars here causes unpredictable behavior in
+        # the `LoehnerIndicator` for AMR in the dry regions. This is likely due to the gradient
+        # estimation in the dry "noisy" regions being sensitive to common indicator variables
+        # like the local water height.
         for i in eachnode(dg)
-            cache.mortars.u[2, 1, 1, i, mortar] = max(cache.mortars.u[2, 1, 1, i,
-                                                                      mortar] -
-                                                      cache.mortars.u[2, 4, 1, i,
-                                                                      mortar],
-                                                      equations.threshold_limiter)
-            cache.mortars.u[2, 1, 2, i, mortar] = max(cache.mortars.u[2, 1, 2, i,
-                                                                      mortar] -
-                                                      cache.mortars.u[2, 4, 2, i,
-                                                                      mortar],
-                                                      equations.threshold_limiter)
+            cache.mortars.u[2, 1, 1, i, mortar] = (cache.mortars.u[2, 1, 1, i, mortar] -
+                                                      cache.mortars.u[2, 4, 1, i, mortar])
+            cache.mortars.u[2, 1, 2, i, mortar] = (cache.mortars.u[2, 1, 2, i, mortar] -
+                                                      cache.mortars.u[2, 4, 2, i, mortar])
         end
     end
 
