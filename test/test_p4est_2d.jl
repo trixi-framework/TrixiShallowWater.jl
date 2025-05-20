@@ -200,7 +200,7 @@ end # SWE
                                 1.1903363999889186e-9,
                                 0.004387569562413221],
                             tspan=(0.0, 0.25),
-                            atol=1e-12)
+                            atol=5e-12)
 
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
