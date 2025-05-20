@@ -9,6 +9,13 @@ using TrixiBottomTopography
 # for a thorough explanation of this problem setup.
 #
 # This elixir allows for experimentation with AMR with this complex test case.
+# In the current state, AMR on wet/dry fronts remains sensitive to the limiting of the water height,
+# desingularization of the velocities, and the design of the AMR indicator.
+# Further, there remains an appreciable loss of conservation, with conservation errors
+# of ≈1e-5 in the water height for this test case as the flow evolves.
+# More investigation is needed to identify exactly why each aspect of this strange behavior occurs.
+# For instance, the conservation loss  may be related to the choice of the CFL that guarantees
+# a positive water height as well as a positive element-wise mean necessary in the limiting.
 
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations with one layer

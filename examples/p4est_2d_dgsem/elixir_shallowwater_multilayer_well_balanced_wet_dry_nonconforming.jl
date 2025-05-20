@@ -3,10 +3,18 @@ using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
+# Stress test case for well-balancedness with wet/dry transition elements
+# on a nonconforming mesh with a discontinuous bottom topography where
+# this elixir allows for experimentation for well-balancedness with this complex test case.
+
+# In the current state, recovering a well-balancedness error up to double precision machine
+# round-off error relies on a special projection procedure at wet/dry fronts.
+# However, there are no conservation issues and these conservation errors remain around
+# double precision unit round-off for all time.
+
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations with one layer
 # to fallback to the standard shallow water equations.
-# Test case for well-balancedness with wet/dry transition elements on a nonconforming mesh.
 
 equations = ShallowWaterMultiLayerEquations2D(gravity = 9.812, H0 = 1.235,
                                               rhos = 1.0)
