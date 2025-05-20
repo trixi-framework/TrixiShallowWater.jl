@@ -266,7 +266,7 @@ boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
     h, hv_1, hv_2, _ = u
 
     n = 0.001 # friction coefficient
-    h = (h^2 + max(h^2, 1e-8)) / (2.0 * h) # desingularization procedure
+    h = (h^2 + max(h^2, 1e-8)) / (2 * h) # desingularization procedure
 
     ## Compute the common friction term
     Sf = -equations.gravity * n^2 * h^(-7 / 3) * sqrt(hv_1^2 + hv_2^2)

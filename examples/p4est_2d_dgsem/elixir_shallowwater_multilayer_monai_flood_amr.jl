@@ -196,7 +196,7 @@ save_solution = SaveSolutionCallback(dt = 0.2,
 
 stepsize_callback = StepsizeCallback(cfl = 0.5)
 
-# Another possible AMR indicator function could be the water height with IndicatorLoehner
+# Another possible AMR indicator function could be the water height with `IndicatorLoehner`
 @inline function momentum_norm(u, equations::ShallowWaterMultiLayerEquations2D)
     _, h_v1, h_v2, _ = u
     return sqrt(h_v1^2 + h_v2^2)

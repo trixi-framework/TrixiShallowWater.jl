@@ -130,7 +130,7 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(dt = 0.04, #dt = 0.5,
+save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
@@ -138,17 +138,14 @@ stepsize_callback = StepsizeCallback(cfl = 0.4)
 
 # Cannot simply use `waterheight` here for multilayer equations.
 # Need a helper function to extract the relevant variable.
-# TODO: This AMR indicator fires too often in the dry regions
 @inline function main_waterheight(u, equations)
     return waterheight(u, equations)[1]
 end
 
-amr_indicator = IndicatorLöhner(semi, variable = main_waterheight)
+amr_indicator = IndicatorLoehner(semi, variable = main_waterheight)
 
 amr_controller = ControllerThreeLevel(semi, amr_indicator,
                                       base_level = 0,
-                                    #   med_level = 1, med_threshold = 0.25,
-                                    #   max_level = 3, max_threshold = 0.5)
                                       med_level = 1, med_threshold = 0.1,
                                       max_level = 3, max_threshold = 0.25)
 
