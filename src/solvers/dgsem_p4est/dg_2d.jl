@@ -304,9 +304,9 @@ function Trixi.prolong2mortars!(cache, u,
         # like the local water height.
         for i in eachnode(dg)
             cache.mortars.u[2, 1, 1, i, mortar] = (cache.mortars.u[2, 1, 1, i, mortar] -
-                                                      cache.mortars.u[2, 4, 1, i, mortar])
+                                                   cache.mortars.u[2, 4, 1, i, mortar])
             cache.mortars.u[2, 1, 2, i, mortar] = (cache.mortars.u[2, 1, 2, i, mortar] -
-                                                      cache.mortars.u[2, 4, 2, i, mortar])
+                                                   cache.mortars.u[2, 4, 2, i, mortar])
         end
     end
 
