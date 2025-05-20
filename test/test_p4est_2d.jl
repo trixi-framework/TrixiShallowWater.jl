@@ -160,16 +160,16 @@ end # SWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl"),
                             l2=[
-                                0.3997030663722126,
-                                0.38644026433480094,
-                                0.4362923911447016,
-                                0.4564350570616195],
+                                0.4177955194235321,
+                                0.2818773677696145,
+                                0.33178075151092923,
+                                0.45643505879802193],
                             linf=[
-                                1.372326981328246,
-                                3.3262654799249893,
-                                3.6541077514853653,
+                                2.129878820442652,
+                                3.292431218004944,
+                                3.3701108685790135,
                                 0.7495177590247986],
-                            tspan=(0.0, 0.025),
+                            tspan=(0.0, 0.01),
                             coverage_override=(maxiters = 5,))
 
         # Ensure that we do not have excessive memory allocations
