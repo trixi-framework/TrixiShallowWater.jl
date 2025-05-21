@@ -75,7 +75,7 @@ function Trixi.resize!(mortars::P4estShallowWaterMortarContainer, capacity)
 end
 
 # Create mortar container and initialize mortar data.
-function Trixi.init_mortars(mesh::Union{P4estMesh, T8codeMesh},
+function Trixi.init_mortars(mesh::P4estMesh,
                             equations::ShallowWaterEquationsWetDry2D,
                             basis, elements)
     NDIMS = ndims(elements)

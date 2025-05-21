@@ -5,11 +5,6 @@
 @muladd begin
 #! format: noindent
 
-# TODO: Once working the mortar methods could likely be extended to the other
-# equation types available in the package. Although for the multilayer equations
-# care must be taken because the pressure term is separated from the physical flux
-# and directly placed in the nonconservative flux
-
 # The methods below are specialized on the `P4estShallowWaterMortarContainer`
 # mortar type. Extra storage is necessary for the numerical flux plus nonconservative term
 # on either side of the parent (large) element mortars. It also requires a work
@@ -18,7 +13,7 @@
 #
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
-function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+function Trixi.create_cache(mesh::P4estMesh{2},
                             equations::ShallowWaterEquationsWetDry2D,
                             mortar_l2::Trixi.LobattoLegendreMortarL2, uEltype)
     # TODO: Taal performance using different types
@@ -40,8 +35,16 @@ function Trixi.create_cache(mesh::Union{P4estMesh{2}, T8codeMesh{2}},
      f_upper_threaded, f_lower_threaded, u_threaded, f_threaded)
 end
 
+# Specialized strategy to project the solution to the mortars and preserve
+# well-balancedness from the work of Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008).
+# This version is for the `ShallowWaterEquations2D` where one also must save a copy
+# of the unprojected parent solution on the mortars (for convenience) in the later
+# back projection of the flux.
+#
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
 function Trixi.prolong2mortars!(cache, u,
-                                mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+                                mesh::P4estMesh{2},
                                 equations::ShallowWaterEquationsWetDry2D,
                                 mortar_l2::Trixi.LobattoLegendreMortarL2,
                                 dg::DGSEM)
@@ -184,10 +187,136 @@ function Trixi.prolong2mortars!(cache, u,
     return nothing
 end
 
+# Specialized strategy to project the solution to the mortars and preserve
+# well-balancedness from the work of Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008).
+# This version is for the `ShallowWaterMultiLayerEquations2D` with a single layer
+# that "peels" the pressure contribution into the nonconservative term for easier well-balancing,
+# see Ersing et al. (https://doi.org/10.1016/j.jcp.2025.113802).
+# Thus, this uses the original `P4estMortarContainer`, `calc_mortar_flux!`
+# and `mortar_fluxes_to_elements!` from Trixi.jl.
+#
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
+function Trixi.prolong2mortars!(cache, u,
+                                mesh::P4estMesh{2},
+                                equations::ShallowWaterMultiLayerEquations2D,
+                                mortar_l2::Trixi.LobattoLegendreMortarL2,
+                                dg::DGSEM)
+    @unpack neighbor_ids, node_indices = cache.mortars
+    index_range = eachnode(dg)
+
+    # Raise an error if `prolong2mortars!` is called with multiple layers.
+    if nlayers(equations) != 1
+        error("Non-conforming meshes are only supported for a single layer!")
+    end
+
+    Trixi.@threaded for mortar in Trixi.eachmortar(dg, cache)
+        # Copy solution data from the small elements using "delayed indexing" with
+        # a start value and a step size to get the correct face and orientation.
+        small_indices = node_indices[1, mortar]
+
+        i_small_start, i_small_step = Trixi.index_to_start_step_2d(small_indices[1],
+                                                                   index_range)
+        j_small_start, j_small_step = Trixi.index_to_start_step_2d(small_indices[2],
+                                                                   index_range)
+
+        for position in 1:2
+            i_small = i_small_start
+            j_small = j_small_start
+            element = neighbor_ids[position, mortar]
+            for i in eachnode(dg)
+                for v in eachvariable(equations)
+                    cache.mortars.u[1, v, position, i, mortar] = u[v, i_small, j_small,
+                                                                   element]
+                end
+                i_small += i_small_step
+                j_small += j_small_step
+            end
+        end
+
+        # Buffer to copy solution values of the large element in the correct orientation
+        # before projection
+        u_buffer = cache.u_threaded[Threads.threadid()]
+
+        # Copy solution of large element face to buffer in the correct orientation
+        large_indices = node_indices[2, mortar]
+
+        i_large_start, i_large_step = Trixi.index_to_start_step_2d(large_indices[1],
+                                                                   index_range)
+        j_large_start, j_large_step = Trixi.index_to_start_step_2d(large_indices[2],
+                                                                   index_range)
+
+        i_large = i_large_start
+        j_large = j_large_start
+        element = neighbor_ids[3, mortar]
+        for i in eachnode(dg)
+            # This strategy from Benov et al. (https://doi.org/10.1016/j.jcp.2018.02.008) assumes that
+            # we know a constant background water height `H0` which we perturb around. This may be restrictive
+            # in practice but a good place to start with the development. We may need to consider more
+            # sophisticated positivity preserving projections of the solution like those found
+            # in the ALE-DG community for the Euler equations with gravity to remove this assumption.
+            # That is, we might be able to directly project the water height `h` instead while maintaining
+            # important steady-state solution behavior.
+            #
+            # Further, it is worth noting that for fully wet portions of the domain, the logic below
+            # is unnecessary and the "classic" mortar method is well-balanced and fully conservative
+            # for the `ShallowWaterMultiLayerEquations2D`. This could be exploited to design a better
+            # approach to the AMR refinement / coarsening.
+            #
+            # Note, some shift is required to ensure we catch water heights close to the threshold
+            # and maintain well-balancedness. The larger this shift we also maintain the conservation
+            # errors to be close to double precision roundoff for longer.
+            if u[1, i_large, j_large, element] >= equations.threshold_desingularization # 1e-10 by default
+                u_buffer[1, i] = (u[1, i_large, j_large, element] +
+                                  u[4, i_large, j_large, element])
+            else
+                u_buffer[1, i] = equations.H0
+            end
+            for v in 2:4
+                u_buffer[v, i] = u[v, i_large, j_large, element]
+            end
+
+            i_large += i_large_step
+            j_large += j_large_step
+        end
+
+        # Interpolate large element face data from buffer to small face locations
+        Trixi.multiply_dimensionwise!(view(cache.mortars.u, 2, :, 1, :, mortar),
+                                      mortar_l2.forward_lower,
+                                      u_buffer)
+        Trixi.multiply_dimensionwise!(view(cache.mortars.u, 2, :, 2, :, mortar),
+                                      mortar_l2.forward_upper,
+                                      u_buffer)
+
+        # After the projection of the constant solution we modify the values
+        # in the first solution variable to no longer be the total water height H = h+b
+        # and instead recover the conservative water height variable `h`.
+        # Basically, unpacking the total water height variable to create the projected local water
+        # height `h` from Eq. 41 in Benov et al.
+        # Note, no desingularization or water height cutoff is done here as these steps are performed
+        # later in the hydrostatic reconstruction and stage limiter, respectively.
+        #
+        # In testing, spurious waves are generated if one instead uses
+        # `max(H - b, equations.threshold_limiter)` on the mortars and using a velocity
+        # desingularization on the mortars here causes unpredictable behavior in
+        # the `LoehnerIndicator` for AMR in the dry regions. This is likely due to the gradient
+        # estimation in the dry "noisy" regions being sensitive to common indicator variables
+        # like the local water height.
+        for i in eachnode(dg)
+            cache.mortars.u[2, 1, 1, i, mortar] = (cache.mortars.u[2, 1, 1, i, mortar] -
+                                                   cache.mortars.u[2, 4, 1, i, mortar])
+            cache.mortars.u[2, 1, 2, i, mortar] = (cache.mortars.u[2, 1, 2, i, mortar] -
+                                                   cache.mortars.u[2, 4, 2, i, mortar])
+        end
+    end
+
+    return nothing
+end
+
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 function Trixi.calc_mortar_flux!(surface_flux_values,
-                                 mesh::Union{P4estMesh{2}, T8codeMesh{2}},
+                                 mesh::P4estMesh{2},
                                  nonconservative_terms,
                                  equations::ShallowWaterEquationsWetDry2D,
                                  mortar_l2::Trixi.LobattoLegendreMortarL2,
@@ -291,8 +420,7 @@ end
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 @inline function Trixi.mortar_fluxes_to_elements!(surface_flux_values,
-                                                  mesh::Union{P4estMesh{2},
-                                                              T8codeMesh{2}},
+                                                  mesh::P4estMesh{2},
                                                   equations::ShallowWaterEquationsWetDry2D,
                                                   mortar_l2::Trixi.LobattoLegendreMortarL2,
                                                   dg::DGSEM, cache, mortar,
