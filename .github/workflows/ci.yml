@@ -51,6 +51,8 @@ jobs:
           - tree_2d
           - structured_2d
           - unstructured_2d
+          - t8code_2d
+          - dgmulti
           - p4est_2d
           - unit
           - upstream
@@ -72,6 +74,20 @@ jobs:
       - run: julia -e 'using InteractiveUtils; versioninfo(verbose=true)'
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
+      # Workaround to test against specific PR (needs to be removed before merging)
+      - name: Checkout Trixi version from PR
+        uses: actions/checkout@v4
+        with:
+          repository: patrickersing/Trixi.jl
+          ref: swe_separation
+          path: Trixi-PR
+      - name: Load Trixi version from PR
+        shell: julia --color=yes --project=@. {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path="Trixi-PR"))
+          Pkg.update()
+      # end of workaround
       - name: Run tests without coverage
         uses: julia-actions/julia-runtest@v1
         with:
@@ -99,6 +115,8 @@ jobs:
           - tree_2d
           - structured_2d
           - unstructured_2d
+          - t8code_2d
+          - dgmulti
           - p4est_2d
           - unit
     steps:
@@ -110,6 +128,20 @@ jobs:
       - run: julia -e 'using InteractiveUtils; versioninfo(verbose=true)'
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
+      # Workaround to test against specific PR (needs to be removed before merging)
+      - name: Checkout Trixi version from PR
+        uses: actions/checkout@v4
+        with:
+          repository: patrickersing/Trixi.jl
+          ref: swe_separation
+          path: Trixi-PR
+      - name: Load Trixi version from PR
+        shell: julia --color=yes --project=@. {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path="Trixi-PR"))
+          Pkg.update()
+      # end of workaround
       - name: Run tests with coverage
         uses: julia-actions/julia-runtest@v1
         with:

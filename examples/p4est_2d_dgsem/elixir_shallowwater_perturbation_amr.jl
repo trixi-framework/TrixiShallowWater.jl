@@ -7,9 +7,9 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a continuous
 # bottom topography function and a perturbation in the water height
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 2.1)
+equations = ShallowWaterEquations2D(gravity = 9.812, H0 = 2.1)
 
-function initial_condition_perturbation(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_perturbation(x, t, equations::ShallowWaterEquations2D)
     # Calculate primitive variables
     H = equations.H0
     v1 = 0.0
@@ -111,7 +111,7 @@ save_solution = SaveSolutionCallback(dt = 0.04,
                                      save_final_solution = true)
 
 # Define the perturbation of water height as a  variable to use in the AMR indicator
-@inline function waterheight_total(u, equations::ShallowWaterEquationsWetDry2D)
+@inline function waterheight_total(u, equations::ShallowWaterEquations2D)
     return u[1] + u[4]
 end
 
