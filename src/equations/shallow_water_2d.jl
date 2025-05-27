@@ -752,7 +752,7 @@ end
 A particular type of hydrostatic reconstruction on the water height to guarantee well-balancedness
 for a general bottom topography [`ShallowWaterEquations2D`](@ref). The reconstructed solution states
 `u_ll_star` and `u_rr_star` variables are used to evaluate the surface numerical flux at the interface.
-Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
+Use in combination with the generic numerical flux routine [`FluxHydrostaticReconstruction`](@ref).
 
 Further details for the hydrostatic reconstruction and its motivation can be found in
 - Emmanuel Audusse, François Bouchut, Marie-Odile Bristeau, Rupert Klein, and Benoit Perthame (2004)
@@ -789,7 +789,7 @@ A particular type of hydrostatic reconstruction of the water height to guarantee
 for a general bottom topography of the [`ShallowWaterEquations2D`](@ref). The reconstructed solution states
 `u_ll_star` and `u_rr_star` variables are then used to evaluate the surface numerical flux at the interface.
 The key idea is a linear reconstruction of the bottom and water height at the interfaces using subcells.
-Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
+Use in combination with the generic numerical flux routine [`FluxHydrostaticReconstruction`](@ref).
 
 Further details on this hydrostatic reconstruction and its motivation can be found in
 - Guoxian Chen and Sebastian Noelle (2017)
@@ -856,7 +856,7 @@ variables.
 
 This hydrostatic reconstruction ensures that the finite volume numerical fluxes remain
 well-balanced for discontinuous bottom topographies [`ShallowWaterEquations2D`](@ref).
-Should be used together with [`Trixi.FluxHydrostaticReconstruction`](@extref) and
+Should be used together with [`FluxHydrostaticReconstruction`](@ref) and
 [`hydrostatic_reconstruction_audusse_etal`](@ref) in the surface flux to ensure consistency.
 
 Further details for the hydrostatic reconstruction and its motivation can be found in
@@ -922,7 +922,7 @@ Non-symmetric two-point surface flux that discretizes the nonconservative (sourc
 The discretization uses the [`hydrostatic_reconstruction_chen_noelle`](@ref) on the conservative
 variables.
 
-Should be used together with [`Trixi.FluxHydrostaticReconstruction`](@extref) and
+Should be used together with [`FluxHydrostaticReconstruction`](@ref) and
 [`hydrostatic_reconstruction_chen_noelle`](@ref) in the surface flux to ensure consistency.
 
 Further details on the hydrostatic reconstruction and its motivation can be found in

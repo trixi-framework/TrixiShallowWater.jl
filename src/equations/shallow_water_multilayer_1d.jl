@@ -414,7 +414,7 @@ The reconstructed solution states `u_ll_star` and `u_rr_star` are used to evalua
 surface numerical flux at the interface. The key idea is a piecewise linear reconstruction of the 
 bottom topography and water height interfaces using subcells, where the bottom topography is allowed 
 to be discontinuous. 
-Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
+Use in combination with the generic numerical flux routine [`FluxHydrostaticReconstruction`](@ref).
 """
 @inline function hydrostatic_reconstruction_ersing_etal(u_ll, u_rr,
                                                         equations::ShallowWaterMultiLayerEquations1D)
