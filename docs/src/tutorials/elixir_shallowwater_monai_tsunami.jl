@@ -30,12 +30,12 @@
 
 # ## Load required packages
 # The core solver component is TrixiShallowWater.jl,
-# which requires [`Trixi.jl`](@extref Trixi.jl) for the underlying spatial discretization
-# and `OrdinaryDiffEqSSPRK.jl` for time integration.
-# `HOHQMesh.jl` is needed to generate an unstructured mesh for this problem.
-# `TrixiBottomTopography.jl` is needed to create a bathymetry approximation that is directly
+# which requires [Trixi.jl](@extref Trixi.jl) for the underlying spatial discretization
+# and OrdinaryDiffEqSSPRK.jl for time integration.
+# HOHQMesh.jl is needed to generate an unstructured mesh for this problem.
+# TrixiBottomTopography.jl is needed to create a bathymetry approximation that is directly
 # usable by Trixi.jl.
-# Finally, we include [`CairoMakie.jl`](https://docs.makie.org/stable/) for insitu visualization and `Trixi2Vtk.jl` for postprocessing.
+# Finally, we include [CairoMakie.jl](https://docs.makie.org/stable/) for insitu visualization and Trixi2Vtk.jl for postprocessing.
 using HOHQMesh
 using OrdinaryDiffEqSSPRK
 using Trixi

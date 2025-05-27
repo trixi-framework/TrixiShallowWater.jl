@@ -1,7 +1,7 @@
 module TrixiShallowWater
 
 # While `using Trixi` makes all exported symbols available, in order to extend a method from the
-# `Trixi.jl` module, symbols need to be explicitly qualified with `Trixi.function_name`.
+# Trixi.jl module, symbols need to be explicitly qualified with `Trixi.function_name`.
 # For more information, see
 # https://github.com/trixi-framework/TrixiShallowWater.jl/pull/10#discussion_r1433720559
 using Trixi

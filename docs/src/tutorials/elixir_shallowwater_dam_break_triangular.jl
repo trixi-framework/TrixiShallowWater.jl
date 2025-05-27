@@ -13,12 +13,12 @@
 # - Set up a SWE solver for wet/dry transitions
 # - Create custom initial conditions and source terms
 # - Save solution data at gauge points
-# - Visualization with [`Makie.jl`](https://docs.makie.org/dev/)
+# - Visualization with [Makie.jl](https://docs.makie.org/dev/)
 
 # ## Load required packages
 # Before we start, we need to load the required packages. Besides TrixiShallowWater.jl, we require
-# [`Trixi.jl`](@extref Trixi.jl) for the spatial discretization and [`OrdinaryDiffEqSSPRK.jl`](https://docs.sciml.ai/OrdinaryDiffEq/stable/) for time integration.
-# In addition to that [`CairoMakie.jl`](https://docs.makie.org/dev/) is used for visualization and [`CSV.jl`](https://csv.juliadata.org/stable/) and [`DataFrames.jl`](https://dataframes.juliadata.org/stable/) will
+# [Trixi.jl](@extref Trixi.jl) for the spatial discretization and [OrdinaryDiffEqSSPRK.jl](https://docs.sciml.ai/OrdinaryDiffEq/stable/) for time integration.
+# In addition to that [CairoMakie.jl](https://docs.makie.org/dev/) is used for visualization and [CSV.jl](https://csv.juliadata.org/stable/) and [DataFrames.jl](https://dataframes.juliadata.org/stable/) will
 # be used to load the experimental data.
 
 # Standard packages

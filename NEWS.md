@@ -10,11 +10,11 @@ for human readability.
 #### Added
 - New equation `ShallowWaterEquationsQuasi1D` and functions `FluxHydrostaticReconstruction`, 
   `flux_nonconservative_audusse_etal`, and `hydrostatic_reconstruction_audusse_etal` are now available
-  through `TrixiShallowWater.jl` instead of `Trixi.jl`. ([#96])
+  through TrixiShallowWater.jl instead of Trixi.jl. ([#96])
   
 #### Changed
 - `ShallowWaterEquationsWetDry` have been renamed to `ShallowWaterEquations`. The source code
-  for these equations is now implemented directly in `TrixiShallowWater.jl` ([#96]).
+  for these equations is now implemented directly in TrixiShallowWater.jl ([#96]).
 
 #### Deprecated
 
