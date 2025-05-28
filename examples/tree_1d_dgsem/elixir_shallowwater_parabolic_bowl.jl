@@ -6,10 +6,10 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry1D(gravity = 9.81)
+equations = ShallowWaterEquations1D(gravity = 9.81)
 
 """
-    initial_condition_parabolic_bowl(x, t, equations:: ShallowWaterEquationsWetDry1D)
+    initial_condition_parabolic_bowl(x, t, equations:: ShallowWaterEquations1D)
 
 Well-known initial condition to test the [`hydrostatic_reconstruction_chen_noelle`](@ref) and its
 wet-dry mechanics. This test has analytical solutions. The initial condition is defined by the
@@ -27,7 +27,7 @@ The particular setup below is taken from Section 6.2 of
   curvilinear meshes with wet/dry fronts accelerated by GPUs
   [DOI: 10.1016/j.jcp.2018.08.038](https://doi.org/10.1016/j.jcp.2018.08.038).
 """
-function initial_condition_parabolic_bowl(x, t, equations::ShallowWaterEquationsWetDry1D)
+function initial_condition_parabolic_bowl(x, t, equations::ShallowWaterEquations1D)
     a = 1
     h_0 = 0.1
     sigma = 0.5
@@ -43,7 +43,7 @@ function initial_condition_parabolic_bowl(x, t, equations::ShallowWaterEquations
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v, b), equations)

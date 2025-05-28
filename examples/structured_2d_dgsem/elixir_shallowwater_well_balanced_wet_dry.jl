@@ -7,10 +7,10 @@ using Printf: @printf, @sprintf
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.812)
+equations = ShallowWaterEquations2D(gravity = 9.812)
 
 """
-    initial_condition_well_balanced_chen_noelle(x, t, equations:: ShallowWaterEquationsWetDry2D)
+    initial_condition_well_balanced_chen_noelle(x, t, equations:: ShallowWaterEquations2D)
 
 Initial condition with a complex (discontinuous) bottom topography to test the well-balanced
 property for the [`hydrostatic_reconstruction_chen_noelle`](@ref) including dry areas within the
@@ -23,7 +23,7 @@ The initial condition is taken from Section 5.2 of the paper:
   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
 """
 function initial_condition_complex_bottom_well_balanced(x, t,
-                                                        equations::ShallowWaterEquationsWetDry2D)
+                                                        equations::ShallowWaterEquations2D)
     v1 = 0
     v2 = 0
     b = sin(4 * pi * x[1]) + 3
@@ -42,7 +42,7 @@ function initial_condition_complex_bottom_well_balanced(x, t,
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v1) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v1, v2, b), equations)
@@ -157,7 +157,7 @@ sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
 
 # Declare a special version of the function to compute the lake-at-rest error
 # OBS! The reference water height values are hardcoded for convenience.
-function lake_at_rest_error_two_level(u, x, equations::ShallowWaterEquationsWetDry2D)
+function lake_at_rest_error_two_level(u, x, equations::ShallowWaterEquations2D)
     h, _, _, b = u
 
     # For well-balancedness testing with possible wet/dry regions the reference

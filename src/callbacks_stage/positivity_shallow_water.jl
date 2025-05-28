@@ -11,16 +11,16 @@
 The limiter is specifically designed for the shallow water equations.
 It is applied to all scalar `variables` in their given order
 using the defined `threshold_limiter` from the equations struct 
-(e.g. in [`ShallowWaterEquationsWetDry1D`](@ref)) to determine the minimal acceptable values.
+(e.g. in [`ShallowWaterEquations1D`](@ref)) to determine the minimal acceptable values.
 The order of the `variables` is important and might have a strong influence
-on the robustness. The limiter is available for the [`ShallowWaterEquationsWetDry1D`](@ref),
-[`ShallowWaterEquationsWetDry2D`](@ref), and [`ShallowWaterMultiLayerEquations1D`](@ref).
+on the robustness. The limiter is available for the [`ShallowWaterEquations1D`](@ref),
+[`ShallowWaterEquations2D`](@ref), and [`ShallowWaterMultiLayerEquations1D`](@ref).
 
 As opposed to the standard version of the [`Trixi.PositivityPreservingLimiterZhangShu`](@extref),
 nodes with a water height below the `threshold_limiter` are treated in a special way.
 To avoid numerical problems caused by velocities close to zero,
 the velocity is cut off, such that the node can be identified as "dry". The special feature of the
-`ShallowWaterEquationsWetDry` used here is that the bottom topography is stored as an additional
+`ShallowWaterEquations` used here is that the bottom topography is stored as an additional
 quantity in the solution vector `u`. However, the value of the bottom topography
 should not be changed. That is why, it is not limited.
 
@@ -75,8 +75,8 @@ end
 # is definitely fine.
 function limiter_shallow_water!(u, variables::NTuple{N, Any},
                                 mesh,
-                                equations::Union{ShallowWaterEquationsWetDry1D,
-                                                 ShallowWaterEquationsWetDry2D,
+                                equations::Union{ShallowWaterEquations1D,
+                                                 ShallowWaterEquations2D,
                                                  ShallowWaterMultiLayerEquations1D,
                                                  ShallowWaterMultiLayerEquations2D},
                                 solver, cache) where {N}
@@ -92,8 +92,8 @@ end
 # terminate the type-stable iteration over tuples
 function limiter_shallow_water!(u, variables::Tuple{},
                                 mesh,
-                                equations::Union{ShallowWaterEquationsWetDry1D,
-                                                 ShallowWaterEquationsWetDry2D,
+                                equations::Union{ShallowWaterEquations1D,
+                                                 ShallowWaterEquations2D,
                                                  ShallowWaterMultiLayerEquations1D,
                                                  ShallowWaterMultiLayerEquations2D},
                                 solver, cache)

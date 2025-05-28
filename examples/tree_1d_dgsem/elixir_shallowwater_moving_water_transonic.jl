@@ -7,7 +7,7 @@ using Roots
 ###############################################################################
 # semidiscretization of the shallow water equations for a transonic moving water steady-state
 
-equations = ShallowWaterEquationsWetDry1D(gravity = 9.812, H0 = 3.25)
+equations = ShallowWaterEquations1D(gravity = 9.812, H0 = 3.25)
 
 """
     inverse_transform(E, hv, sigma, b)
@@ -59,7 +59,7 @@ function inverse_transform(E, hv, sigma, b)
 end
 
 """
-    initial_condition_moving_water_transonic(x, t, equations::ShallowWaterEquationsWetDry1D)
+    initial_condition_moving_water_transonic(x, t, equations::ShallowWaterEquations1D)
 
 Set the initial condition for a smooth transonic moving water steady-state and a quadratic bottom 
 topography, to test the well-balancedness of the scheme.
@@ -70,7 +70,7 @@ The test parameters are taken from Section 5 of the paper:
   [DOI: 10.4208/cmr.2020-0013](https://doi.org/10.4208/cmr.2020-0013)
 """
 function initial_condition_moving_water_transonic(x, t,
-                                                  equations::ShallowWaterEquationsWetDry1D)
+                                                  equations::ShallowWaterEquations1D)
     # Set initial conditions
     hv = 1.53 # momentum
     E = 11.090714039778195 # total energy

@@ -51,6 +51,8 @@ jobs:
           - tree_2d
           - structured_2d
           - unstructured_2d
+          - t8code_2d
+          - dgmulti
           - p4est_2d
           - unit
           - upstream
@@ -99,6 +101,8 @@ jobs:
           - tree_2d
           - structured_2d
           - unstructured_2d
+          - t8code_2d
+          - dgmulti
           - p4est_2d
           - unit
     steps:

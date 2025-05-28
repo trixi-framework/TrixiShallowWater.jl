@@ -5,7 +5,8 @@
 @muladd begin
 #! format: noindent
 @doc raw"""
-    ShallowWaterEquationsWetDry2D(; gravity, H0 = 0, threshold_limiter = nothing, threshold_wet = nothing)
+    ShallowWaterEquations2D(; gravity, H0 = 0, threshold_limiter = nothing, threshold_wet = nothing, 
+                              threshold_partially_wet = nothing, threshold_desingularization = nothing)
 
 Shallow water equations (SWE) in two space dimensions. The equations are given by
 ```math
@@ -58,7 +59,7 @@ References for the SWE are many but a good introduction is available in Chapter 
   Finite Volume Methods for Hyperbolic Problems
   [DOI: 10.1017/CBO9780511791253](https://doi.org/10.1017/CBO9780511791253)
 """
-struct ShallowWaterEquationsWetDry2D{RealT <: Real} <:
+struct ShallowWaterEquations2D{RealT <: Real} <:
        Trixi.AbstractShallowWaterEquations{2, 4}
     gravity::RealT # gravitational acceleration
     H0::RealT      # constant "lake-at-rest" total water height
@@ -77,8 +78,6 @@ struct ShallowWaterEquationsWetDry2D{RealT <: Real} <:
     # `threshold_desingularization` used in the velocity desingularization procedure, to avoid
     # division by small numbers. Default in double precision is 1e-10.
     threshold_desingularization::RealT
-    # Standard shallow water equations for dispatch on Trixi.jl functions
-    basic_swe::ShallowWaterEquations2D{RealT}
 end
 
 # Allow for flexibility to set the gravitational acceleration within an elixir depending on the
@@ -86,11 +85,11 @@ end
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
 # well-balancedness test cases.
 # Strict default values for thresholds that performed well in many numerical experiments
-function ShallowWaterEquationsWetDry2D(; gravity, H0 = zero(gravity),
-                                       threshold_limiter = nothing,
-                                       threshold_wet = nothing,
-                                       threshold_partially_wet = nothing,
-                                       threshold_desingularization = nothing)
+function ShallowWaterEquations2D(; gravity, H0 = zero(gravity),
+                                 threshold_limiter = nothing,
+                                 threshold_wet = nothing,
+                                 threshold_partially_wet = nothing,
+                                 threshold_desingularization = nothing)
     T = promote_type(typeof(gravity), typeof(H0))
     if threshold_limiter === nothing
         threshold_limiter = 500 * eps(T)
@@ -104,46 +103,49 @@ function ShallowWaterEquationsWetDry2D(; gravity, H0 = zero(gravity),
     if threshold_desingularization === nothing
         threshold_desingularization = default_threshold_desingularization(T)
     end
-    # Construct the standard SWE for dispatch. Even though the `basic_swe` already store the
-    # gravitational acceleration and the total water height, we store an extra copy in
-    # `ShallowWaterEquationsWetDry2D` for convenience.
-    basic_swe = ShallowWaterEquations2D(gravity, H0)
 
-    ShallowWaterEquationsWetDry2D(gravity, H0, threshold_limiter,
-                                  threshold_wet, threshold_partially_wet,
-                                  threshold_desingularization, basic_swe)
+    ShallowWaterEquations2D(gravity, H0, threshold_limiter,
+                            threshold_wet, threshold_partially_wet,
+                            threshold_desingularization)
 end
 
-Trixi.have_nonconservative_terms(::ShallowWaterEquationsWetDry2D) = True()
+Trixi.have_nonconservative_terms(::ShallowWaterEquations2D) = True()
 
-Trixi.varnames(::typeof(cons2cons), ::ShallowWaterEquationsWetDry2D) = ("h", "h_v1",
-                                                                        "h_v2", "b")
+Trixi.varnames(::typeof(cons2cons), ::ShallowWaterEquations2D) = ("h", "h_v1",
+                                                                  "h_v2", "b")
 # Note, we use the total water height, H = h + b, as the first primitive variable for easier
 # visualization and setting initial conditions
-Trixi.varnames(::typeof(cons2prim), ::ShallowWaterEquationsWetDry2D) = ("H", "v1", "v2",
-                                                                        "b")
-
-# This equation set extends the basic ShallowWaterEquations2D from Trixi.jl with additional
-# functionality for wet/dry transitions. Since many functions correspond to the fully wet case, we
-# make use of the existing functionality and introduce a number of wrapper functions, that dispatch
-# to the ShallowWaterEquations2D.
+Trixi.varnames(::typeof(cons2prim), ::ShallowWaterEquations2D) = ("H", "v1", "v2",
+                                                                  "b")
 
 # Set initial conditions at physical location `x` for time `t`
 """
-    initial_condition_convergence_test(x, t, equations::ShallowWaterEquationsWetDry2D)
+    initial_condition_convergence_test(x, t, equations::ShallowWaterEquations2D)
 
 A smooth initial condition used for convergence tests in combination with
 [`source_terms_convergence_test`](@ref)
 (and [`Trixi.BoundaryConditionDirichlet`](@extref) in non-periodic domains).
 """
 function Trixi.initial_condition_convergence_test(x, t,
-                                                  equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.initial_condition_convergence_test(x, t,
-                                                    equations.basic_swe)
+                                                  equations::ShallowWaterEquations2D)
+    # some constants are chosen such that the function is periodic on the domain [0,sqrt(2)]^2
+    RealT = eltype(x)
+    c = 7
+    omega_x = 2 * convert(RealT, pi) * sqrt(convert(RealT, 2))
+    omega_t = 2 * convert(RealT, pi)
+
+    x1, x2 = x
+
+    H = c + cos(omega_x * x1) * sin(omega_x * x2) * cos(omega_t * t)
+    v1 = 0.5f0
+    v2 = 1.5f0
+    b = 2 + 0.5f0 * sinpi(sqrt(convert(RealT, 2)) * x1) +
+        0.5f0 * sinpi(sqrt(convert(RealT, 2)) * x2)
+    return prim2cons(SVector(H, v1, v2, b), equations)
 end
 
 """
-    source_terms_convergence_test(u, x, t, equations::ShallowWaterEquationsWetDry2D)
+    source_terms_convergence_test(u, x, t, equations::ShallowWaterEquations2D)
 
 Source terms used for convergence tests in combination with
 [`initial_condition_convergence_test`](@ref)
@@ -154,26 +156,72 @@ This manufactured solution source term is specifically designed for the bottom t
 as defined in [`initial_condition_convergence_test`](@ref).
 """
 @inline function Trixi.source_terms_convergence_test(u, x, t,
-                                                     equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.source_terms_convergence_test(u, x, t,
-                                               equations.basic_swe)
+                                                     equations::ShallowWaterEquations2D)
+    # Same settings as in `initial_condition_convergence_test`. Some derivatives simplify because
+    # for this manufactured solution velocities are taken to be constants
+    RealT = eltype(u)
+    c = 7
+    omega_x = 2 * convert(RealT, pi) * sqrt(convert(RealT, 2))
+    omega_t = 2 * convert(RealT, pi)
+    omega_b = sqrt(convert(RealT, 2)) * convert(RealT, pi)
+    v1 = 0.5f0
+    v2 = 1.5f0
+
+    x1, x2 = x
+
+    sinX, cosX = sincos(omega_x * x1)
+    sinY, cosY = sincos(omega_x * x2)
+    sinT, cosT = sincos(omega_t * t)
+
+    H = c + cosX * sinY * cosT
+    H_x = -omega_x * sinX * sinY * cosT
+    H_y = omega_x * cosX * cosY * cosT
+    # this time derivative for the water height exploits that the bottom topography is
+    # fixed in time such that H_t = (h+b)_t = h_t + 0
+    H_t = -omega_t * cosX * sinY * sinT
+
+    # bottom topography and its gradient
+    b = 2 + 0.5f0 * sinpi(sqrt(convert(RealT, 2)) * x1) +
+        0.5f0 * sinpi(sqrt(convert(RealT, 2)) * x2)
+    tmp1 = 0.5f0 * omega_b
+    b_x = tmp1 * cos(omega_b * x1)
+    b_y = tmp1 * cos(omega_b * x2)
+
+    du1 = H_t + v1 * (H_x - b_x) + v2 * (H_y - b_y)
+    du2 = v1 * du1 + equations.gravity * (H - b) * H_x
+    du3 = v2 * du1 + equations.gravity * (H - b) * H_y
+    return SVector(du1, du2, du3, 0)
 end
 
 """
-    initial_condition_weak_blast_wave(x, t, equations::ShallowWaterEquationsWetDry2D)
+    initial_condition_weak_blast_wave(x, t, equations::ShallowWaterEquations2D)
 
 A weak blast wave discontinuity useful for testing, e.g., total energy conservation.
 Note for the shallow water equations to the total energy acts as a mathematical entropy function.
 """
 function Trixi.initial_condition_weak_blast_wave(x, t,
-                                                 equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.initial_condition_weak_blast_wave(x, t,
-                                                   equations.basic_swe)
+                                                 equations::ShallowWaterEquations2D)
+    # Set up polar coordinates
+    RealT = eltype(x)
+    inicenter = SVector(convert(RealT, 0.7), convert(RealT, 0.7))
+    x_norm = x[1] - inicenter[1]
+    y_norm = x[2] - inicenter[2]
+    r = sqrt(x_norm^2 + y_norm^2)
+    phi = atan(y_norm, x_norm)
+    sin_phi, cos_phi = sincos(phi)
+
+    # Calculate primitive variables
+    H = r > 0.5f0 ? 3.25f0 : 4.0f0
+    v1 = r > 0.5f0 ? zero(RealT) : convert(RealT, 0.1882) * cos_phi
+    v2 = r > 0.5f0 ? zero(RealT) : convert(RealT, 0.1882) * sin_phi
+    b = 0 # by default assume there is no bottom topography
+
+    return prim2cons(SVector(H, v1, v2, b), equations)
 end
 
 """
     boundary_condition_slip_wall(u_inner, normal_direction, x, t, surface_flux_function,
-                                 equations::ShallowWaterEquationsWetDry2D)
+                                 equations::ShallowWaterEquations2D)
 Create a boundary state by reflecting the normal velocity component and keep
 the tangential velocity component unchanged. The boundary water height is taken from
 the internal value.
@@ -187,7 +235,7 @@ For details see Section 9.2.5 of the book:
                                                     normal_direction::AbstractVector,
                                                     x, t,
                                                     surface_flux_functions,
-                                                    equations::ShallowWaterEquationsWetDry2D)
+                                                    equations::ShallowWaterEquations2D)
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
 
     # normalize the outward pointing direction
@@ -198,8 +246,8 @@ For details see Section 9.2.5 of the book:
 
     # create the "external" boundary solution state
     u_boundary = SVector(u_inner[1],
-                         u_inner[2] - 2.0 * u_normal * normal[1],
-                         u_inner[3] - 2.0 * u_normal * normal[2],
+                         u_inner[2] - 2 * u_normal * normal[1],
+                         u_inner[3] - 2 * u_normal * normal[2],
                          u_inner[4])
 
     # calculate the boundary flux
@@ -211,14 +259,14 @@ end
 
 """
     boundary_condition_slip_wall(u_inner, orientation, direction, x, t,
-                                 surface_flux_function, equations::ShallowWaterEquationsWetDry2D)
+                                 surface_flux_function, equations::ShallowWaterEquations2D)
 
 Should be used together with [`Trixi.TreeMesh`](@extref).
 """
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation,
                                                     direction, x, t,
                                                     surface_flux_functions,
-                                                    equations::ShallowWaterEquationsWetDry2D)
+                                                    equations::ShallowWaterEquations2D)
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
 
     ## get the appropriate normal vector from the orientation
@@ -243,7 +291,7 @@ Should be used together with [`Trixi.TreeMesh`](@extref).
 end
 
 """
-    BoundaryConditionWaterHeight(h_boundary, equations::ShallowWaterEquationsWetDry2D)
+    BoundaryConditionWaterHeight(h_boundary, equations::ShallowWaterEquations2D)
 
 Create a boundary condition that uses `h_boundary` to specify a fixed water height at the
 boundary and extrapolates the velocity from the incoming Riemann invariant.
@@ -264,14 +312,14 @@ More details can be found in the paper:
     This is an experimental feature and can change any time.
 """
 function BoundaryConditionWaterHeight(h_boundary::Real,
-                                      equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+                                      equations::ShallowWaterEquations2D{RealT}) where {RealT}
     # Convert function output to the correct type
     h_boundary = convert(RealT, h_boundary)
     return BoundaryConditionWaterHeight(t -> h_boundary)
 end
 
 function BoundaryConditionWaterHeight(h_boundary::Function,
-                                      equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+                                      equations::ShallowWaterEquations2D{RealT}) where {RealT}
     # Check if the function output is of the correct type
     if !(typeof(h_boundary(one(RealT))) == RealT)
         throw(ArgumentError("Boundary value functions must return a value of type $(RealT)"))
@@ -284,7 +332,7 @@ function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
                                                             orientation,
                                                             direction, x, t,
                                                             surface_flux_functions,
-                                                            equations::ShallowWaterEquationsWetDry2D)
+                                                            equations::ShallowWaterEquations2D)
     # Extract the gravitational acceleration
     g = equations.gravity
 
@@ -338,7 +386,7 @@ function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
                                                             normal_direction,
                                                             x, t,
                                                             surface_flux_functions,
-                                                            equations::ShallowWaterEquationsWetDry2D)
+                                                            equations::ShallowWaterEquations2D)
     # Extract the gravitational acceleration
     g = equations.gravity
 
@@ -378,7 +426,7 @@ function (boundary_condition::BoundaryConditionWaterHeight)(u_inner,
 end
 
 """
-    BoundaryConditionMomentum(hv1_boundary, hv2_boundary, equations::ShallowWaterEquationsWetDry2D)
+    BoundaryConditionMomentum(hv1_boundary, hv2_boundary, equations::ShallowWaterEquations2D)
 
 Create a boundary condition that sets a fixed momentum in x- and y- directions, `hv1_boundary`
 and `hv2_boundary`, at the boundary and extrapolates the water height `h_boundary` from the incoming
@@ -400,7 +448,7 @@ More details can be found in the paper:
     This is an experimental feature and can change any time.
 """
 function BoundaryConditionMomentum(hv1_boundary::Real, hv2_boundary::Real,
-                                   equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+                                   equations::ShallowWaterEquations2D{RealT}) where {RealT}
     # Convert function output to the correct type
     hv1_boundary = convert(RealT, hv1_boundary)
     hv2_boundary = convert(RealT, hv2_boundary)
@@ -408,7 +456,7 @@ function BoundaryConditionMomentum(hv1_boundary::Real, hv2_boundary::Real,
 end
 
 function BoundaryConditionMomentum(hv1_boundary::Function, hv2_boundary::Function,
-                                   equations::ShallowWaterEquationsWetDry2D{RealT}) where {RealT}
+                                   equations::ShallowWaterEquations2D{RealT}) where {RealT}
     # Check if the function output is of the correct type
     if !(typeof(hv1_boundary(one(RealT))) == RealT &&
          typeof(hv2_boundary(one(RealT))) == RealT)
@@ -422,7 +470,7 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
                                                          orientation,
                                                          direction, x, t,
                                                          surface_flux_functions,
-                                                         equations::ShallowWaterEquationsWetDry2D)
+                                                         equations::ShallowWaterEquations2D)
     # Extract the gravitational acceleration
     g = equations.gravity
 
@@ -493,7 +541,7 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
                                                          normal_direction,
                                                          x, t,
                                                          surface_flux_functions,
-                                                         equations::ShallowWaterEquationsWetDry2D)
+                                                         equations::ShallowWaterEquations2D)
 
     # Extract the gravitational acceleration
     g = equations.gravity
@@ -543,27 +591,49 @@ end
 # Calculate 1D flux for a single point
 # Note, the bottom topography has no flux
 @inline function Trixi.flux(u, orientation::Integer,
-                            equations::ShallowWaterEquationsWetDry2D)
-    Trixi.flux(u, orientation, equations.basic_swe)
+                            equations::ShallowWaterEquations2D)
+    h, h_v1, h_v2, _ = u
+    v1, v2 = velocity(u, equations)
+
+    p = 0.5f0 * equations.gravity * h^2
+    if orientation == 1
+        f1 = h_v1
+        f2 = h_v1 * v1 + p
+        f3 = h_v1 * v2
+    else
+        f1 = h_v2
+        f2 = h_v2 * v1
+        f3 = h_v2 * v2 + p
+    end
+    return SVector(f1, f2, f3, 0)
 end
 
 # Calculate 1D flux for a single point in the normal direction
 # Note, this directional vector is not normalized and the bottom topography has no flux
 @inline function Trixi.flux(u, normal_direction::AbstractVector,
-                            equations::ShallowWaterEquationsWetDry2D)
-    Trixi.flux(u, normal_direction,
-               equations.basic_swe)
+                            equations::ShallowWaterEquations2D)
+    h = waterheight(u, equations)
+    v1, v2 = velocity(u, equations)
+
+    v_normal = v1 * normal_direction[1] + v2 * normal_direction[2]
+    h_v_normal = h * v_normal
+    p = 0.5f0 * equations.gravity * h^2
+
+    f1 = h_v_normal
+    f2 = h_v_normal * v1 + p * normal_direction[1]
+    f3 = h_v_normal * v2 + p * normal_direction[2]
+    return SVector(f1, f2, f3, 0)
 end
 
 """
     flux_nonconservative_wintermeyer_etal(u_ll, u_rr, orientation::Integer,
-                                          equations::ShallowWaterEquationsWetDry2D)
+                                          equations::ShallowWaterEquations2D)
     flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
                                           normal_direction::AbstractVector,
-                                          equations::ShallowWaterEquationsWetDry2D)
+                                          equations::ShallowWaterEquations2D)
 
 Non-symmetric two-point volume flux discretizing the nonconservative (source) term
-that contains the gradient of the bottom topography [`ShallowWaterEquationsWetDry2D`](@ref).
+that contains the gradient of the bottom topography [`ShallowWaterEquations2D`](@ref).
 
 For the `surface_flux` either [`flux_wintermeyer_etal`](@ref) or [`flux_fjordholm_etal`](@ref) can
 be used to ensure well-balancedness and entropy conservation.
@@ -580,34 +650,49 @@ Further details are available in the papers:
 """
 @inline function Trixi.flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
                                                              orientation::Integer,
-                                                             equations::ShallowWaterEquationsWetDry2D)
-    Trixi.flux_nonconservative_wintermeyer_etal(u_ll, u_rr, orientation,
-                                                equations.basic_swe)
+                                                             equations::ShallowWaterEquations2D)
+    # Pull the necessary left and right state information
+    h_ll = waterheight(u_ll, equations)
+    b_jump = u_rr[4] - u_ll[4]
+
+    # Bottom gradient nonconservative term: (0, g h b_x, g h b_y, 0)
+    if orientation == 1
+        f = SVector(0, equations.gravity * h_ll * b_jump, 0, 0)
+    else # orientation == 2
+        f = SVector(0, 0, equations.gravity * h_ll * b_jump, 0)
+    end
+    return f
 end
 
 @inline function Trixi.flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
                                                              normal_direction::AbstractVector,
-                                                             equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
-                                                       normal_direction,
-                                                       equations.basic_swe)
+                                                             equations::ShallowWaterEquations2D)
+    # Pull the necessary left and right state information
+    h_ll = waterheight(u_ll, equations)
+    b_jump = u_rr[4] - u_ll[4]
+
+    # Bottom gradient nonconservative term: (0, g h b_x, g h b_y, 0)
+    return SVector(0,
+                   normal_direction[1] * equations.gravity * h_ll * b_jump,
+                   normal_direction[2] * equations.gravity * h_ll * b_jump,
+                   0)
 end
 
 """
     flux_nonconservative_fjordholm_etal(u_ll, u_rr, orientation::Integer,
-                                        equations::ShallowWaterEquationsWetDry2D)
+                                        equations::ShallowWaterEquations2D)
     flux_nonconservative_fjordholm_etal(u_ll, u_rr,
                                         normal_direction::AbstractVector,
-                                        equations::ShallowWaterEquationsWetDry2D)
+                                        equations::ShallowWaterEquations2D)
 
 Non-symmetric two-point surface flux discretizing the nonconservative (source) term of
-that contains the gradient of the bottom topography [`ShallowWaterEquationsWetDry2D`](@ref).
+that contains the gradient of the bottom topography [`ShallowWaterEquations2D`](@ref).
 
 This flux can be used together with [`flux_fjordholm_etal`](@ref) at interfaces to ensure entropy
 conservation and well-balancedness.
 
 Further details for the original finite volume formulation are available in
-- Ulrik S. Fjordholm, Siddhartha Mishr and Eitan Tadmor (2011)
+- Ulrik S. Fjordholm, Siddhartha Mishra and Eitan Tadmor (2011)
   Well-balanced and energy stable schemes for the shallow water equations with discontinuous topography
   [DOI: 10.1016/j.jcp.2011.03.042](https://doi.org/10.1016/j.jcp.2011.03.042)
 and for curvilinear 2D case in the paper:
@@ -618,48 +703,93 @@ and for curvilinear 2D case in the paper:
 """
 @inline function Trixi.flux_nonconservative_fjordholm_etal(u_ll, u_rr,
                                                            orientation::Integer,
-                                                           equations::ShallowWaterEquationsWetDry2D)
-    Trixi.flux_nonconservative_fjordholm_etal(u_ll, u_rr, orientation,
-                                              equations.basic_swe)
+                                                           equations::ShallowWaterEquations2D)
+    # Pull the necessary left and right state information
+    h_ll, _, _, b_ll = u_ll
+    h_rr, _, _, b_rr = u_rr
+
+    h_average = 0.5f0 * (h_ll + h_rr)
+    b_jump = b_rr - b_ll
+
+    # Bottom gradient nonconservative term: (0, g h b_x, g h b_y, 0)
+    if orientation == 1
+        f = SVector(0,
+                    equations.gravity * h_average * b_jump,
+                    0, 0)
+    else # orientation == 2
+        f = SVector(0, 0,
+                    equations.gravity * h_average * b_jump,
+                    0)
+    end
+
+    return f
 end
 
 @inline function Trixi.flux_nonconservative_fjordholm_etal(u_ll, u_rr,
                                                            normal_direction::AbstractVector,
-                                                           equations::ShallowWaterEquationsWetDry2D)
-    Trixi.flux_nonconservative_fjordholm_etal(u_ll, u_rr,
-                                              normal_direction,
-                                              equations.basic_swe)
+                                                           equations::ShallowWaterEquations2D)
+    # Pull the necessary left and right state information
+    h_ll, _, _, b_ll = u_ll
+    h_rr, _, _, b_rr = u_rr
+
+    h_average = 0.5f0 * (h_ll + h_rr)
+    b_jump = b_rr - b_ll
+
+    # Bottom gradient nonconservative term: (0, g h b_x, g h b_y, 0)
+    f2 = normal_direction[1] * equations.gravity * h_average * b_jump
+    f3 = normal_direction[2] * equations.gravity * h_average * b_jump
+
+    # First and last equations do not have a nonconservative flux
+    f1 = f4 = 0
+
+    return SVector(f1, f2, f3, f4)
 end
 
 """
     hydrostatic_reconstruction_audusse_etal(u_ll, u_rr, orientation_or_normal_direction,
-                                            equations::ShallowWaterEquationsWetDry2D)
+                                            equations::ShallowWaterEquations2D)
 
 A particular type of hydrostatic reconstruction on the water height to guarantee well-balancedness
-for a general bottom topography [`ShallowWaterEquationsWetDry2D`](@ref). The reconstructed solution states
+for a general bottom topography [`ShallowWaterEquations2D`](@ref). The reconstructed solution states
 `u_ll_star` and `u_rr_star` variables are used to evaluate the surface numerical flux at the interface.
-Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
+Use in combination with the generic numerical flux routine [`FluxHydrostaticReconstruction`](@ref).
 
 Further details for the hydrostatic reconstruction and its motivation can be found in
 - Emmanuel Audusse, François Bouchut, Marie-Odile Bristeau, Rupert Klein, and Benoit Perthame (2004)
   A fast and stable well-balanced scheme with hydrostatic reconstruction for shallow water flows
   [DOI: 10.1137/S1064827503431090](https://doi.org/10.1137/S1064827503431090)
 """
-@inline function Trixi.hydrostatic_reconstruction_audusse_etal(u_ll, u_rr,
-                                                               equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.hydrostatic_reconstruction_audusse_etal(u_ll, u_rr,
-                                                         equations.basic_swe)
+@inline function hydrostatic_reconstruction_audusse_etal(u_ll, u_rr,
+                                                         equations::ShallowWaterEquations2D)
+    # Unpack left and right water heights and bottom topographies
+    h_ll, _, _, b_ll = u_ll
+    h_rr, _, _, b_rr = u_rr
+
+    # Get the velocities on either side
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    # Compute the reconstructed water heights
+    h_ll_star = max(0, h_ll + b_ll - max(b_ll, b_rr))
+    h_rr_star = max(0, h_rr + b_rr - max(b_ll, b_rr))
+
+    # Create the conservative variables using the reconstruted water heights
+    u_ll_star = SVector(h_ll_star, h_ll_star * v1_ll, h_ll_star * v2_ll, b_ll)
+    u_rr_star = SVector(h_rr_star, h_rr_star * v1_rr, h_rr_star * v2_rr, b_rr)
+
+    return u_ll_star, u_rr_star
 end
+# TODO: Adapt this to wetting and drying
 
 """
     hydrostatic_reconstruction_chen_noelle(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry2D)
+                                           equations::ShallowWaterEquations2D)
 
 A particular type of hydrostatic reconstruction of the water height to guarantee well-balancedness
-for a general bottom topography of the [`ShallowWaterEquationsWetDry2D`](@ref). The reconstructed solution states
+for a general bottom topography of the [`ShallowWaterEquations2D`](@ref). The reconstructed solution states
 `u_ll_star` and `u_rr_star` variables are then used to evaluate the surface numerical flux at the interface.
 The key idea is a linear reconstruction of the bottom and water height at the interfaces using subcells.
-Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
+Use in combination with the generic numerical flux routine [`FluxHydrostaticReconstruction`](@ref).
 
 Further details on this hydrostatic reconstruction and its motivation can be found in
 - Guoxian Chen and Sebastian Noelle (2017)
@@ -667,7 +797,7 @@ Further details on this hydrostatic reconstruction and its motivation can be fou
   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
 """
 @inline function hydrostatic_reconstruction_chen_noelle(u_ll, u_rr,
-                                                        equations::ShallowWaterEquationsWetDry2D)
+                                                        equations::ShallowWaterEquations2D)
     # Unpack left and right water heights and bottom topographies
     h_ll, _, _, b_ll = u_ll
     h_rr, _, _, b_rr = u_rr
@@ -690,7 +820,7 @@ Further details on this hydrostatic reconstruction and its motivation can be fou
     # to avoid numerical problem with arbitrary small values. Interfaces with a water height
     # lower or equal to the threshold can be declared as dry.
     # The default value for `threshold_wet` is ≈5*eps(), or 1e-15 in double precision, is set
-    # in the `ShallowWaterEquationsWetDry2D` struct. This threshold value can be changed in the constructor
+    # in the `ShallowWaterEquations2D` struct. This threshold value can be changed in the constructor
     # call of this equation struct in an elixir.
     threshold = equations.threshold_wet
 
@@ -715,18 +845,18 @@ end
 
 """
     flux_nonconservative_audusse_etal(u_ll, u_rr, orientation::Integer,
-                                      equations::ShallowWaterEquationsWetDry2D)
+                                      equations::ShallowWaterEquations2D)
     flux_nonconservative_audusse_etal(u_ll, u_rr,
                                       normal_direction::AbstractVector,
-                                      equations::ShallowWaterEquationsWetDry2D)
+                                      equations::ShallowWaterEquations2D)
 
 Non-symmetric two-point surface flux that discretizes the nonconservative (source) term.
 The discretization uses the [`hydrostatic_reconstruction_audusse_etal`](@ref) on the conservative
 variables.
 
 This hydrostatic reconstruction ensures that the finite volume numerical fluxes remain
-well-balanced for discontinuous bottom topographies [`ShallowWaterEquationsWetDry2D`](@ref).
-Should be used together with [`Trixi.FluxHydrostaticReconstruction`](@extref) and
+well-balanced for discontinuous bottom topographies [`ShallowWaterEquations2D`](@ref).
+Should be used together with [`FluxHydrostaticReconstruction`](@ref) and
 [`hydrostatic_reconstruction_audusse_etal`](@ref) in the surface flux to ensure consistency.
 
 Further details for the hydrostatic reconstruction and its motivation can be found in
@@ -734,34 +864,65 @@ Further details for the hydrostatic reconstruction and its motivation can be fou
   A fast and stable well-balanced scheme with hydrostatic reconstruction for shallow water flows
   [DOI: 10.1137/S1064827503431090](https://doi.org/10.1137/S1064827503431090)
 """
-@inline function Trixi.flux_nonconservative_audusse_etal(u_ll, u_rr,
-                                                         orientation::Integer,
-                                                         equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.flux_nonconservative_audusse_etal(u_ll, u_rr, orientation,
-                                                   equations.basic_swe)
+@inline function flux_nonconservative_audusse_etal(u_ll, u_rr,
+                                                   orientation::Integer,
+                                                   equations::ShallowWaterEquations2D)
+    # Pull the water height and bottom topography on the left
+    h_ll, _, _, b_ll = u_ll
+
+    # Create the hydrostatic reconstruction for the left solution state
+    u_ll_star, _ = hydrostatic_reconstruction_audusse_etal(u_ll, u_rr, equations)
+
+    # Copy the reconstructed water height for easier to read code
+    h_ll_star = u_ll_star[1]
+
+    if orientation == 1
+        f = SVector(0,
+                    equations.gravity * (h_ll^2 - h_ll_star^2),
+                    0, 0)
+    else # orientation == 2
+        f = SVector(0, 0,
+                    equations.gravity * (h_ll^2 - h_ll_star^2),
+                    0)
+    end
+
+    return f
 end
 
-@inline function Trixi.flux_nonconservative_audusse_etal(u_ll, u_rr,
-                                                         normal_direction::AbstractVector,
-                                                         equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.flux_nonconservative_audusse_etal(u_ll, u_rr,
-                                                   normal_direction,
-                                                   equations.basic_swe)
+@inline function flux_nonconservative_audusse_etal(u_ll, u_rr,
+                                                   normal_direction::AbstractVector,
+                                                   equations::ShallowWaterEquations2D)
+    # Pull the water height and bottom topography on the left
+    h_ll, _, _, b_ll = u_ll
+
+    # Create the hydrostatic reconstruction for the left solution state
+    u_ll_star, _ = hydrostatic_reconstruction_audusse_etal(u_ll, u_rr, equations)
+
+    # Copy the reconstructed water height for easier to read code
+    h_ll_star = u_ll_star[1]
+
+    f2 = normal_direction[1] * equations.gravity * (h_ll^2 - h_ll_star^2)
+    f3 = normal_direction[2] * equations.gravity * (h_ll^2 - h_ll_star^2)
+
+    # First and last equations do not have a nonconservative flux
+    f1 = f4 = 0
+
+    return SVector(f1, f2, f3, f4)
 end
 
 """
     flux_nonconservative_chen_noelle(u_ll, u_rr,
                                      orientation::Integer,
-                                     equations::ShallowWaterEquationsWetDry2D)
+                                     equations::ShallowWaterEquations2D)
     flux_nonconservative_chen_noelle(u_ll, u_rr,
                                      normal_direction::AbstractVector,
-                                     equations::ShallowWaterEquationsWetDry2D)
+                                     equations::ShallowWaterEquations2D)
 
 Non-symmetric two-point surface flux that discretizes the nonconservative (source) term.
 The discretization uses the [`hydrostatic_reconstruction_chen_noelle`](@ref) on the conservative
 variables.
 
-Should be used together with [`Trixi.FluxHydrostaticReconstruction`](@extref) and
+Should be used together with [`FluxHydrostaticReconstruction`](@ref) and
 [`hydrostatic_reconstruction_chen_noelle`](@ref) in the surface flux to ensure consistency.
 
 Further details on the hydrostatic reconstruction and its motivation can be found in
@@ -770,7 +931,7 @@ Further details on the hydrostatic reconstruction and its motivation can be foun
   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
 """
 @inline function flux_nonconservative_chen_noelle(u_ll, u_rr, orientation::Integer,
-                                                  equations::ShallowWaterEquationsWetDry2D)
+                                                  equations::ShallowWaterEquations2D)
     # Pull the water height and bottom topography on the left
     h_ll, _, _, b_ll = u_ll
     h_rr, _, _, b_rr = u_rr
@@ -804,7 +965,7 @@ end
 
 @inline function flux_nonconservative_chen_noelle(u_ll, u_rr,
                                                   normal_direction::AbstractVector,
-                                                  equations::ShallowWaterEquationsWetDry2D)
+                                                  equations::ShallowWaterEquations2D)
     # Pull the water height and bottom topography on the left
     h_ll, _, _, b_ll = u_ll
     h_rr, _, _, b_rr = u_rr
@@ -833,7 +994,7 @@ end
 
 """
     flux_fjordholm_etal(u_ll, u_rr, orientation_or_normal_direction,
-                        equations::ShallowWaterEquationsWetDry2D)
+                        equations::ShallowWaterEquations2D)
 
 Total energy conservative (mathematical entropy for shallow water equations). When the bottom topography
 is nonzero this should only be used as a surface flux otherwise the scheme will not be well-balanced.
@@ -845,20 +1006,63 @@ Details are available in Eq. (4.1) in the paper:
   [DOI: 10.1016/j.jcp.2011.03.042](https://doi.org/10.1016/j.jcp.2011.03.042)
 """
 @inline function Trixi.flux_fjordholm_etal(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry2D)
-    Trixi.flux_fjordholm_etal(u_ll, u_rr, orientation,
-                              equations.basic_swe)
+                                           equations::ShallowWaterEquations2D)
+    # Unpack left and right state
+    h_ll = waterheight(u_ll, equations)
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    # Average each factor of products in flux
+    h_avg = 0.5f0 * (h_ll + h_rr)
+    v1_avg = 0.5f0 * (v1_ll + v1_rr)
+    v2_avg = 0.5f0 * (v2_ll + v2_rr)
+    p_avg = 0.25f0 * equations.gravity * (h_ll^2 + h_rr^2)
+
+    # Calculate fluxes depending on orientation
+    if orientation == 1
+        f1 = h_avg * v1_avg
+        f2 = f1 * v1_avg + p_avg
+        f3 = f1 * v2_avg
+    else
+        f1 = h_avg * v2_avg
+        f2 = f1 * v1_avg
+        f3 = f1 * v2_avg + p_avg
+    end
+
+    return SVector(f1, f2, f3, 0)
 end
 
 @inline function Trixi.flux_fjordholm_etal(u_ll, u_rr, normal_direction::AbstractVector,
-                                           equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.flux_fjordholm_etal(u_ll, u_rr, normal_direction,
-                                     equations.basic_swe)
+                                           equations::ShallowWaterEquations2D)
+    # Unpack left and right state
+    h_ll = waterheight(u_ll, equations)
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    v_dot_n_ll = v1_ll * normal_direction[1] + v2_ll * normal_direction[2]
+    v_dot_n_rr = v1_rr * normal_direction[1] + v2_rr * normal_direction[2]
+
+    # Average each factor of products in flux
+    h_avg = 0.5f0 * (h_ll + h_rr)
+    v1_avg = 0.5f0 * (v1_ll + v1_rr)
+    v2_avg = 0.5f0 * (v2_ll + v2_rr)
+    h2_avg = 0.5f0 * (h_ll^2 + h_rr^2)
+    p_avg = 0.5f0 * equations.gravity * h2_avg
+    v_dot_n_avg = 0.5f0 * (v_dot_n_ll + v_dot_n_rr)
+
+    # Calculate fluxes depending on normal_direction
+    f1 = h_avg * v_dot_n_avg
+    f2 = f1 * v1_avg + p_avg * normal_direction[1]
+    f3 = f1 * v2_avg + p_avg * normal_direction[2]
+
+    return SVector(f1, f2, f3, 0)
 end
 
 """
     flux_wintermeyer_etal(u_ll, u_rr, orientation_or_normal_direction,
-                          equations::ShallowWaterEquationsWetDry2D)
+                          equations::ShallowWaterEquations2D)
 
 Total energy conservative (mathematical entropy for shallow water equations) split form.
 When the bottom topography is nonzero this scheme will be well-balanced when used as a `volume_flux`.
@@ -872,30 +1076,73 @@ Further details are available in Theorem 1 of the paper:
   [DOI: 10.1016/j.jcp.2017.03.036](https://doi.org/10.1016/j.jcp.2017.03.036)
 """
 @inline function Trixi.flux_wintermeyer_etal(u_ll, u_rr, orientation::Integer,
-                                             equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.flux_wintermeyer_etal(u_ll, u_rr, orientation,
-                                       equations.basic_swe)
+                                             equations::ShallowWaterEquations2D)
+    # Unpack left and right state
+    h_ll, h_v1_ll, h_v2_ll, _ = u_ll
+    h_rr, h_v1_rr, h_v2_rr, _ = u_rr
+
+    # Get the velocities on either side
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    # Average each factor of products in flux
+    v1_avg = 0.5f0 * (v1_ll + v1_rr)
+    v2_avg = 0.5f0 * (v2_ll + v2_rr)
+    p_avg = 0.5f0 * equations.gravity * h_ll * h_rr
+
+    # Calculate fluxes depending on orientation
+    if orientation == 1
+        f1 = 0.5f0 * (h_v1_ll + h_v1_rr)
+        f2 = f1 * v1_avg + p_avg
+        f3 = f1 * v2_avg
+    else
+        f1 = 0.5f0 * (h_v2_ll + h_v2_rr)
+        f2 = f1 * v1_avg
+        f3 = f1 * v2_avg + p_avg
+    end
+
+    return SVector(f1, f2, f3, 0)
 end
 
 @inline function Trixi.flux_wintermeyer_etal(u_ll, u_rr,
                                              normal_direction::AbstractVector,
-                                             equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.flux_wintermeyer_etal(u_ll, u_rr, normal_direction,
-                                       equations.basic_swe)
+                                             equations::ShallowWaterEquations2D)
+    # Unpack left and right state
+    h_ll, h_v1_ll, h_v2_ll, _ = u_ll
+    h_rr, h_v1_rr, h_v2_rr, _ = u_rr
+
+    # Get the velocities on either side
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    # Average each factor of products in flux
+    h_v1_avg = 0.5f0 * (h_v1_ll + h_v1_rr)
+    h_v2_avg = 0.5f0 * (h_v2_ll + h_v2_rr)
+    v1_avg = 0.5f0 * (v1_ll + v1_rr)
+    v2_avg = 0.5f0 * (v2_ll + v2_rr)
+    p_avg = 0.5f0 * equations.gravity * h_ll * h_rr
+
+    # Calculate fluxes depending on normal_direction
+    f1 = h_v1_avg * normal_direction[1] + h_v2_avg * normal_direction[2]
+    f2 = f1 * v1_avg + p_avg * normal_direction[1]
+    f3 = f1 * v2_avg + p_avg * normal_direction[2]
+
+    return SVector(f1, f2, f3, 0)
 end
 
 # Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom topography
 @inline function (dissipation::DissipationLocalLaxFriedrichs)(u_ll, u_rr,
                                                               orientation_or_normal_direction,
-                                                              equations::ShallowWaterEquationsWetDry2D)
-    return (dissipation::DissipationLocalLaxFriedrichs)(u_ll, u_rr,
-                                                        orientation_or_normal_direction,
-                                                        equations.basic_swe)
+                                                              equations::ShallowWaterEquations2D)
+    λ = dissipation.max_abs_speed(u_ll, u_rr, orientation_or_normal_direction,
+                                  equations)
+    diss = -0.5f0 * λ * (u_rr - u_ll)
+    return SVector(diss[1], diss[2], diss[3], 0)
 end
 
 # Specialized `FluxHLL` to avoid spurious dissipation in the bottom topography
 @inline function (numflux::FluxHLL)(u_ll, u_rr, orientation_or_normal_direction,
-                                    equations::ShallowWaterEquationsWetDry2D)
+                                    equations::ShallowWaterEquations2D)
     λ_min, λ_max = numflux.min_max_speed(u_ll, u_rr, orientation_or_normal_direction,
                                          equations)
 
@@ -918,8 +1165,8 @@ end
 
 """
     dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
-                                    equations::ShallowWaterEquationsWetDry2D)
-Roe-type dissipation term for the [`ShallowWaterEquationsWetDry2D`](@ref). To create the classical Roe solver,
+                                    equations::ShallowWaterEquations2D)
+Roe-type dissipation term for the [`ShallowWaterEquations2D`](@ref). To create the classical Roe solver,
 this dissipation term can be combined with [`Trixi.flux_central`](@extref) using [`Trixi.FluxPlusDissipation`](@extref).
 
 For details on the Roe linearization see Chapter 15.3.2 and Chapter 21.7 for the two-dimensional
@@ -929,7 +1176,7 @@ shallow water equations of the book:
   [DOI: 10.1017/CBO9780511791253](https://doi.org/10.1017/CBO9780511791253)
 """
 @inline function dissipation_roe(u_ll, u_rr, normal_direction::AbstractVector,
-                                 equations::ShallowWaterEquationsWetDry2D)
+                                 equations::ShallowWaterEquations2D)
     g = equations.gravity
     z = zero(eltype(u_ll))
 
@@ -1003,7 +1250,7 @@ shallow water equations of the book:
 end
 
 @inline function dissipation_roe(u_ll, u_rr, orientation::Integer,
-                                 equations::ShallowWaterEquationsWetDry2D)
+                                 equations::ShallowWaterEquations2D)
     if orientation == 1
         return dissipation_roe(u_ll, u_rr, SVector(1, 0), equations)
     else # orientation == 2
@@ -1030,7 +1277,7 @@ the reference below. The definition of the wave speeds are given in Equation (2.
   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
 """
 @inline function min_max_speed_chen_noelle(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry2D)
+                                           equations::ShallowWaterEquations2D)
     h_ll = waterheight(u_ll, equations)
     v1_ll, v2_ll = velocity(u_ll, equations)
     h_rr = waterheight(u_rr, equations)
@@ -1051,7 +1298,7 @@ the reference below. The definition of the wave speeds are given in Equation (2.
 end
 
 @inline function min_max_speed_chen_noelle(u_ll, u_rr, normal_direction::AbstractVector,
-                                           equations::ShallowWaterEquationsWetDry2D)
+                                           equations::ShallowWaterEquations2D)
     h_ll = waterheight(u_ll, equations)
     v1_ll, v2_ll = velocity(u_ll, equations)
     h_rr = waterheight(u_rr, equations)
@@ -1072,7 +1319,7 @@ end
 end
 
 # Wave speed estimates used in the CFL based time step selection
-@inline function Trixi.max_abs_speeds(u, equations::ShallowWaterEquationsWetDry2D)
+@inline function Trixi.max_abs_speeds(u, equations::ShallowWaterEquations2D)
     h = waterheight(u, equations)
     v1, v2 = velocity(u, equations)
 
@@ -1080,47 +1327,272 @@ end
     return abs(v1) + c, abs(v2) + c
 end
 
+# Calculate maximum wave speed for local Lax-Friedrichs-type dissipation as the
+# maximum velocity magnitude plus the maximum speed of sound
+@inline function Trixi.max_abs_speed_naive(u_ll, u_rr, orientation::Integer,
+                                           equations::ShallowWaterEquations2D)
+    # Get the velocity quantities in the appropriate direction
+    if orientation == 1
+        v_ll, _ = velocity(u_ll, equations)
+        v_rr, _ = velocity(u_rr, equations)
+    else
+        _, v_ll = velocity(u_ll, equations)
+        _, v_rr = velocity(u_rr, equations)
+    end
+
+    # Calculate the wave celerity on the left and right
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    c_ll = sqrt(equations.gravity * h_ll)
+    c_rr = sqrt(equations.gravity * h_rr)
+
+    return max(abs(v_ll), abs(v_rr)) + max(c_ll, c_rr)
+end
+
+@inline function Trixi.max_abs_speed_naive(u_ll, u_rr, normal_direction::AbstractVector,
+                                           equations::ShallowWaterEquations2D)
+    # Extract and compute the velocities in the normal direction
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+    v_ll = v1_ll * normal_direction[1] + v2_ll * normal_direction[2]
+    v_rr = v1_rr * normal_direction[1] + v2_rr * normal_direction[2]
+
+    # Compute the wave celerity on the left and right
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    c_ll = sqrt(equations.gravity * h_ll)
+    c_rr = sqrt(equations.gravity * h_rr)
+
+    # The normal velocities are already scaled by the norm
+    return max(abs(v_ll), abs(v_rr)) + max(c_ll, c_rr) * norm(normal_direction)
+end
+
+# Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr, orientation::Integer,
+                                     equations::ShallowWaterEquations2D)
+    # Get the velocity quantities in the appropriate direction
+    if orientation == 1
+        v_ll, _ = velocity(u_ll, equations)
+        v_rr, _ = velocity(u_rr, equations)
+    else
+        _, v_ll = velocity(u_ll, equations)
+        _, v_rr = velocity(u_rr, equations)
+    end
+
+    # Calculate the wave celerity on the left and right
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    c_ll = sqrt(equations.gravity * h_ll)
+    c_rr = sqrt(equations.gravity * h_rr)
+
+    return max(abs(v_ll) + c_ll, abs(v_rr) + c_rr)
+end
+
+# Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr, normal_direction::AbstractVector,
+                                     equations::ShallowWaterEquations2D)
+    # Extract and compute the velocities in the normal direction
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+    v_ll = v1_ll * normal_direction[1] + v2_ll * normal_direction[2]
+    v_rr = v1_rr * normal_direction[1] + v2_rr * normal_direction[2]
+
+    # Compute the wave celerity on the left and right
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    c_ll = sqrt(equations.gravity * h_ll)
+    c_rr = sqrt(equations.gravity * h_rr)
+
+    norm_ = norm(normal_direction)
+    # The normal velocities are already scaled by the norm
+    return max(abs(v_ll) + c_ll * norm_, abs(v_rr) + c_rr * norm_)
+end
+
 # Calculate estimates for minimum and maximum wave speeds for HLL-type fluxes
 @inline function Trixi.min_max_speed_naive(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.min_max_speed_naive(u_ll, u_rr, orientation,
-                                     equations.basic_swe)
+                                           equations::ShallowWaterEquations2D)
+    h_ll = waterheight(u_ll, equations)
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    if orientation == 1 # x-direction
+        λ_min = v1_ll - sqrt(equations.gravity * h_ll)
+        λ_max = v1_rr + sqrt(equations.gravity * h_rr)
+    else # y-direction
+        λ_min = v2_ll - sqrt(equations.gravity * h_ll)
+        λ_max = v2_rr + sqrt(equations.gravity * h_rr)
+    end
+
+    return λ_min, λ_max
 end
 
 @inline function Trixi.min_max_speed_naive(u_ll, u_rr, normal_direction::AbstractVector,
-                                           equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.min_max_speed_naive(u_ll, u_rr, normal_direction,
-                                     equations.basic_swe)
+                                           equations::ShallowWaterEquations2D)
+    h_ll = waterheight(u_ll, equations)
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    v_normal_ll = v1_ll * normal_direction[1] + v2_ll * normal_direction[2]
+    v_normal_rr = v1_rr * normal_direction[1] + v2_rr * normal_direction[2]
+
+    norm_ = norm(normal_direction)
+    # The v_normals are already scaled by the norm
+    λ_min = v_normal_ll - sqrt(equations.gravity * h_ll) * norm_
+    λ_max = v_normal_rr + sqrt(equations.gravity * h_rr) * norm_
+
+    return λ_min, λ_max
 end
 
 # More refined estimates for minimum and maximum wave speeds for HLL-type fluxes
 @inline function Trixi.min_max_speed_davis(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.min_max_speed_davis(u_ll, u_rr, orientation,
-                                     equations.basic_swe)
+                                           equations::ShallowWaterEquations2D)
+    h_ll = waterheight(u_ll, equations)
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    c_ll = sqrt(equations.gravity * h_ll)
+    c_rr = sqrt(equations.gravity * h_rr)
+
+    if orientation == 1 # x-direction
+        λ_min = min(v1_ll - c_ll, v1_rr - c_rr)
+        λ_max = max(v1_ll + c_ll, v1_rr + c_rr)
+    else # y-direction
+        λ_min = min(v2_ll - c_ll, v2_rr - c_rr)
+        λ_max = max(v2_ll + c_ll, v2_rr + c_rr)
+    end
+
+    return λ_min, λ_max
 end
 
 @inline function Trixi.min_max_speed_davis(u_ll, u_rr, normal_direction::AbstractVector,
-                                           equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.min_max_speed_davis(u_ll, u_rr, normal_direction,
-                                     equations.basic_swe)
+                                           equations::ShallowWaterEquations2D)
+    h_ll = waterheight(u_ll, equations)
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    norm_ = norm(normal_direction)
+    c_ll = sqrt(equations.gravity * h_ll) * norm_
+    c_rr = sqrt(equations.gravity * h_rr) * norm_
+
+    v_normal_ll = v1_ll * normal_direction[1] + v2_ll * normal_direction[2]
+    v_normal_rr = v1_rr * normal_direction[1] + v2_rr * normal_direction[2]
+
+    # The v_normals are already scaled by the norm
+    λ_min = min(v_normal_ll - c_ll, v_normal_rr - c_rr)
+    λ_max = max(v_normal_ll + c_ll, v_normal_rr + c_rr)
+
+    return λ_min, λ_max
 end
 
 @inline function Trixi.min_max_speed_einfeldt(u_ll, u_rr, orientation::Integer,
-                                              equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.min_max_speed_einfeldt(u_ll, u_rr, orientation,
-                                        equations.basic_swe)
+                                              equations::ShallowWaterEquations2D)
+    h_ll = waterheight(u_ll, equations)
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    c_ll = sqrt(equations.gravity * h_ll)
+    c_rr = sqrt(equations.gravity * h_rr)
+
+    if orientation == 1 # x-direction
+        v_roe, c_roe = calc_wavespeed_roe(u_ll, u_rr, orientation, equations)
+        λ_min = min(v1_ll - c_ll, v_roe - c_roe)
+        λ_max = max(v1_rr + c_rr, v_roe + c_roe)
+    else # y-direction
+        v_roe, c_roe = calc_wavespeed_roe(u_ll, u_rr, orientation, equations)
+        λ_min = min(v2_ll - c_ll, v_roe - c_roe)
+        λ_max = max(v2_rr + c_rr, v_roe + c_roe)
+    end
+
+    return λ_min, λ_max
 end
 
 @inline function Trixi.min_max_speed_einfeldt(u_ll, u_rr,
                                               normal_direction::AbstractVector,
-                                              equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.min_max_speed_einfeldt(u_ll, u_rr, normal_direction,
-                                        equations.basic_swe)
+                                              equations::ShallowWaterEquations2D)
+    h_ll = waterheight(u_ll, equations)
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    norm_ = norm(normal_direction)
+
+    c_ll = sqrt(equations.gravity * h_ll) * norm_
+    c_rr = sqrt(equations.gravity * h_rr) * norm_
+
+    v_normal_ll = (v1_ll * normal_direction[1] + v2_ll * normal_direction[2])
+    v_normal_rr = (v1_rr * normal_direction[1] + v2_rr * normal_direction[2])
+
+    v_roe, c_roe = calc_wavespeed_roe(u_ll, u_rr, normal_direction, equations)
+    λ_min = min(v_normal_ll - c_ll, v_roe - c_roe)
+    λ_max = max(v_normal_rr + c_rr, v_roe + c_roe)
+
+    return λ_min, λ_max
+end
+
+"""
+    calc_wavespeed_roe(u_ll, u_rr, direction::Integer,
+                       equations::ShallowWaterEquations2D)
+
+Calculate Roe-averaged velocity `v_roe` and wavespeed `c_roe = sqrt{g * h_roe}` depending on direction.
+See for instance equation (62) in
+- Paul A. Ullrich, Christiane Jablonowski, and Bram van Leer (2010)
+  High-order finite-volume methods for the shallow-water equations on the sphere
+  [DOI: 10.1016/j.jcp.2010.04.044](https://doi.org/10.1016/j.jcp.2010.04.044)
+Or [this slides](https://faculty.washington.edu/rjl/classes/am574w2011/slides/am574lecture20nup3.pdf),
+slides 8 and 9.
+"""
+@inline function calc_wavespeed_roe(u_ll, u_rr, orientation::Integer,
+                                    equations::ShallowWaterEquations2D)
+    h_ll = waterheight(u_ll, equations)
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    h_roe = 0.5f0 * (h_ll + h_rr)
+    c_roe = sqrt(equations.gravity * h_roe)
+
+    h_ll_sqrt = sqrt(h_ll)
+    h_rr_sqrt = sqrt(h_rr)
+
+    if orientation == 1 # x-direction
+        v_roe = (h_ll_sqrt * v1_ll + h_rr_sqrt * v1_rr) / (h_ll_sqrt + h_rr_sqrt)
+    else # y-direction
+        v_roe = (h_ll_sqrt * v2_ll + h_rr_sqrt * v2_rr) / (h_ll_sqrt + h_rr_sqrt)
+    end
+
+    return v_roe, c_roe
+end
+
+@inline function calc_wavespeed_roe(u_ll, u_rr, normal_direction::AbstractVector,
+                                    equations::ShallowWaterEquations2D)
+    h_ll = waterheight(u_ll, equations)
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    norm_ = norm(normal_direction)
+
+    h_roe = 0.5f0 * (h_ll + h_rr)
+    c_roe = sqrt(equations.gravity * h_roe) * norm_
+
+    h_ll_sqrt = sqrt(h_ll)
+    h_rr_sqrt = sqrt(h_rr)
+
+    v1_roe = (h_ll_sqrt * v1_ll + h_rr_sqrt * v1_rr) / (h_ll_sqrt + h_rr_sqrt)
+    v2_roe = (h_ll_sqrt * v2_ll + h_rr_sqrt * v2_rr) / (h_ll_sqrt + h_rr_sqrt)
+
+    v_roe = (v1_roe * normal_direction[1] + v2_roe * normal_direction[2])
+
+    return v_roe, c_roe
 end
 
 @inline function Trixi.rotate_to_x(u, normal_vector,
-                                   equations::ShallowWaterEquationsWetDry2D)
+                                   equations::ShallowWaterEquations2D)
     # cos and sin of the angle between the x-axis and the normalized normal_vector are
     # the normalized vector's x and y coordinates respectively (see unit circle).
     c = normal_vector[1]
@@ -1140,7 +1612,7 @@ end
 end
 
 @inline function Trixi.rotate_from_x(u, normal_vector,
-                                     equations::ShallowWaterEquationsWetDry2D)
+                                     equations::ShallowWaterEquations2D)
     # cos and sin of the angle between the x-axis and the normalized normal_vector are
     # the normalized vector's x and y coordinates respectively (see unit circle).
     c = normal_vector[1]
@@ -1160,72 +1632,107 @@ end
 end
 
 # Helper function to extract the velocity vector from the conservative variables
-@inline function Trixi.velocity(u, equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.velocity(u, equations.basic_swe)
+@inline function Trixi.velocity(u, equations::ShallowWaterEquations2D)
+    h, h_v1, h_v2, _ = u
+
+    v1 = h_v1 / h
+    v2 = h_v2 / h
+    return SVector(v1, v2)
+end
+
+@inline function Trixi.velocity(u, orientation::Int, equations::ShallowWaterEquations2D)
+    h = u[1]
+    v = u[orientation + 1] / h
+    return v
 end
 
 # Convert conservative variables to primitive
-@inline function Trixi.cons2prim(u, equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.cons2prim(u, equations.basic_swe)
+@inline function Trixi.cons2prim(u, equations::ShallowWaterEquations2D)
+    h, _, _, b = u
+
+    H = h + b
+    v1, v2 = velocity(u, equations)
+    return SVector(H, v1, v2, b)
 end
 
 # Convert conservative variables to entropy
 # Note, only the first three are the entropy variables, the fourth entry still
 # just carries the bottom topography values for convenience
-@inline function Trixi.cons2entropy(u, equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.cons2entropy(u,
-                              equations.basic_swe)
+@inline function Trixi.cons2entropy(u, equations::ShallowWaterEquations2D)
+    h, _, _, b = u
+
+    v1, v2 = velocity(u, equations)
+    v_square = v1^2 + v2^2
+
+    w1 = equations.gravity * (h + b) - 0.5f0 * v_square
+    w2 = v1
+    w3 = v2
+    return SVector(w1, w2, w3, b)
 end
 
 # Convert entropy variables to conservative
-@inline function Trixi.entropy2cons(w, equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.entropy2cons(w,
-                              equations.basic_swe)
+@inline function Trixi.entropy2cons(w, equations::ShallowWaterEquations2D)
+    w1, w2, w3, b = w
+
+    h = (w1 + 0.5f0 * (w2^2 + w3^2)) / equations.gravity - b
+    h_v1 = h * w2
+    h_v2 = h * w3
+    return SVector(h, h_v1, h_v2, b)
 end
 
 # Convert primitive to conservative variables
-@inline function Trixi.prim2cons(prim, equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.prim2cons(prim,
-                           equations.basic_swe)
+@inline function Trixi.prim2cons(prim, equations::ShallowWaterEquations2D)
+    H, v1, v2, b = prim
+
+    h = H - b
+    h_v1 = h * v1
+    h_v2 = h * v2
+    return SVector(h, h_v1, h_v2, b)
 end
 
-@inline function Trixi.waterheight(u, equations::ShallowWaterEquationsWetDry2D)
-    return waterheight(u,
-                       equations.basic_swe)
+@inline function Trixi.waterheight(u, equations::ShallowWaterEquations2D)
+    return u[1]
 end
 
-@inline function Trixi.pressure(u, equations::ShallowWaterEquationsWetDry2D)
-    return Trixi.pressure(u, equations.basic_swe)
+@inline function Trixi.pressure(u, equations::ShallowWaterEquations2D)
+    h = waterheight(u, equations)
+    p = 0.5f0 * equations.gravity * h^2
+    return p
 end
 
-@inline function Trixi.waterheight_pressure(u, equations::ShallowWaterEquationsWetDry2D)
+@inline function Trixi.waterheight_pressure(u, equations::ShallowWaterEquations2D)
     return waterheight(u, equations) * Trixi.pressure(u, equations)
 end
 
 # Entropy function for the shallow water equations is the total energy
-@inline function Trixi.entropy(cons, equations::ShallowWaterEquationsWetDry2D)
+@inline function Trixi.entropy(cons, equations::ShallowWaterEquations2D)
     Trixi.energy_total(cons, equations)
 end
 
 # Calculate total energy for a conservative state `cons`
-@inline function Trixi.energy_total(cons, equations::ShallowWaterEquationsWetDry2D)
-    Trixi.energy_total(cons, equations.basic_swe)
+@inline function Trixi.energy_total(cons, equations::ShallowWaterEquations2D)
+    h, h_v1, h_v2, b = cons
+
+    e = (h_v1^2 + h_v2^2) / (2 * h) + 0.5f0 * equations.gravity * h^2 +
+        equations.gravity * h * b
+    return e
 end
 
 # Calculate kinetic energy for a conservative state `cons`
-@inline function Trixi.energy_kinetic(u, equations::ShallowWaterEquationsWetDry2D)
-    Trixi.energy_kinetic(u, equations.basic_swe)
+@inline function Trixi.energy_kinetic(u, equations::ShallowWaterEquations2D)
+    h, h_v1, h_v2, _ = u
+    return (h_v1^2 + h_v2^2) / (2 * h)
 end
 
 # Calculate potential energy for a conservative state `cons`
-@inline function Trixi.energy_internal(cons, equations::ShallowWaterEquationsWetDry2D)
+@inline function Trixi.energy_internal(cons, equations::ShallowWaterEquations2D)
     return energy_total(cons, equations) - energy_kinetic(cons, equations)
 end
 
 # Calculate the error for the "lake-at-rest" test case where H = h+b should
 # be a constant value over time. Note, assumes there is a single reference
 # water height `H0` with which to compare.
-@inline function Trixi.lake_at_rest_error(u, equations::ShallowWaterEquationsWetDry2D)
+@inline function Trixi.lake_at_rest_error(u, equations::ShallowWaterEquations2D)
     h, _, _, b = u
 
     # For well-balancedness testing with possible wet/dry regions the reference

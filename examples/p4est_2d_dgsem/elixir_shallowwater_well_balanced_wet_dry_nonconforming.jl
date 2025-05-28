@@ -7,12 +7,12 @@ using TrixiShallowWater
 # Semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function and wet/dry transition elements on a nonconforming mesh
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.812, H0 = 1.235)
+equations = ShallowWaterEquations2D(gravity = 9.812, H0 = 1.235)
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
 # Note, this routine is used to compute errors in the analysis callback but the initialization is
 # overwritten by `initial_condition_discontinuous_well_balancedness` below.
-function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquations2D)
     # Calculate primitive variables
     v1 = 0.0
     v2 = 0.0
@@ -28,7 +28,7 @@ function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquati
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(equations.H0, b + equations.threshold_limiter)
 
@@ -119,7 +119,7 @@ ode = semidiscretize(semi, tspan)
 # `element_id` explicitly. In particular, this initial conditions works as intended
 # only for the specific mesh loaded above!
 function initial_condition_discontinuous_well_balancedness(x, t, element_id,
-                                                           equations::ShallowWaterEquationsWetDry2D)
+                                                           equations::ShallowWaterEquations2D)
     # Set the background values for velocity
     H = equations.H0
     v1 = zero(H)
@@ -146,7 +146,7 @@ function initial_condition_discontinuous_well_balancedness(x, t, element_id,
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(equations.H0, b + equations.threshold_limiter)
 

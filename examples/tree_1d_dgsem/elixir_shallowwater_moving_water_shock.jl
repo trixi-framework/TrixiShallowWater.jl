@@ -8,7 +8,7 @@ using Roots
 # semidiscretization of the shallow water equations for a transonic moving water 
 # steady-state with a standing shock.
 
-equations = ShallowWaterEquationsWetDry1D(gravity = 9.812, H0 = 3.25)
+equations = ShallowWaterEquations1D(gravity = 9.812, H0 = 3.25)
 
 """
     inverse_transform(E, hv, sigma, b)
@@ -59,7 +59,7 @@ function inverse_transform(E, hv, sigma, b)
 end
 
 """
-    initial_condition_moving_water_transonic(x, t, equations::ShallowWaterEquationsWetDry1D)
+    initial_condition_moving_water_transonic(x, t, equations::ShallowWaterEquations1D)
 
 Set the initial condition for a transonic moving water steady-state and a quadratic bottom 
 topography, to test the well-balancedness of the scheme.
@@ -70,7 +70,7 @@ The test parameters are taken from Section 4.1 of the paper:
   [DOI: 10.1016/j.jcp.2007.03.031](https://doi.org/10.1016/j.jcp.2007.03.031).
 """
 function initial_condition_moving_water_shock(x, t,
-                                              equations::ShallowWaterEquationsWetDry1D)
+                                              equations::ShallowWaterEquations1D)
     # Extract the gravitational acceleration
     g = equations.gravity
 

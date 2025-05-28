@@ -7,7 +7,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.81)
+equations = ShallowWaterEquations2D(gravity = 9.81)
 
 # Note, this initial condition is used to compute errors in the analysis callback but the initialization is
 # overwritten by `initial_condition_ec_discontinuous_bottom` below.
@@ -52,7 +52,7 @@ ode = semidiscretize(semi, tspan)
 # `element_id` explicitly. In particular, this initial conditions works as intended
 # only for the specific mesh loaded above!
 function initial_condition_ec_discontinuous_bottom(x, t, element_id,
-                                                   equations::ShallowWaterEquationsWetDry2D)
+                                                   equations::ShallowWaterEquations2D)
     # Set up polar coordinates
     inicenter = SVector(0.7, 0.7)
     x_norm = x[1] - inicenter[1]

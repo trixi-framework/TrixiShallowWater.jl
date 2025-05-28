@@ -6,11 +6,11 @@ using TrixiShallowWater
 ###############################################################################
 # semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.81, H0 = 1.875,
-                                          threshold_limiter = 1e-12, threshold_wet = 1e-14)
+equations = ShallowWaterEquations2D(gravity = 9.81, H0 = 1.875,
+                                    threshold_limiter = 1e-12, threshold_wet = 1e-14)
 
 """
-    initial_condition_three_mounds(x, t, equations::ShallowWaterEquationsWetDry2D)
+    initial_condition_three_mounds(x, t, equations::ShallowWaterEquations2D)
 
 Initial condition simulating a dam break. The bottom topography is given by one large and two smaller
 mounds. The mounds are flooded by the water for t > 0. To smooth the discontinuity, a logistic function
@@ -22,7 +22,7 @@ The initial conditions is taken from Section 6.3 of the paper:
   curvilinear meshes with wet/dry fronts accelerated by GPUs\n
   [DOI: 10.1016/j.jcp.2018.08.038](https://doi.org/10.1016/j.jcp.2018.08.038)
 """
-function initial_condition_three_mounds(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_three_mounds(x, t, equations::ShallowWaterEquations2D)
 
     # Set the background values
     v1 = 0.0
@@ -44,7 +44,7 @@ function initial_condition_three_mounds(x, t, equations::ShallowWaterEquationsWe
 
     # Avoid division by zero by adjusting the initial condition with a small dry state threshold
     # that defaults to 500*eps() ≈ 1e-13 in double precision and is set in the constructor above
-    # for the ShallowWaterEquationsWetDry struct.
+    # for the ShallowWaterEquations struct.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v1, v2, b), equations)
 end
@@ -53,7 +53,7 @@ initial_condition = initial_condition_three_mounds
 
 function boundary_condition_outflow(u_inner, normal_direction::AbstractVector, x, t,
                                     surface_flux_functions,
-                                    equations::ShallowWaterEquationsWetDry2D)
+                                    equations::ShallowWaterEquations2D)
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
     # Impulse and bottom from inside, height from external state
     u_outer = SVector(equations.threshold_wet, u_inner[2], u_inner[3], u_inner[4])

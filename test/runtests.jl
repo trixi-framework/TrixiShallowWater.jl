@@ -23,12 +23,22 @@ const TRIXI_TEST = get(ENV, "TRIXI_TEST", "all")
         include("test_structured_2d.jl")
     end
 
+    @time if TRIXI_TEST == "all" || TRIXI_TEST == "t8code_2d"
+        include("test_t8code_2d.jl")
+    end
+
+    @time if TRIXI_TEST == "all" || TRIXI_TEST == "dgmulti"
+        include("test_dgmulti_1d.jl")
+        include("test_dgmulti_2d.jl")
+    end
+
     @time if TRIXI_TEST == "all" || TRIXI_TEST == "p4est_2d"
         include("test_p4est_2d.jl")
     end
 
     @time if TRIXI_TEST == "all" || TRIXI_TEST == "unit"
         include("test_unit.jl")
+        include("test_type.jl")
     end
 
     @time if TRIXI_TEST == "all" || TRIXI_TEST == "upstream"

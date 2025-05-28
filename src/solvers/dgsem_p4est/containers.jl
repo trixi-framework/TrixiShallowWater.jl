@@ -76,7 +76,7 @@ end
 
 # Create mortar container and initialize mortar data.
 function Trixi.init_mortars(mesh::P4estMesh,
-                            equations::ShallowWaterEquationsWetDry2D,
+                            equations::ShallowWaterEquations2D,
                             basis, elements)
     NDIMS = ndims(elements)
     uEltype = eltype(elements)

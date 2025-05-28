@@ -7,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function for a fully wet configuration
 
-equations = ShallowWaterEquationsWetDry1D(gravity = 9.81)
+equations = ShallowWaterEquations1D(gravity = 9.81)
 
 # Initial condition with a truly discontinuous water height, velocity, and bottom
 # topography function as an academic testcase for entropy conservation.
@@ -17,7 +17,7 @@ equations = ShallowWaterEquationsWetDry1D(gravity = 9.81)
 # refinement level is changed the initial condition below may need changed as well to
 # ensure that the discontinuities lie on an element interface.
 function initial_condition_ec_discontinuous_bottom(x, t,
-                                                   equations::ShallowWaterEquationsWetDry1D)
+                                                   equations::ShallowWaterEquations1D)
     # Set the background values
     H = 4.25
     v = 0.0
