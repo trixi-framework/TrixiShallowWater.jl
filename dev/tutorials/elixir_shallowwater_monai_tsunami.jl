@@ -30,12 +30,12 @@
 
 # ## Load required packages
 # The core solver component is TrixiShallowWater.jl,
-# which requires [`Trixi.jl`](@extref Trixi.jl) for the underlying spatial discretization
-# and `OrdinaryDiffEqSSPRK.jl` for time integration.
-# `HOHQMesh.jl` is needed to generate an unstructured mesh for this problem.
-# `TrixiBottomTopography.jl` is needed to create a bathymetry approximation that is directly
+# which requires [Trixi.jl](@extref Trixi.jl) for the underlying spatial discretization
+# and OrdinaryDiffEqSSPRK.jl for time integration.
+# HOHQMesh.jl is needed to generate an unstructured mesh for this problem.
+# TrixiBottomTopography.jl is needed to create a bathymetry approximation that is directly
 # usable by Trixi.jl.
-# Finally, we include [`CairoMakie.jl`](https://docs.makie.org/stable/) for insitu visualization and `Trixi2Vtk.jl` for postprocessing.
+# Finally, we include [CairoMakie.jl](https://docs.makie.org/stable/) for insitu visualization and Trixi2Vtk.jl for postprocessing.
 using HOHQMesh
 using OrdinaryDiffEqSSPRK
 using Trixi
@@ -152,12 +152,12 @@ generate_mesh(monai);
 # for the tsunami runup problem.
 
 # For this example we solve the two-dimensional shallow water equations,
-# so we use the [`ShallowWaterEquationsWetDry2D`](@ref ShallowWaterEquationsWetDry2D)
+# so we use the [`ShallowWaterEquations2D`](@ref)
 # and specify the gravitational acceleration to `gravity = 9.812`
 # as well as a background water height `H0 = 0.0`.
-# In contrast to the [`Trixi.ShallowWaterEquations2D`](@extref Trixi.ShallowWaterEquations2D) type,
-# this equation type contains additional parameters and methods needed to handle wetting and drying.
-equations = ShallowWaterEquationsWetDry2D(gravity = 9.81, H0 = 0.0)
+# In contrast to the [`ShallowWaterEquations2D`](@ref) type,
+# this equation type allows contains additional parameters and methods needed to handle wetting and drying.
+equations = ShallowWaterEquations2D(gravity = 9.81, H0 = 0.0)
 
 # Next, we construct an approximation to the bathymetry with TrixiBottomTopography.jl using
 # a [`BicubicBSpline`](https://trixi-framework.github.io/TrixiBottomTopography.jl/stable/reference/#TrixiBottomTopography.BicubicBSpline)
@@ -176,7 +176,7 @@ bathymetry(x::Float64, y::Float64) = spline_interpolation(bath_spline_struct, x,
 
 # We then create a function to supply the initial condition for the simulation.
 @inline function initial_condition_monai_tsunami(x, t,
-                                                 equations::ShallowWaterEquationsWetDry2D)
+                                                 equations::ShallowWaterEquations2D)
     ## Initially water is at rest
     v1 = 0.0
     v2 = 0.0
@@ -221,7 +221,7 @@ H_from_wave_maker(t::Float64) = spline_interpolation(h_spline_struct, t);
 # wave maker.
 @inline function boundary_condition_wave_maker(u_inner, normal_direction::AbstractVector,
                                                x, t, surface_flux_functions,
-                                               equations::ShallowWaterEquationsWetDry2D)
+                                               equations::ShallowWaterEquations2D)
     ## Extract the numerical flux functions to compute the conservative and nonconservative
     ## pieces of the approximation
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
@@ -263,7 +263,7 @@ boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
 # For this application, we also need to model the bottom friction.
 # Thus, we create a new source term, which adds a Manning friction term to the momentum equations.
 @inline function source_terms_manning_friction(u, x, t,
-                                               equations::ShallowWaterEquationsWetDry2D)
+                                               equations::ShallowWaterEquations2D)
     h, hv_1, hv_2, _ = u
 
     n = 0.001 # friction coefficient
