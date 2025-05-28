@@ -9,7 +9,14 @@ information about helpful tools for package development in Julia can be found on
 - Check whether everything is okay, tests pass etc.
 - Set the new version number in `Project.toml` according to the Julian version of semver.
   Commit and push.
-- Comment `@JuliaRegistrator register` on the commit setting the version number.
+- Comment `@JuliaRegistrator register` on the commit setting the version number. If the release includes breaking changes, it is also required to provide release notes by commenting:
+  ```
+  @JuliaRegistrator register
+
+  Release notes:
+
+  The breaking changes are documented in the NEWS.md file in the repository and in the changelog in the documentation, see https://trixi-framework.github.io/TrixiShallowWater.jl/stable/changelog/
+  ``` 
 - `JuliaRegistrator` will create a PR with the new version in the General registry.
   Wait for it to be merged.
 - Increment the version number in `Project.toml` again with suffix `-DEV`. For example,
