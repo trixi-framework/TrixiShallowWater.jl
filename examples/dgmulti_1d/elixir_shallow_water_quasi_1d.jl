@@ -19,7 +19,7 @@ volume_flux = (flux_chan_etal, flux_nonconservative_chan_etal)
 # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
 # `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxPlusDissipation(flux_chan_etal,
-                                    DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)),
+                                    DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                 flux_nonconservative_chan_etal)
 
 dg = DGMulti(polydeg = 4, element_type = Line(), approximation_type = SBP(),

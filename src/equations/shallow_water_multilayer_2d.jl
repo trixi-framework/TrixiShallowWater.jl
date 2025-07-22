@@ -564,7 +564,7 @@ When the bottom topography is nonzero this scheme will be well-balanced when use
 nonconservative [`flux_nonconservative_ersing_etal`](@ref).
 
 To obtain an entropy stable formulation the `surface_flux` can be set as
-`FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)), flux_nonconservative_ersing_etal`.
+`FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs(max_abs_speed_naive)), flux_nonconservative_ersing_etal`.
 
 In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)

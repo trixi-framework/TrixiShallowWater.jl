@@ -186,7 +186,7 @@ end
 
 Total energy conservative (mathematical entropy for quasi 1D shallow water equations) split form.
 When the bottom topography is nonzero this scheme will be well-balanced when used as a `volume_flux`.
-The `surface_flux` should still use, e.g., [`FluxPlusDissipation(flux_chan_etal, DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive))`](@extref Trixi.FluxPlusDissipation).
+The `surface_flux` should still use, e.g., [`FluxPlusDissipation(flux_chan_etal, DissipationLocalLaxFriedrichs(max_abs_speed_naive))`](@extref Trixi.FluxPlusDissipation).
 
 Further details are available in the paper:
 - Jesse Chan, Khemraj Shukla, Xinhui Wu, Ruofeng Liu, Prani Nalluri (2023) 

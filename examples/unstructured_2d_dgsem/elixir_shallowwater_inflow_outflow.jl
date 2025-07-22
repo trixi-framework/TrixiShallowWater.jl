@@ -44,7 +44,7 @@ volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
 # `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxPlusDissipation(flux_wintermeyer_etal,
-                                    DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)),
+                                    DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                 flux_nonconservative_wintermeyer_etal)
 polydeg = 3
 solver = DGSEM(polydeg = polydeg,

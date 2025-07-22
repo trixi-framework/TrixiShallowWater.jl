@@ -43,7 +43,7 @@ volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
 # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
 # `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxPlusDissipation(flux_ersing_etal,
-                                    DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)),
+                                    DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                 flux_nonconservative_ersing_etal)
 solver = DGSEM(polydeg = 3,
                surface_flux = surface_flux,

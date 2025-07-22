@@ -65,7 +65,7 @@ volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
 # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
 # `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
-                                                                  DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)),
+                                                                  DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                                               hydrostatic_reconstruction_ersing_etal),
                 FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                               hydrostatic_reconstruction_ersing_etal))
