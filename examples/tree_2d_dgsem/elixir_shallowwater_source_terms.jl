@@ -13,7 +13,7 @@ initial_condition = initial_condition_convergence_test # MMS EOC test
 ###############################################################################
 # Get the DG approximation space
 
-# Up to version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
 # `const flux_lax_friedrichs = FluxLaxFriedrichs(), i.e., `FluxLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
 # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
 # Thus, we exchanged in PR#2458 the default wave speed used in the LLF flux to `max_abs_speed`.
