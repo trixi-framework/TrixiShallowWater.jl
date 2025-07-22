@@ -92,7 +92,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 0.10416666834254838
                             ],
                             linf=[2.0000000000000018, 2.4019608337954543e-14, 2.0],
-                            surface_flux=(FluxHydrostaticReconstruction(flux_lax_friedrichs,
+                            surface_flux=(FluxHydrostaticReconstruction(FluxLaxFriedrichs(max_abs_speed_naive),
                                                                         hydrostatic_reconstruction_audusse_etal),
                                           flux_nonconservative_audusse_etal),
                             tspan=(0.0, 0.25))
@@ -653,7 +653,7 @@ end
         end
     end
 
-    @trixi_testset "elixir_shallowwater_twolayer_dam_break.jl with flux_lax_friedrichs" begin
+    @trixi_testset "elixir_shallowwater_twolayer_dam_break.jl with FluxLaxFriedrichs(max_abs_speed_naive)" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_twolayer_dam_break.jl"),
                             l2=[0.1000774903431289, 0.5670692949571057,
@@ -709,7 +709,7 @@ end # 2LSWE
         end
     end
 
-    @trixi_testset "elixir_shallowwater_multilayer_convergence.jl with flux_lax_friedrichs" begin
+    @trixi_testset "elixir_shallowwater_multilayer_convergence.jl with FluxLaxFriedrichs(max_abs_speed_naive)" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_convergence.jl"),
                             l2=[
@@ -730,7 +730,7 @@ end # 2LSWE
                                 0.0005211057995907487,
                                 0.00021874455861881081
                             ],
-                            surface_flux=(flux_lax_friedrichs,
+                            surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations

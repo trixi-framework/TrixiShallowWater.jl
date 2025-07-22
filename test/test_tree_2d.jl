@@ -108,7 +108,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 2.2492839032269154e-14,
                                 2.1130620376156584
                             ],
-                            surface_flux=(FluxHydrostaticReconstruction(flux_lax_friedrichs,
+                            surface_flux=(FluxHydrostaticReconstruction(FluxLaxFriedrichs(max_abs_speed_naive),
                                                                         hydrostatic_reconstruction_audusse_etal),
                                           flux_nonconservative_audusse_etal),
                             tspan=(0.0, 0.25))
@@ -535,7 +535,7 @@ end # SWE
         end
     end
 
-    @trixi_testset "elixir_shallowwater_twolayer_well_balanced with flux_lax_friedrichs.jl" begin
+    @trixi_testset "elixir_shallowwater_twolayer_well_balanced with FluxLaxFriedrichs(max_abs_speed_naive).jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_twolayer_well_balanced.jl"),
                             l2=[2.0525741072929735e-16, 6.000589392730905e-17,
@@ -548,7 +548,7 @@ end # SWE
                                 0.02647405113891016, 1.038795478061861e-15,
                                 1.0401789378532516e-15,
                                 0.026474051138910267],
-                            surface_flux=(flux_lax_friedrichs,
+                            surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
@@ -601,7 +601,7 @@ end # 2LSWE
         end
     end
 
-    @trixi_testset "elixir_shallowwater_multilayer_convergence.jl with flux_lax_friedrichs" begin
+    @trixi_testset "elixir_shallowwater_multilayer_convergence.jl with FluxLaxFriedrichs(max_abs_speed_naive)" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_convergence.jl"),
                             l2=[
@@ -628,7 +628,7 @@ end # 2LSWE
                                 0.000775668423696807,
                                 0.0004374891172380657
                             ],
-                            surface_flux=(flux_lax_friedrichs,
+                            surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25),
                             atol=1e-11)
@@ -728,7 +728,7 @@ end # 2LSWE
         end
     end
 
-    @trixi_testset "elixir_shallowwater_multilayer_well_balanced.jl with flux_lax_friedrichs" begin
+    @trixi_testset "elixir_shallowwater_multilayer_well_balanced.jl with FluxLaxFriedrichs(max_abs_speed_naive)" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_well_balanced.jl"),
                             l2=[
@@ -761,7 +761,7 @@ end # 2LSWE
                                 2.034006113871492e-16,
                                 0.026474051138910267
                             ],
-                            surface_flux=(flux_lax_friedrichs,
+                            surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
@@ -812,7 +812,7 @@ end # 2LSWE
         end
     end
 
-    @trixi_testset "elixir_shallowwater_multilayer_dam_break with flux_lax_friedrichs.jl" begin
+    @trixi_testset "elixir_shallowwater_multilayer_dam_break with FluxLaxFriedrichs(max_abs_speed_naive).jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_dam_break.jl"),
                             l2=[
@@ -839,7 +839,7 @@ end # 2LSWE
                                 0.00037146307629417057,
                                 0.10000011323773067
                             ],
-                            surface_flux=(flux_lax_friedrichs,
+                            surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
