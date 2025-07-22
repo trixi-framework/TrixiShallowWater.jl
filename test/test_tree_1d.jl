@@ -765,7 +765,7 @@ end # 2LSWE
                                 0.00021874455861881081
                             ],
                             surface_flux=(FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
-                                                                                            DissipationLocalLaxFriedrichs()),
+                                                                                            DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)),
                                                                         hydrostatic_reconstruction_ersing_etal),
                                           FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                                                         hydrostatic_reconstruction_ersing_etal)),
@@ -1089,7 +1089,7 @@ end # MLSWE
                                 4.4937259775723604e-5
                             ],
                             surface_flux=(FluxPlusDissipation(flux_ersing_etal,
-                                                              DissipationLocalLaxFriedrichs()),
+                                                              DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)),
                                           flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)

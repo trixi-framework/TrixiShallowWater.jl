@@ -396,7 +396,7 @@ together with the nonconservative [`flux_nonconservative_ersing_etal`](@ref) to 
 that is entropy conservative and well-balanced.
 
 To obtain an entropy stable formulation the `surface_flux` can be set as
-`FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs()), flux_nonconservative_ersing_etal`.
+`FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)), flux_nonconservative_ersing_etal`.
 """
 @inline function flux_ersing_etal(u_ll, u_rr, orientation::Integer,
                                   equations::ShallowWaterExnerEquations1D)
