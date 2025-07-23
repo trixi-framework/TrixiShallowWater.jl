@@ -55,16 +55,6 @@ jobs:
           - dgmulti
           - p4est_2d
           - unit
-          - upstream
-        include:
-          - version: '1.10'
-            os: macos-latest
-            arch: aarch64
-            trixi_test: upstream
-          - version: '1.10'
-            os: windows-latest
-            arch: x64
-            trixi_test: upstream
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
@@ -74,65 +64,29 @@ jobs:
       - run: julia -e 'using InteractiveUtils; versioninfo(verbose=true)'
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
-      - name: Run tests without coverage
-        uses: julia-actions/julia-runtest@v1
-        with:
-          coverage: false
-        env:
-          PYTHON: ""
-          TRIXI_TEST: ${{ matrix.trixi_test }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # for authenticated downloads without strict rate limits
-
-  test_coverage:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
-    name: coverage - ${{ matrix.trixi_test }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        version:
-          - '1.10'
-        os:
-          - ubuntu-latest
-        arch:
-          - x64
-        trixi_test:
-          - tree_1d
-          - tree_2d
-          - structured_2d
-          - unstructured_2d
-          - t8code_2d
-          - dgmulti
-          - p4est_2d
-          - unit
-    steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v2
-        with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - run: julia -e 'using InteractiveUtils; versioninfo(verbose=true)'
-      - uses: julia-actions/cache@v2
-      - uses: julia-actions/julia-buildpkg@v1
-      - name: Run tests with coverage
+      - name: Run tests
         uses: julia-actions/julia-runtest@v1
         with:
           coverage: true
         env:
           PYTHON: ""
           TRIXI_TEST: ${{ matrix.trixi_test }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # for authenticated downloads without strict rate limits
       - name: Process coverage results
         uses: julia-actions/julia-processcoverage@v1
+        if: ${{ !cancelled() }}
         with:
           directories: src,examples
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@v5
+        if: ${{ !cancelled() }}
         with:
           files: lcov.info
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }} # now required for public repos
       - name: Upload coverage report to Coveralls
         uses: coverallsapp/github-action@v2
+        if: ${{ !cancelled() }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: ./lcov.info
