@@ -15,6 +15,7 @@ isdir(outdir) && rm(outdir, recursive = true)
 #! format: noindent
 
 @timed_testset "Printing indicators/controllers" begin
+    using Test: @test_nowarn
     # OBS! Constructing indicators/controllers using the parameters below doesn't make sense. It's
     # just useful to run basic tests of `show` methods.
 

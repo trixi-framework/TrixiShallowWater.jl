@@ -1,5 +1,5 @@
 using Test: @test
-using TrixiTest
+using TrixiTest: @test_trixi_include_base, append_to_kwargs
 
 macro test_trixi_include(expr, args...)
     local add_to_additional_ignore_content = [
