@@ -140,8 +140,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 3.576650520299362,
                                 0.7495177590247986
                             ],
-                            tspan=(0.0, 0.025),
-                            coverage_override=(maxiters = 5,))
+                            tspan=(0.0, 0.025))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
@@ -195,8 +194,7 @@ end # SWE
                                 3.292431218004944,
                                 3.3701108685790135,
                                 0.7495177590247986],
-                            tspan=(0.0, 0.01),
-                            coverage_override=(maxiters = 5,))
+                            tspan=(0.0, 0.01))
 
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
@@ -252,7 +250,6 @@ end # SWE
                                 1.324711724284584e-11,
                                 0.044079775502972124],
                             tspan=(0.0, 0.3),
-                            coverage_override=(maxiters = 5,),
                             atol=1e-10)
 
         # Ensure that we do not have excessive memory allocations
