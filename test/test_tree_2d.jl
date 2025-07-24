@@ -433,9 +433,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 1.3874204364467229,
                                 1.3874204364467246,
                                 0.0
-                            ],
-                            # Increase iterations for coverage testing to trigger both inflow and outflow conditions
-                            coverage_override=(maxiters = 65, tspan = (0.0, 2.5)))
+                            ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
@@ -472,9 +470,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             boundary_conditions=(x_neg = boundary_condition_outflow,
                                                  x_pos = boundary_condition_inflow,
                                                  y_neg = boundary_condition_outflow,
-                                                 y_pos = boundary_condition_inflow),
-                            # Increase iterations for coverage testing to trigger both inflow and outflow conditions
-                            coverage_override=(maxiters = 65, tspan = (0.0, 2.5)))
+                                                 y_pos = boundary_condition_inflow))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
@@ -879,10 +875,7 @@ end # 2LSWE
                                 0.026626783423061535,
                                 0.1016120899921184
                             ],
-                            tspan=(0.0, 0.25),
-                            # Increase iterations for coverage testing to trigger the
-                            # positivity limiter
-                            coverage_override=(maxiters = 130, tspan = (0.0, 1.5)))
+                            tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
