@@ -660,7 +660,7 @@ end
         end
     end
 
-    @trixi_testset "elixir_shallowwater_twolayer_dam_break.jl with FluxLaxFriedrichs(max_abs_speed_naive)" begin
+    @trixi_testset "elixir_shallowwater_twolayer_dam_break.jl with FluxLaxFriedrichs(max_abs_speed)" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_twolayer_dam_break.jl"),
                             l2=[0.1000774903431289, 0.5670692949571057,
