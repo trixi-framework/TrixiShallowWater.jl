@@ -108,6 +108,13 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 2.2492839032269154e-14,
                                 2.1130620376156584
                             ],
+                            # Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+                            # `const flux_lax_friedrichs = FluxLaxFriedrichs(), i.e., `FluxLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+                            # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+                            # Thus, we exchanged in PR#2458 the default wave speed used in the LLF flux to `max_abs_speed`.
+                            # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxHydrostaticReconstruction(FluxLaxFriedrichs(max_abs_speed_naive),
                                                                         hydrostatic_reconstruction_audusse_etal),
                                           flux_nonconservative_audusse_etal),
@@ -544,6 +551,13 @@ end # SWE
                                 0.02647405113891016, 1.038795478061861e-15,
                                 1.0401789378532516e-15,
                                 0.026474051138910267],
+                            # Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+                            # `const flux_lax_friedrichs = FluxLaxFriedrichs(), i.e., `FluxLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+                            # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+                            # Thus, we exchanged in PR#2458 the default wave speed used in the LLF flux to `max_abs_speed`.
+                            # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
@@ -624,6 +638,13 @@ end # 2LSWE
                                 0.000775668423696807,
                                 0.0004374891172380657
                             ],
+                            # Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+                            # `const flux_lax_friedrichs = FluxLaxFriedrichs(), i.e., `FluxLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+                            # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+                            # Thus, we exchanged in PR#2458 the default wave speed used in the LLF flux to `max_abs_speed`.
+                            # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25),
@@ -757,6 +778,13 @@ end # 2LSWE
                                 2.034006113871492e-16,
                                 0.026474051138910267
                             ],
+                            # Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+                            # `const flux_lax_friedrichs = FluxLaxFriedrichs(), i.e., `FluxLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+                            # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+                            # Thus, we exchanged in PR#2458 the default wave speed used in the LLF flux to `max_abs_speed`.
+                            # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
@@ -835,6 +863,13 @@ end # 2LSWE
                                 0.00037146307629417057,
                                 0.10000011323773067
                             ],
+                            # Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+                            # `const flux_lax_friedrichs = FluxLaxFriedrichs(), i.e., `FluxLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+                            # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+                            # Thus, we exchanged in PR#2458 the default wave speed used in the LLF flux to `max_abs_speed`.
+                            # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
