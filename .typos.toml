@@ -1,0 +1,2 @@
+[default.extend-words]
+ater = "ater" # Needed for {T}rixi{S}hallow{W}ater.jl
