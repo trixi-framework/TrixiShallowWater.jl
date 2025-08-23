@@ -90,7 +90,7 @@ You can directly refer to TrixiShallowWater.jl as
 
 ```bibtex
 @misc{winters2025trixi,
-  title={{T}rixi{S}hallow{W}ater.jl: {S}hallow water simulations with {T}rixi.jl},
+  title={{TrixiShallowWater.jl}: {S}hallow water simulations with {T}rixi.jl},
   author={Winters, Andrew R and Ersing, Patrick and Ranocha, Hendrik and Schlottke-Lakemper, Michael},
   year={2025},
   howpublished={\url{https://github.com/trixi-framework/TrixiShallowWater.jl}},
