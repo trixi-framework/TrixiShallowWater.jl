@@ -85,6 +85,19 @@ clone Trixi.jl, can be found in the
 [Development section](https://trixi-framework.github.io/TrixiShallowWater.jl/stable/development/)
 of the documentation.
 
+## Referencing
+You can directly refer to TrixiShallowWater.jl as
+
+```bibtex
+@misc{winters2025trixi,
+  title={{TrixiShallowWater.jl}: {S}hallow water simulations with {T}rixi.jl},
+  author={Winters, Andrew R and Ersing, Patrick and Ranocha, Hendrik and Schlottke-Lakemper, Michael},
+  year={2025},
+  howpublished={\url{https://github.com/trixi-framework/TrixiShallowWater.jl}},
+  doi={10.5281/zenodo.15206520}
+}
+```
+
 ## Authors
 TrixiShallowWater.jl is maintained by the
 [Trixi authors](https://github.com/trixi-framework/Trixi.jl/blob/main/AUTHORS.md).
