@@ -100,18 +100,6 @@ function limiter_shallow_water!(u, variables::Tuple{},
     nothing
 end
 
-# Workaround to use positivity-limiter with time integrators from Trixi.jl
-Trixi.init_callback(limiter!::PositivityPreservingLimiterShallowWater, semi) = nothing
-
-Trixi.finalize_callback(limiter!::PositivityPreservingLimiterShallowWater, semi) = nothing
-
-# Stage callbacks for SimpleSSPRK33 require different arguments (..., stage) instead of (..., semi, t)
-function (limiter!::PositivityPreservingLimiterShallowWater)(u_ode, integrator, stage)
-    semi = integrator.p
-    t = integrator.t
-    limiter!(u_ode, integrator, semi, t)
-end
-
 include("positivity_shallow_water_dg1d.jl")
 include("positivity_shallow_water_dg2d.jl")
 end # @muladd
