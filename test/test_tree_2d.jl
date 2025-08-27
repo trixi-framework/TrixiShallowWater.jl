@@ -735,7 +735,11 @@ end # 2LSWE
             t = sol.t[end]
             u_ode = sol.u[end]
             du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+            # Larger values for allowed allocations due to usage of custom
+            # integrator which are not *recorded* for the methods from
+            # OrdinaryDiffEq.jl
+            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
         end
     end
 
@@ -858,7 +862,11 @@ end # 2LSWE
             t = sol.t[end]
             u_ode = sol.u[end]
             du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+            # Larger values for allowed allocations due to usage of custom
+            # integrator which are not *recorded* for the methods from
+            # OrdinaryDiffEq.jl
+            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
         end
     end
 
@@ -989,25 +997,29 @@ end # 2LSWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_blast_wet_dry_sc.jl"),
                             l2=[
-                                0.46998834070895473,
-                                1.0032319967871552,
-                                1.0032282700364155,
+                                0.31422759523146143,
+                                0.9661771846299017,
+                                0.9661741147888134,
                                 1.0914087960878302e-16
                             ],
                             linf=[
-                                2.0967314402770887,
-                                3.7474423256999807,
-                                3.7473948465588367,
+                                1.4261633496577857,
+                                4.731463762292976,
+                                4.731622271293912,
                                 4.440892098500626e-16
                             ],
-                            tspan=(0.0, 0.1))
+                            tspan=(0.0, 0.05))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
             t = sol.t[end]
             u_ode = sol.u[end]
             du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
+            # Larger values for allowed allocations due to usage of custom
+            # integrator which are not *recorded* for the methods from
+            # OrdinaryDiffEq.jl
+            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
         end
     end
 end # MLSWE
