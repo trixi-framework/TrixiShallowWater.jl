@@ -618,7 +618,7 @@ end
                                            nonconservative_term::Integer)
 
 Local part of the nonconservative term needed for the calculation of the non-conservative staggered
-"fluxes" for the subcell limiting in [`VolumeIntegralSubcellLimiting`](@extref).
+"fluxes" for the subcell limiting in [`Trixi.VolumeIntegralSubcellLimiting`](@extref).
 
 ## References
 - Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
@@ -692,7 +692,7 @@ end
                                            nonconservative_term::Integer)
 
 Jump part of the nonconservative term needed for the calculation of the non-conservative staggered
-"fluxes" for the subcell limiting in [`VolumeIntegralSubcellLimiting`](@extref).
+"fluxes" for the subcell limiting in [`Trixi.VolumeIntegralSubcellLimiting`](@extref).
 
 ## References
 - Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
