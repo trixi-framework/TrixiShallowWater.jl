@@ -16,6 +16,7 @@ using Roots: Order2, solve, ZeroProblem
 include("equations/equations.jl")
 include("equations/numerical_fluxes.jl")
 include("solvers/indicators.jl")
+include("solvers/subcell_limiters.jl")
 include("solvers/dgsem_p4est/containers.jl")
 include("solvers/dgsem_p4est/dg_2d.jl")
 include("callbacks_stage/callbacks_stage.jl")
@@ -43,7 +44,7 @@ export BoundaryConditionWaterHeight, BoundaryConditionMomentum
 
 export nlayers, eachlayer
 
-export PositivityPreservingLimiterShallowWater
+export PositivityPreservingLimiterShallowWater, VelocityDesingularization
 
 export IndicatorHennemannGassnerShallowWater
 
