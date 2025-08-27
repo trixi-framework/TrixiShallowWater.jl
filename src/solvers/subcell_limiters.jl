@@ -77,3 +77,146 @@ function (limiter::Trixi.SubcellLimiterIDP)(u::AbstractArray{<:Any, 4},
     end
     return nothing
 end
+
+###############################################################################
+# Calculation of local bounds using low-order FV solution.
+
+# Specialized version of the two-sided limiter for the shallow water equations that uses the total 
+# water height `H = h + b` for the limiting variable instead of the water height `h`.
+# TODO: Add support for other mesh types. Right now only TreeMesh2D is supported.
+@inline function Trixi.calc_bounds_twosided!(var_min, var_max, variable,
+                                             u, t, semi,
+                                             equations::Union{Trixi.AbstractShallowWaterEquations,
+                                                              AbstractShallowWaterMultiLayerEquations})
+    mesh, _, dg, cache = Trixi.mesh_equations_solver_cache(semi)
+    # Calc bounds inside elements
+    Trixi.@threaded for element in eachelement(dg, cache)
+        var_min[:, :, element] .= typemax(eltype(var_min))
+        var_max[:, :, element] .= typemin(eltype(var_max))
+        # Calculate bounds at Gauss-Lobatto nodes using u
+        for j in eachnode(dg), i in eachnode(dg)
+            var = u[variable, i, j, element]
+
+            # If the water height is specified as the limiting variable, apply limiting with the 
+            # total water height `H = h + b` instead.
+            if variable == 1
+                var += u[end, i, j, element]
+            end
+
+            var_min[i, j, element] = min(var_min[i, j, element], var)
+            var_max[i, j, element] = max(var_max[i, j, element], var)
+
+            if i > 1
+                var_min[i - 1, j, element] = min(var_min[i - 1, j, element], var)
+                var_max[i - 1, j, element] = max(var_max[i - 1, j, element], var)
+            end
+            if i < nnodes(dg)
+                var_min[i + 1, j, element] = min(var_min[i + 1, j, element], var)
+                var_max[i + 1, j, element] = max(var_max[i + 1, j, element], var)
+            end
+            if j > 1
+                var_min[i, j - 1, element] = min(var_min[i, j - 1, element], var)
+                var_max[i, j - 1, element] = max(var_max[i, j - 1, element], var)
+            end
+            if j < nnodes(dg)
+                var_min[i, j + 1, element] = min(var_min[i, j + 1, element], var)
+                var_max[i, j + 1, element] = max(var_max[i, j + 1, element], var)
+            end
+        end
+    end
+
+    # Values at element boundary
+    Trixi.calc_bounds_twosided_interface!(var_min, var_max, variable,
+                                          u, t, semi, mesh, equations)
+
+    # If the water height is specified as the limiting variable, subtract the bottom topography
+    # to get back the water height `h = H - b`
+    if variable == 1
+        Trixi.@threaded for element in eachelement(dg, cache)
+            for j in eachnode(dg), i in eachnode(dg)
+                var_min[i, j, element] -= u[end, i, j, element]
+                var_max[i, j, element] -= u[end, i, j, element]
+            end
+        end
+    end
+
+    return nothing
+end
+
+@inline function Trixi.calc_bounds_twosided_interface!(var_min, var_max, variable,
+                                                       u, t, semi, mesh::Trixi.TreeMesh2D,
+                                                       equations::Union{Trixi.AbstractShallowWaterEquations,
+                                                                        AbstractShallowWaterMultiLayerEquations})
+    _, _, dg, cache = Trixi.mesh_equations_solver_cache(semi)
+    (; boundary_conditions) = semi
+    # Calc bounds at interfaces and periodic boundaries
+    for interface in Trixi.eachinterface(dg, cache)
+        # Get neighboring element ids
+        left = cache.interfaces.neighbor_ids[1, interface]
+        right = cache.interfaces.neighbor_ids[2, interface]
+
+        orientation = cache.interfaces.orientations[interface]
+
+        for i in eachnode(dg)
+            index_left = (nnodes(dg), i)
+            index_right = (1, i)
+            if orientation == 2
+                index_left = reverse(index_left)
+                index_right = reverse(index_right)
+            end
+            var_left = u[variable, index_left..., left] + u[end, index_left..., left]
+            var_right = u[variable, index_right..., right] + u[end, index_right..., right]
+
+            # If the water height is specified as the limiting variable, apply limiting with the 
+            # total water height `H = h + b` instead.
+            var_left += u[end, index_left..., left]
+            var_right += u[end, index_right..., right]
+
+            var_min[index_right..., right] = min(var_min[index_right..., right],
+                                                 var_left)
+            var_max[index_right..., right] = max(var_max[index_right..., right],
+                                                 var_left)
+
+            var_min[index_left..., left] = min(var_min[index_left..., left], var_right)
+            var_max[index_left..., left] = max(var_max[index_left..., left], var_right)
+        end
+    end
+
+    # Calc bounds at physical boundaries
+    for boundary in Trixi.eachboundary(dg, cache)
+        element = cache.boundaries.neighbor_ids[boundary]
+        orientation = cache.boundaries.orientations[boundary]
+        neighbor_side = cache.boundaries.neighbor_sides[boundary]
+
+        for i in eachnode(dg)
+            if neighbor_side == 2 # Element is on the right, boundary on the left
+                index = (1, i)
+                boundary_index = 1
+            else # Element is on the left, boundary on the right
+                index = (nnodes(dg), i)
+                boundary_index = 2
+            end
+            if orientation == 2
+                index = reverse(index)
+                boundary_index += 2
+            end
+            u_inner = get_node_vars(u, equations, dg, index..., element)
+            u_outer = Trixi.get_boundary_outer_state(u_inner, t,
+                                                     boundary_conditions[boundary_index],
+                                                     orientation, boundary_index,
+                                                     mesh, equations, dg, cache,
+                                                     index..., element)
+            var_outer = u_outer[variable]
+            # If the water height is specified as the limiting variable, apply limiting with the
+            # total water height `H = h + b` instead.
+            if variable == 1
+                var_outer += u_outer[end]
+            end
+
+            var_min[index..., element] = min(var_min[index..., element], var_outer)
+            var_max[index..., element] = max(var_max[index..., element], var_outer)
+        end
+    end
+
+    return nothing
+end
