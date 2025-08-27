@@ -1012,7 +1012,7 @@ end # 2LSWE
                             # Increase the absolute tolerance to account for varying results with 
                             # with the two-sided limiter on different architectures.
                             # See https://github.com/trixi-framework/Trixi.jl/pull/2007
-                            atol = 5e-4)
+                            atol=5e-4)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         let
