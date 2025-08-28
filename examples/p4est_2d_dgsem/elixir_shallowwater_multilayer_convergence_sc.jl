@@ -14,8 +14,8 @@ initial_condition = initial_condition_convergence_test
 # Get the DG approximation space
 
 polydeg = 3
-volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal_local_jump)
-surface_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal_local_jump)
+volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
+surface_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
 
 basis = LobattoLegendreBasis(polydeg)
 limiter_idp = SubcellLimiterIDP(equations, basis;)

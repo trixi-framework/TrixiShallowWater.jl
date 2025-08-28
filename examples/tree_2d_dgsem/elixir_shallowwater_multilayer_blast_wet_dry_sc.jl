@@ -40,11 +40,11 @@ initial_condition = initial_condition_blast_wave
 # Get the DG approximation space
 
 polydeg = 4
-volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal_local_jump)
+volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
                                                                   DissipationLocalLaxFriedrichs()),
                                               hydrostatic_reconstruction_ersing_etal),
-                FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal_local_jump,
+                FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                               hydrostatic_reconstruction_ersing_etal))
 
 basis = LobattoLegendreBasis(polydeg)
