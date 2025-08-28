@@ -5,6 +5,19 @@ TrixiShallowWater.jl follows the interpretation of
 used in the Julia ecosystem. Notable changes will be documented in this file
 for human readability.
 
+## Changes in the v0.2 lifecycle
+
+#### Added
+- Introduce node-wise limiting functionality for the `ShallowWaterMultiLayerEquations2D`. ([#111])
+
+#### Changed
+- Velocity desingularization procedure has been moved into a distinct `VelocityDesingularization` 
+  stage callback. ([#111])
+
+#### Deprecated
+
+#### Removed
+
 ## Changes when updating to v0.2 from v0.1.x
 
 #### Added
