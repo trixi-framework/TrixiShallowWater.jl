@@ -23,7 +23,7 @@ function initial_condition_blast_wave(x, t, equations::ShallowWaterMultiLayerEqu
     phi = atan(y_norm, x_norm)
     sin_phi, cos_phi = sincos(phi)
 
-    # Calculate primitive variables5
+    # Calculate primitive variables
     H = r > 0.5f0 ? 2.0f0 : 4.0f0
     v1 = r > 0.5f0 ? zero(RealT) : convert(RealT, 0.1882) * cos_phi
     v2 = r > 0.5f0 ? zero(RealT) : convert(RealT, 0.1882) * sin_phi
@@ -58,17 +58,18 @@ volume_integral = VolumeIntegralSubcellLimiting(limiter_idp;
 solver = DGSEM(basis, surface_flux, volume_integral)
 
 ###############################################################################
-# Get the TreeMesh and setup a periodic mesh
+# Get the TreeMesh
 
 coordinates_min = (0.0, 0.0)
 coordinates_max = (4.0, 4.0)
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 5,
                 n_cells_max = 10_000,
-                periodicity = true)
+                periodicity = false)
 
 # Create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = BoundaryConditionDirichlet(initial_condition))
 
 ###############################################################################
 # ODE solver
