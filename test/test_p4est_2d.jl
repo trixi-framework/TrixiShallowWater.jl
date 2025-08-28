@@ -153,6 +153,48 @@ isdir(outdir) && rm(outdir, recursive = true)
 end # SWE
 
 @testset "Multilayer Shallow Water" begin
+    @trixi_testset "elixir_shallowwater_multilayer_convergence_sc.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_convergence_sc.jl"),
+                            l2=[
+                                0.01770984821679178,
+                                0.004286607743764252,
+                                0.004023699509733987,
+                                0.05668550592307261,
+                                0.013344645378104427,
+                                0.012908273119348163,
+                                0.057098217665604176,
+                                0.013457502294192182,
+                                0.01299749852417241,
+                                0.00019675440964321886
+                            ],
+                            linf=[
+                                0.04203471373309231,
+                                0.01132125631208325,
+                                0.008102011965177014,
+                                0.10543688271126994,
+                                0.030154260356389684,
+                                0.02161357776216416,
+                                0.10984088968503603,
+                                0.03125829217014642,
+                                0.022394666044872613,
+                                0.00043748911723784367
+                            ],
+                            tspan=(0.0, 0.1))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            # Larger values for allowed allocations due to usage of custom
+            # integrator which are not *recorded* for the methods from
+            # OrdinaryDiffEq.jl
+            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
+        end
+    end
+
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry_nonconforming.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_well_balanced_wet_dry_nonconforming.jl"),

@@ -16,6 +16,7 @@ using Roots: Order2, solve, ZeroProblem
 include("equations/equations.jl")
 include("equations/numerical_fluxes.jl")
 include("solvers/indicators.jl")
+include("solvers/subcell_limiters.jl")
 include("solvers/dgsem_p4est/containers.jl")
 include("solvers/dgsem_p4est/dg_2d.jl")
 include("callbacks_stage/callbacks_stage.jl")
@@ -31,6 +32,7 @@ export ShallowWaterEquations1D, ShallowWaterEquations2D,
 export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle,
        min_max_speed_chen_noelle, flux_hll_chen_noelle,
        flux_ersing_etal, flux_nonconservative_ersing_etal,
+       flux_nonconservative_ersing_etal_local_jump,
        flux_es_ersing_etal, hydrostatic_reconstruction_ersing_etal,
        flux_nonconservative_audusse_etal, hydrostatic_reconstruction_audusse_etal,
        FluxHydrostaticReconstruction
@@ -42,7 +44,7 @@ export BoundaryConditionWaterHeight, BoundaryConditionMomentum
 
 export nlayers, eachlayer
 
-export PositivityPreservingLimiterShallowWater
+export PositivityPreservingLimiterShallowWater, VelocityDesingularization
 
 export IndicatorHennemannGassnerShallowWater
 
