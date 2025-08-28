@@ -6,8 +6,7 @@
 # The threshold value can be set via `threshold_partially_wet` in the equations struct.
 function (limiter::Trixi.SubcellLimiterIDP)(u::AbstractArray{<:Any, 4},
                                             semi,
-                                            equations::Union{Trixi.AbstractShallowWaterEquations,
-                                                             AbstractShallowWaterMultiLayerEquations},
+                                            equations::AbstractShallowWaterMultiLayerEquations,
                                             dg::DGSEM,
                                             t, dt;
                                             kwargs...)
@@ -86,10 +85,9 @@ end
 # TODO: Add support for other mesh types. Right now only TreeMesh2D is supported.
 @inline function Trixi.calc_bounds_twosided!(var_min, var_max, variable,
                                              u, t, semi,
-                                             equations::Union{Trixi.AbstractShallowWaterEquations,
-                                                              AbstractShallowWaterMultiLayerEquations{2,
-                                                                                                      4,
-                                                                                                      1}})
+                                             equations::AbstractShallowWaterMultiLayerEquations{2,
+                                                                                                4,
+                                                                                                1})
     mesh, _, dg, cache = Trixi.mesh_equations_solver_cache(semi)
     # Calc bounds inside elements
     Trixi.@threaded for element in eachelement(dg, cache)
@@ -147,10 +145,9 @@ end
 
 @inline function Trixi.calc_bounds_twosided_interface!(var_min, var_max, variable,
                                                        u, t, semi, mesh::Trixi.TreeMesh2D,
-                                                       equations::Union{Trixi.AbstractShallowWaterEquations,
-                                                                        AbstractShallowWaterMultiLayerEquations{2,
-                                                                                                                4,
-                                                                                                                1}})
+                                                       equations::AbstractShallowWaterMultiLayerEquations{2,
+                                                                                                          4,
+                                                                                                          1})
     _, _, dg, cache = Trixi.mesh_equations_solver_cache(semi)
     (; boundary_conditions) = semi
     # Calc bounds at interfaces and periodic boundaries

@@ -637,7 +637,7 @@ Local part of the nonconservative term needed for the calculation of the non-con
     # Initialize flux vector
     f = zero(Trixi.MVector{3 * nlayers(equations) + 1, real(equations)})
 
-    # Compute the nonconservative flux in each layer
+    # Compute the local part of the nonconservative flux in each layer
     # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
     # density ratio of different layers
     for i in eachlayer(equations)
@@ -666,10 +666,11 @@ end
     # Initialize flux vector
     f = zero(Trixi.MVector{3 * nlayers(equations) + 1, real(equations)})
 
-    # Compute the nonconservative flux in each layer
+    # Compute the local part of the nonconservative flux in each layer
     # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
     # density ratio of different layers
     for i in eachlayer(equations)
+        f_h = zero(real(equations))
         f_hv = g * h_ll[i]
 
         setlayer!(f, f_h, f_hv * normal_direction[1],
@@ -716,7 +717,7 @@ Jump part of the nonconservative term needed for the calculation of the non-cons
     # Initialize flux vector
     f = zero(Trixi.MVector{3 * nlayers(equations) + 1, real(equations)})
 
-    # Compute the nonconservative flux in each layer
+    # Compute the jump part of the nonconservative flux in each layer
     # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
     # density ratio of different layers
     for i in eachlayer(equations)
@@ -758,7 +759,7 @@ end
     # Initialize flux vector
     f = zero(MVector{3 * nlayers(equations) + 1, real(equations)})
 
-    # Compute the nonconservative flux in each layer
+    # Compute the jump part of the nonconservative flux in each layer
     # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
     # density ratio of different layers
     for i in eachlayer(equations)
