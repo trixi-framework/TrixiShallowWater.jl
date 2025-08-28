@@ -53,11 +53,11 @@ initial_condition = initial_condition_complex_bottom_well_balanced
 # Get the DG approximation space
 
 polydeg = 3
-volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
+volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal_local_jump)
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
                                                                   DissipationLocalLaxFriedrichs()),
                                               hydrostatic_reconstruction_ersing_etal),
-                FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
+                FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal_local_jump,
                                               hydrostatic_reconstruction_ersing_etal))
 
 basis = LobattoLegendreBasis(polydeg)

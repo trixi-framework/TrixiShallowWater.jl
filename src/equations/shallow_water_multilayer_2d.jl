@@ -457,17 +457,6 @@ end
     return SVector(f)
 end
 
-# For use with `VolumeIntegralSubcellLimiting` the nonconservative flux is created as a callable struct to 
-# enable dispatch on the type of the nonconservative term (local / jump).
-struct FluxNonConservativeErsingLocalJump <:
-       Trixi.FluxNonConservative{Trixi.NonConservativeJump()}
-end
-
-# Number of nonconservative terms
-Trixi.n_nonconservative_terms(::FluxNonConservativeErsingLocalJump) = 1
-
-const flux_nonconservative_ersing_etal = FluxNonConservativeErsingLocalJump()
-
 """
     flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
                                      equations::ShallowWaterMultiLayerEquations2D)
@@ -481,17 +470,7 @@ and the nonconservative pressure formulation [`ShallowWaterMultiLayerEquations2D
 
 When the bottom topography is nonzero this scheme will be well-balanced when used with [`flux_ersing_etal`](@ref).
 
-This implementation uses a non-conservative term that can be written as the product
-of local and jump parts. The two other flux functions with the same name return either the local
-or jump portion of the non-conservative flux based on the type of the
-nonconservative_type argument, employing multiple dispatch. They are used to
-compute the subcell fluxes in dg_2d_subcell_limiters.jl.
-
-## References
-- Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
-  Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
-
-In the two-layer setting the combination with [`flux_ersing_etal`](@ref) is equivalent to the fluxes in:
+In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
   An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on
   curvilinear meshes
@@ -573,13 +552,66 @@ end
     return SVector(f)
 end
 
+# For `VolumeIntegralSubcellLimiting` the nonconservative flux is created as a callable struct to 
+# enable dispatch on the type of the nonconservative term (local / jump).
+struct FluxNonConservativeErsingLocalJump <:
+       Trixi.FluxNonConservative{Trixi.NonConservativeJump()}
+end
+
+Trixi.n_nonconservative_terms(::FluxNonConservativeErsingLocalJump) = 1
+
+const flux_nonconservative_ersing_etal_local_jump = FluxNonConservativeErsingLocalJump()
+
+"""
+    flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr, orientation::Integer,
+                                           equations::ShallowWaterMultiLayerEquations2D)
+    flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr,
+                                           normal_direction::AbstractVector,
+                                     equations::ShallowWaterMultiLayerEquations2D)
+
+Non-symmetric path-conservative two-point flux discretizing the nonconservative (source) term
+that contains the gradients of the bottom topography and waterheights from the coupling between layers
+and the nonconservative pressure formulation [`ShallowWaterMultiLayerEquations2D`](@ref).
+
+When the bottom topography is nonzero this scheme will be well-balanced when used with [`flux_ersing_etal`](@ref).
+
+This implementation uses a non-conservative term that can be written as the product
+of local and jump parts. 
+
+The two other flux functions with the same name return either the local
+or jump portion of the non-conservative flux based on the type of the
+nonconservative_type argument, employing multiple dispatch. They are used to
+compute the subcell fluxes in dg_2d_subcell_limiters.jl.
+
+## References
+- Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
+  Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
+
+In the two-layer setting this combination is equivalent to the fluxes in:
+- Patrick Ersing, Andrew R. Winters (2023)
+  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on
+  curvilinear meshes
+  [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
+"""
+@inline function (noncons_flux::FluxNonConservativeErsingLocalJump)(u_ll, u_rr,
+                                                                    orientation::Integer,
+                                                                    equations::ShallowWaterMultiLayerEquations2D)
+    return flux_nonconservative_ersing_etal(u_ll, u_rr, orientation, equations)
+end
+
+@inline function (noncons_flux::FluxNonConservativeErsingLocalJump)(u_ll, u_rr,
+                                                                    normal_direction::AbstractVector,
+                                                                    equations::ShallowWaterMultiLayerEquations2D)
+    return flux_nonconservative_ersing_etal(u_ll, u_rr, normal_direction, equations)
+end
+
 # Local part
 """
-    flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr, orientation::Integer,
                                            equations::ShallowWaterMultiLayerEquations2D,
                                            nonconservative_type::Trixi.NonConservativeLocal,
                                            nonconservative_term::Integer)
-    flux_nonconservative_ersing_etal(u_ll, u_rr,
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr,
                                            normal_direction::AbstractVector,
                                            equations::ShallowWaterMultiLayerEquations2D,
                                            nonconservative_type::Trixi.NonConservativeLocal,
@@ -592,11 +624,11 @@ Local part of the nonconservative term needed for the calculation of the non-con
 - Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
   Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
 """
-@inline function flux_nonconservative_ersing_etal(u_ll,
-                                                  orientation::Integer,
-                                                  equations::ShallowWaterMultiLayerEquations2D,
-                                                  nonconservative_type::Trixi.NonConservativeLocal,
-                                                  nonconservative_term::Integer)
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll,
+                                                             orientation::Integer,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeLocal,
+                                                             nonconservative_term::Integer)
     # Pull the necessary left and right state information
     h_ll = waterheight(u_ll, equations)
 
@@ -621,11 +653,11 @@ Local part of the nonconservative term needed for the calculation of the non-con
     return SVector(f)
 end
 
-@inline function flux_nonconservative_ersing_etal(u_ll,
-                                                  normal_direction::AbstractVector,
-                                                  equations::ShallowWaterMultiLayerEquations2D,
-                                                  nonconservative_type::Trixi.NonConservativeLocal,
-                                                  nonconservative_term::Integer)
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll,
+                                                             normal_direction::AbstractVector,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeLocal,
+                                                             nonconservative_term::Integer)
     # Pull the necessary left and right state information
     h_ll = waterheight(u_ll, equations)
 
@@ -650,11 +682,11 @@ end
 
 # Jump part
 """
-    flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr, orientation::Integer,
                                            equations::ShallowWaterMultiLayerEquations2D,
                                            nonconservative_type::Trixi.NonConservativeJump,
                                            nonconservative_term::Integer)
-    flux_nonconservative_ersing_etal(u_ll, u_rr,
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr,
                                            normal_direction::AbstractVector,
                                            equations::ShallowWaterMultiLayerEquations2D,
                                            nonconservative_type::Trixi.NonConservativeJump,
@@ -667,11 +699,11 @@ Jump part of the nonconservative term needed for the calculation of the non-cons
 - Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
   Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
 """
-@inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                  orientation::Integer,
-                                                  equations::ShallowWaterMultiLayerEquations2D,
-                                                  nonconservative_type::Trixi.NonConservativeJump,
-                                                  nonconservative_term::Integer)
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr,
+                                                             orientation::Integer,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeJump,
+                                                             nonconservative_term::Integer)
     # Pull the necessary left and right state information
     h_ll = waterheight(u_ll, equations)
     h_rr = waterheight(u_rr, equations)
@@ -708,11 +740,11 @@ Jump part of the nonconservative term needed for the calculation of the non-cons
     return SVector(f)
 end
 
-@inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                  normal_direction::AbstractVector,
-                                                  equations::ShallowWaterMultiLayerEquations2D,
-                                                  nonconservative_type::Trixi.NonConservativeJump,
-                                                  nonconservative_term::Integer)
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr,
+                                                             normal_direction::AbstractVector,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeJump,
+                                                             nonconservative_term::Integer)
     # Pull the necessary left and right state information
     h_ll = waterheight(u_ll, equations)
     h_rr = waterheight(u_rr, equations)

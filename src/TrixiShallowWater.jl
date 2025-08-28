@@ -32,6 +32,7 @@ export ShallowWaterEquations1D, ShallowWaterEquations2D,
 export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle,
        min_max_speed_chen_noelle, flux_hll_chen_noelle,
        flux_ersing_etal, flux_nonconservative_ersing_etal,
+       flux_nonconservative_ersing_etal_local_jump,
        flux_es_ersing_etal, hydrostatic_reconstruction_ersing_etal,
        flux_nonconservative_audusse_etal, hydrostatic_reconstruction_audusse_etal,
        FluxHydrostaticReconstruction
