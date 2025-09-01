@@ -674,8 +674,7 @@ end
         f_h = zero(real(equations))
         f_hv = g * h_ll[i]
 
-        setlayer!(f, f_h, f_hv * normal_direction[1],
-                  f_hv * normal_direction[2], i, equations)
+        setlayer!(f, f_h, f_hv, f_hv, i, equations)
     end
 
     return SVector(f)
