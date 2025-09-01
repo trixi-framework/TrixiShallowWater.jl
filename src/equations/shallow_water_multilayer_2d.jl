@@ -582,7 +582,7 @@ of local and jump parts.
 The two other flux functions with the same name return either the local
 or jump portion of the non-conservative flux based on the type of the
 nonconservative_type argument, employing multiple dispatch. They are used to
-compute the subcell fluxes in dg_2d_subcell_limiters.jl.
+compute the subcell fluxes in [`Trixi.VolumeIntegralSubcellLimiting`](@extref).
 
 ## References
 - Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
