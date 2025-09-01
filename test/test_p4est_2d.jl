@@ -153,9 +153,9 @@ isdir(outdir) && rm(outdir, recursive = true)
 end # SWE
 
 @testset "Multilayer Shallow Water" begin
-    @trixi_testset "elixir_shallowwater_multilayer_convergence_sc.jl" begin
+    @trixi_testset "elixir_shallowwater_multilayer_convergence_sc_subcell.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_multilayer_convergence_sc.jl"),
+                                     "elixir_shallowwater_multilayer_convergence_sc_subcell.jl"),
                             l2=[
                                 0.01770984821679178,
                                 0.004286607743764252,

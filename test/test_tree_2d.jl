@@ -701,9 +701,9 @@ end # 2LSWE
         end
     end
 
-    @trixi_testset "elixir_shallowwater_multilayer_convergence_sc.jl" begin
+    @trixi_testset "elixir_shallowwater_multilayer_convergence_sc_subcell.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_multilayer_convergence_sc.jl"),
+                                     "elixir_shallowwater_multilayer_convergence_sc_subcell.jl"),
                             l2=[
                                 6.285628750145513e-5,
                                 4.610193471623983e-5,
@@ -840,9 +840,9 @@ end # 2LSWE
         end
     end
 
-    @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry_sc.jl" begin
+    @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry_sc_subcell.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_multilayer_well_balanced_wet_dry_sc.jl"),
+                                     "elixir_shallowwater_multilayer_well_balanced_wet_dry_sc_subcell.jl"),
                             l2=[
                                 0.030186039395617457,
                                 5.550472541052989e-15,
@@ -993,9 +993,9 @@ end # 2LSWE
         end
     end
 
-    @trixi_testset "elixir_shallowwater_multilayer_blast_wet_dry_sc.jl" begin
+    @trixi_testset "elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_multilayer_blast_wet_dry_sc.jl"),
+                                     "elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell.jl"),
                             l2=[
                                 0.31422759523146143,
                                 0.9661771846299017,
