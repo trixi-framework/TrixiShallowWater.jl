@@ -573,7 +573,8 @@ Non-symmetric path-conservative two-point flux discretizing the nonconservative 
 that contains the gradients of the bottom topography and waterheights from the coupling between layers
 and the nonconservative pressure formulation [`ShallowWaterMultiLayerEquations2D`](@ref).
 
-When the bottom topography is nonzero this scheme will be well-balanced when used with [`flux_ersing_etal`](@ref).
+If the bottom topography is nonzero this scheme will be well-balanced
+when used together with [`flux_ersing_etal`](@ref).
 
 This implementation uses a non-conservative term that can be written as the product
 of local and jump parts. 
