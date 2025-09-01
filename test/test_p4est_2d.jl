@@ -358,7 +358,7 @@ end # SWE
                                            coordinates_min = coordinates_min,
                                            coordinates_max = coordinates_max,
                                            initial_refinement_level = 5,
-                                           periodicity = false),
+                                           periodicity = true),
                             semi=SemidiscretizationHyperbolic(mesh, equations,
                                                               initial_condition, solver),
                             # Increase the absolute tolerance to account for varying results with 
