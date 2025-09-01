@@ -337,6 +337,47 @@ end # SWE
             @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
         end
     end
+
+    @trixi_testset "elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell with periodic BC.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell.jl"),
+                            l2=[
+                                0.31374291044904945,
+                                0.9623170373390161,
+                                0.9623163985536942,
+                                1.167749829555993e-16
+                            ],
+                            linf=[
+                                1.4347685747786731,
+                                4.760470726550078,
+                                4.761142120243878,
+                                4.440892098500626e-16
+                            ],
+                            tspan=(0.0, 0.05),
+                            mesh=P4estMesh(trees_per_dimension, polydeg = 3,
+                                           coordinates_min = coordinates_min,
+                                           coordinates_max = coordinates_max,
+                                           initial_refinement_level = 5,
+                                           periodicity = false),
+                            semi=SemidiscretizationHyperbolic(mesh, equations,
+                                                              initial_condition, solver),
+                            # Increase the absolute tolerance to account for varying results with 
+                            # with the two-sided limiter on different architectures.
+                            # See https://github.com/trixi-framework/Trixi.jl/pull/2007
+                            atol=5e-4)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            # Larger values for allowed allocations due to usage of custom
+            # integrator which are not *recorded* for the methods from
+            # OrdinaryDiffEq.jl
+            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
+        end
+    end
 end # MLSWE
 end # P4estMesh2D
 

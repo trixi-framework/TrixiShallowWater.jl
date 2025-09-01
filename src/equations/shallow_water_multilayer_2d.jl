@@ -398,6 +398,46 @@ Should be used together with [`Trixi.TreeMesh`](@extref).
     return flux, noncons_flux
 end
 
+"""
+    Trixi.get_boundary_outer_state(u_inner, t,
+                                   boundary_condition::typeof(boundary_condition_slip_wall),
+                                   normal_direction,
+                                   mesh::Union{UnstructuredMesh2D, P4estMesh{2}},
+                                   equations::ShallowWaterMultiLayerEquations2D,
+                                   dg, cache, indices...)
+
+    For subcell limiting, the calculation of local bounds for non-periodic domains requires the boundary
+    outer state. This function returns the boundary value for [`Trixi.boundary_condition_slip_wall`](@extref)
+    for the [`ShallowWaterMultiLayerEquations2D`](@ref) at time `t` and for node with spatial 
+    indices `indices` at the boundary with meshes using a `normal_direction`.
+"""
+@inline function Trixi.get_boundary_outer_state(u_inner, t,
+                                                boundary_condition::typeof(boundary_condition_slip_wall),
+                                                normal_direction,
+                                                mesh::Union{P4estMesh{2},
+                                                            UnstructuredMesh2D},
+                                                equations::ShallowWaterMultiLayerEquations2D,
+                                                dg, cache, indices...)
+    # normalize the outward pointing direction
+    normal = normal_direction / norm(normal_direction)
+
+    # Extract internal values
+    h = waterheight(u_inner, equations)
+    h_v1, h_v2 = momentum(u_inner, equations)
+    b = u_inner[end]
+
+    # compute the normal velocity
+    u_normal = normal[1] * h_v1 + normal[2] * h_v2
+
+    # create the "external" boundary solution state
+    u_boundary = SVector(h...,
+                         (h_v1 - 2.0 * u_normal * normal[1])...,
+                         (h_v2 - 2.0 * u_normal * normal[2])...,
+                         b)
+
+    return u_boundary
+end
+
 # Calculate 2D advective portion of the flux for a single point
 # Note, the bottom topography has no flux
 @inline function Trixi.flux(u, orientation::Integer,
