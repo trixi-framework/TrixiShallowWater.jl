@@ -6,7 +6,11 @@ using Printf: @printf, @sprintf
 
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations with a bottom topography function
-# to test well-balancedness
+# to test well-balancedness.
+# Note! When using subcell limiting with a non-conservative equation, well-balancedness is only 
+# guaranteed for non-conservative terms in the form local * jump that vanish in the equilibrium 
+# state. In this particular case, `flux_nonconservative_ersing_etal_local_jump` provides 
+# well-balancedness for a single-layer equation.
 
 equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, rhos = (1.0))
 
