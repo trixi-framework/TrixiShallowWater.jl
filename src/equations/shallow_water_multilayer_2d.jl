@@ -604,10 +604,10 @@ const flux_nonconservative_ersing_etal_local_jump = FluxNonConservativeErsingLoc
 
 """
     flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr, orientation::Integer,
-                                           equations::ShallowWaterMultiLayerEquations2D)
+                                                equations::ShallowWaterMultiLayerEquations2D)
     flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr,
-                                           normal_direction::AbstractVector,
-                                     equations::ShallowWaterMultiLayerEquations2D)
+                                                normal_direction::AbstractVector,
+                                                equations::ShallowWaterMultiLayerEquations2D)
 
 Non-symmetric path-conservative two-point flux discretizing the nonconservative (source) term
 that contains the gradients of the bottom topography and waterheights from the coupling between layers
