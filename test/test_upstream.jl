@@ -31,14 +31,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             1.7711213427919539
                         ],
                         tspan=(0.0, 0.25))
-    # Ensure that we do not have excessive memory allocations
-    # (e.g., from type instabilities)
-    let
-        t = sol.t[end]
-        u_ode = sol.u[end]
-        du_ode = similar(u_ode)
-        @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-    end
+    @test_allocations(Trixi.rhs!, semi, sol,  1000)
 end
 
 @trixi_testset "TreeMesh1D: elixir_shallowwater_well_balanced_nonperiodic.jl with wall boundary" begin
@@ -56,14 +49,7 @@ end
                         ],
                         tspan=(0.0, 0.25),
                         boundary_condition=boundary_condition_slip_wall)
-    # Ensure that we do not have excessive memory allocations
-    # (e.g., from type instabilities)
-    let
-        t = sol.t[end]
-        u_ode = sol.u[end]
-        du_ode = similar(u_ode)
-        @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-    end
+    @test_allocations(Trixi.rhs!, semi, sol,  1000)
 end
 
 # Shallow water wet/dry 2D
@@ -84,14 +70,7 @@ end
                             0.021790250683516282
                         ],
                         tspan=(0.0, 0.025))
-    # Ensure that we do not have excessive memory allocations
-    # (e.g., from type instabilities)
-    let
-        t = sol.t[end]
-        u_ode = sol.u[end]
-        du_ode = similar(u_ode)
-        @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-    end
+    @test_allocations(Trixi.rhs!, semi, sol,  1000)
 end
 # Unstructured2D
 @trixi_testset "Unstructured2D: elixir_shallowwater_wall_bc_shockcapturing.jl" begin
@@ -113,14 +92,7 @@ end
                         surface_flux=(FluxHydrostaticReconstruction(FluxHLL(min_max_speed_naive),
                                                                     hydrostatic_reconstruction_audusse_etal),
                                       flux_nonconservative_audusse_etal))
-    # Ensure that we do not have excessive memory allocations
-    # (e.g., from type instabilities)
-    let
-        t = sol.t[end]
-        u_ode = sol.u[end]
-        du_ode = similar(u_ode)
-        @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-    end
+    @test_allocations(Trixi.rhs!, semi, sol,  1000)
 end
 # Structured2D
 @trixi_testset "Structured2D: elixir_shallowwater_conical_island.jl" begin
@@ -139,14 +111,7 @@ end
                             0.021790250683516296
                         ],
                         tspan=(0.0, 0.025))
-    # Ensure that we do not have excessive memory allocations
-    # (e.g., from type instabilities)
-    let
-        t = sol.t[end]
-        u_ode = sol.u[end]
-        du_ode = similar(u_ode)
-        @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-    end
+    @test_allocations(Trixi.rhs!, semi, sol,  1000)
 end
 # P4estMesh2D
 @trixi_testset "P4estMesh2D: elixir_shallowwater_perturbation_amr.jl" begin
@@ -165,14 +130,7 @@ end
                             0.011669083581857587
                         ],
                         tspan=(0.0, 0.025))
-    # Ensure that we do not have excessive memory allocations
-    # (e.g., from type instabilities)
-    let
-        t = sol.t[end]
-        u_ode = sol.u[end]
-        du_ode = similar(u_ode)
-        @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-    end
+    @test_allocations(Trixi.rhs!, semi, sol,  1000)
 end
 
 # Clean up afterwards: delete output directory

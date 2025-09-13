@@ -29,14 +29,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 1.7711213427919539
                             ],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_ec.jl with initial_condition_weak_blast_wave" begin
@@ -53,14 +46,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             initial_condition=initial_condition_weak_blast_wave,
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced.jl" begin
@@ -73,14 +59,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             linf=[1.9999999999999996, 3.248036646353028e-14, 2.0],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced.jl with FluxHydrostaticReconstruction" begin
@@ -103,14 +82,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                                                         hydrostatic_reconstruction_audusse_etal),
                                           flux_nonconservative_audusse_etal),
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced.jl with flux_nonconservative_wintermeyer_etal" begin
@@ -125,14 +97,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             surface_flux=(flux_wintermeyer_etal,
                                           flux_nonconservative_wintermeyer_etal),
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced_wet_dry.jl with FluxHydrostaticReconstruction" begin
@@ -151,14 +116,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25),
                             # Soften the tolerance as test results vary between different CPUs
                             atol=2000 * eps())
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms.jl" begin
@@ -175,14 +133,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 9.098379777405796e-5
                             ],
                             tspan=(0.0, 0.025))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms.jl with flux_hll" begin
@@ -201,14 +152,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.025),
                             surface_flux=(FluxHLL(min_max_speed_naive),
                                           flux_nonconservative_fjordholm_etal))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms.jl with flux_nonconservative_wintermeyer_etal" begin
@@ -227,14 +171,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             surface_flux=(flux_wintermeyer_etal,
                                           flux_nonconservative_wintermeyer_etal),
                             tspan=(0.0, 0.025))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms.jl with dissipation_roe" begin
@@ -254,14 +191,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                                               dissipation_roe),
                                           flux_nonconservative_fjordholm_etal),
                             tspan=(0.0, 0.025))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms_dirichlet.jl" begin
@@ -278,14 +208,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 9.098379777405796e-5
                             ],
                             tspan=(0.0, 0.025))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms_dirichlet.jl with FluxHydrostaticReconstruction" begin
@@ -305,14 +228,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                                                         hydrostatic_reconstruction_audusse_etal),
                                           flux_nonconservative_audusse_etal),
                             tspan=(0.0, 0.025))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced_nonperiodic.jl with Dirichlet boundary" begin
@@ -331,14 +247,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25),
                             surface_flux=(FluxHLL(min_max_speed_naive),
                                           flux_nonconservative_fjordholm_etal),)
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced_nonperiodic.jl with wall boundary" begin
@@ -358,14 +267,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             surface_flux=(FluxHLL(min_max_speed_naive),
                                           flux_nonconservative_fjordholm_etal),
                             boundary_condition=boundary_condition_slip_wall)
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_moving_water_subsonic" begin
@@ -382,14 +284,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 5.195496810550537e-16
                             ],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_moving_water_subsonic (pressure inflow / momentum outflow)" begin
@@ -408,14 +303,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             boundary_conditions=(x_neg = boundary_condition_outflow,
                                                  x_pos = boundary_condition_inflow),
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_moving_water_transonic" begin
@@ -432,14 +320,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 5.195496810550537e-16
                             ],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_moving_water_shock" begin
@@ -456,14 +337,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 5.195496810550537e-16
                             ],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_shock_capturing.jl" begin
@@ -480,14 +354,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 0.8646939843534251
                             ],
                             tspan=(0.0, 0.05))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_beach.jl" begin
@@ -504,14 +371,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             tspan=(0.0, 0.05),
                             atol=1e-7) # see https://github.com/trixi-framework/Trixi.jl/issues/1617
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_parabolic_bowl.jl" begin
@@ -528,14 +388,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 3.3306690738754696e-16
                             ],
                             tspan=(0.0, 0.05))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 end # SWE
 
@@ -556,14 +409,7 @@ end # SWE
                                 1.8196759554278685e-5
                             ],
                             tspan=(0.0, 0.05))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_quasi_1d_well_balanced.jl" begin
@@ -583,14 +429,7 @@ end # SWE
                             ],
                             tspan=(0.0, 100.0),
                             atol=1e-12)
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_quasi_1d_discontinuous.jl" begin
@@ -608,14 +447,7 @@ end # SWE
                                 0.09999999999999983,
                                 0.10000000000000009
                             ],)
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 end
 
@@ -630,14 +462,7 @@ end
                                 0.02175023787351349,
                                 0.008212004668840978, 0.0008992474511784199],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_twolayer_well_balanced.jl" begin
@@ -650,14 +475,7 @@ end
                                 0.005119880996670156,
                                 8.003199803957679e-16, 0.005119880996670666],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_twolayer_dam_break.jl with FluxLaxFriedrichs(max_abs_speed)" begin
@@ -672,14 +490,7 @@ end
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 end # 2LSWE
 
@@ -706,14 +517,7 @@ end # 2LSWE
                                 0.00021874455861881081
                             ],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_convergence.jl with FluxLaxFriedrichs(max_abs_speed_naive)" begin
@@ -747,14 +551,7 @@ end # 2LSWE
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_convergence.jl with hydrostatic_reconstruction_ersing_etal" begin
@@ -791,14 +588,7 @@ end # 2LSWE
                                           FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                                                         hydrostatic_reconstruction_ersing_etal)),
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced.jl" begin
@@ -823,14 +613,7 @@ end # 2LSWE
                                 0.005119880996670708
                             ],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry.jl" begin
@@ -851,14 +634,7 @@ end # 2LSWE
                                 2.0
                             ],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry.jl with perturbation" begin
@@ -880,14 +656,7 @@ end # 2LSWE
                             ],
                             tspan=(0.0, 0.25),
                             perturbation=true)
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_dam_break_ec.jl" begin
@@ -912,14 +681,7 @@ end # 2LSWE
                                 0.4999999999999993
                             ],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_dam_break_es.jl" begin
@@ -944,14 +706,7 @@ end # 2LSWE
                                 0.4999999999999993
                             ],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_dam_break_es_dry.jl" begin
@@ -984,14 +739,7 @@ end # 2LSWE
                                 0.5
                             ],
                             tspan=(0.0, 0.25))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_beach.jl" begin
@@ -1009,14 +757,7 @@ end # 2LSWE
                             ],
                             tspan=(0.0, 0.25),
                             atol=1e-5)
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_parabolic_bowl.jl" begin
@@ -1034,14 +775,7 @@ end # 2LSWE
                             ],
                             tspan=(0.0, 0.25),
                             atol=1e-9)
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 end # MLSWE
 
@@ -1059,14 +793,7 @@ end # MLSWE
                                 0.0075032017005062235,
                                 4.7151297207559395e-5
                             ])
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_source_terms_mpm.jl with Roe dissipation" begin
@@ -1085,14 +812,7 @@ end # MLSWE
                             surface_flux=(FluxPlusDissipation(flux_central,
                                                               dissipation_roe),
                                           flux_nonconservative_ersing_etal))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_source_terms_mpm.jl with LLF dissipation" begin
@@ -1118,14 +838,7 @@ end # MLSWE
                             surface_flux=(FluxPlusDissipation(flux_ersing_etal,
                                                               DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                                           flux_nonconservative_ersing_etal))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_well_balanced.jl" begin
@@ -1141,14 +854,7 @@ end # MLSWE
                                 2.957304143715833e-15,
                                 0.19999999999999998
                             ])
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_well_balanced.jl with Roe dissipation" begin
@@ -1167,14 +873,7 @@ end # MLSWE
                             surface_flux=(FluxPlusDissipation(flux_ersing_etal,
                                                               dissipation_roe),
                                           flux_nonconservative_ersing_etal))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_channel.jl" begin
@@ -1190,14 +889,7 @@ end # MLSWE
                                 0.009352017074210295,
                                 0.5499622869285822
                             ])
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_channel.jl with EC fluxes" begin
@@ -1215,14 +907,7 @@ end # MLSWE
                             ],
                             surface_flux=(flux_ersing_etal,
                                           flux_nonconservative_ersing_etal))
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_dam_break_symmetric.jl" begin
@@ -1238,14 +923,7 @@ end # MLSWE
                                 0.9193314051729015,
                                 0.06639643395379602
                             ])
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 1000
-        end
+        @test_allocations(Trixi.rhs!, semi, sol,  1000)
     end
 end # SWE-Exner
 end # TreeMesh1D
