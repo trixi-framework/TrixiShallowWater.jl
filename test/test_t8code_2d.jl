@@ -31,7 +31,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             1.2129488214718265e-5
                         ],
                         tspan=(0.0, 0.1))
-    @test_allocations(Trixi.rhs!, semi, sol,  1000)
+    @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 end # T8codeMesh2D
 end # module

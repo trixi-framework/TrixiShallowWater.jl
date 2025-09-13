@@ -31,7 +31,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             9.43689570931383e-16,
                             2.220446049250313e-15
                         ])
-    @test_allocations(Trixi.rhs!, semi, sol,  1000)
+    @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 end # DGMulti1D
 

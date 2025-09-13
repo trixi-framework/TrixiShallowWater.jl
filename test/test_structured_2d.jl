@@ -32,7 +32,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 0.00018196759554722775
                             ],
                             tspan=(0.0, 0.05))
-        @test_allocations(Trixi.rhs!, semi, sol,  1000)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced.jl" begin
@@ -51,7 +51,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 2.4084298688001335
                             ],
                             tspan=(0.0, 0.25))
-        @test_allocations(Trixi.rhs!, semi, sol,  1000)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced_wet_dry.jl" begin
@@ -71,7 +71,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             tspan=(0.0, 0.25),
                             atol=1e-12)
-        @test_allocations(Trixi.rhs!, semi, sol,  1000)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_conical_island.jl" begin
@@ -90,7 +90,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 0.021790250683516296
                             ],
                             tspan=(0.0, 0.025))
-        @test_allocations(Trixi.rhs!, semi, sol,  1000)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_parabolic_bowl.jl" begin
@@ -109,7 +109,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 7.771561172376096e-16
                             ],
                             tspan=(0.0, 0.025), cells_per_dimension=(40, 40))
-        @test_allocations(Trixi.rhs!, semi, sol,  1000)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 end # SWE
 end # StructuredMesh2D

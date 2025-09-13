@@ -31,7 +31,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             0.12088391569555768,
                             9.325873406851315e-15
                         ])
-    @test_allocations(Trixi.rhs!, semi, sol,  1000)
+    @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 
 @trixi_testset "elixir_shallowwater_source_terms.jl (Tri, SBP)" begin
@@ -50,7 +50,7 @@ end
                             0.567418412384793,
                             1.1102230246251565e-14
                         ])
-    @test_allocations(Trixi.rhs!, semi, sol,  1000)
+    @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 
 @trixi_testset "elixir_shallowwater_source_terms.jl (Tri, Polynomial)" begin
@@ -71,7 +71,7 @@ end
                             0.06345896594568323,
                             3.398993309877696e-5
                         ])
-    @test_allocations(Trixi.rhs!, semi, sol,  1000)
+    @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 
 @trixi_testset "elixir_shallowwater_source_terms.jl (Quad, Polynomial)" begin
@@ -94,7 +94,7 @@ end
                             0.010364657535841815,
                             2.042810365310288e-14
                         ])
-    @test_allocations(Trixi.rhs!, semi, sol,  1000)
+    @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 end # DGMulti2D
 
