@@ -31,6 +31,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 2.052861364219655
                             ],
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -51,6 +53,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             tspan=(0.0f0, 0.25f0),
                             RealT=Float32)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -71,6 +75,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             tspan=(0.0, 0.25),
                             atol=1e-10)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -101,6 +107,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                           flux_nonconservative_audusse_etal),
                             tspan=(0.0, 0.2),
                             atol=1e-10)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -123,6 +131,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                           flux_nonconservative_wintermeyer_etal),
                             tspan=(0.0, 0.25),
                             atol=1e-10)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -142,6 +152,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 2.6407324614341476e-5
                             ],
                             tspan=(0.0, 0.025))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -164,6 +176,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                                                         hydrostatic_reconstruction_audusse_etal),
                                           flux_nonconservative_audusse_etal),
                             tspan=(0.0, 0.025))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -185,6 +199,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             surface_flux=(flux_wintermeyer_etal,
                                           flux_nonconservative_wintermeyer_etal),
                             tspan=(0.0, 0.025))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -206,6 +222,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             surface_flux=(FluxHLL(min_max_speed_naive),
                                           flux_nonconservative_fjordholm_etal),
                             tspan=(0.0, 0.025))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -227,6 +245,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             surface_flux=(FluxHLL(min_max_speed_naive),
                                           flux_nonconservative_fjordholm_etal),
                             atol=1e-10)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -249,6 +269,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             surface_flux=(FluxHydrostaticReconstruction(FluxHLL(min_max_speed_naive),
                                                                         hydrostatic_reconstruction_audusse_etal),
                                           flux_nonconservative_audusse_etal))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -268,6 +290,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 2.052861364219655
                             ],
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -288,6 +312,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             basis=LobattoLegendreBasis(3),
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -307,6 +333,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 0.0
                             ],
                             tspan=(0.0, 3.0))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 end # SWE
@@ -325,6 +353,8 @@ end # SWE
                                 0.005884818649227186, 0.042658506561995546,
                                 0.014125956138838602, 2.5829318284764646e-5],
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -342,6 +372,8 @@ end # SWE
                                 4.7000983997100496e-14,
                                 0.024280130945632732],
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -367,6 +399,8 @@ end # SWE
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 end # 2LSWE
@@ -400,6 +434,8 @@ end # 2LSWE
                                 4.040896422807805e-6
                             ],
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -440,6 +476,8 @@ end # 2LSWE
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -475,6 +513,8 @@ end # 2LSWE
                                           FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                                                         hydrostatic_reconstruction_ersing_etal)),
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -512,6 +552,8 @@ end # 2LSWE
                                 0.024280130945632836
                             ],
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -558,6 +600,8 @@ end # 2LSWE
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -589,6 +633,8 @@ end # 2LSWE
                                 1.3458935664973586
                             ],
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -620,6 +666,8 @@ end # 2LSWE
                                 0.10000000026183736
                             ],
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -660,6 +708,8 @@ end # 2LSWE
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -691,6 +741,8 @@ end # 2LSWE
                                 0.10003205938749304
                             ],
                             tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 end # MLSWE

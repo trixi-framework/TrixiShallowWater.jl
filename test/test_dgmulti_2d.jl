@@ -31,6 +31,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             0.12088391569555768,
                             9.325873406851315e-15
                         ])
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 
@@ -50,6 +52,8 @@ end
                             0.567418412384793,
                             1.1102230246251565e-14
                         ])
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 
@@ -71,6 +75,8 @@ end
                             0.06345896594568323,
                             3.398993309877696e-5
                         ])
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 
@@ -94,6 +100,8 @@ end
                             0.010364657535841815,
                             2.042810365310288e-14
                         ])
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 end # DGMulti2D

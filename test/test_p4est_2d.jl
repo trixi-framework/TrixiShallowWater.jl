@@ -32,6 +32,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 1.2129488214718265e-5
                             ],
                             tspan=(0.0, 0.1))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -52,6 +54,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             tspan=(0.0, 0.25),
                             atol=1e-10)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -71,6 +75,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 0.011669083581857587
                             ],
                             tspan=(0.0, 0.025))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -91,6 +97,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             ],
                             tspan=(0.0, 0.25),
                             atol=1e-10)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -113,6 +121,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                 0.7495177590247986
                             ],
                             tspan=(0.0, 0.025))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 end # SWE
@@ -133,6 +143,8 @@ end # SWE
                                 0.41600528180178625],
                             tspan=(0.0, 0.25),
                             atol=1e-10)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -154,6 +166,8 @@ end # SWE
                                 0.7495177590247986],
                             tspan=(0.0, 0.01))
 
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -177,6 +191,8 @@ end # SWE
                             tspan=(0.0, 0.25),
                             atol=5e-12)
 
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
@@ -196,6 +212,8 @@ end # SWE
                             tspan=(0.0, 0.3),
                             atol=1e-10)
 
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 end # MLSWE

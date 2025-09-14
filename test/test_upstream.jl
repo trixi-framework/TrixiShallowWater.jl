@@ -31,6 +31,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                             1.7711213427919539
                         ],
                         tspan=(0.0, 0.25))
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 
@@ -49,6 +51,8 @@ end
                         ],
                         tspan=(0.0, 0.25),
                         boundary_condition=boundary_condition_slip_wall)
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 
@@ -70,6 +74,8 @@ end
                             0.021790250683516282
                         ],
                         tspan=(0.0, 0.025))
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 # Unstructured2D
@@ -92,6 +98,8 @@ end
                         surface_flux=(FluxHydrostaticReconstruction(FluxHLL(min_max_speed_naive),
                                                                     hydrostatic_reconstruction_audusse_etal),
                                       flux_nonconservative_audusse_etal))
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 # Structured2D
@@ -111,6 +119,8 @@ end
                             0.021790250683516296
                         ],
                         tspan=(0.0, 0.025))
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 # P4estMesh2D
@@ -130,6 +140,8 @@ end
                             0.011669083581857587
                         ],
                         tspan=(0.0, 0.025))
+    # Ensure that we do not have excessive memory allocations
+    # (e.g., from type instabilities)
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 
