@@ -42,15 +42,8 @@ function (limiter::Trixi.SubcellLimiterIDP)(u::AbstractArray{<:Any, 4},
         for j in 2:nnodes(dg), i in eachnode(dg)
             alpha2[i, j, element] = max(alpha[i, j - 1, element], alpha[i, j, element])
         end
-        alpha1[1, :, element] .= zero(eltype(alpha1))
-        alpha1[nnodes(dg) + 1, :, element] .= zero(eltype(alpha1))
-        alpha2[:, 1, element] .= zero(eltype(alpha2))
-        alpha2[:, nnodes(dg) + 1, element] .= zero(eltype(alpha2))
-    end
 
-    # Modification for wet/dry elements
-    Trixi.@threaded for element in eachelement(dg, semi.cache)
-
+        # Modification for wet/dry elements.
         # (Re-)set dummy variable for alpha_dry
         indicator_wet = 1
 
@@ -68,7 +61,8 @@ function (limiter::Trixi.SubcellLimiterIDP)(u::AbstractArray{<:Any, 4},
             alpha1[:, :, element] .= one(eltype(alpha1))
             alpha2[:, :, element] .= one(eltype(alpha2))
         end
-        # Reset the magic edges
+
+        # Use pure DG for interface fluxes
         alpha1[1, :, element] .= zero(eltype(alpha1))
         alpha1[nnodes(dg) + 1, :, element] .= zero(eltype(alpha1))
         alpha2[:, 1, element] .= zero(eltype(alpha2))
