@@ -398,6 +398,46 @@ Should be used together with [`Trixi.TreeMesh`](@extref).
     return flux, noncons_flux
 end
 
+"""
+    Trixi.get_boundary_outer_state(u_inner, t,
+                                   boundary_condition::typeof(boundary_condition_slip_wall),
+                                   normal_direction,
+                                   mesh::Union{UnstructuredMesh2D, P4estMesh{2}},
+                                   equations::ShallowWaterMultiLayerEquations2D,
+                                   dg, cache, indices...)
+
+    For subcell limiting, the calculation of local bounds for non-periodic domains requires the boundary
+    outer state. This function returns the boundary value for [`Trixi.boundary_condition_slip_wall`](@extref)
+    for the [`ShallowWaterMultiLayerEquations2D`](@ref) at time `t` and for node with spatial 
+    indices `indices` at the boundary with meshes using a `normal_direction`.
+"""
+@inline function Trixi.get_boundary_outer_state(u_inner, t,
+                                                boundary_condition::typeof(boundary_condition_slip_wall),
+                                                normal_direction,
+                                                mesh::Union{P4estMesh{2},
+                                                            UnstructuredMesh2D},
+                                                equations::ShallowWaterMultiLayerEquations2D,
+                                                dg, cache, indices...)
+    # normalize the outward pointing direction
+    normal = normal_direction / norm(normal_direction)
+
+    # Extract internal values
+    h = waterheight(u_inner, equations)
+    h_v1, h_v2 = momentum(u_inner, equations)
+    b = u_inner[end]
+
+    # compute the normal velocity
+    u_normal = normal[1] * h_v1 + normal[2] * h_v2
+
+    # create the "external" boundary solution state
+    u_boundary = SVector(h...,
+                         (h_v1 - 2.0 * u_normal * normal[1])...,
+                         (h_v2 - 2.0 * u_normal * normal[2])...,
+                         b)
+
+    return u_boundary
+end
+
 # Calculate 2D advective portion of the flux for a single point
 # Note, the bottom topography has no flux
 @inline function Trixi.flux(u, orientation::Integer,
@@ -543,6 +583,233 @@ end
                         (equations.rhos[j] / equations.rhos[i] * h_jump[j])
             else # (i<j<nlayers) nonconservative formulation of the pressure
                 f_hv += g * h_ll[i] * h_jump[j]
+            end
+        end
+        setlayer!(f, f_h, f_hv * normal_direction[1],
+                  f_hv * normal_direction[2], i, equations)
+    end
+
+    return SVector(f)
+end
+
+# For `VolumeIntegralSubcellLimiting` the nonconservative flux is created as a callable struct to 
+# enable dispatch on the type of the nonconservative term (local / jump).
+struct FluxNonConservativeErsingLocalJump <:
+       Trixi.FluxNonConservative{Trixi.NonConservativeJump()}
+end
+
+Trixi.n_nonconservative_terms(::FluxNonConservativeErsingLocalJump) = 1
+
+const flux_nonconservative_ersing_etal_local_jump = FluxNonConservativeErsingLocalJump()
+
+"""
+    flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr, orientation::Integer,
+                                                equations::ShallowWaterMultiLayerEquations2D)
+    flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr,
+                                                normal_direction::AbstractVector,
+                                                equations::ShallowWaterMultiLayerEquations2D)
+
+Non-symmetric path-conservative two-point flux discretizing the nonconservative (source) term
+that contains the gradients of the bottom topography and waterheights from the coupling between layers
+and the nonconservative pressure formulation [`ShallowWaterMultiLayerEquations2D`](@ref).
+
+If the bottom topography is nonzero this scheme will be well-balanced
+when used together with [`flux_ersing_etal`](@ref).
+
+This implementation uses a non-conservative term that can be written as the product
+of local and jump parts. 
+
+The two other flux functions with the same name return either the local
+or jump portion of the non-conservative flux based on the type of the
+nonconservative_type argument, employing multiple dispatch. They are used to
+compute the subcell fluxes in [`Trixi.VolumeIntegralSubcellLimiting`](@extref).
+
+## References
+- Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
+  Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
+
+In the two-layer setting this combination is equivalent to the fluxes in:
+- Patrick Ersing, Andrew R. Winters (2023)
+  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on
+  curvilinear meshes
+  [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
+"""
+@inline function (noncons_flux::FluxNonConservativeErsingLocalJump)(u_ll, u_rr,
+                                                                    orientation::Integer,
+                                                                    equations::ShallowWaterMultiLayerEquations2D)
+    return flux_nonconservative_ersing_etal(u_ll, u_rr, orientation, equations)
+end
+
+@inline function (noncons_flux::FluxNonConservativeErsingLocalJump)(u_ll, u_rr,
+                                                                    normal_direction::AbstractVector,
+                                                                    equations::ShallowWaterMultiLayerEquations2D)
+    return flux_nonconservative_ersing_etal(u_ll, u_rr, normal_direction, equations)
+end
+
+# Local part
+"""
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr, orientation::Integer,
+                                           equations::ShallowWaterMultiLayerEquations2D,
+                                           nonconservative_type::Trixi.NonConservativeLocal,
+                                           nonconservative_term::Integer)
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr,
+                                           normal_direction::AbstractVector,
+                                           equations::ShallowWaterMultiLayerEquations2D,
+                                           nonconservative_type::Trixi.NonConservativeLocal,
+                                           nonconservative_term::Integer)
+
+Local part of the nonconservative term needed for the calculation of the non-conservative staggered
+"fluxes" for the subcell limiting in [`Trixi.VolumeIntegralSubcellLimiting`](@extref).
+
+## References
+- Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
+  Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
+"""
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll,
+                                                             orientation::Integer,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeLocal,
+                                                             nonconservative_term::Integer)
+    # Pull the necessary left and right state information
+    h_ll = waterheight(u_ll, equations)
+
+    g = equations.gravity
+
+    # Initialize flux vector
+    f = zero(Trixi.MVector{3 * nlayers(equations) + 1, real(equations)})
+
+    # Compute the local part of the nonconservative flux in each layer
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # density ratio of different layers
+    for i in eachlayer(equations)
+        f_hv = g * h_ll[i]
+
+        if orientation == 1
+            setindex!(f, f_hv, i + nlayers(equations))
+        else # orientation == 2
+            setindex!(f, f_hv, i + 2 * nlayers(equations))
+        end
+    end
+
+    return SVector(f)
+end
+
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll,
+                                                             normal_direction::AbstractVector,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeLocal,
+                                                             nonconservative_term::Integer)
+    # Pull the necessary left and right state information
+    h_ll = waterheight(u_ll, equations)
+
+    g = equations.gravity
+
+    # Initialize flux vector
+    f = zero(Trixi.MVector{3 * nlayers(equations) + 1, real(equations)})
+
+    # Compute the local part of the nonconservative flux in each layer
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # density ratio of different layers
+    for i in eachlayer(equations)
+        f_h = zero(real(equations))
+        f_hv = g * h_ll[i]
+
+        setlayer!(f, f_h, f_hv, f_hv, i, equations)
+    end
+
+    return SVector(f)
+end
+
+# Jump part
+"""
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr, orientation::Integer,
+                                           equations::ShallowWaterMultiLayerEquations2D,
+                                           nonconservative_type::Trixi.NonConservativeJump,
+                                           nonconservative_term::Integer)
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr,
+                                           normal_direction::AbstractVector,
+                                           equations::ShallowWaterMultiLayerEquations2D,
+                                           nonconservative_type::Trixi.NonConservativeJump,
+                                           nonconservative_term::Integer)
+
+Jump part of the nonconservative term needed for the calculation of the non-conservative staggered
+"fluxes" for the subcell limiting in [`Trixi.VolumeIntegralSubcellLimiting`](@extref).
+
+## References
+- Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
+  Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
+"""
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr,
+                                                             orientation::Integer,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeJump,
+                                                             nonconservative_term::Integer)
+    # Pull the necessary left and right state information
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    b_rr = u_rr[end]
+    b_ll = u_ll[end]
+
+    # Compute the jumps
+    h_jump = h_rr - h_ll
+    b_jump = b_rr - b_ll
+
+    # Initialize flux vector
+    f = zero(Trixi.MVector{3 * nlayers(equations) + 1, real(equations)})
+
+    # Compute the jump part of the nonconservative flux in each layer
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # density ratio of different layers
+    for i in eachlayer(equations)
+        f_hv = b_jump
+        for j in eachlayer(equations)
+            if j < i
+                f_hv += equations.rhos[j] / equations.rhos[i] * h_jump[j]
+            else # (i<j<nlayers) nonconservative formulation of the pressure
+                f_hv += h_jump[j]
+            end
+        end
+
+        if orientation == 1
+            setindex!(f, f_hv, i + nlayers(equations))
+        else # orientation == 2
+            setindex!(f, f_hv, i + 2 * nlayers(equations))
+        end
+    end
+
+    return SVector(f)
+end
+
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr,
+                                                             normal_direction::AbstractVector,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeJump,
+                                                             nonconservative_term::Integer)
+    # Pull the necessary left and right state information
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    b_rr = u_rr[end]
+    b_ll = u_ll[end]
+
+    # Compute the jumps
+    h_jump = h_rr - h_ll
+    b_jump = b_rr - b_ll
+    g = equations.gravity
+
+    # Initialize flux vector
+    f = zero(MVector{3 * nlayers(equations) + 1, real(equations)})
+
+    # Compute the jump part of the nonconservative flux in each layer
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # density ratio of different layers
+    for i in eachlayer(equations)
+        f_h = zero(real(equations))
+        f_hv = b_jump
+        for j in eachlayer(equations)
+            if j < i
+                f_hv += equations.rhos[j] / equations.rhos[i] * h_jump[j]
+            else # (i<j<nlayers) nonconservative formulation of the pressure
+                f_hv += h_jump[j]
             end
         end
         setlayer!(f, f_h, f_hv * normal_direction[1],

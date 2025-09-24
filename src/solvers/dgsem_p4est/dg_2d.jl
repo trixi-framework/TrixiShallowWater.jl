@@ -199,16 +199,12 @@ end
 #     This is an experimental feature and may change in future releases.
 function Trixi.prolong2mortars!(cache, u,
                                 mesh::P4estMesh{2},
-                                equations::ShallowWaterMultiLayerEquations2D,
+                                equations::AbstractShallowWaterMultiLayerEquations{2, 4,
+                                                                                   1},
                                 mortar_l2::Trixi.LobattoLegendreMortarL2,
                                 dg::DGSEM)
     @unpack neighbor_ids, node_indices = cache.mortars
     index_range = eachnode(dg)
-
-    # Raise an error if `prolong2mortars!` is called with multiple layers.
-    if nlayers(equations) != 1
-        error("Non-conforming meshes are only supported for a single layer!")
-    end
 
     Trixi.@threaded for mortar in Trixi.eachmortar(dg, cache)
         # Copy solution data from the small elements using "delayed indexing" with

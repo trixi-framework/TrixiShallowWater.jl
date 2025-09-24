@@ -65,26 +65,7 @@ function limiter_shallow_water!(u, threshold::Real, variable,
     # on the current `element` after the limiting above in order to avoid dry nodes.
     # If the value_mean < threshold before applying limiter, there
     # could still be dry nodes afterwards due to logic of the limiting
-    Trixi.@threaded for element in eachelement(dg, cache)
-        for i in eachnode(dg)
-            u_node = get_node_vars(u, equations, dg, i, element)
-
-            h, hv, b = u_node
-
-            # Apply velocity desingularization
-            hv = h * (2 * h * hv) /
-                 (h^2 + max(h^2, equations.threshold_desingularization))
-
-            if h <= threshold
-                h = threshold
-                hv = zero(eltype(u))
-            end
-
-            u_node = SVector(h, hv, b)
-
-            set_node_vars!(u, u_node, equations, dg, i, element)
-        end
-    end
+    velocity_desingularization!(u, mesh, equations, dg, cache)
 
     return nothing
 end
@@ -142,31 +123,7 @@ function limiter_shallow_water!(u, threshold::Real, variable,
     # could still be dry nodes afterwards due to logic of the limiting.
     # Additionally, a velocity desingularization is applied to avoid numerical 
     # problems near dry states.
-    Trixi.@threaded for element in eachelement(dg, cache)
-        for i in eachnode(dg)
-            u_node = get_node_vars(u, equations, dg, i, element)
-
-            h = MVector(waterheight(u_node, equations))
-            hv = MVector(momentum(u_node, equations))
-            b = u_node[end]
-
-            # Apply velocity desingularization
-            hv = h .* (2 * h .* hv) ./
-                 (h .^ 2 .+ max.(h .^ 2, equations.threshold_desingularization))
-
-            for i in eachlayer(equations)
-                # Ensure positivity and zero velocity at dry states
-                if h[i] <= threshold
-                    h[i] = threshold
-                    hv[i] = zero(eltype(u))
-                end
-            end
-
-            u_node = SVector(h..., hv..., b)
-
-            set_node_vars!(u, u_node, equations, dg, i, element)
-        end
-    end
+    velocity_desingularization!(u, mesh, equations, dg, cache)
 
     return nothing
 end
