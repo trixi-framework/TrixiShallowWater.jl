@@ -78,7 +78,7 @@ end
 # water height `H = h + b` for the limiting variable instead of the water height `h`.
 # TODO: Add support for other mesh types. Right now only TreeMesh2D and P4estMesh2D are supported.
 @inline function Trixi.calc_bounds_twosided!(var_min, var_max, variable,
-                                             u, t, semi,
+                                             u::AbstractArray{<:Any, 4}, t, semi,
                                              equations::AbstractShallowWaterMultiLayerEquations{2,
                                                                                                 4,
                                                                                                 1})
