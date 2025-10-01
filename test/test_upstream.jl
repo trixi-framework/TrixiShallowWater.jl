@@ -146,7 +146,7 @@ end
 end
 # P4estMesh2D - Subcell limiting
 @trixi_testset "P4estMesh2D: elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell.jl" begin
-    @test_trixi_include(joinpath(EXAMPLES_DIR,
+    @test_trixi_include(joinpath(EXAMPLES_DIR, "p4est_2d_dgsem",
                                  "elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell.jl"),
                         l2=[
                             0.31374291044904945,
