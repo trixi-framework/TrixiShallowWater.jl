@@ -148,7 +148,7 @@ l1_well_balance_error = Trixi.integrate_via_indices(u, mesh, equations, semi.sol
     x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations, solver,
                                    i, element)
     # We know that the discontinuity is a vertical line. Slightly augment the x value by a factor
-    # of unit roundoff to avoid the repeted value from the LGL nodes at at interface.
+    # of unit roundoff to avoid the repeated value from the LGL nodes at at interface.
     if i == 1
         x_node = SVector(nextfloat(x_node[1]))
     elseif i == nnodes(semi.solver)
