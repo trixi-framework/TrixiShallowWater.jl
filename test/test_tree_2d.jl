@@ -586,6 +586,48 @@ end # 2LSWE
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
+    @trixi_testset "elixir_shallowwater_multilayer_convergence_sc_subcell.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_convergence_sc_subcell.jl"),
+                            l2=[
+                                6.285628750145513e-5,
+                                4.610193471623983e-5,
+                                9.917462704118323e-6,
+                                5.216963320346522e-5,
+                                3.780893484303917e-5,
+                                8.455581580540902e-6,
+                                6.0837269494371406e-5,
+                                4.723885890946319e-5,
+                                9.036273274310515e-6,
+                                1.4948274057922941e-5
+                            ],
+                            linf=[
+                                0.000440237193891857,
+                                0.00031820211894051376,
+                                4.767210578965342e-5,
+                                0.0003343406410485361,
+                                0.00025976327797261334,
+                                4.1952105625853164e-5,
+                                0.0004081378771902955,
+                                0.0003234469646737348,
+                                4.355481293077945e-5,
+                                3.373484037560992e-5
+                            ],
+                            tspan=(0.0, 0.1))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            # Larger values for allowed allocations due to usage of custom
+            # integrator which are not *recorded* for the methods from
+            # OrdinaryDiffEq.jl
+            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
+        end
+    end
+
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_well_balanced.jl"),
@@ -671,6 +713,36 @@ end # 2LSWE
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
+    @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry_sc_subcell.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_well_balanced_wet_dry_sc_subcell.jl"),
+                            l2=[
+                                0.030186039395617457,
+                                5.550472541052989e-15,
+                                3.2397070250076644e-18,
+                                0.10911781485920433
+                            ],
+                            linf=[
+                                0.4999999999999989,
+                                5.874572204086319e-14,
+                                3.532067592476273e-17,
+                                1.9999999999999993
+                            ],
+                            tspan=(0.0, 1.0))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            # Larger values for allowed allocations due to usage of custom
+            # integrator which are not *recorded* for the methods from
+            # OrdinaryDiffEq.jl
+            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
+        end
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_dam_break.jl" begin
@@ -779,6 +851,40 @@ end # 2LSWE
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
+    @trixi_testset "elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell.jl"),
+                            l2=[
+                                0.31379834774718235,
+                                0.9625133254935517,
+                                0.9624858747376203,
+                                1.0914087960878302e-16
+                            ],
+                            linf=[
+                                1.438395397135686,
+                                4.715200146867988,
+                                4.715083768860907,
+                                4.440892098500626e-16
+                            ],
+                            tspan=(0.0, 0.05),
+                            # Increase the absolute tolerance to account for varying results with 
+                            # with the two-sided limiter on different architectures.
+                            # See https://github.com/trixi-framework/Trixi.jl/pull/2007
+                            atol=5e-4)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        let
+            t = sol.t[end]
+            u_ode = sol.u[end]
+            du_ode = similar(u_ode)
+            # Larger values for allowed allocations due to usage of custom
+            # integrator which are not *recorded* for the methods from
+            # OrdinaryDiffEq.jl
+            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
+        end
     end
 end # MLSWE
 end # TreeMesh2D

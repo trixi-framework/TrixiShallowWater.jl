@@ -71,29 +71,7 @@ function limiter_shallow_water!(u, threshold::Real, variable,
     # on the current `element` after the limiting above in order to avoid dry nodes.
     # If the value_mean < threshold before applying limiter, there
     # could still be dry nodes afterwards due to logic of the limiting
-    Trixi.@threaded for element in eachelement(dg, cache)
-        for j in eachnode(dg), i in eachnode(dg)
-            u_node = get_node_vars(u, equations, dg, i, j, element)
-
-            h, h_v1, h_v2, b = u_node
-
-            # Apply velocity desingularization
-            h_v1 = h * (2 * h * h_v1) /
-                   (h^2 + max(h^2, equations.threshold_desingularization))
-            h_v2 = h * (2 * h * h_v2) /
-                   (h^2 + max(h^2, equations.threshold_desingularization))
-
-            if h <= threshold
-                h = threshold
-                h_v1 = zero(eltype(u))
-                h_v2 = zero(eltype(u))
-            end
-
-            u_node = SVector(h, h_v1, h_v2, b)
-
-            set_node_vars!(u, u_node, equations, dg, i, j, element)
-        end
-    end
+    velocity_desingularization!(u, mesh, equations, dg, cache)
 
     return nothing
 end
@@ -151,35 +129,7 @@ function limiter_shallow_water!(u, threshold::Real, variable,
     # on the current `element` after the limiting above in order to avoid dry nodes.
     # If the value_mean < threshold before applying limiter, there
     # could still be dry nodes afterwards due to logic of the limiting
-    Trixi.@threaded for element in eachelement(dg, cache)
-        for j in eachnode(dg), i in eachnode(dg)
-            u_node = get_node_vars(u, equations, dg, i, j, element)
-
-            h = MVector(waterheight(u_node, equations))
-            h_v1 = MVector(momentum(u_node, equations)[1])
-            h_v2 = MVector(momentum(u_node, equations)[2])
-            b = u_node[end]
-
-            # Apply velocity desingularization
-            h_v1 = h .* (2 * h .* h_v1) ./
-                   (h .^ 2 .+ max.(h .^ 2, equations.threshold_desingularization))
-            h_v2 = h .* (2 * h .* h_v2) ./
-                   (h .^ 2 .+ max.(h .^ 2, equations.threshold_desingularization))
-
-            for i in eachlayer(equations)
-                # Ensure positivity and zero velocity at dry states
-                if h[i] <= threshold
-                    h[i] = threshold
-                    h_v1[i] = zero(eltype(u))
-                    h_v2[i] = zero(eltype(u))
-                end
-            end
-
-            u_node = SVector(h..., h_v1..., h_v2..., b)
-
-            set_node_vars!(u, u_node, equations, dg, i, j, element)
-        end
-    end
+    velocity_desingularization!(u, mesh, equations, dg, cache)
 
     return nothing
 end
