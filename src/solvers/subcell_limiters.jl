@@ -39,7 +39,7 @@ function (limiter::Trixi.SubcellLimiterIDP)(u::AbstractArray{<:Any, 4},
         indicator_wet = 1
 
         for j in eachnode(dg), i in eachnode(dg)
-            h = waterheight(u[:, i, j, element], equations)
+            h = waterheight(get_node_vars(u, equations, dg, i, j, element), equations)
 
             # Set indicator to FV if water height is below the threshold
             if minimum(h) <= equations.threshold_partially_wet
