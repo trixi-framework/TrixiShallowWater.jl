@@ -33,22 +33,13 @@ function (limiter::Trixi.SubcellLimiterIDP)(u::AbstractArray{<:Any, 4},
                                                                                      semi)
     end
 
-    # Calculate alpha1 and alpha2
-    @unpack alpha1, alpha2 = limiter.cache.subcell_limiter_coefficients
     Trixi.@threaded for element in eachelement(dg, semi.cache)
-        for j in eachnode(dg), i in 2:nnodes(dg)
-            alpha1[i, j, element] = max(alpha[i - 1, j, element], alpha[i, j, element])
-        end
-        for j in 2:nnodes(dg), i in eachnode(dg)
-            alpha2[i, j, element] = max(alpha[i, j - 1, element], alpha[i, j, element])
-        end
-
         # Modification for wet/dry elements.
         # (Re-)set dummy variable for alpha_dry
         indicator_wet = 1
 
-        for j in eachnode(dg), i in 1:nnodes(dg)
-            h = waterheight(u[:, i, j, element], equations)
+        for j in eachnode(dg), i in eachnode(dg)
+            h = waterheight(get_node_vars(u, equations, dg, i, j, element), equations)
 
             # Set indicator to FV if water height is below the threshold
             if minimum(h) <= equations.threshold_partially_wet
@@ -58,15 +49,7 @@ function (limiter::Trixi.SubcellLimiterIDP)(u::AbstractArray{<:Any, 4},
 
         if indicator_wet == 0   # element is dry
             alpha[:, :, element] .= one(eltype(alpha))
-            alpha1[:, :, element] .= one(eltype(alpha1))
-            alpha2[:, :, element] .= one(eltype(alpha2))
         end
-
-        # Use pure DG for interface fluxes
-        alpha1[1, :, element] .= zero(eltype(alpha1))
-        alpha1[nnodes(dg) + 1, :, element] .= zero(eltype(alpha1))
-        alpha2[:, 1, element] .= zero(eltype(alpha2))
-        alpha2[:, nnodes(dg) + 1, element] .= zero(eltype(alpha2))
     end
     return nothing
 end
