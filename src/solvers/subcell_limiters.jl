@@ -11,8 +11,7 @@ function (limiter::Trixi.SubcellLimiterIDP)(u::AbstractArray{<:Any, 4},
                                             t, dt;
                                             kwargs...)
     @unpack alpha = limiter.cache.subcell_limiter_coefficients
-    # TODO: Do not abuse `reset_du!` but maybe implement a generic `set_zero!`
-    Trixi.@trixi_timeit Trixi.timer() "reset alpha" Trixi.reset_du!(alpha, dg, semi.cache)
+    Trixi.@trixi_timeit Trixi.timer() "reset alpha" Trixi.set_zero!(alpha, dg, semi.cache)
 
     if limiter.local_twosided
         Trixi.@trixi_timeit Trixi.timer() "local twosided" Trixi.idp_local_twosided!(alpha,
