@@ -54,10 +54,10 @@ mesh_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000
 mesh = UnstructuredMesh2D(mesh_file, periodicity = false)
 
 # Boundary conditions
-boundary_condition = Dict(:Top => boundary_condition_slip_wall,
-                          :Left => boundary_condition_slip_wall,
-                          :Right => boundary_condition_slip_wall,
-                          :Bottom => boundary_condition_slip_wall)
+boundary_condition = (; Top = boundary_condition_slip_wall,
+                      Left = boundary_condition_slip_wall,
+                      Right = boundary_condition_slip_wall,
+                      Bottom = boundary_condition_slip_wall)
 
 # Create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition,

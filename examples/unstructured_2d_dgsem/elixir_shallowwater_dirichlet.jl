@@ -25,7 +25,7 @@ end
 initial_condition = initial_condition_well_balancedness
 
 boundary_condition_constant = BoundaryConditionDirichlet(initial_condition)
-boundary_condition = Dict(:OuterCircle => boundary_condition_constant)
+boundary_condition = (; OuterCircle = boundary_condition_constant)
 
 ###############################################################################
 # Get the DG approximation space
