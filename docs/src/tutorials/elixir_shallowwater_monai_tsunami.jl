@@ -255,10 +255,10 @@ end;
 # are the default names provided by HOHQMesh. As per the problem definition,
 # three of the domain boundaries are walls and the incident wave maker boundary condition
 # implemented above is set at the `Left` domain
-boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
-                          :Top => boundary_condition_slip_wall,
-                          :Right => boundary_condition_slip_wall,
-                          :Left => boundary_condition_wave_maker);
+boundary_condition = (; Bottom = boundary_condition_slip_wall,
+                      Top = boundary_condition_slip_wall,
+                      Right = boundary_condition_slip_wall,
+                      Left = boundary_condition_wave_maker);
 
 # For this application, we also need to model the bottom friction.
 # Thus, we create a new source term, which adds a Manning friction term to the momentum equations.
