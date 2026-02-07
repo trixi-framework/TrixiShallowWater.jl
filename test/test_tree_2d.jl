@@ -98,7 +98,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
                             # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux to `max_abs_speed`.
                             # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
-                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
                             # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxHydrostaticReconstruction(FluxLaxFriedrichs(max_abs_speed_naive),
                                                                         hydrostatic_reconstruction_audusse_etal),
@@ -461,7 +461,7 @@ end # SWE
                             # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
                             # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux to `max_abs_speed`.
                             # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
-                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
                             # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
@@ -538,7 +538,7 @@ end # 2LSWE
                             # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
                             # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux to `max_abs_speed`.
                             # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
-                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
                             # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
@@ -616,16 +616,11 @@ end # 2LSWE
                             tspan=(0.0, 0.1))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            # Larger values for allowed allocations due to usage of custom
-            # integrator which are not *recorded* for the methods from
-            # OrdinaryDiffEq.jl
-            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
-        end
+        # Larger values for allowed allocations due to usage of custom
+        # integrator which are not *recorded* for the methods from
+        # OrdinaryDiffEq.jl
+        # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+        @test_allocations(Trixi.rhs!, semi, sol, 15000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced.jl" begin
@@ -705,7 +700,7 @@ end # 2LSWE
                             # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
                             # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux to `max_abs_speed`.
                             # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
-                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
                             # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
@@ -733,16 +728,11 @@ end # 2LSWE
                             tspan=(0.0, 1.0))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            # Larger values for allowed allocations due to usage of custom
-            # integrator which are not *recorded* for the methods from
-            # OrdinaryDiffEq.jl
-            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
-        end
+        # Larger values for allowed allocations due to usage of custom
+        # integrator which are not *recorded* for the methods from
+        # OrdinaryDiffEq.jl
+        # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+        @test_allocations(Trixi.rhs!, semi, sol, 15000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_dam_break.jl" begin
@@ -810,7 +800,7 @@ end # 2LSWE
                             # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
                             # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux to `max_abs_speed`.
                             # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
-                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
                             # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
@@ -869,22 +859,17 @@ end # 2LSWE
                                 4.440892098500626e-16
                             ],
                             tspan=(0.0, 0.05),
-                            # Increase the absolute tolerance to account for varying results with 
+                            # Increase the absolute tolerance to account for varying results with
                             # with the two-sided limiter on different architectures.
                             # See https://github.com/trixi-framework/Trixi.jl/pull/2007
                             atol=5e-4)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            # Larger values for allowed allocations due to usage of custom
-            # integrator which are not *recorded* for the methods from
-            # OrdinaryDiffEq.jl
-            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
-        end
+        # Larger values for allowed allocations due to usage of custom
+        # integrator which are not *recorded* for the methods from
+        # OrdinaryDiffEq.jl
+        # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+        @test_allocations(Trixi.rhs!, semi, sol, 15000)
     end
 end # MLSWE
 end # TreeMesh2D
