@@ -66,7 +66,7 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 # Get the P4estMesh
 
 coordinates_min = (0.0, 0.0) # minimum coordinates (min(x), min(y))
-coordinates_max = (4.0, 4.0)  # maximum coordinates (max(x), max(y))
+coordinates_max = (4.0, 4.0) # maximum coordinates (max(x), max(y))
 
 trees_per_dimension = (1, 1)
 
