@@ -43,7 +43,8 @@ mesh_file = default_mesh_file
 mesh = UnstructuredMesh2D(mesh_file, periodicity = true)
 
 # Create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solver

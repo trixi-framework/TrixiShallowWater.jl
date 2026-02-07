@@ -65,10 +65,10 @@ function boundary_condition_outflow(u_inner, normal_direction::AbstractVector, x
     return flux, noncons_flux
 end
 
-boundary_conditions = Dict(:Bottom => boundary_condition_slip_wall,
-                           :Top => boundary_condition_slip_wall,
-                           :Right => boundary_condition_outflow,
-                           :Left => boundary_condition_slip_wall)
+boundary_conditions = (; Bottom = boundary_condition_slip_wall,
+                       Top = boundary_condition_slip_wall,
+                       Right = boundary_condition_outflow,
+                       Left = boundary_condition_slip_wall)
 
 ###############################################################################
 # Get the DG approximation space

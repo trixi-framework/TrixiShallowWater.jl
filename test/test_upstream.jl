@@ -161,22 +161,17 @@ end
                             4.440892098500626e-16
                         ],
                         tspan=(0.0, 0.05),
-                        # Increase the absolute tolerance to account for varying results with 
+                        # Increase the absolute tolerance to account for varying results with
                         # with the two-sided limiter on different architectures.
                         # See https://github.com/trixi-framework/Trixi.jl/pull/2007
                         atol=5e-4)
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
-    let
-        t = sol.t[end]
-        u_ode = sol.u[end]
-        du_ode = similar(u_ode)
-        # Larger values for allowed allocations due to usage of custom
-        # integrator which are not *recorded* for the methods from
-        # OrdinaryDiffEq.jl
-        # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
-        @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
-    end
+    # Larger values for allowed allocations due to usage of custom
+    # integrator which are not *recorded* for the methods from
+    # OrdinaryDiffEq.jl
+    # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+    @test_allocations(Trixi.rhs!, semi, sol, 15000)
 end
 
 # Clean up afterwards: delete output directory

@@ -30,7 +30,7 @@ end
 
 initial_condition = initial_condition_well_balancedness
 
-boundary_condition = Dict(:all => boundary_condition_slip_wall)
+boundary_condition = (; all = boundary_condition_slip_wall)
 
 ###############################################################################
 # Get the DG approximation space

@@ -7,9 +7,9 @@ using Printf: @printf, @sprintf
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations with a bottom topography function
 # to test well-balancedness.
-# Note! When using subcell limiting with a non-conservative equation, well-balancedness is only 
-# guaranteed for non-conservative terms in the form local * jump that vanish in the equilibrium 
-# state. In this particular case, `flux_nonconservative_ersing_etal_local_jump` provides 
+# Note! When using subcell limiting with a non-conservative equation, well-balancedness is only
+# guaranteed for non-conservative terms in the form local * jump that vanish in the equilibrium
+# state. In this particular case, `flux_nonconservative_ersing_etal_local_jump` provides
 # well-balancedness for a single-layer equation.
 
 equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, rhos = (1.0))
@@ -18,7 +18,7 @@ equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, rhos = (1.0))
     initial_condition_well_balanced_chen_noelle(x, t, equations:: ShallowWaterMultiLayerEquations2D)
 
 Initial condition with a complex (discontinuous) bottom topography to test the well-balanced
-property including dry areas within the domain. The errors from the analysis callback are not 
+property including dry areas within the domain. The errors from the analysis callback are not
 important but the error for this lake-at-rest test case `∑|H0-(h+b)|` should be around machine roundoff.
 
 The initial condition is taken from Section 5.2 of the paper:
@@ -85,7 +85,8 @@ mesh = TreeMesh(coordinates_min, coordinates_max,
                 periodicity = true)
 
 # Create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solver
@@ -141,7 +142,7 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
                         stepsize_callback)
 
 ###############################################################################
-# Setup the stage callbacks 
+# Setup the stage callbacks
 stage_limiter! = VelocityDesingularization()
 stage_callbacks = (SubcellLimiterIDPCorrection(), stage_limiter!)
 

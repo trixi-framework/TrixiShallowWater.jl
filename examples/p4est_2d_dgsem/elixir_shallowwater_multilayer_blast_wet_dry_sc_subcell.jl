@@ -4,7 +4,7 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the multilayer shallow water equations with a single layer and a bottom 
+# Semidiscretization of the multilayer shallow water equations with a single layer and a bottom
 # topography function for a blast wave test with a wet/dry front with discontinuous initial conditions.
 # This example combines the subcell limiter with a velocity desingularization callback to ensure
 # robustness at wet/dry fronts.
@@ -36,10 +36,10 @@ end
 
 initial_condition = initial_condition_blast_wave
 
-boundary_condition = Dict(:x_neg => boundary_condition_slip_wall,
-                          :y_neg => boundary_condition_slip_wall,
-                          :x_pos => boundary_condition_slip_wall,
-                          :y_pos => boundary_condition_slip_wall)
+boundary_condition = (; x_neg = boundary_condition_slip_wall,
+                      y_neg = boundary_condition_slip_wall,
+                      x_pos = boundary_condition_slip_wall,
+                      y_pos = boundary_condition_slip_wall)
 
 ###############################################################################
 # Get the DG approximation space
@@ -66,7 +66,7 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 # Get the P4estMesh
 
 coordinates_min = (0.0, 0.0) # minimum coordinates (min(x), min(y))
-coordinates_max = (4.0, 4.0)  # maximum coordinates (max(x), max(y))
+coordinates_max = (4.0, 4.0) # maximum coordinates (max(x), max(y))
 
 trees_per_dimension = (1, 1)
 
@@ -106,7 +106,7 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 
 ###############################################################################
 
-# Setup the stage callbacks 
+# Setup the stage callbacks
 stage_limiter! = VelocityDesingularization()
 stage_callbacks = (SubcellLimiterIDPCorrection(), stage_limiter!)
 

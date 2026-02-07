@@ -16,7 +16,7 @@ volume_flux = (flux_chan_etal, flux_nonconservative_chan_etal)
 # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
 # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
 # To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
-# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
 # `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxPlusDissipation(flux_chan_etal,
                                     DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
@@ -31,7 +31,8 @@ mesh = DGMultiMesh(dg, cells_per_dimension,
                    coordinates_min = (0.0,), coordinates_max = (sqrt(2),),
                    periodicity = true)
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, dg;
-                                    source_terms = source_terms_convergence_test)
+                                    source_terms = source_terms_convergence_test,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solvers, callbacks etc.
