@@ -315,7 +315,8 @@ end # SWE
                                            initial_refinement_level = 5,
                                            periodicity = true),
                             semi=SemidiscretizationHyperbolic(mesh, equations,
-                                                              initial_condition, solver),
+                                                              initial_condition, solver,
+                                                              boundary_conditions = boundary_condition_periodic),
                             # Increase the absolute tolerance to account for varying results with 
                             # with the two-sided limiter on different architectures.
                             # See https://github.com/trixi-framework/Trixi.jl/pull/2007
