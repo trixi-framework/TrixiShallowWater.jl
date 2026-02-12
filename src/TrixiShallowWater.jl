@@ -8,9 +8,9 @@ using Trixi
 # Import additional symbols that are not exported by Trixi.jl
 using Trixi: get_node_vars, set_node_vars!
 using MuladdMacro: @muladd
-using StaticArrays: SVector, @SMatrix, MVector
+using StaticArrays: SVector, MVector, MArray, SMatrix, @SMatrix
 using Static: True, False
-using LinearAlgebra: norm
+using LinearAlgebra: norm, diagm
 using Roots: Order2, solve, ZeroProblem
 
 include("equations/equations.jl")
@@ -27,22 +27,25 @@ export ShallowWaterEquations1D, ShallowWaterEquations2D,
        ShallowWaterExnerEquations1D,
        ShallowWaterTwoLayerEquations1D, ShallowWaterTwoLayerEquations2D,
        ShallowWaterMultiLayerEquations1D, ShallowWaterMultiLayerEquations2D,
-       ShallowWaterEquationsQuasi1D
+       ShallowWaterEquationsQuasi1D,
+       ShallowWaterMomentEquations1D, ShallowWaterLinearizedMomentEquations1D
 
 export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle,
        min_max_speed_chen_noelle, flux_hll_chen_noelle,
        flux_ersing_etal, flux_nonconservative_ersing_etal,
        flux_nonconservative_ersing_etal_local_jump,
        flux_es_ersing_etal, hydrostatic_reconstruction_ersing_etal,
+       flux_careaga_etal, flux_nonconservative_careaga_etal,
        flux_nonconservative_audusse_etal, hydrostatic_reconstruction_audusse_etal,
-       FluxHydrostaticReconstruction
+       FluxHydrostaticReconstruction,
+       source_term_manning_friction, source_term_newtonian_slip_friction, source_term_bottom_friction
 
 export ManningFriction, MeyerPeterMueller, GrassModel, ShieldsStressModel,
-       dissipation_roe, water_sediment_height, source_term_bottom_friction
+       dissipation_roe, water_sediment_height
 
 export BoundaryConditionWaterHeight, BoundaryConditionMomentum
 
-export nlayers, eachlayer
+export nlayers, eachlayer, nmoments, eachmoment
 
 export PositivityPreservingLimiterShallowWater, VelocityDesingularization
 
