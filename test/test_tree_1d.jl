@@ -1018,6 +1018,74 @@ end # MLSWE
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 end # SWE-Exner
+
+@testset "Shallow Water Moment Equations" begin
+    @trixi_testset "elixir_shallowwater_moments_convergence.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_moments_convergence.jl"),
+                            l2=[
+                                0.00010538826246212324,
+                                0.000895385477803143,
+                                7.939452043042687e-5,
+                                5.513944892765542e-5,
+                                2.786842042488848e-6
+                            ],
+                            linf=[
+                                0.0005157562974615892,
+                                0.0037012974250205666,
+                                0.000263640249442032,
+                                0.0002500758166408268,
+                                6.064744106915043e-6
+                            ])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
+    @trixi_testset "elixir_shallowwater_linearized_moments_convergence.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_moments_convergence.jl"),
+                            l2=[
+                                0.00010448645915164509,
+                                0.00089489107657177,
+                                0.00018809197493396669,
+                                0.00018809197493367853,
+                                2.786842042488848e-6
+                            ],
+                            linf=[
+                                0.0005123031595881677,
+                                0.0036873462837689885,
+                                0.0007559142064010871,
+                                0.0007559142063975344,
+                                6.064744106915043e-6
+                            ])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
+    @trixi_testset "elixir_shallowwater_moments_smooth_wave.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_moments_smooth_wave.jl"),
+                            l2=[
+                                0.19728462659782733,
+                                0.07590495279548304,
+                                0.023092903904798148,
+                                0.26052844462413477,
+                                0.0
+                            ],
+                            linf=[
+                                0.36281851298498946,
+                                0.1809635596092205,
+                                0.04035222713705404,
+                                0.3307945540233276,
+                                0.0
+                            ])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+end # SWME
 end # TreeMesh1D
 
 # Clean up afterwards: delete TrixiShallowWater.jl output directory

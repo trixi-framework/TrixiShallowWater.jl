@@ -62,9 +62,8 @@ mesh = TreeMesh(coordinates_min,
                 periodicity = true)
 
 # create the semi discretization object
-source_term = source_term_bottom_friction
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
-                                    source_terms = source_term)
+                                    source_terms = source_term_manning_friction)
 
 ###############################################################################
 # ODE solver

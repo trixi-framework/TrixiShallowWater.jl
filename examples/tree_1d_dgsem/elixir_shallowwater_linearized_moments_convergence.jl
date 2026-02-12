@@ -3,8 +3,6 @@ using Trixi
 using TrixiShallowWater
 using Symbolics
 
-include("../src/main.jl")
-
 ###############################################################################
 # Semidiscretization of the shallow water linearized moment equations to test convergence against a 
 # manufactured solution.
