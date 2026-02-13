@@ -166,6 +166,35 @@ end
                   Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)
         end
     end
+
+    @timed_testset "ShallowWaterMomentEquations" begin
+        h, v, a1, a2, b = (1.0, 0.3, 0.15, 0.15, 0.1)
+
+        let equations = ShallowWaterMomentEquations1D(gravity = 9.81, n_moments = 2)
+            # Test conversion between primitive and conservative variables
+            prim_vars = SVector(h, v, a1, a2, b)
+            cons_vars = prim2cons(prim_vars, equations)
+            @test prim_vars ≈ cons2prim(cons_vars, equations)
+
+            # Test conversion from conservative to entropy variables
+            entropy_vars = cons2entropy(cons_vars, equations)
+            @test entropy_vars ≈
+                  Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)
+        end
+
+        let equations = ShallowWaterLinearizedMomentEquations1D(gravity = 9.81,
+                                                                n_moments = 2)
+            # Test conversion between primitive and conservative variables
+            prim_vars = SVector(h, v, a1, a2, b)
+            cons_vars = prim2cons(prim_vars, equations)
+            @test prim_vars ≈ cons2prim(cons_vars, equations)
+
+            # Test conversion from conservative to entropy variables
+            entropy_vars = cons2entropy(cons_vars, equations)
+            @test entropy_vars ≈
+                  Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)
+        end
+    end
 end
 
 @timed_testset "Consistency check for HLL flux (naive): SWE" begin
@@ -603,6 +632,21 @@ end
         @test_throws ArgumentError BoundaryConditionMomentum(t -> 0.3f0,
                                                              equations)
     end
+end
+@timed_testset "Consistency check for SWME dissipation terms" begin
+    # Test that for b=constant, the dissipation terms return the same output.
+    equations = ShallowWaterMomentEquations1D(gravity = 9.81, n_moments = 2)
+    equations_lin = ShallowWaterLinearizedMomentEquations1D(gravity = 9.81,
+                                                            n_moments = 2)
+    u_ll = SVector(1.0, 0.3, 0.15, 0.15, 0.1)
+    u_rr = SVector(1.5, 0.1, 0.25, 0.35, 0.1)
+
+    diss_lf = DissipationLocalLaxFriedrichs()
+    diss_ec = DissipationLaxFriedrichsEntropyVariables()
+
+    @test diss_lf(u_ll, u_rr, 1, equations) ≈ diss_ec(u_ll, u_rr, 1, equations)
+    @test diss_lf(u_ll, u_rr, 1, equations_lin) ≈
+            diss_ec(u_ll, u_rr, 1, equations_lin)
 end
 end # Unit tests
 
