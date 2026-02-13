@@ -449,21 +449,13 @@ end
 
     # Construct the H matrix from H = yy' + Iz
     y = SVector{nmoments(equations) + 2, real(equations)}(1, v_avg, a_avg...)
-    z = SVector{nmoments(equations) + 2, real(equations)}(ntuple(k -> k == 1 ? 0 :
-                                                                      k == 2 ?
-                                                                      g * h_avg :
-                                                                      (2k - 3) * g *
-                                                                      h_avg,
-                                                                 nmoments(equations) +
-                                                                 2))
-
-    H = SMatrix{nmoments(equations) + 2, nmoments(equations) + 2, real(equations)}(1 /
-                                                                                   g *
-                                                                                   (y *
-                                                                                    y' +
-                                                                                    diagm(z)))
-
-    diss = SVector{nmoments(equations) + 2, real(equations)}(-0.5 .* λ .* (H * w_jump))
+    z = zero(MVector{nmoments(equations) + 2, real(equations)})
+    for i in 0:nmoments(equations)
+        z[i + 2] = (2i + 1) * g * h_avg
+    end
+    diss = SVector{nmoments(equations) + 2, real(equations)}(-0.5 * λ / g *
+                                                             (y * (y' * w_jump) +
+                                                              z .* w_jump))
 
     return SVector{nmoments(equations) + 3, real(equations)}(diss...,
                                                              zero(eltype(u_ll)))
