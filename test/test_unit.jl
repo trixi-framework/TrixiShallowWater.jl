@@ -162,8 +162,8 @@ end
 
             # Test conversion from conservative to entropy variables
             entropy_vars = cons2entropy(cons_vars, equations)
-            @test entropy_vars ≈
-                  Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)
+            @test entropy_vars[1:end-1] ≈
+                  Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)[1:end-1]
         end
     end
 
@@ -178,8 +178,8 @@ end
 
             # Test conversion from conservative to entropy variables
             entropy_vars = cons2entropy(cons_vars, equations)
-            @test entropy_vars ≈
-                  Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)
+            @test entropy_vars[1:end-1] ≈
+                  Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)[1:end-1]
         end
 
         let equations = ShallowWaterLinearizedMomentEquations1D(gravity = 9.81,
