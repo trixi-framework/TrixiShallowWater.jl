@@ -12,7 +12,7 @@ equations = ShallowWaterLinearizedMomentEquations1D(gravity = 9.81, n_moments = 
 ### Create manufactured solution for method of manufactured solutions (MMS)
 
 # Symbolic Variables
-@variables x_sym[1], t_sym, g
+@variables x_sym, t_sym, g
 
 # Define Differentials
 Dt, Dx = Differential(t_sym), Differential(x_sym[1])
@@ -20,9 +20,9 @@ Dt, Dx = Differential(t_sym), Differential(x_sym[1])
 ## Initial condition
 ###############################################################################
 # Primitive Variables
-H = 7 + cos(sqrt(2) * 2 * pi * x_sym[1]) * cos(2 * pi * t_sym)
+H = 7 + cos(sqrt(2) * 2 * pi * x_sym) * cos(2 * pi * t_sym)
 v = 0.5
-b = 2 + 0.5 * sinpi(sqrt(2) * x_sym[1])
+b = 2 + 0.5 * sinpi(sqrt(2) * x_sym)
 h = H - b
 a = [1 for i in 1:(equations.n_moments)]
 
