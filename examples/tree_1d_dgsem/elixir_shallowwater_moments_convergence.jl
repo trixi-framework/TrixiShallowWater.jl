@@ -99,7 +99,8 @@ semi = SemidiscretizationHyperbolic(mesh,
                                     equations,
                                     initial_condition,
                                     solver,
-                                    source_terms = source_terms_convergence)
+                                    source_terms = source_terms_convergence;
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solvers, callbacks etc.

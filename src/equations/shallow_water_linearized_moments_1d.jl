@@ -422,8 +422,9 @@ end
 end
 
 @inline function moments(u, equations::ShallowWaterLinearizedMomentEquations1D)
-    return SVector{nmoments(equations), real(equations)}(u[i]
-                                                         for i in (3:(nmoments(equations) + 2)))
+    T = eltype(u)
+    return SVector{nmoments(equations), T}(u[i]
+                                           for i in (3:(nmoments(equations) + 2)))
 end
 
 # Helper function to extract the velocity vector from the conservative variables
