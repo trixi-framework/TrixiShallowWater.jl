@@ -9,6 +9,7 @@ for human readability.
 
 #### Added
 - Introduce node-wise limiting functionality for the `ShallowWaterMultiLayerEquations2D`. ([#111])
+- New equation types `ShallowWaterMomentEquations1D` and `ShallowWaterLinearizedMomentEquations1D` have been added. ([#128])
 
 #### Changed
 - Velocity desingularization procedure has been moved into a distinct `VelocityDesingularization` 
