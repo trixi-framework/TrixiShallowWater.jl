@@ -10,7 +10,7 @@ using Trixi: get_node_vars, set_node_vars!
 using MuladdMacro: @muladd
 using StaticArrays: SVector, MVector, MArray, SMatrix, @SMatrix
 using Static: True, False
-using LinearAlgebra: norm, diagm
+using LinearAlgebra: norm
 using Roots: Order2, solve, ZeroProblem
 
 include("equations/equations.jl")
