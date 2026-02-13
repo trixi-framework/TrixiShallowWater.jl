@@ -9,8 +9,8 @@ equations = ShallowWaterLinearizedMomentEquations1D(gravity = 9.812, H0 = 1.75,
                                                     n_moments = 2)
 
 function initial_condition_well_balanced(x, t,
-                                       equations::Union{ShallowWaterMomentEquations1D,
-                                                        ShallowWaterLinearizedMomentEquations1D})
+                                         equations::Union{ShallowWaterMomentEquations1D,
+                                                          ShallowWaterLinearizedMomentEquations1D})
     # Initial lake-at-rest configuration
     H = 1.75
     v = 0.0
@@ -68,7 +68,8 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 stepsize_callback = StepsizeCallback(cfl = 0.9)
 
-callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, stepsize_callback)
+callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback,
+                        stepsize_callback)
 ###############################################################################
 # run the simulation
 

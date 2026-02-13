@@ -646,7 +646,7 @@ end
 
     @test diss_lf(u_ll, u_rr, 1, equations) ≈ diss_ec(u_ll, u_rr, 1, equations)
     @test diss_lf(u_ll, u_rr, 1, equations_lin) ≈
-            diss_ec(u_ll, u_rr, 1, equations_lin)
+          diss_ec(u_ll, u_rr, 1, equations_lin)
 end
 end # Unit tests
 
