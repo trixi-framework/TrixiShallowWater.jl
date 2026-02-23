@@ -49,20 +49,19 @@ function compute_B_tensor(n::Int, RealT = Float64)
         B[i, j, k] = 0.5f0 * (2 * i + 1) * res
     end # i, j, k
 
-    return Array{RealT, 3}(B)
+    return SArray{Tuple{n, n, n}, RealT, 3, n * n * n}(B)
 end
 
 # Directly compute the A tensor from B using the relation
 #  A_ijk / (2i + 1) = - B_ijk / (2i + 1) - B_kji / (2k + 1)
-function compute_A_tensor(B::Array{RealT, 3}) where {RealT}
-    N = size(B, 1) # Get number of moments
+function compute_A_tensor(B::SArray{Tuple{N, N, N}, RealT, 3}) where {RealT <: Real, N}
     A = Array{RealT, 3}(zeros(RealT, N, N, N))  # initialize the A tensor
 
     for i in 1:N, j in 1:N, k in 1:N
         A[i, j, k] = -(2 * i + 1) * (B[i, j, k] / (2 * i + 1) + B[k, j, i] / (2 * k + 1))
     end # i, j, k
 
-    return A
+    return SArray{Tuple{N, N, N}, RealT, 3, N * N * N}(A)
 end
 
 # Helper function to precompute and store every instance of the interior integral
@@ -152,7 +151,7 @@ function compute_C_matrix(n::Int, RealT = Float64)
         C[i, j] = 0.5f0 * (2 * i + 1) * res
     end # i, j
 
-    return C
+    return SArray{Tuple{n, n}, RealT, 2, n * n}(C)
 end
 
 # The tensor B and matrix C are built from the shifted and unnormalized Legendre polynomials.

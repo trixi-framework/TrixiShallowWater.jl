@@ -8,7 +8,7 @@ using Trixi
 # Import additional symbols that are not exported by Trixi.jl
 using Trixi: get_node_vars, set_node_vars!
 using MuladdMacro: @muladd
-using StaticArrays: SVector, MVector, MArray, SMatrix, @SMatrix
+using StaticArrays: SVector, MVector, MArray, SMatrix, @SMatrix, SArray
 using Static: True, False
 using LinearAlgebra: norm
 using Roots: Order2, solve, ZeroProblem
