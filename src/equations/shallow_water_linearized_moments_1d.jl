@@ -39,32 +39,35 @@ For details see the paper:
   Entropy analysis and entropy stable DG methods for the shallow water moment equations
   [DOI: 10.48550/arXiv.2602.06513](https://doi.org/10.48550/arXiv.2602.06513)
 """
-struct ShallowWaterLinearizedMomentEquations1D{NVARS, NMOMENTS, RealT <: Real} <:
+struct ShallowWaterLinearizedMomentEquations1D{NVARS, NMOMENTS, RealT <: Real,
+                                               Array2 <: AbstractArray{RealT, 2}} <:
        AbstractMomentEquations{1, NVARS, NMOMENTS}
     gravity::RealT   # gravitational acceleration
     H0::RealT        # constant "lake-at-rest" total water height
     n_moments::Integer  # number of moments
-    C::Array{RealT, 2} # Moment matrix for friction term
+    C::Array2 # Moment matrix for friction term
     # Friction related quantities
     nu::RealT       # kinematic viscosity
     lambda::RealT  # slip length
     rho::RealT    # fluid density (relevant for Manning friction)
     nman::RealT   # Manning roughness coefficient
 
-    function ShallowWaterLinearizedMomentEquations1D{NVARS, NMOMENTS, RealT}(gravity::RealT,
-                                                                             H0::RealT,
-                                                                             n_moments::Integer,
-                                                                             C::Array{RealT,
-                                                                                      2},
-                                                                             nu::RealT,
-                                                                             lambda::RealT,
-                                                                             rho::RealT,
-                                                                             nman::RealT) where {
-                                                                                                 NVARS,
-                                                                                                 NMOMENTS,
-                                                                                                 RealT <:
-                                                                                                 Real
-                                                                                                 }
+    function ShallowWaterLinearizedMomentEquations1D{NVARS, NMOMENTS, RealT, Array2}(gravity::RealT,
+                                                                                     H0::RealT,
+                                                                                     n_moments::Integer,
+                                                                                     C::Array2,
+                                                                                     nu::RealT,
+                                                                                     lambda::RealT,
+                                                                                     rho::RealT,
+                                                                                     nman::RealT) where {
+                                                                                                         NVARS,
+                                                                                                         NMOMENTS,
+                                                                                                         RealT <:
+                                                                                                         Real,
+                                                                                                         Array2 <:
+                                                                                                         AbstractArray{RealT,
+                                                                                                                       2}
+                                                                                                         }
         new(gravity, H0, n_moments, C, nu, lambda, rho, nman)
     end
 end
@@ -89,24 +92,28 @@ function ShallowWaterLinearizedMomentEquations1D(;
 
     # Compute the moment matrix C for the friction term
     C = compute_C_matrix(n_moments)
+    Array2 = typeof(C)
 
-    return ShallowWaterLinearizedMomentEquations1D{NVARS, NMOMENTS, RealT}(gravity,
-                                                                           H0,
-                                                                           n_moments,
-                                                                           C,
-                                                                           nu,
-                                                                           lambda,
-                                                                           rho,
-                                                                           nman)
+    return ShallowWaterLinearizedMomentEquations1D{NVARS, NMOMENTS, RealT, Array2}(gravity,
+                                                                                   H0,
+                                                                                   n_moments,
+                                                                                   C,
+                                                                                   nu,
+                                                                                   lambda,
+                                                                                   rho,
+                                                                                   nman)
 end
 
 @inline function Base.real(::ShallowWaterLinearizedMomentEquations1D{NVARS, NMOMENTS,
-                                                                     RealT}) where {
-                                                                                    NVARS,
-                                                                                    NMOMENTS,
-                                                                                    RealT <:
-                                                                                    Real
-                                                                                    }
+                                                                     RealT, Array2}) where {
+                                                                                            NVARS,
+                                                                                            NMOMENTS,
+                                                                                            RealT <:
+                                                                                            Real,
+                                                                                            Array2 <:
+                                                                                            AbstractArray{RealT,
+                                                                                                          2}
+                                                                                            }
     RealT
 end
 
