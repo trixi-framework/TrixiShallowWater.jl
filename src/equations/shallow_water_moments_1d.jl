@@ -14,13 +14,13 @@ Shallow water moment equations in one spatial dimensions. The equations are give
 \begin{cases}
 \partial_t h + \partial_x hv = 0, \\
 \partial_t hv + \partial_x (hv^2 + h\sum\limits_{i=1}^N \frac{\alpha_i^2}{2i+1}) = -gh\partial(h+b)_x,\\
-\partial_t h\alpha_i + \partial_x \left(2hv\alpha_i + h\sum\limits_{j,k=1}^N A_{ijk}\alpha_j \alpha_k \right) = 
+\partial_t h\alpha_i + \partial_x \left(2hv\alpha_i + h\sum\limits_{j,k=1}^N A_{ijk}\alpha_j \alpha_k \right) =
                        v\partial_x h\alpha_i - h\sum\limits_{j,k=1}^N B_{ijk} \alpha_k \partial_x h\alpha_j,
 \end{cases}
 ```
 
 The unknown quantities are the water and sediment height ``h``, the velocity ``v`` and the moments
-``\alpha_i`` for ``i = 1, ..., n_moments``. The terms ``A_{ijk}`` and ``B_{ijk}`` are moment tensors that 
+``\alpha_i`` for ``i = 1, ..., n_moments``. The terms ``A_{ijk}`` and ``B_{ijk}`` are moment tensors that
 are precomputed using shifted Legendre polynomials and ``g`` is the gravitational acceleration.
 
 The conservative variable water height ``h`` is measured from the bottom topography ``b``, therefore
@@ -85,7 +85,7 @@ end
 
 # Allow for flexibility to set the gravitational acceleration and number of moments within an elixir
 # depending on the application. Here `gravity=1.0` or `gravity=9.81` are common values for the
-# gravitational acceleration. The reference total water height H0 defaults to 0.0 but is used for 
+# gravitational acceleration. The reference total water height H0 defaults to 0.0 but is used for
 # the "lake-at-rest" well-balancedness test cases.
 function ShallowWaterMomentEquations1D(; gravity, H0 = zero(gravity), n_moments,
                                        nu = 0.1, lambda = 0.1, rho = 1000.0,
@@ -149,8 +149,8 @@ end
 """
     source_term_newtonian_slip_friction(u, x, t, equations::Union{ShallowWaterMomentEquations1D,
                                                     ShallowWaterLinearizedMomentEquations1D})
-  
-  Bottom friction source term using a Newtonian slip friction model. 
+
+  Bottom friction source term using a Newtonian slip friction model.
   The parameters slip length `lambda` and kinematic viscosity `nu` are set in the equation struct.
 
   For details see the paper:
@@ -275,7 +275,7 @@ end
 @inline function Trixi.flux(u,
                             orientation::Integer,
                             equations::ShallowWaterMomentEquations1D)
-    # Extract conservative variables    
+    # Extract conservative variables
     h = waterheight(u, equations)
     hv = u[2]
     ha = moments(u, equations)
@@ -309,7 +309,7 @@ end
                                      equations::ShallowWaterMomentEquations1D)
 
 Total energy conservative split form, without the hydrostatic pressure.
-When the bottom topography is nonzero this scheme will be well-balanced when used with the 
+When the bottom topography is nonzero this scheme will be well-balanced when used with the
 nonconservative flux [`flux_nonconservative_careaga_etal`](@ref).
 
 To obtain an entropy stable and well-balanced formulation the `surface_flux` can be set as
@@ -369,7 +369,7 @@ end
                             equations::ShallowWaterMomentEquations1D)
 
 Non-symmetric path-conservative two-point flux discretizing the nonconservative term
-that contains the gradients of the bottom topography, the nonconservative pressure formulation and 
+that contains the gradients of the bottom topography, the nonconservative pressure formulation and
 the moment tensor contributions.
 When the bottom topography is nonzero this scheme will be well-balanced when used with [`flux_careaga_etal`](@ref).
 
@@ -436,11 +436,11 @@ end
 
 # Provably entropy stable and well-balanced local Lax-Friedrichs dissipation for the SWME that avoids
 # spurious dissipation in the bottom topography.
-# 
+#
 # For details see the paper:
 #   - Julio Careaga, Patrick Ersing, Julian Koellermeier, Andrew R. Winters (2026)
 #     Entropy analysis and entropy stable DG methods for the shallow water moment equations
-#     [DOI: 10.48550/arXiv.2602.06513](https://doi.org/10.48550/arXiv.2602.06513) 
+#     [DOI: 10.48550/arXiv.2602.06513](https://doi.org/10.48550/arXiv.2602.06513)
 @inline function (dissipation::DissipationLaxFriedrichsEntropyVariables)(u_ll,
                                                                          u_rr,
                                                                          orientation_or_normal_direction,
@@ -464,7 +464,7 @@ end
                      moments(u_rr, equations) / u_rr[1]))
     g = equations.gravity
 
-    # Construct the H matrix from H = yy' + Iz
+    # Construct the H matrix from H = y y' + I z
     y = SVector{nmoments(equations) + 2, real(equations)}(1, v_avg, a_avg...)
     z = zero(MVector{nmoments(equations) + 2, real(equations)})
     for i in 0:nmoments(equations)
@@ -540,7 +540,7 @@ end
 
 # Convert primitive to conservative variables
 @inline function Trixi.prim2cons(prim, equations::ShallowWaterMomentEquations1D)
-    # To extract the total layer height and velocity we reuse the water height and momentum functions 
+    # To extract the total layer height and velocity we reuse the water height and momentum functions
     # from the conservative variables.
     H = waterheight(prim, equations)
     v = prim[2]
@@ -618,7 +618,7 @@ end
 end
 
 # Calculate the error for the "lake-at-rest" test case where H = h + b should
-# be a constant value over time. 
+# be a constant value over time.
 # Note, assumes there is a single reference water height `H0` with which to compare.
 @inline function Trixi.lake_at_rest_error(u, equations::ShallowWaterMomentEquations1D)
     h = waterheight(u, equations)
