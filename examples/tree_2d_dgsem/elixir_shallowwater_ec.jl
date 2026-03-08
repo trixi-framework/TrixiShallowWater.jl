@@ -44,7 +44,7 @@ ode = semidiscretize(semi, tspan)
 ###############################################################################
 # Workaround to set a discontinuous bottom topography and initial condition for debugging and testing.
 
-# alternative version of the initial conditinon used to setup a truly discontinuous
+# alternative version of the initial condition used to setup a truly discontinuous
 # bottom topography function and initial condition for this academic testcase of entropy conservation.
 # The errors from the analysis callback are not important but `∑∂S/∂U ⋅ Uₜ` should be around machine roundoff
 # In contrast to the usual signature of initial conditions, this one get passed the
