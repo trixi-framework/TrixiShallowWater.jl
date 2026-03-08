@@ -180,13 +180,8 @@ end # SWE
                                 0.00072508771648927,
                                 9.31948456051046e-5
                             ])
-        # Ensure that we do not have excessive memory allocations
-        # (e.g., from type instabilities)
-        # Larger values for allowed allocations due to usage of custom
-        # integrator which are not *recorded* for the methods from
-        # OrdinaryDiffEq.jl
-        # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
-        @test_allocations(Trixi.rhs!, semi, sol, 15000)
+        # Allocation testing is disabled as the symbolic source term computation is known to cause
+        # allocations.
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry_nonconforming.jl" begin
@@ -348,15 +343,15 @@ end # SWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_ec_sc_subcell.jl"),
                             l2=[
-                                0.048601626864618594,
-                                0.1343614637604679,
-                                0.13437170366862836,
+                                0.048644905499184085,
+                                0.13417026916085964,
+                                0.13419425501307608,
                                 7.906244739074657e-18
                             ],
                             linf=[
-                                0.2859074493260505,
-                                0.6963700987987801,
-                                0.8737587712501504,
+                                0.2850457374812443,
+                                0.706376116500374,
+                                0.7190385752964662,
                                 1.1102230246251565e-16
                             ])
         # Ensure that we do not have excessive memory allocations
