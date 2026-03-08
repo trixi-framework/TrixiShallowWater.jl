@@ -1142,7 +1142,7 @@ end
     return SVector(diss[1], diss[2], diss[3], 0)
 end
 
-# Provably entropy stable and well-balanced local Lax-Friedrichs dissipation for the SWME that avoids
+# Provably entropy stable and well-balanced local Lax-Friedrichs dissipation that avoids
 # spurious dissipation in the bottom topography.
 function (dissipation::DissipationLaxFriedrichsEntropyVariables)(u_ll, u_rr,
                                                                  orientation_or_normal_direction,
