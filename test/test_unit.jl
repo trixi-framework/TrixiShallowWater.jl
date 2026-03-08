@@ -658,8 +658,8 @@ end
 @testset "Consistency check for DissipationLaxFriedrichsEntropyVariables" begin
     @timed_testset "ShallowWaterEquations2D" begin
         equations = ShallowWaterEquations2D(gravity = 9.81)
-        u_ll = SVector(1.0, 0.3, 0.2)
-        u_rr = SVector(1.5, 0.1, 0.2)
+        u_ll = SVector(1.0, 0.3, 0.2, 0.2)
+        u_rr = SVector(1.5, 0.1, -0.1, 0.2)
         @test DissipationLaxFriedrichsEntropyVariables()(u_ll, u_rr, 1, equations) ≈
               DissipationLocalLaxFriedrichs()(u_ll, u_rr, 1, equations)
     end
