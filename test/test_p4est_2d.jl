@@ -168,8 +168,18 @@ end # SWE
     @trixi_testset "elixir_shallowwater_multilayer_convergence_sc_subcell_curved.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_convergence_sc_subcell_curved.jl"),
-                            l2 = [0.00013275624153302434, 0.0001586600356395913, 0.000158660035639501, 2.9583315272612922e-5],
-                            linf = [0.0007544272991792944, 0.0007250877164874936, 0.00072508771648927, 9.31948456051046e-5])
+                            l2=[
+                                0.00013275624153302434,
+                                0.0001586600356395913,
+                                0.000158660035639501,
+                                2.9583315272612922e-5
+                            ],
+                            linf=[
+                                0.0007544272991792944,
+                                0.0007250877164874936,
+                                0.00072508771648927,
+                                9.31948456051046e-5
+                            ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         # Larger values for allowed allocations due to usage of custom
@@ -334,11 +344,21 @@ end # SWE
         @test_allocations(Trixi.rhs!, semi, sol, 15000)
     end
 
-        @trixi_testset "elixir_shallowwater_multilayer_ec_sc_subcell.jl" begin
+    @trixi_testset "elixir_shallowwater_multilayer_ec_sc_subcell.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_ec_sc_subcell.jl"),
-                            l2 = [0.048601626864618594, 0.1343614637604679, 0.13437170366862836, 7.906244739074657e-18],
-                            linf = [0.2859074493260505, 0.6963700987987801, 0.8737587712501504, 1.1102230246251565e-16])
+                            l2=[
+                                0.048601626864618594,
+                                0.1343614637604679,
+                                0.13437170366862836,
+                                7.906244739074657e-18
+                            ],
+                            linf=[
+                                0.2859074493260505,
+                                0.6963700987987801,
+                                0.8737587712501504,
+                                1.1102230246251565e-16
+                            ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         # Larger values for allowed allocations due to usage of custom
