@@ -34,8 +34,8 @@ init = [H, v1, v2, b]
 ###############################################################################
 eqs = [
     Dt(h) + Dx(h * v1) + Dy(h * v2),
-    Dt(h * v1) + Dx(h * v1^2 + 0.5 * g * h^2) + Dy(h * v1 * v2) + g*h*Dx( b),
-    Dt(h * v2) + Dx(h * v1 * v2) + Dy(h * v2^2 + 0.5 * g * h^2) + g*h*Dy( b),
+    Dt(h * v1) + Dx(h * v1^2 + 0.5 * g * h^2) + Dy(h * v1 * v2) + g * h * Dx(b),
+    Dt(h * v2) + Dx(h * v1 * v2) + Dy(h * v2^2 + 0.5 * g * h^2) + g * h * Dy(b),
     0
 ]
 
@@ -50,16 +50,16 @@ du_funcs = build_function.(du_exprs, Ref(x_sym), t_sym, g, expression = Val(fals
 init_funcs = build_function.(init, Ref(x_sym), t_sym, expression = Val(false))
 
 function initial_condition_convergence_mms(x,
-                                       t,
-                                       equations::ShallowWaterMultiLayerEquations2D)
+                                           t,
+                                           equations::ShallowWaterMultiLayerEquations2D)
     prim = SVector{4, Float64}([f(x, t) for f in init_funcs]...)
     return prim2cons(prim, equations)
 end
 
 function source_terms_convergence_mms(u,
-                                  x,
-                                  t,
-                                  equations::ShallowWaterMultiLayerEquations2D)
+                                      x,
+                                      t,
+                                      equations::ShallowWaterMultiLayerEquations2D)
     g = equations.gravity
     return SVector{4, Float64}([f(x, t, g) for f in du_funcs]...)
 end
@@ -84,8 +84,8 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 # Get the P4estMesh and setup a periodic mesh on the domain [-1,1]^2 with an affine type mapping to
 # obtain a warped curvilinear mesh.
 function mapping_twist(xi, eta)
-    y = eta + 0.1 * sin(pi * xi) * cos(0.5*pi * eta)
-    x = xi + 0.1 * sin(pi * eta)* cos(0.5*pi * xi)
+    y = eta + 0.1 * sin(pi * xi) * cos(0.5 * pi * eta)
+    x = xi + 0.1 * sin(pi * eta) * cos(0.5 * pi * xi)
     return SVector(x, y)
 end
 

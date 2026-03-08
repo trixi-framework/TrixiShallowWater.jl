@@ -9,7 +9,8 @@ using TrixiShallowWater
 
 equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, rhos = (1.0))
 
-function initial_condition_weak_blast_wave(x, t, equations::ShallowWaterMultiLayerEquations2D)
+function initial_condition_weak_blast_wave(x, t,
+                                           equations::ShallowWaterMultiLayerEquations2D)
     # Set up polar coordinates
     RealT = eltype(x)
     inicenter = SVector(convert(RealT, 0.0), convert(RealT, 0.0))
@@ -29,7 +30,7 @@ function initial_condition_weak_blast_wave(x, t, equations::ShallowWaterMultiLay
     # Setup a continuous bottom topography
     r = 0.4
     b = (((x[1])^2 + (x[2])^2) < r^2 ?
-         0.5 * (cos(1/r * pi * sqrt((x[1])^2 + (x[2])^2)) + 1) : 0.0)
+         0.5 * (cos(1 / r * pi * sqrt((x[1])^2 + (x[2])^2)) + 1) : 0.0)
 
     return prim2cons(SVector(H, v1, v2, b), equations)
 end
@@ -57,8 +58,8 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 # Get the P4estMesh and setup a periodic mesh on the domain [-1,1]^2 with an affine type mapping to
 # obtain a warped curvilinear mesh.
 function mapping_twist(xi, eta)
-    y = eta + 0.1 * sin(pi * xi) * cos(0.5*pi * eta)
-    x = xi + 0.1 * sin(pi * eta)* cos(0.5*pi * xi)
+    y = eta + 0.1 * sin(pi * xi) * cos(0.5 * pi * eta)
+    x = xi + 0.1 * sin(pi * eta) * cos(0.5 * pi * xi)
     return SVector(x, y)
 end
 
