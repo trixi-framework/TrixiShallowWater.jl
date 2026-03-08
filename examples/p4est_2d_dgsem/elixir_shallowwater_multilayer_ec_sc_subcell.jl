@@ -5,7 +5,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations with a single layer and a bottom
 # topography function for a blast wave test with discontinuous initial conditions to test entropy
-# conservation on a curvilinear mesh.
+# conservation with the subcell limiting volume integral on a curvilinear mesh.
 
 equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, rhos = (1.0))
 
@@ -45,10 +45,9 @@ volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal_local_jump)
 surface_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal_local_jump)
 
 basis = LobattoLegendreBasis(polydeg)
-limiter_idp = SubcellLimiterIDP(equations, basis;
-                                positivity_variables_cons = ["h1"],
-                                local_twosided_variables_cons = ["h1"],
-                                positivity_correction_factor = 0.5,)
+# For reproducibility set the limiting coefficients to pure DG,
+# see https://github.com/trixi-framework/Trixi.jl/pull/2007
+limiter_idp = SubcellLimiterIDP(equations, basis;)
 volume_integral = VolumeIntegralSubcellLimiting(limiter_idp;
                                                 volume_flux_dg = volume_flux,
                                                 volume_flux_fv = surface_flux)
@@ -87,7 +86,7 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
                                      analysis_polydeg = polydeg,
                                      extra_analysis_errors = (:conservation_error,))
 
-stepsize_callback = StepsizeCallback(cfl = 0.1)
+stepsize_callback = StepsizeCallback(cfl = 0.5)
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
