@@ -624,6 +624,12 @@ or jump portion of the non-conservative flux based on the type of the
 nonconservative_type argument, employing multiple dispatch. They are used to
 compute the subcell fluxes in [`Trixi.VolumeIntegralSubcellLimiting`](@extref).
 
+!!! note
+    While `flux_nonconservative_ersing_etal_local_jump` and [`flux_nonconservative_ersing_etal`](@ref)
+    are equivalent at interfaces, the volume formulation for [`Trixi.VolumeIntegralSubcellLimiting`](@extref)
+    differs as `flux_nonconservative_ersing_etal_local_jump` applies the local normal direction 
+    instead of the averaged one.
+
 ## References
 - Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
   Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
