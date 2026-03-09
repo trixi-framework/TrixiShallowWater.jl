@@ -659,7 +659,7 @@ end
                                            nonconservative_type::Trixi.NonConservativeLocal,
                                            nonconservative_term::Integer)
     flux_nonconservative_ersing_local_jump(u_ll, u_rr,
-                                           normal_direction::AbstractVector,
+                                           normal_direction_ll::AbstractVector,
                                            equations::ShallowWaterMultiLayerEquations2D,
                                            nonconservative_type::Trixi.NonConservativeLocal,
                                            nonconservative_term::Integer)
@@ -701,7 +701,7 @@ Local part of the nonconservative term needed for the calculation of the non-con
 end
 
 @inline function flux_nonconservative_ersing_etal_local_jump(u_ll,
-                                                             normal_direction::AbstractVector,
+                                                             normal_direction_ll::AbstractVector,
                                                              equations::ShallowWaterMultiLayerEquations2D,
                                                              nonconservative_type::Trixi.NonConservativeLocal,
                                                              nonconservative_term::Integer)
@@ -720,7 +720,8 @@ end
         f_h = zero(real(equations))
         f_hv = g * h_ll[i]
 
-        setlayer!(f, f_h, f_hv * normal_direction[1], f_hv * normal_direction[2], i,
+        setlayer!(f, f_h, f_hv * normal_direction_ll[1], f_hv * normal_direction_ll[2],
+                  i,
                   equations)
     end
 
