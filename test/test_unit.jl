@@ -634,22 +634,6 @@ end
     end
 end
 
-@timed_testset "Consistency check for SWME dissipation terms" begin
-    # Test that for b=constant, the dissipation terms return the same output.
-    equations = ShallowWaterMomentEquations1D(gravity = 9.81, n_moments = 2)
-    equations_lin = ShallowWaterLinearizedMomentEquations1D(gravity = 9.81,
-                                                            n_moments = 2)
-    u_ll = SVector(1.0, 0.3, 0.15, 0.15, 0.1)
-    u_rr = SVector(1.5, 0.1, 0.25, 0.35, 0.1)
-
-    diss_lf = DissipationLocalLaxFriedrichs()
-    diss_ec = DissipationLaxFriedrichsEntropyVariables()
-
-    @test diss_lf(u_ll, u_rr, 1, equations) ≈ diss_ec(u_ll, u_rr, 1, equations)
-    @test diss_lf(u_ll, u_rr, 1, equations_lin) ≈
-          diss_ec(u_ll, u_rr, 1, equations_lin)
-end
-
 # Check consistency for conservative two-point fluxes (f(u, u) = f(u))
 @timed_testset "Consistency check for SWME fluxes" begin
     equations = ShallowWaterMomentEquations1D(gravity = 9.81, n_moments = 2)
@@ -668,6 +652,47 @@ end
     poly, deriv = TrixiShallowWater.shifted_legendre_polynomial_and_derivative(0, 0.1)
     @test poly ≈ 1
     @test deriv ≈ 0
+end
+
+# Test that for b=constant, the dissipation terms return the same output.
+@testset "Consistency check for DissipationLaxFriedrichsEntropyVariables" begin
+    @timed_testset "ShallowWaterEquations2D" begin
+        equations = ShallowWaterEquations2D(gravity = 9.81)
+        u_ll = SVector(1.0, 0.3, 0.2, 0.2)
+        u_rr = SVector(1.5, 0.1, -0.1, 0.2)
+        @test DissipationLaxFriedrichsEntropyVariables()(u_ll, u_rr, 1, equations) ≈
+              DissipationLocalLaxFriedrichs()(u_ll, u_rr, 1, equations)
+    end
+
+    @timed_testset "ShalloWaterMultiLayerEquations2D (single layer)" begin
+        equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, rhos = (1.0))
+        u_ll = SVector(1.0, 0.3, 0.2, 0.1)
+        u_rr = SVector(1.5, 0.1, -0.1, 0.1)
+        @test DissipationLaxFriedrichsEntropyVariables()(u_ll, u_rr, 1, equations) ≈
+              DissipationLocalLaxFriedrichs()(u_ll, u_rr, 1, equations)
+
+        # For a single layer the dissipation should be consistent with the 2D SWE
+        u_ll = SVector(1.0, 0.3, 0.2, 0.1)
+        u_rr = SVector(1.5, 0.1, -0.1, 0.2)
+        equations_swe = ShallowWaterEquations2D(gravity = 9.81)
+        @test DissipationLaxFriedrichsEntropyVariables()(u_ll, u_rr, 1, equations) ≈
+              DissipationLaxFriedrichsEntropyVariables()(u_ll, u_rr, 1, equations_swe)
+    end
+
+    @timed_testset "ShallowWaterMomentEquations1D" begin
+        equations = ShallowWaterMomentEquations1D(gravity = 9.81, n_moments = 2)
+        equations_lin = ShallowWaterLinearizedMomentEquations1D(gravity = 9.81,
+                                                                n_moments = 2)
+        u_ll = SVector(1.0, 0.3, 0.15, 0.15, 0.1)
+        u_rr = SVector(1.5, 0.1, 0.25, 0.35, 0.1)
+
+        diss_lf = DissipationLocalLaxFriedrichs()
+        diss_ec = DissipationLaxFriedrichsEntropyVariables()
+
+        @test diss_lf(u_ll, u_rr, 1, equations) ≈ diss_ec(u_ll, u_rr, 1, equations)
+        @test diss_lf(u_ll, u_rr, 1, equations_lin) ≈
+              diss_ec(u_ll, u_rr, 1, equations_lin)
+    end
 end
 end # Unit tests
 

@@ -288,6 +288,30 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
+    @trixi_testset "elixir_shallowwater_source_terms.jl with es-llf dissipation" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_source_terms.jl"),
+                            l2=[
+                                0.0003733798777192089,
+                                0.02043287183047546,
+                                0.052383482460735806,
+                                6.274146767724067e-5
+                            ],
+                            linf=[
+                                0.0022222461533480953,
+                                0.06863676418052789,
+                                0.13355361762228668,
+                                0.0001819675955490041
+                            ],
+                            surface_flux=(FluxPlusDissipation(flux_fjordholm_etal,
+                                                              DissipationLaxFriedrichsEntropyVariables()),
+                                          flux_nonconservative_fjordholm_etal),
+                            tspan=(0.0, 0.25))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
     @trixi_testset "elixir_shallowwater_conical_island.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_conical_island.jl"),
