@@ -6,8 +6,7 @@
                                           b0 = one(gravity), alpha = 3,
                                           threshold_limiter = nothing)
 
-Hyperbolic approximation of the Sainte-Marie system
-[`SainteMarieEquations1D`](@ref) in one spatial dimension
+Hyperbolic approximation of the Sainte-Marie system in one spatial dimension
 (with parameter ``\gamma = 2`` compared to the original literature)
 derived by Escalante, Dumbser and Castro (2019).
 The equations are given by
