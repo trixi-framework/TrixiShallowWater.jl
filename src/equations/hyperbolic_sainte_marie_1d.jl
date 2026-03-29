@@ -63,15 +63,19 @@ struct HyperbolicSainteMarieEquations1D{RealT <: Real} <:
     gravity::RealT
     H0::RealT
     celerity::RealT
+    threshold_limiter::RealT
 end
 
 function HyperbolicSainteMarieEquations1D(; gravity, H0 = zero(gravity),
-                                          b0 = one(gravity), alpha = 3)
+                                          b0 = one(gravity), alpha = 3,
+                                          threshold_limiter = nothing)
     T = promote_type(typeof(gravity), typeof(H0), typeof(b0), typeof(alpha))
-
+    if threshold_limiter === nothing
+        threshold_limiter = 500 * eps(T)
+    end
     celerity = alpha * sqrt(gravity * b0)
 
-    HyperbolicSainteMarieEquations1D(gravity, H0, celerity)
+    HyperbolicSainteMarieEquations1D(gravity, H0, celerity, threshold_limiter)
 end
 
 Trixi.have_nonconservative_terms(::HyperbolicSainteMarieEquations1D) = Trixi.True()
