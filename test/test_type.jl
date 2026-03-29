@@ -321,7 +321,8 @@ isdir(outdir) && rm(outdir, recursive = true)
                                                              equations)) == RealT
             @test eltype(@inferred surface_flux_functions[2](u_ll, u_rr, orientation,
                                                              equations)) == RealT
-            @test eltype(varnames(cons2prim, equations)) == String
+            @test eltype(Trixi, varnames(cons2prim, equations)) == String
+            @test eltype(Trixi, varnames(cons2cons, equations)) == String
             @test eltype(@inferred Trixi.max_abs_speeds(u, equations)) == RealT
             @test eltype(@inferred Trixi.max_abs_speed(u_ll, u_rr, orientation, equations)) ==
                   RealT
