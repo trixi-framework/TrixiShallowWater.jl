@@ -41,7 +41,7 @@ export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle,
        FluxHydrostaticReconstruction,
        source_term_manning_friction, source_term_newtonian_slip_friction,
        source_term_bottom_friction, source_term_hyperbolic_sainte_marie,
-       flux_conservative_artiano_ranocha, flux_nonconservative_artiano_ranocha
+       flux_conservative_ec, flux_nonconservative_ec
 
 export ManningFriction, MeyerPeterMueller, GrassModel, ShieldsStressModel,
        dissipation_roe, water_sediment_height
