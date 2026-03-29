@@ -57,7 +57,6 @@ References for the Sainte-Marie system and its hyperbolization can be found in
   water waves and its solution with high order discontinuous Galerkin schemes
   [DOI: 10.1016/j.jcp.2019.05.035](https://doi.org/10.1016/j.jcp.2019.05.035)
 """
-
 struct HyperbolicSainteMarieEquations1D{RealT <: Real} <:
        Trixi.AbstractShallowWaterEquations{1, 5}
     gravity::RealT

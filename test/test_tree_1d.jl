@@ -1173,8 +1173,9 @@ end # SWME
                                 24.656638862610052,
                                 3.279725713234427e-9
                             ])
-        # Allocation testing is disabled as the symbolic source term computation is known to cause
-        # allocations.
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 end # HYPSM
 end # TreeMesh1D
