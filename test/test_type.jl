@@ -298,7 +298,8 @@ isdir(outdir) && rm(outdir, recursive = true)
 
             x = SVector(zero(RealT))
             t = zero(RealT)
-            u = u_ll = u_rr = u_inner = cons = SVector(one(RealT), one(RealT), one(RealT))
+            u = u_ll = u_rr = u_inner = cons = SVector(one(RealT), one(RealT), one(RealT),
+                                                       one(RealT), one(RealT))
             orientation = 1
             directions = [1, 2]
             normal_direction = SVector(one(RealT))
