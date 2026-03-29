@@ -291,5 +291,55 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test typeof(@inferred lake_at_rest_error(u, equations)) == RealT
         end
     end
+    @timed_testset "Hyperbolic Sainte-Marie Equations 1D" begin
+        for RealT in (Float32, Float64)
+            equations = @inferred HyperbolicSainteMarieEquations1D(gravity = RealT(9.81),
+                                                                   b0 = RealT(0.1))
+
+            x = SVector(zero(RealT))
+            t = zero(RealT)
+            u = u_ll = u_rr = u_inner = cons = SVector(one(RealT), one(RealT), one(RealT))
+            orientation = 1
+            directions = [1, 2]
+            normal_direction = SVector(one(RealT))
+            alpha_coefficients = RealT.((1 / 2, 1.0, 2 / 3))
+            surface_flux_functions = (flux_conservative_artiano_ranocha(alpha_coefficients...),
+                                      flux_nonconservative_artiano_ranocha(alpha_coefficients...))
+            dissipation = DissipationLocalLaxFriedrichs()
+            numflux = FluxHLL()
+
+            @test eltype(@inferred initial_condition_convergence_test(x, t, equations)) ==
+                  RealT
+            @test eltype(@inferred initial_condition_weak_blast_wave(x, t, equations)) ==
+                  RealT
+            @test eltype(@inferred source_terms_convergence_test(u, x, t, equations)) ==
+                  RealT
+
+            for direction in directions
+                @test eltype(@inferred boundary_condition_slip_wall(u_inner,
+                                                                    orientation,
+                                                                    direction,
+                                                                    x, t,
+                                                                    surface_flux_functions,
+                                                                    equations)) ==
+                      SVector{5, RealT}
+            end
+
+            @test eltype(@inferred surface_flux_functions[1](u_ll, u_rr, orientation,
+                                                             equations)) == RealT
+            @test eltype(@inferred surface_flux_functions[2](u_ll, u_rr, orientation,
+                                                             equations)) == RealT
+
+            @test eltype(@inferred Trixi.max_abs_speeds(u, equations)) == RealT
+
+            @test typeof(@inferred velocity(u, equations)) == RealT
+            @test eltype(@inferred cons2prim(u, equations)) == RealT
+            @test eltype(@inferred prim2cons(u, equations)) == RealT
+            @test eltype(@inferred cons2entropy(u, equations)) == RealT
+            @test typeof(@inferred entropy(cons, equations)) == RealT
+            @test typeof(@inferred energy_total(cons, equations)) == RealT
+            @test typeof(@inferred lake_at_rest_error(u, equations)) == RealT
+        end
+    end
 end
 end # module

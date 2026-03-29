@@ -1154,6 +1154,29 @@ end # SWE-Exner
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 end # SWME
+
+@testset "Hyperbolic Sainte-Marie Equations" begin
+    @trixi_testset "elixir_hyperbolic_sainte_marie_ec.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_hyperbolic_sainte_marie_ec.jl"),
+                            l2=[
+                                1.0441454360043452,
+                                2.5582468792214086,
+                                4.125808227717679,
+                                10.814871283792858,
+                                8.077199796761241e-10
+                            ],
+                            linf=[
+                                2.319148117407863,
+                                8.969819026592885,
+                                7.698519878211499,
+                                24.656638862610052,
+                                3.279725713234427e-9
+                            ])
+        # Allocation testing is disabled as the symbolic source term computation is known to cause
+        # allocations.
+    end
+end # HYPSM
 end # TreeMesh1D
 
 # Clean up afterwards: delete TrixiShallowWater.jl output directory
