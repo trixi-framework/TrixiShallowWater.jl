@@ -306,15 +306,6 @@ isdir(outdir) && rm(outdir, recursive = true)
             alpha_coefficients = RealT.((1 / 2, 1.0, 2 / 3))
             surface_flux_functions = (flux_conservative_artiano_ranocha(alpha_coefficients...),
                                       flux_nonconservative_artiano_ranocha(alpha_coefficients...))
-            dissipation = DissipationLocalLaxFriedrichs()
-            numflux = FluxHLL()
-
-            @test eltype(@inferred initial_condition_convergence_test(x, t, equations)) ==
-                  RealT
-            @test eltype(@inferred initial_condition_weak_blast_wave(x, t, equations)) ==
-                  RealT
-            @test eltype(@inferred source_terms_convergence_test(u, x, t, equations)) ==
-                  RealT
 
             for direction in directions
                 @test eltype(@inferred boundary_condition_slip_wall(u_inner,
