@@ -145,6 +145,15 @@ end
     return SVector(du1, du2, du3, du4, du5)
 end
 
+"""
+	flux_conservative_artiano_ranocha(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
+
+Total energy conserving and well-balanced two-point flux by
+-  Marco Artiano, Hendrik Ranocha (2026)
+   On Affordable High-Order Entropy-Conservative/Stable and 
+   Well-Balanced Methods for Nonconservative Hyperbolic Systems
+   [DOI: 10.48550/arXiv.2603.18978](https://arxiv.org/abs/2603.18978)
+"""
 struct flux_conservative_artiano_ranocha{RealT <: Real}
     alpha_1::RealT
     alpha_2::RealT
@@ -192,6 +201,15 @@ end
                    f3, f4, zero(eltype(u_ll)))
 end
 
+"""
+	flux_nonconservative_artiano_ranocha(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
+
+Total energy conserving and well-balanced two-point flux by
+-  Marco Artiano, Hendrik Ranocha (2026)
+   On Affordable High-Order Entropy-Conservative/Stable and 
+   Well-Balanced Methods for Nonconservative Hyperbolic Systems
+   [DOI: 10.48550/arXiv.2603.18978](https://arxiv.org/abs/2603.18978)
+"""
 struct flux_nonconservative_artiano_ranocha{RealT <: Real}
     alpha_1::RealT
     alpha_2::RealT
