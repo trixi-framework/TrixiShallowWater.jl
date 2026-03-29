@@ -2,11 +2,9 @@
 #! format: noindent
 
 @doc raw"""
-    HyperbolicSainteMarieEquations1D(; bathymetry_type = bathymetry_mild_slope,
-                                       gravity,
-                                       eta0 = 0.0,
-                                       h0,
-                                       alpha = 3.0)
+    HyperbolicSainteMarieEquations1D(; gravity, H0 = zero(gravity),
+                                          b0 = one(gravity), alpha = 3,
+                                          threshold_limiter = nothing)
 
 Hyperbolic approximation of the Sainte-Marie system
 [`SainteMarieEquations1D`](@ref) in one spatial dimension
@@ -23,9 +21,6 @@ The equations are given by
 \end{aligned}
 ```
 
-The additional quantity ``H_0`` is also available to store a reference value for the total water height that
-is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
-
 The unknown quantities of the Sainte-Marie equations 
 are the water height ``h`` and the velocity ``v``.
 The gravitational acceleration `gravity` is denoted by ``g`` and the (possibly) variable bottom topography
@@ -33,6 +28,8 @@ The gravitational acceleration `gravity` is denoted by ``g`` and the (possibly) 
 also defines the total water height as ``H = h + b``.
 There are two auxiliary variables:``w \approx -h v_x / 2 + v b_x`` and the non-hydrostatic pressure ``p``.
 In the formal limit ``c^2 \to \infty``, the hyperbolic approximation recovers the original Sainte-Marie system.
+The additional quantity ``H_0`` is also available to store a reference value for the total water height that
+is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 Escalante, Dumbser and Castro (2019) choose the hyperbolization parameter as ``c = \alpha \sqrt{g h_0}`` for some background water height ``h_0``.
 Thus, the hyperbolization parameter ``c^2`` is set by the keyword arguments `alpha` (``\alpha``), `gravity` (``g``), and `h0` (``h_0``).
 The larger the value of ``\alpha``, the better the approximation of the original system, but also the stiffer the system.
@@ -311,7 +308,7 @@ end
 end
 
 # Convert conservative variables to entropy
-# Note, only the first two are the entropy variables, the third entry still
+# Note, only the first four are the entropy variables, the fifth entry still
 # just carries the bottom topography values for convenience
 @inline function Trixi.cons2entropy(u, equations::HyperbolicSainteMarieEquations1D)
     h, h_v, h_w, h_p, b = u
