@@ -28,7 +28,8 @@ export ShallowWaterEquations1D, ShallowWaterEquations2D,
        ShallowWaterTwoLayerEquations1D, ShallowWaterTwoLayerEquations2D,
        ShallowWaterMultiLayerEquations1D, ShallowWaterMultiLayerEquations2D,
        ShallowWaterEquationsQuasi1D,
-       ShallowWaterMomentEquations1D, ShallowWaterLinearizedMomentEquations1D
+       ShallowWaterMomentEquations1D, ShallowWaterLinearizedMomentEquations1D,
+       HyperbolicSainteMarieEquations1D
 
 export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle,
        min_max_speed_chen_noelle, flux_hll_chen_noelle,
@@ -39,7 +40,8 @@ export hydrostatic_reconstruction_chen_noelle, flux_nonconservative_chen_noelle,
        flux_nonconservative_audusse_etal, hydrostatic_reconstruction_audusse_etal,
        FluxHydrostaticReconstruction,
        source_term_manning_friction, source_term_newtonian_slip_friction,
-       source_term_bottom_friction
+       source_term_bottom_friction, source_term_hyperbolic_sainte_marie,
+       flux_conservative_artiano_ranocha, flux_nonconservative_artiano_ranocha
 
 export ManningFriction, MeyerPeterMueller, GrassModel, ShieldsStressModel,
        dissipation_roe, water_sediment_height
