@@ -150,7 +150,7 @@ end
 end
 
 """
-	flux_conservative_artiano_ranocha(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
+	flux_conservative_ec(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
 
 Total energy conserving and well-balanced two-point flux by
 -  Marco Artiano, Hendrik Ranocha (2026)
@@ -158,15 +158,15 @@ Total energy conserving and well-balanced two-point flux by
    Well-Balanced Methods for Nonconservative Hyperbolic Systems
    [DOI: 10.48550/arXiv.2603.18978](https://arxiv.org/abs/2603.18978)
 """
-struct flux_conservative_artiano_ranocha{RealT <: Real}
+struct flux_conservative_ec{RealT <: Real}
     alpha_1::RealT
     alpha_2::RealT
     alpha_3::RealT
 end
 
-@inline function (flux_ec::flux_conservative_artiano_ranocha)(u_ll, u_rr,
-                                                              orientation::Integer,
-                                                              equations::HyperbolicSainteMarieEquations1D)
+@inline function (flux_ec::flux_conservative_ec)(u_ll, u_rr,
+                                                 orientation::Integer,
+                                                 equations::HyperbolicSainteMarieEquations1D)
     alpha_1 = flux_ec.alpha_1
     alpha_2 = flux_ec.alpha_2
     alpha_3 = flux_ec.alpha_3
@@ -206,7 +206,7 @@ end
 end
 
 """
-	flux_nonconservative_artiano_ranocha(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
+	flux_nonconservative_ec(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
 
 Total energy conserving and well-balanced two-point flux by
 -  Marco Artiano, Hendrik Ranocha (2026)
@@ -214,15 +214,15 @@ Total energy conserving and well-balanced two-point flux by
    Well-Balanced Methods for Nonconservative Hyperbolic Systems
    [DOI: 10.48550/arXiv.2603.18978](https://arxiv.org/abs/2603.18978)
 """
-struct flux_nonconservative_artiano_ranocha{RealT <: Real}
+struct flux_nonconservative_ec{RealT <: Real}
     alpha_1::RealT
     alpha_2::RealT
     alpha_3::RealT
 end
 
-@inline function (flux_ec::flux_nonconservative_artiano_ranocha)(u_ll, u_rr,
-                                                                 orientation::Integer,
-                                                                 equations::HyperbolicSainteMarieEquations1D)
+@inline function (flux_ec::flux_nonconservative_ec)(u_ll, u_rr,
+                                                    orientation::Integer,
+                                                    equations::HyperbolicSainteMarieEquations1D)
     alpha_1 = flux_ec.alpha_1
     alpha_2 = flux_ec.alpha_2
     alpha_3 = flux_ec.alpha_3

@@ -22,8 +22,8 @@ initial_condition = initial_condition_periodic
 ###############################################################################
 # Get the DG approximation space
 alpha_coefficients = (1 / 2, 1.0, 2 / 3)
-volume_flux = (flux_conservative_artiano_ranocha(alpha_coefficients...),
-               flux_nonconservative_artiano_ranocha(alpha_coefficients...))
+volume_flux = (flux_conservative_ec(alpha_coefficients...),
+               flux_nonconservative_ec(alpha_coefficients...))
 surface_flux = volume_flux
 polydeg = 3
 solver = DGSEM(polydeg = polydeg, surface_flux = surface_flux,
