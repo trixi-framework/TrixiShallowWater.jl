@@ -304,8 +304,8 @@ isdir(outdir) && rm(outdir, recursive = true)
             directions = [1, 2]
             normal_direction = SVector(one(RealT))
             alpha_coefficients = RealT.((1 / 2, 1.0, 2 / 3))
-            surface_flux_functions = (flux_conservative_ec(alpha_coefficients...),
-                                      flux_nonconservative_ec(alpha_coefficients...))
+            surface_flux_functions = (FluxConservativeEC(alpha_coefficients...),
+                                      FluxNonConservativeEC(alpha_coefficients...))
 
             for direction in directions
                 @test eltype(@inferred boundary_condition_slip_wall(u_inner,

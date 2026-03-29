@@ -161,8 +161,8 @@ struct FluxConservativeEC{RealT <: Real}
 end
 
 @inline function (flux_conservative_ec::FluxConservativeEC)(u_ll, u_rr,
-                                                 orientation::Integer,
-                                                 equations::HyperbolicSainteMarieEquations1D)
+                                                            orientation::Integer,
+                                                            equations::HyperbolicSainteMarieEquations1D)
     alpha_1 = flux_conservative_ec.alpha_1
     alpha_2 = flux_conservative_ec.alpha_2
     alpha_3 = flux_conservative_ec.alpha_3
@@ -217,8 +217,8 @@ struct FluxNonConservativeEC{RealT <: Real}
 end
 
 @inline function (flux_nonconservative_ec::FluxNonConservativeEC)(u_ll, u_rr,
-                                                    orientation::Integer,
-                                                    equations::HyperbolicSainteMarieEquations1D)
+                                                                  orientation::Integer,
+                                                                  equations::HyperbolicSainteMarieEquations1D)
     alpha_1 = flux_nonconservative_ec.alpha_1
     alpha_2 = flux_nonconservative_ec.alpha_2
     alpha_3 = flux_nonconservative_ec.alpha_3
