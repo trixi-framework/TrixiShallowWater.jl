@@ -58,16 +58,17 @@ References for the Sainte-Marie system and its hyperbolization can be found in
   [DOI: 10.1016/j.jcp.2019.05.035](https://doi.org/10.1016/j.jcp.2019.05.035)
 """
 
-struct HyperbolicSainteMarieEquations1D{RealT<:Real} <:
-       Trixi.AbstractShallowWaterEquations{1,5}
+struct HyperbolicSainteMarieEquations1D{RealT <: Real} <:
+       Trixi.AbstractShallowWaterEquations{1, 5}
     gravity::RealT
     H0::RealT
     celerity::RealT
 end
 
-function HyperbolicSainteMarieEquations1D(; gravity, H0=zero(gravity), b0=one(gravity), alpha=3)
+function HyperbolicSainteMarieEquations1D(; gravity, H0 = zero(gravity),
+                                          b0 = one(gravity), alpha = 3)
     T = promote_type(typeof(gravity), typeof(H0), typeof(b0), typeof(alpha))
-    
+
     celerity = alpha * sqrt(gravity * b0)
 
     HyperbolicSainteMarieEquations1D(gravity, H0, celerity)
@@ -98,37 +99,38 @@ For details see Section 9.2.5 of the book:
   ISBN 0471987662
 """
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation_or_normal,
-    direction,
-    x, t,
-    surface_flux_functions,
-    equations::HyperbolicSainteMarieEquations1D)
+                                                    direction,
+                                                    x, t,
+                                                    surface_flux_functions,
+                                                    equations::HyperbolicSainteMarieEquations1D)
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
 
     # This can not be dispatched, when Flux Hydrostactic reconstruction is used
     # create the "external" boundary solution state
     u_boundary = SVector(u_inner[1],
-        -u_inner[2],
-        u_inner[3], u_inner[4], u_inner[5])
+                         -u_inner[2],
+                         u_inner[3], u_inner[4], u_inner[5])
 
     # calculate the boundary flux
     if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
         flux = surface_flux_function(u_inner, u_boundary, orientation_or_normal,
-            equations)
+                                     equations)
         noncons_flux = nonconservative_flux_function(u_inner, u_boundary,
-            orientation_or_normal,
-            equations)
+                                                     orientation_or_normal,
+                                                     equations)
     else # u_boundary is "left" of boundary, u_inner is "right" of boundary
         flux = surface_flux_function(u_boundary, u_inner, orientation_or_normal,
-            equations)
+                                     equations)
         noncons_flux = nonconservative_flux_function(u_boundary, u_inner,
-            orientation_or_normal,
-            equations)
+                                                     orientation_or_normal,
+                                                     equations)
     end
 
     return flux, noncons_flux
 end
 
-@inline function source_term_hyperbolic_sainte_marie(u, x, t, equations::HyperbolicSainteMarieEquations1D)
+@inline function source_term_hyperbolic_sainte_marie(u, x, t,
+                                                     equations::HyperbolicSainteMarieEquations1D)
     h, h_v, h_w, h_p, b = u
 
     p = h_p / h
@@ -143,13 +145,14 @@ end
     return SVector(du1, du2, du3, du4, du5)
 end
 
-struct flux_conservative_artiano_ranocha{RealT<:Real}
+struct flux_conservative_artiano_ranocha{RealT <: Real}
     alpha_1::RealT
     alpha_2::RealT
     alpha_3::RealT
 end
 
-@inline function (flux_ec::flux_conservative_artiano_ranocha)(u_ll, u_rr, orientation::Integer,
+@inline function (flux_ec::flux_conservative_artiano_ranocha)(u_ll, u_rr,
+                                                              orientation::Integer,
                                                               equations::HyperbolicSainteMarieEquations1D)
     alpha_1 = flux_ec.alpha_1
     alpha_2 = flux_ec.alpha_2
@@ -177,26 +180,27 @@ end
     h2_avg = 0.5f0 * (h_ll^2 + h_rr^2)
 
     f1 = alpha_1 * h_avg * v_avg + (1 - alpha_1) * h_v_avg
-    pressure_terms = equations.gravity * (1 - alpha_1) * h_avg^2 + equations.gravity * (alpha_1 - 0.5f0) * h2_avg + alpha_3 * h_avg * p_avg + (1 - alpha_3) * h_p_avg
+    pressure_terms = equations.gravity * (1 - alpha_1) * h_avg^2 +
+                     equations.gravity * (alpha_1 - 0.5f0) * h2_avg +
+                     alpha_3 * h_avg * p_avg + (1 - alpha_3) * h_p_avg
     f2 = f1 * v_avg + pressure_terms
     f3 = f1 * w_avg
     f4 = f1 * p_avg
 
     return SVector(f1,
-        f2,
-        f3, f4, zero(eltype(u_ll)))
+                   f2,
+                   f3, f4, zero(eltype(u_ll)))
 end
 
-struct flux_nonconservative_artiano_ranocha{RealT<:Real}
+struct flux_nonconservative_artiano_ranocha{RealT <: Real}
     alpha_1::RealT
     alpha_2::RealT
     alpha_3::RealT
 end
 
 @inline function (flux_ec::flux_nonconservative_artiano_ranocha)(u_ll, u_rr,
-    orientation::Integer,
-    equations::HyperbolicSainteMarieEquations1D)
-
+                                                                 orientation::Integer,
+                                                                 equations::HyperbolicSainteMarieEquations1D)
     alpha_1 = flux_ec.alpha_1
     alpha_2 = flux_ec.alpha_2
     alpha_3 = flux_ec.alpha_3
@@ -218,25 +222,29 @@ end
     v_jump = v_rr - v_ll
 
     f1 = zero(eltype(u_ll))
-    f2_fluxdiff = alpha_1 * equations.gravity * h_avg * b_jump + alpha_2 * 2 * p_avg * b_jump
-    f2_pointwise = (1 - alpha_1) * equations.gravity * h_ll * b_jump + (1 - alpha_2) * 2 * p_ll * b_jump
+    f2_fluxdiff = alpha_1 * equations.gravity * h_avg * b_jump +
+                  alpha_2 * 2 * p_avg * b_jump
+    f2_pointwise = (1 - alpha_1) * equations.gravity * h_ll * b_jump +
+                   (1 - alpha_2) * 2 * p_ll * b_jump
     f2 = f2_fluxdiff + f2_pointwise
     f3 = zero(eltype(u_ll))
 
-    f4_fluxdiff = alpha_3 * equations.celerity^2 * h_avg * v_jump - 2 * alpha_2 * equations.celerity^2 * v_avg * b_jump
-    f4_pointwise = (1 - alpha_3) * equations.celerity^2 * h_ll * v_jump - 2 * (1 - alpha_2) * equations.celerity^2 * v_ll * b_jump
+    f4_fluxdiff = alpha_3 * equations.celerity^2 * h_avg * v_jump -
+                  2 * alpha_2 * equations.celerity^2 * v_avg * b_jump
+    f4_pointwise = (1 - alpha_3) * equations.celerity^2 * h_ll * v_jump -
+                   2 * (1 - alpha_2) * equations.celerity^2 * v_ll * b_jump
     f4 = f4_fluxdiff + f4_pointwise
 
     return SVector(f1,
-        f2,
-        f3,
-        f4,
-        zero(eltype(u_ll)))
+                   f2,
+                   f3,
+                   f4,
+                   zero(eltype(u_ll)))
 end
 
 # Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
 @inline function Trixi.max_abs_speed(u_ll, u_rr, orientation::Integer,
-    equations::HyperbolicSainteMarieEquations1D)
+                                     equations::HyperbolicSainteMarieEquations1D)
     # Get the velocity quantities
     v_ll = velocity(u_ll, equations)
     v_rr = velocity(u_rr, equations)
@@ -251,7 +259,6 @@ end
 
     return max(abs(v_ll) + c_ll, abs(v_rr) + c_rr)
 end
-
 
 @inline function Trixi.max_abs_speeds(u, equations::HyperbolicSainteMarieEquations1D)
     h = u[1]
@@ -319,11 +326,13 @@ end
 @inline function Trixi.energy_total(cons, equations::HyperbolicSainteMarieEquations1D)
     h, h_v, h_w, h_p, b = cons
 
-    e = (h_v^2 + h_w^2) / (2 * h) + h_p^2 / (2 * equations.celerity^2 * h) + 0.5f0 * equations.gravity * h^2 + equations.gravity * h * b
+    e = (h_v^2 + h_w^2) / (2 * h) + h_p^2 / (2 * equations.celerity^2 * h) +
+        0.5f0 * equations.gravity * h^2 + equations.gravity * h * b
     return e
 end
 
-@inline function Trixi.lake_at_rest_error(u, equations::HyperbolicSainteMarieEquations1D)
+@inline function Trixi.lake_at_rest_error(u,
+                                          equations::HyperbolicSainteMarieEquations1D)
     h, _, _, _, b = u
     H0_wet_dry = max(equations.H0, b + equations.threshold_limiter)
 
