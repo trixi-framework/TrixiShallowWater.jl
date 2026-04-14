@@ -119,9 +119,15 @@ end
         end
     end
 
-    # Values at element boundary
-    Trixi.calc_bounds_twosided_interface!(var_min, var_max, variable,
-                                          u, t, semi, mesh, equations)
+    # Calc bounds at element interfaces and periodic boundaries
+    Trixi.calc_bounds_twosided_interface!(var_min, var_max, variable, u,
+                                          semi, mesh, equations)
+
+    # Calc bounds at physical boundaries
+    (; boundary_conditions) = semi
+    Trixi.calc_bounds_twosided_boundary!(var_min, var_max, variable, u, t,
+                                         boundary_conditions,
+                                         mesh, equations, dg, cache)
 
     # If the water height is specified as the limiting variable, subtract the bottom topography
     # to get back the water height `h = H - b`
@@ -137,14 +143,13 @@ end
     return nothing
 end
 
-@inline function Trixi.calc_bounds_twosided_interface!(var_min, var_max, variable,
-                                                       u, t, semi, mesh::Trixi.TreeMesh2D,
+@inline function Trixi.calc_bounds_twosided_interface!(var_min, var_max, variable, u,
+                                                       semi, mesh::Trixi.TreeMesh2D,
                                                        equations::AbstractShallowWaterMultiLayerEquations{2,
                                                                                                           4,
                                                                                                           1})
     _, _, dg, cache = Trixi.mesh_equations_solver_cache(semi)
-    (; boundary_conditions) = semi
-    # Calc bounds at interfaces and periodic boundaries
+
     for interface in Trixi.eachinterface(dg, cache)
         # Get neighboring element ids
         left = cache.interfaces.neighbor_ids[1, interface]
@@ -180,7 +185,16 @@ end
         end
     end
 
-    # Calc bounds at physical boundaries
+    return nothing
+end
+
+@inline function Trixi.calc_bounds_twosided_boundary!(var_min, var_max, variable, u, t,
+                                                      boundary_conditions,
+                                                      mesh::Trixi.TreeMesh2D,
+                                                      equations::AbstractShallowWaterMultiLayerEquations{2,
+                                                                                                         4,
+                                                                                                         1},
+                                                      dg, cache)
     for boundary in Trixi.eachboundary(dg, cache)
         element = cache.boundaries.neighbor_ids[boundary]
         orientation = cache.boundaries.orientations[boundary]
@@ -219,18 +233,16 @@ end
     return nothing
 end
 
-function Trixi.calc_bounds_twosided_interface!(var_min, var_max, variable, u, t, semi,
-                                               mesh::Trixi.P4estMesh{2},
+function Trixi.calc_bounds_twosided_interface!(var_min, var_max, variable, u,
+                                               semi, mesh::Trixi.P4estMesh{2},
                                                equations::AbstractShallowWaterMultiLayerEquations{2,
                                                                                                   4,
                                                                                                   1})
-    _, equations, dg, cache = Trixi.mesh_equations_solver_cache(semi)
-    (; boundary_conditions) = semi
+    _, _, dg, cache = Trixi.mesh_equations_solver_cache(semi)
 
     (; neighbor_ids, node_indices) = cache.interfaces
     index_range = eachnode(dg)
 
-    # Calc bounds at interfaces and periodic boundaries
     for interface in Trixi.eachinterface(dg, cache)
         # Get element and side index information on the primary element
         primary_element = neighbor_ids[1, interface]
@@ -289,11 +301,6 @@ function Trixi.calc_bounds_twosided_interface!(var_min, var_max, variable, u, t,
             j_secondary += j_secondary_step
         end
     end
-
-    # Calc bounds at physical boundaries
-    Trixi.calc_bounds_twosided_boundary!(var_min, var_max, variable, u, t,
-                                         boundary_conditions,
-                                         mesh, equations, dg, cache)
 
     return nothing
 end
