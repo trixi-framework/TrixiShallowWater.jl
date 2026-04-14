@@ -13,7 +13,7 @@ equations = ShallowWaterEquations1D(gravity = 9.812, H0 = 3.25)
     inverse_transform(E, hv, sigma, b)
 
 Inverse transformation from equilibrium variables (E, hv) to conservative variables (h, hv). Besides the
-equilibrium variables, which are the total energy `E` and momentum `hv`, the function also depends 
+equilibrium variables, which are the total energy `E` and momentum `hv`, the function also depends
 on the bottom topography `b` and the flow regime `sigma` (supersonic = 1 , sonic = 0 or subsonic = -1).
 
 The implementation follows the procedure described in Section 2.1 of the paper:
@@ -61,7 +61,7 @@ end
 """
     initial_condition_moving_water_transonic(x, t, equations::ShallowWaterEquations1D)
 
-Set the initial condition for a smooth transonic moving water steady-state and a quadratic bottom 
+Set the initial condition for a smooth transonic moving water steady-state and a quadratic bottom
 topography, to test the well-balancedness of the scheme.
 
 The test parameters are taken from Section 5 of the paper:
@@ -105,7 +105,7 @@ initial_condition = initial_condition_moving_water_transonic
 boundary_condition_inflow = BoundaryConditionMomentum(1.53, equations)
 boundary_condition_outflow = BoundaryConditionDirichlet(initial_condition_moving_water_transonic)
 
-boundary_conditions = (x_neg = boundary_condition_inflow,
+boundary_conditions = (; x_neg = boundary_condition_inflow,
                        x_pos = boundary_condition_outflow)
 
 ###############################################################################

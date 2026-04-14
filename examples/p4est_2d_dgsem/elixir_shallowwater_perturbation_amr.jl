@@ -30,10 +30,10 @@ end
 
 initial_condition = initial_condition_perturbation
 
-boundary_condition = Dict(:x_neg => boundary_condition_slip_wall,
-                          :y_neg => boundary_condition_slip_wall,
-                          :x_pos => boundary_condition_slip_wall,
-                          :y_pos => boundary_condition_slip_wall)
+boundary_condition = (; x_neg = boundary_condition_slip_wall,
+                      y_neg = boundary_condition_slip_wall,
+                      x_pos = boundary_condition_slip_wall,
+                      y_pos = boundary_condition_slip_wall)
 
 ###############################################################################
 # Get the DG approximation space

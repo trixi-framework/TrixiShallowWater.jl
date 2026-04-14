@@ -111,10 +111,10 @@ H_from_wave_maker(t::RealT) = spline_interpolation(h_spline_struct, t)
     return flux, noncons_flux
 end
 
-boundary_condition = Dict(:Bottom => boundary_condition_slip_wall,
-                          :Top => boundary_condition_slip_wall,
-                          :Right => boundary_condition_slip_wall,
-                          :Left => boundary_condition_wave_maker)
+boundary_condition = (; Bottom = boundary_condition_slip_wall,
+                      Top = boundary_condition_slip_wall,
+                      Right = boundary_condition_slip_wall,
+                      Left = boundary_condition_wave_maker)
 
 # Manning friction source term
 @inline function source_terms_manning_friction(u, x, t,
@@ -147,7 +147,7 @@ volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
 # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
 # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
 # To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
-# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
 # `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
                                                                   DissipationLocalLaxFriedrichs(max_abs_speed_naive)),

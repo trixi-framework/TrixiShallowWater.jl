@@ -158,16 +158,30 @@ end # SWE
                             tspan=(0.0, 0.1))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            # Larger values for allowed allocations due to usage of custom
-            # integrator which are not *recorded* for the methods from
-            # OrdinaryDiffEq.jl
-            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
-        end
+        # Larger values for allowed allocations due to usage of custom
+        # integrator which are not *recorded* for the methods from
+        # OrdinaryDiffEq.jl
+        # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+        @test_allocations(Trixi.rhs!, semi, sol, 15000)
+    end
+
+    @trixi_testset "elixir_shallowwater_multilayer_convergence_sc_subcell_curved.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_convergence_sc_subcell_curved.jl"),
+                            l2=[
+                                0.00013275624153302434,
+                                0.0001586600356395913,
+                                0.000158660035639501,
+                                2.9583315272612922e-5
+                            ],
+                            linf=[
+                                0.0007544272991792944,
+                                0.0007250877164874936,
+                                0.00072508771648927,
+                                9.31948456051046e-5
+                            ])
+        # Allocation testing is disabled as the symbolic source term computation is known to cause
+        # allocations.
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry_nonconforming.jl" begin
@@ -275,22 +289,17 @@ end # SWE
                                 4.440892098500626e-16
                             ],
                             tspan=(0.0, 0.05),
-                            # Increase the absolute tolerance to account for varying results with 
+                            # Increase the absolute tolerance to account for varying results with
                             # with the two-sided limiter on different architectures.
                             # See https://github.com/trixi-framework/Trixi.jl/pull/2007
                             atol=5e-4)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            # Larger values for allowed allocations due to usage of custom
-            # integrator which are not *recorded* for the methods from
-            # OrdinaryDiffEq.jl
-            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
-        end
+        # Larger values for allowed allocations due to usage of custom
+        # integrator which are not *recorded* for the methods from
+        # OrdinaryDiffEq.jl
+        # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+        @test_allocations(Trixi.rhs!, semi, sol, 15000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell with periodic BC.jl" begin
@@ -315,23 +324,43 @@ end # SWE
                                            initial_refinement_level = 5,
                                            periodicity = true),
                             semi=SemidiscretizationHyperbolic(mesh, equations,
-                                                              initial_condition, solver),
-                            # Increase the absolute tolerance to account for varying results with 
+                                                              initial_condition, solver,
+                                                              boundary_conditions = boundary_condition_periodic),
+                            # Increase the absolute tolerance to account for varying results with
                             # with the two-sided limiter on different architectures.
                             # See https://github.com/trixi-framework/Trixi.jl/pull/2007
                             atol=5e-4)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        let
-            t = sol.t[end]
-            u_ode = sol.u[end]
-            du_ode = similar(u_ode)
-            # Larger values for allowed allocations due to usage of custom
-            # integrator which are not *recorded* for the methods from
-            # OrdinaryDiffEq.jl
-            # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
-            @test (@allocated Trixi.rhs!(du_ode, u_ode, semi, t)) < 15000
-        end
+        # Larger values for allowed allocations due to usage of custom
+        # integrator which are not *recorded* for the methods from
+        # OrdinaryDiffEq.jl
+        # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+        @test_allocations(Trixi.rhs!, semi, sol, 15000)
+    end
+
+    @trixi_testset "elixir_shallowwater_multilayer_ec_sc_subcell.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_ec_sc_subcell.jl"),
+                            l2=[
+                                0.04338581073333642,
+                                0.12068863355590975,
+                                0.12068863355590971,
+                                7.906244739074657e-18
+                            ],
+                            linf=[
+                                0.2550462084344076,
+                                0.42004261172048024,
+                                0.4200426117204863,
+                                1.1102230246251565e-16
+                            ])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        # Larger values for allowed allocations due to usage of custom
+        # integrator which are not *recorded* for the methods from
+        # OrdinaryDiffEq.jl
+        # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
+        @test_allocations(Trixi.rhs!, semi, sol, 15000)
     end
 end # MLSWE
 end # P4estMesh2D

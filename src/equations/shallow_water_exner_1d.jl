@@ -12,8 +12,8 @@ abstract type Friction{RealT} end
     ManningFriction(; n)
 
 Creates a Manning friction model for the bottom friction with Manning coefficient `n`.
-The type is used to dispatch on the respective friction law through the
-`shear_stress_coefficient` when computing the `shear_stress`.
+The type is used to dispatch on the respective friction law through the `shear_stress_coefficient` 
+when computing the `shear_stress`.
 """
 struct ManningFriction{RealT} <: Friction{RealT}
     n::RealT
@@ -249,7 +249,7 @@ To use this source term the equations must be set to:
 equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
                                             rho_s = 1.0, porosity = 0.5,
                                             friction = ManningFriction(n = 0.0),
-                                            sediment_model = GrassModel(A_g = 0.01)
+                                            sediment_model = GrassModel(A_g = 0.01))
 ```
 """
 @inline function Trixi.source_terms_convergence_test(u, x, t,

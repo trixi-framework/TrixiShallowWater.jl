@@ -30,7 +30,7 @@ end
 
 initial_condition = initial_condition_stone_throw
 
-boundary_condition = Dict(:OuterCircle => boundary_condition_slip_wall)
+boundary_condition = (; OuterCircle = boundary_condition_slip_wall)
 
 ###############################################################################
 # Get the DG approximation space

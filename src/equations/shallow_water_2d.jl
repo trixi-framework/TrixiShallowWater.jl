@@ -1130,7 +1130,9 @@ end
     return SVector(f1, f2, f3, 0)
 end
 
-# Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom topography
+# Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom topography.
+# For discontinuous bottom topography [`Trixi.DissipationLaxFriedrichsEntropyVariables`](@extref)
+# should be used instead as this version is not well-balanced.
 @inline function (dissipation::DissipationLocalLaxFriedrichs)(u_ll, u_rr,
                                                               orientation_or_normal_direction,
                                                               equations::ShallowWaterEquations2D)
@@ -1138,6 +1140,35 @@ end
                                   equations)
     diss = -0.5f0 * λ * (u_rr - u_ll)
     return SVector(diss[1], diss[2], diss[3], 0)
+end
+
+# Provably entropy stable and well-balanced local Lax-Friedrichs dissipation that avoids
+# spurious dissipation in the bottom topography.
+function (dissipation::DissipationLaxFriedrichsEntropyVariables)(u_ll, u_rr,
+                                                                 orientation_or_normal_direction,
+                                                                 equations::ShallowWaterEquations2D)
+    λ = dissipation.max_abs_speed(u_ll, u_rr, orientation_or_normal_direction,
+                                  equations)
+    g = equations.gravity
+
+    # Compute averages
+    h_avg = 0.5f0 * (u_ll[1] + u_rr[1])
+    v1_avg = 0.5f0 * (u_ll[2] / u_ll[1] + u_rr[2] / u_rr[1])
+    v2_avg = 0.5f0 * (u_ll[3] / u_ll[1] + u_rr[3] / u_rr[1])
+
+    # Compute the jump in entropy variables
+    w_ll = cons2entropy(u_ll, equations)
+    w_rr = cons2entropy(u_rr, equations)
+    w_jump = SVector{3}(w_rr[1] - w_ll[1], w_rr[2] - w_ll[2], w_rr[3] - w_ll[3])
+
+    # Compute the H := du/dw
+    H = 1 / g * @SMatrix [1 v1_avg v2_avg;
+                  v1_avg g * h_avg+v1_avg^2 v1_avg*v2_avg;
+                  v2_avg v1_avg*v2_avg g * h_avg+v2_avg^2]
+
+    diss = SVector(-0.5f0 * λ * H * w_jump)
+
+    return SVector(diss..., 0)
 end
 
 # Specialized `FluxHLL` to avoid spurious dissipation in the bottom topography

@@ -21,16 +21,16 @@ end
 initial_condition = initial_condition_channel_flow
 
 # Setup boundary conditions.
-# At the inlet, we prescribe constant momentum to simulate inflow. 
+# At the inlet, we prescribe constant momentum to simulate inflow.
 # At the outlet, we prescribe the water height as a time-dependent cosine wave.
 boundary_condition_inflow = BoundaryConditionMomentum(0.4, 0.4, equations)
 boundary_condition_outflow = BoundaryConditionWaterHeight(t -> 1.0 + 0.1 * cos(π / 2 * t),
                                                           equations)
 
-boundary_conditions = Dict(:Bottom => boundary_condition_inflow,
-                           :Top => boundary_condition_outflow,
-                           :Left => boundary_condition_slip_wall,
-                           :Right => boundary_condition_slip_wall)
+boundary_conditions = (; Bottom = boundary_condition_inflow,
+                       Top = boundary_condition_outflow,
+                       Left = boundary_condition_slip_wall,
+                       Right = boundary_condition_slip_wall)
 
 ###############################################################################
 # Get the DG approximation space
@@ -41,7 +41,7 @@ volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
 # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
 # To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
-# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
 # `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxPlusDissipation(flux_wintermeyer_etal,
                                     DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
