@@ -15,7 +15,7 @@ TrixiBottomTopography = "86af9953-43df-404b-8eaa-d20d82623a82"
 TrixiShallowWater = "804cb1fc-5b08-4398-a671-a789bfe091b3"
 
 [compat]
-CairoMakie = "0.13"
+CairoMakie = "0.13, 0.14, 0.15"
 Changelog = "1.1"
 CSV = "0.10"
 DataFrames = "1.7"
