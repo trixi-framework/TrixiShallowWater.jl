@@ -1,6 +1,5 @@
 
-using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -8,12 +7,12 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function (set in the initial conditions)
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 3.0)
+equations = ShallowWaterEquations2D(gravity = 9.81, H0 = 3.0)
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
 # Note, this routine is used to compute errors in the analysis callback but the initialization is
 # overwritten by `initial_condition_discontinuous_well_balancedness` below.
-function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquations2D)
     # Set the background values
     H = equations.H0
     v1 = 0.0
@@ -41,14 +40,15 @@ solver = DGSEM(polydeg = 6, surface_flux = surface_flux,
 # Get the unstructured quad mesh from a file (downloads the file if not available locally)
 default_mesh_file = joinpath(@__DIR__, "mesh_alfven_wave_with_twist_and_flip.mesh")
 isfile(default_mesh_file) ||
-    download("https://gist.githubusercontent.com/andrewwinters5000/8f8cd23df27fcd494553f2a89f3c1ba4/raw/85e3c8d976bbe57ca3d559d653087b0889535295/mesh_alfven_wave_with_twist_and_flip.mesh",
-             default_mesh_file)
+    Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/8f8cd23df27fcd494553f2a89f3c1ba4/raw/85e3c8d976bbe57ca3d559d653087b0889535295/mesh_alfven_wave_with_twist_and_flip.mesh",
+                   default_mesh_file)
 mesh_file = default_mesh_file
 
 mesh = UnstructuredMesh2D(mesh_file, periodicity = true)
 
 # Create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solver
@@ -67,7 +67,7 @@ ode = semidiscretize(semi, tspan)
 # `element_id` explicitly. In particular, this initial conditions works as intended
 # only for the specific mesh loaded above!
 function initial_condition_discontinuous_well_balancedness(x, t, element_id,
-                                                           equations::ShallowWaterEquationsWetDry2D)
+                                                           equations::ShallowWaterEquations2D)
     # Set the background values
     H = equations.H0
     v1 = 0.0
@@ -118,7 +118,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false);
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary
+            ode_default_options()..., callback = callbacks);

@@ -1,12 +1,12 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the two-layer shallow water equations
 
-equations = ShallowWaterTwoLayerEquations2D(gravity_constant = 10.0, rho_upper = 0.9,
+equations = ShallowWaterTwoLayerEquations2D(gravity = 10.0, rho_upper = 0.9,
                                             rho_lower = 1.0)
 
 initial_condition = initial_condition_convergence_test
@@ -31,7 +31,8 @@ mesh = TreeMesh(coordinates_min, coordinates_max,
 
 # Create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
-                                    source_terms = source_terms_convergence_test)
+                                    source_terms = source_terms_convergence_test,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solvers, callbacks etc.
@@ -56,6 +57,5 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 # run the simulation
 
 # use a Runge-Kutta method with automatic (error based) time step size control
-sol = solve(ode, RDPK3SpFSAL49(), abstol = 1.0e-8, reltol = 1.0e-8,
-            save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary
+sol = solve(ode, RDPK3SpFSAL49(); abstol = 1.0e-8, reltol = 1.0e-8,
+            ode_default_options()..., callback = callbacks);

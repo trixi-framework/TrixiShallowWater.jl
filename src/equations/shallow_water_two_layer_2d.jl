@@ -40,7 +40,7 @@ Two-Layer Shallow water equations (2LSWE) in two space dimension. The equations 
 The unknown quantities of the 2LSWE are the water heights of the lower layer ``h_{lower}`` and the
 upper
 layer ``h_{upper}`` and the respective velocities in x-direction ``v_{1,lower}`` and ``v_{1,upper}`` and in y-direction
-``v_{2,lower}`` and ``v_{2,upper}``. The gravitational constant is denoted by `g`, the layer densitites by
+``v_{2,lower}`` and ``v_{2,upper}``. The gravitational acceleration is denoted by `g`, the layer densitites by
 ``\rho_{upper}``and ``\rho_{lower}`` and the (possibly) variable bottom topography function by ``b(x)``.
 Conservative variable water height ``h_{lower}`` is measured from the bottom topography ``b`` and ``h_{upper}``
 relative to ``h_{lower}``, therefore one also defines the total water heights as ``H_{lower} = h_{lower} + b`` and
@@ -74,19 +74,19 @@ A good introduction for the 2LSWE is available in Chapter 12 of the book:
 """
 struct ShallowWaterTwoLayerEquations2D{RealT <: Real} <:
        Trixi.AbstractShallowWaterEquations{2, 7}
-    gravity::RealT   # gravitational constant
+    gravity::RealT   # gravitational acceleration
     H0::RealT        # constant "lake-at-rest" total water height
     rho_upper::RealT # lower layer density
     rho_lower::RealT # upper layer density
     r::RealT         # ratio of rho_upper / rho_lower
 end
 
-# Allow for flexibility to set the gravitational constant within an elixir depending on the
-# application where `gravity_constant=1.0` or `gravity_constant=9.81` are common values.
+# Allow for flexibility to set the gravitational acceleration within an elixir depending on the
+# application where `gravity=1.0` or `gravity=9.81` are common values.
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
 # well-balancedness test cases. Densities must be specified such that rho_upper < rho_lower.
-function ShallowWaterTwoLayerEquations2D(; gravity_constant,
-                                         H0 = zero(gravity_constant), rho_upper,
+function ShallowWaterTwoLayerEquations2D(; gravity,
+                                         H0 = zero(gravity), rho_upper,
                                          rho_lower)
     # Assign density ratio if rho_upper <= rho_lower
     if rho_upper > rho_lower
@@ -94,7 +94,7 @@ function ShallowWaterTwoLayerEquations2D(; gravity_constant,
     else
         r = rho_upper / rho_lower
     end
-    ShallowWaterTwoLayerEquations2D(gravity_constant, H0, rho_upper, rho_lower, r)
+    ShallowWaterTwoLayerEquations2D(gravity, H0, rho_upper, rho_lower, r)
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterTwoLayerEquations2D) = True()
@@ -238,8 +238,10 @@ For details see Section 9.2.5 of the book:
 """
 @inline function Trixi.boundary_condition_slip_wall(u_inner,
                                                     normal_direction::AbstractVector,
-                                                    x, t, surface_flux_function,
+                                                    x, t, surface_flux_functions,
                                                     equations::ShallowWaterTwoLayerEquations2D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
     # normalize the outward pointing direction
     normal = normal_direction / norm(normal_direction)
 
@@ -258,7 +260,10 @@ For details see Section 9.2.5 of the book:
 
     # calculate the boundary flux
     flux = surface_flux_function(u_inner, u_boundary, normal_direction, equations)
-    return flux
+    noncons_flux = nonconservative_flux_function(u_inner, u_boundary, normal_direction,
+                                                 equations)
+
+    return flux, noncons_flux
 end
 
 # Calculate 1D flux for a single point
@@ -322,12 +327,8 @@ end
     flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
                                      equations::ShallowWaterTwoLayerEquations2D)
     flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                     normal_direction_ll::AbstractVector,
-                                     normal_direction_average::AbstractVector,
+                                     normal_direction::AbstractVector,
                                      equations::ShallowWaterTwoLayerEquations2D)
-
-!!! warning "Experimental code"
-  This numerical flux is experimental and may change in any future release.
 
 Non-symmetric path-conservative two-point volume flux discretizing the nonconservative (source) term
 that contains the gradient of the bottom topography [`ShallowWaterTwoLayerEquations2D`](@ref) and an
@@ -382,8 +383,7 @@ For further details see:
 end
 
 @inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                  normal_direction_ll::AbstractVector,
-                                                  normal_direction_average::AbstractVector,
+                                                  normal_direction::AbstractVector,
                                                   equations::ShallowWaterTwoLayerEquations2D)
     # Pull the necessary left and right state information
     h_upper_ll, h_lower_ll = waterheight(u_ll, equations)
@@ -396,17 +396,17 @@ end
     h_lower_jump = (h_lower_rr - h_lower_ll)
     b_jump = (b_rr - b_ll)
 
-    # Note this routine only uses the `normal_direction_average` and the average of the
+    # Note this routine only uses the `normal_direction` and the average of the
     # bottom topography to get a quadratic split form DG gradient on curved elements
     return SVector(zero(eltype(u_ll)),
-                   normal_direction_average[1] * equations.gravity * h_upper_ll *
+                   normal_direction[1] * equations.gravity * h_upper_ll *
                    (b_jump + h_lower_jump),
-                   normal_direction_average[2] * equations.gravity * h_upper_ll *
+                   normal_direction[2] * equations.gravity * h_upper_ll *
                    (b_jump + h_lower_jump),
                    zero(eltype(u_ll)),
-                   normal_direction_average[1] * equations.gravity * h_lower_ll *
+                   normal_direction[1] * equations.gravity * h_lower_ll *
                    (b_jump + equations.r * h_upper_jump),
-                   normal_direction_average[2] * equations.gravity * h_lower_ll *
+                   normal_direction[2] * equations.gravity * h_lower_ll *
                    (b_jump + equations.r * h_upper_jump),
                    zero(eltype(u_ll)))
 end
@@ -669,6 +669,71 @@ end
 
     # The normal velocities are already scaled by the norm
     return max(abs(v_m_ll), abs(v_m_rr)) + max(c_ll, c_rr) * norm(normal_direction)
+end
+
+# Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     orientation::Integer,
+                                     equations::ShallowWaterTwoLayerEquations2D)
+    # Unpack left and right state
+    h_upper_ll, h_v1_upper_ll, h_v2_upper_ll, h_lower_ll, h_v1_lower_ll, h_v2_lower_ll, _ = u_ll
+    h_upper_rr, h_v1_upper_rr, h_v2_upper_rr, h_lower_rr, h_v1_lower_rr, h_v2_lower_rr, _ = u_rr
+
+    # Calculate averaged velocity of both layers
+    if orientation == 1
+        v_m_ll = (h_v1_upper_ll + h_v1_lower_ll) / (h_upper_ll + h_lower_ll)
+        v_m_rr = (h_v1_upper_rr + h_v1_lower_rr) / (h_upper_rr + h_lower_rr)
+    else
+        v_m_ll = (h_v2_upper_ll + h_v2_lower_ll) / (h_upper_ll + h_lower_ll)
+        v_m_rr = (h_v2_upper_rr + h_v2_lower_rr) / (h_upper_rr + h_lower_rr)
+    end
+
+    # Calculate the wave celerity on the left and right
+    h_upper_ll, h_lower_ll = waterheight(u_ll, equations)
+    h_upper_rr, h_lower_rr = waterheight(u_rr, equations)
+
+    c_ll = sqrt(equations.gravity * (h_upper_ll + h_lower_ll))
+    c_rr = sqrt(equations.gravity * (h_upper_rr + h_lower_rr))
+
+    return max(abs(v_m_ll) + c_ll, abs(v_m_rr) + c_rr)
+end
+
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     normal_direction::AbstractVector,
+                                     equations::ShallowWaterTwoLayerEquations2D)
+    # Unpack left and right state
+    h_upper_ll, _, _, h_lower_ll, _, _, _ = u_ll
+    h_upper_rr, _, _, h_lower_rr, _, _, _ = u_rr
+
+    # Extract and compute the velocities in the normal direction
+    v1_upper_ll, v2_upper_ll, v1_lower_ll, v2_lower_ll = velocity(u_ll, equations)
+    v1_upper_rr, v2_upper_rr, v1_lower_rr, v2_lower_rr = velocity(u_rr, equations)
+
+    v_upper_dot_n_ll = v1_upper_ll * normal_direction[1] +
+                       v2_upper_ll * normal_direction[2]
+    v_upper_dot_n_rr = v1_upper_rr * normal_direction[1] +
+                       v2_upper_rr * normal_direction[2]
+    v_lower_dot_n_ll = v1_lower_ll * normal_direction[1] +
+                       v2_lower_ll * normal_direction[2]
+    v_lower_dot_n_rr = v1_lower_rr * normal_direction[1] +
+                       v2_lower_rr * normal_direction[2]
+
+    # Calculate averaged velocity of both layers
+    v_m_ll = (v_upper_dot_n_ll * h_upper_ll + v_lower_dot_n_ll * h_lower_ll) /
+             (h_upper_ll + h_lower_ll)
+    v_m_rr = (v_upper_dot_n_rr * h_upper_rr + v_lower_dot_n_rr * h_lower_rr) /
+             (h_upper_rr + h_lower_rr)
+
+    # Compute the wave celerity on the left and right
+    h_upper_ll, h_lower_ll = waterheight(u_ll, equations)
+    h_upper_rr, h_lower_rr = waterheight(u_rr, equations)
+
+    c_ll = sqrt(equations.gravity * (h_upper_ll + h_lower_ll))
+    c_rr = sqrt(equations.gravity * (h_upper_rr + h_lower_rr))
+
+    norm_ = norm(normal_direction)
+    # The normal velocities are already scaled by the norm
+    return (max(abs(v_m_ll) + c_ll * norm_, abs(v_m_rr) + c_rr * norm_))
 end
 
 # Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom topography

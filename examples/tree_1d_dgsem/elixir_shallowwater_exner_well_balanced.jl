@@ -1,14 +1,14 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the SWE-Exner equations with a discontinuous sediment bed 
+# Semidiscretization of the SWE-Exner equations with a discontinuous sediment bed
 # to test well-balancedness
 
 # Equations with Meyer-Peter-Mueller sedimentation model
-equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, H0 = 1.0,
+equations = ShallowWaterExnerEquations1D(gravity = 10.0, H0 = 1.0,
                                          rho_f = 0.5, rho_s = 1.0, porosity = 0.5,
                                          friction = ManningFriction(n = 0.01),
                                          sediment_model = MeyerPeterMueller(theta_c = 0.047,
@@ -38,7 +38,15 @@ boundary_condition = boundary_condition_slip_wall
 # Get the DG approximation space
 
 volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
-surface_flux = (FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs()),
+# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+# `DissipationLocalLaxFriedrichs(), i.e., `DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+# In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+# Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
+# To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+# `StepsizeCallback` (CFL-Condition) and less diffusion.
+surface_flux = (FluxPlusDissipation(flux_ersing_etal,
+                                    DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                 flux_nonconservative_ersing_etal)
 
 basis = LobattoLegendreBasis(3)
@@ -97,8 +105,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 
 ###############################################################################
 # run the simulation
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false);
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            save_everystep = false, callback = callbacks);
-
-summary_callback() # print the timer summary
+            ode_default_options()..., callback = callbacks);

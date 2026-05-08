@@ -1,15 +1,15 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the shallow water equations for a fully wet configuration
 
-equations = ShallowWaterEquationsWetDry1D(gravity_constant = 1.0, H0 = 3.0)
+equations = ShallowWaterEquations1D(gravity = 1.0, H0 = 3.0)
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
-function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquationsWetDry1D)
+function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquations1D)
     # Set the background values
     H = equations.H0
     v = 0.0
@@ -71,7 +71,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false);
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary
+            ode_default_options()..., callback = callbacks);

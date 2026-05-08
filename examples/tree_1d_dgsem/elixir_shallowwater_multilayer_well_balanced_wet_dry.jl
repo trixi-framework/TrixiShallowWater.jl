@@ -1,12 +1,12 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the two-layer shallow water equations to test well-balancedness
 
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.0, H0 = 2.0,
+equations = ShallowWaterMultiLayerEquations1D(gravity = 1.0, H0 = 2.0,
                                               rhos = (1.0, 3.0))
 
 """
@@ -15,12 +15,12 @@ equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 1.0, H0 = 2.0,
 
 Initial condition with a complex (discontinuous) bottom topography to test well-balancedness for a
 two-layer shallow water system with dry states if `perturbation` is set to `false`.
-Additionally, it is possible to set a perturbation in the lower layer to test perturbations from the 
+Additionally, it is possible to set a perturbation in the lower layer to test perturbations from the
 lake-at-rest condition by setting the `perturbation` variable to `true`.
 
 The initial condition is taken from the paper:
   - S. Martínez-Aranda, A. Ramos-Pérez, P. García-Navarro (2020)
-    A 1D shallow-ﬂow model for two-layer ﬂows based on FORCE scheme with wet–dry treatment\n 
+    A 1D shallow-ﬂow model for two-layer ﬂows based on FORCE scheme with wet–dry treatment\n
     [DOI:10.2166/hydro.2020.002](https://doi.org/10.2166/hydro.2020.002)
 """
 function initial_condition_twolayer_well_balanced_wet_dry(perturbation::Bool,
@@ -78,7 +78,7 @@ function initial_condition_twolayer_well_balanced_wet_dry(perturbation::Bool,
         v1_upper = zero(H_upper)
         v1_lower = zero(H_upper)
 
-        #= 
+        #=
         It is mandatory to shift the water level at dry areas to make sure the water height h
         stays positive. The system would not be stable for h set to a hard 0 due to division by h in
         the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
@@ -103,8 +103,15 @@ initial_condition = initial_condition_twolayer_well_balanced_wet_dry(perturbatio
 # Get the DG approximation space
 
 volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
+# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+# `DissipationLocalLaxFriedrichs(), i.e., `DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+# In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+# Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
+# To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
+# `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
-                                                                  DissipationLocalLaxFriedrichs()),
+                                                                  DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                                               hydrostatic_reconstruction_ersing_etal),
                 FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                               hydrostatic_reconstruction_ersing_etal))
@@ -122,7 +129,7 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 ###############################################################################
 # Get the TreeMesh and setup a periodic mesh
 
-# The domain of interest [0.0, 100.0] is extended towards -28.0 to match the positions of the 
+# The domain of interest [0.0, 100.0] is extended towards -28.0 to match the positions of the
 # disctontinuities with TreeMesh.
 coordinates_min = -28.0
 coordinates_max = 100.0
@@ -132,7 +139,8 @@ mesh = TreeMesh(coordinates_min, coordinates_max,
                 periodicity = true)
 
 # create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solvers, callbacks etc.
@@ -157,7 +165,7 @@ save_solution = SaveSolutionCallback(interval = 1000,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)
@@ -168,4 +176,3 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 # use a Runge-Kutta method with CFL-based time step
 sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()..., callback = callbacks, adaptive = false, dt = 1.0);
-summary_callback() # print the timer summary

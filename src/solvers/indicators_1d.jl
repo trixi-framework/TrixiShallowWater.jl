@@ -5,13 +5,13 @@
 @muladd begin
 #! format: noindent
 
-# Modified indicator for ShallowWaterEquationsWetDry1D and ShallowWaterMultiLayerEquations1D to 
+# Modified indicator for ShallowWaterEquations1D and ShallowWaterMultiLayerEquations1D to 
 # apply full FV method on elements containing some "dry" LGL nodes. That is, if an element is 
 # partially "wet" then it becomes a full FV element.
 function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{<:Any,
                                                                                 3},
                                                                mesh,
-                                                               equations::Union{ShallowWaterEquationsWetDry1D,
+                                                               equations::Union{ShallowWaterEquations1D,
                                                                                 ShallowWaterMultiLayerEquations1D,
                                                                                 ShallowWaterExnerEquations1D},
                                                                dg::DGSEM, cache;
@@ -44,7 +44,7 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
     The value can be seen as a trade-off between accuracy and stability.
     Well-balancedness of the scheme on partially wet elements with hydrostatic reconstruction
     can only be proven for the FV method (see Chen and Noelle).
-    Therefore we set alpha to one regardless of its given maximum value. 
+    Therefore we set alpha to one regardless of its given maximum value.
     =#
     threshold_partially_wet = equations.threshold_partially_wet
 
@@ -105,7 +105,7 @@ function (indicator_hg::IndicatorHennemannGassnerShallowWater)(u::AbstractArray{
 
         # Clip the maximum amount of FV allowed or set to one depending on indicator_wet
         if indicator_wet == 0
-            alpha[element] = 1
+            alpha[element] = one(alpha_element)
         else # Element is not defined as dry but wet
             alpha[element] = min(alpha_max, alpha_element)
         end

@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -7,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the two-layer shallow water equations with a periodic
 # bottom topography function (set in the initial conditions)
 
-equations = ShallowWaterTwoLayerEquations2D(gravity_constant = 10.0, rho_upper = 0.9,
+equations = ShallowWaterTwoLayerEquations2D(gravity = 10.0, rho_upper = 0.9,
                                             rho_lower = 1.0)
 
 initial_condition = initial_condition_convergence_test
@@ -31,7 +31,8 @@ mesh = UnstructuredMesh2D(mesh_file, periodicity = true)
 
 # Create the semidiscretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
-                                    source_terms = source_terms_convergence_test)
+                                    source_terms = source_terms_convergence_test,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solvers, callbacks etc.
@@ -58,7 +59,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false);
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary
+            ode_default_options()..., callback = callbacks);

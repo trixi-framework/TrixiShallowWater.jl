@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -7,7 +7,7 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function for a fully wet configuration
 
-equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.81, H0 = 3.25)
+equations = ShallowWaterEquations1D(gravity = 9.81, H0 = 3.25)
 
 # Setup a truly discontinuous bottom topography function for this academic
 # testcase of well-balancedness. The errors from the analysis callback are
@@ -17,7 +17,7 @@ equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.81, H0 = 3.25)
 # refinement level is changed the initial condition below may need changed as well to
 # ensure that the discontinuities lie on an element interface.
 function initial_condition_discontinuous_well_balancedness(x, t,
-                                                           equations::ShallowWaterEquationsWetDry1D)
+                                                           equations::ShallowWaterEquations1D)
     # Set the background values
     H = equations.H0
     v = 0.0
@@ -48,10 +48,12 @@ coordinates_min = -1.0
 coordinates_max = 1.0
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 3,
-                n_cells_max = 10_000)
+                n_cells_max = 10_000,
+                periodicity = true)
 
 # Create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solver
@@ -82,7 +84,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false);
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary
+            ode_default_options()..., callback = callbacks);

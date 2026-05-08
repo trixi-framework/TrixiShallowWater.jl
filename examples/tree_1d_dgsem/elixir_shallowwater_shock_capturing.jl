@@ -1,19 +1,19 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.812, H0 = 1.75)
+equations = ShallowWaterEquations1D(gravity = 9.812, H0 = 1.75)
 
 # Initial condition with a truly discontinuous velocity and bottom topography.
 # Works as intended for TreeMesh1D with `initial_refinement_level=3`. If the mesh
 # refinement level is changed the initial condition below may need changed as well to
 # ensure that the discontinuities lie on an element interface.
 function initial_condition_stone_throw_discontinuous_bottom(x, t,
-                                                            equations::ShallowWaterEquationsWetDry1D)
+                                                            equations::ShallowWaterEquations1D)
 
     # Calculate primitive variables
 
@@ -47,7 +47,14 @@ boundary_condition = boundary_condition_slip_wall
 # Get the DG approximation space
 
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
-surface_flux = (FluxHydrostaticReconstruction(flux_lax_friedrichs,
+# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+# `const flux_lax_friedrichs = FluxLaxFriedrichs(), i.e., `FluxLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+# In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+# Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux to `max_abs_speed`.
+# To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+# `StepsizeCallback` (CFL-Condition) and less diffusion.
+surface_flux = (FluxHydrostaticReconstruction(FluxLaxFriedrichs(max_abs_speed_naive),
                                               hydrostatic_reconstruction_audusse_etal),
                 flux_nonconservative_audusse_etal)
 basis = LobattoLegendreBasis(4)
@@ -114,4 +121,3 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 # use a Runge-Kutta method with automatic (error based) time step size control
 sol = solve(ode, RDPK3SpFSAL49(); abstol = 1.0e-7, reltol = 1.0e-7,
             ode_default_options()..., callback = callbacks);
-summary_callback() # print the timer summary

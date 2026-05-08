@@ -11,7 +11,7 @@
 Multi-Layer Shallow Water equations (MLSWE) in two space dimension. The equations are given by
 ```math
 \left\{
-	\begin{aligned}			
+	\begin{aligned}
 		&\partial_t h_m + \partial_x h_mv_m = 0,\\
 		&\partial h_mv1_m + \partial_x h_mv1_m^2 + \partial_y h_mv1_mv2_m = -gh_m\partial_x \bigg(b + \sum\limits_{k\geq j}h_k + \sum\limits_{k<m}\frac{\rho_k}{\rho_m}h_k \bigg)
         &\partial h_mv2_m + \partial_x h_mv1_mv2_m + \partial_y h_mv2_m^2 = -gh_m\partial_y \bigg(b + \sum\limits_{k\geq j}h_k + \sum\limits_{k<m}\frac{\rho_k}{\rho_m}h_k \bigg)
@@ -20,25 +20,25 @@ Multi-Layer Shallow Water equations (MLSWE) in two space dimension. The equation
 ```
 
 where ``m = 1, 2, ..., M`` is the layer index and the unknown variables are the water height ``h`` and
-the velocities ``v1, v2`` in both spatial dimensions .  Furthermore, ``g`` denotes the gravitational 
-constant, ``b(x)`` the bottom topography and ``\rho_m`` the m-th layer density, that must be chosen such that 
-``\rho_1 < \rho_2 < ... < \rho_M``, to ensure that different layers are ordered from top to bottom, with 
+the velocities ``v1, v2`` in both spatial dimensions .  Furthermore, ``g`` denotes the gravitational
+constant, ``b(x)`` the bottom topography and ``\rho_m`` the m-th layer density, that must be chosen such that
+``\rho_1 < \rho_2 < ... < \rho_M``, to ensure that different layers are ordered from top to bottom, with
 increasing density.
 
-We use a specific formulation of the system, where the pressure term is reformulated as a 
+We use a specific formulation of the system, where the pressure term is reformulated as a
 nonconservative term, which has some benefits for the design of well-balanced schemes.
 
 The additional quantity ``H_0`` is also available to store a reference value for the total water
 height that is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 
-Also, there are two thresholds which prevent numerical problems as well as instabilities. The limiters are 
-used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height. `threshold_limiter` 
-acts as a (small) shift on the initial condition and cutoff before the next time step, whereas 
-`threshold_desingularization` is used in the velocity desingularization. A third 
-`threshold_partially_wet` is applied on the water height to define "partially wet" elements in 
+Also, there are two thresholds which prevent numerical problems as well as instabilities. The limiters are
+used in [`PositivityPreservingLimiterShallowWater`](@ref) on the water height. `threshold_limiter`
+acts as a (small) shift on the initial condition and cutoff before the next time step, whereas
+`threshold_desingularization` is used in the velocity desingularization. A third
+`threshold_partially_wet` is applied on the water height to define "partially wet" elements in
 [`IndicatorHennemannGassnerShallowWater`](@ref), that are then calculated with a pure FV method to
-ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are 
-defined within the struct. For other number formats `threshold_desingularization` and `threshold_partially_wet` 
+ensure well-balancedness. For `Float64` no threshold needs to be passed, as default values are
+defined within the struct. For other number formats `threshold_desingularization` and `threshold_partially_wet`
 must be provided.
 
 The bottom topography function ``b(x)`` is set inside the initial condition routine
@@ -52,7 +52,7 @@ This affects the implementation and use of these equations in various ways:
 * The flux values corresponding to the bottom topography must be zero.
 * The bottom topography values must be included when defining initial conditions, boundary
   conditions or source terms.
-* [`AnalysisCallback`](@ref) analyzes this variable.
+* [`Trixi.AnalysisCallback`](@extref) analyzes this variable.
 * Trixi's visualization tools will visualize the bottom topography by default.
 
 A good introduction for the MLSWE is available in Chapter 12 of the book:
@@ -63,7 +63,7 @@ A good introduction for the MLSWE is available in Chapter 12 of the book:
 """
 struct ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT <: Real} <:
        AbstractShallowWaterMultiLayerEquations{2, NVARS, NLAYERS}
-    gravity::RealT   # gravitational constant
+    gravity::RealT   # gravitational acceleration
     H0::RealT        # constant "lake-at-rest" total water height
     threshold_limiter::RealT    # threshold for the positivity-limiter
     threshold_desingularization::RealT  # threshold for velocity desingularization
@@ -92,12 +92,12 @@ struct ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT <: Real} <:
     end
 end
 
-# Allow for flexibility to set the gravitational constant within an elixir depending on the
-# application where `gravity_constant=1.0` or `gravity_constant=9.81` are common values.
+# Allow for flexibility to set the gravitational acceleration within an elixir depending on the
+# application where `gravity=1.0` or `gravity=9.81` are common values.
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
-# well-balancedness test cases. 
-function ShallowWaterMultiLayerEquations2D(; gravity_constant,
-                                           H0 = zero(gravity_constant),
+# well-balancedness test cases.
+function ShallowWaterMultiLayerEquations2D(; gravity,
+                                           H0 = zero(gravity),
                                            threshold_limiter = nothing,
                                            threshold_desingularization = nothing,
                                            threshold_partially_wet = nothing,
@@ -105,7 +105,7 @@ function ShallowWaterMultiLayerEquations2D(; gravity_constant,
 
     # Promote all variables to a common type
     _rhos = promote(rhos...)
-    RealT = promote_type(eltype(_rhos), eltype(gravity_constant), eltype(H0))
+    RealT = promote_type(eltype(_rhos), eltype(gravity), eltype(H0))
     __rhos = SVector(map(RealT, _rhos))
 
     # Set default values for thresholds
@@ -123,7 +123,7 @@ function ShallowWaterMultiLayerEquations2D(; gravity_constant,
     NLAYERS = length(rhos)
     NVARS = 3 * NLAYERS + 1
 
-    return ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT}(gravity_constant,
+    return ShallowWaterMultiLayerEquations2D{NVARS, NLAYERS, RealT}(gravity,
                                                                     H0,
                                                                     threshold_limiter,
                                                                     threshold_desingularization,
@@ -331,8 +331,10 @@ For details see Section 9.2.5 of the book:
 @inline function Trixi.boundary_condition_slip_wall(u_inner,
                                                     normal_direction::AbstractVector,
                                                     x, t,
-                                                    surface_flux_function,
+                                                    surface_flux_functions,
                                                     equations::ShallowWaterMultiLayerEquations2D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
     # normalize the outward pointing direction
     normal = normal_direction / norm(normal_direction)
 
@@ -352,20 +354,24 @@ For details see Section 9.2.5 of the book:
 
     # calculate the boundary flux
     flux = surface_flux_function(u_inner, u_boundary, normal_direction, equations)
+    noncons_flux = nonconservative_flux_function(u_inner, u_boundary, normal_direction,
+                                                 equations)
 
-    return flux
+    return flux, noncons_flux
 end
 
 """
     boundary_condition_slip_wall(u_inner, orientation, direction, x, t,
                                  surface_flux_function, equations::ShallowWaterMultiLayerEquations2D)
 
-Should be used together with [`TreeMesh`](@ref).
+Should be used together with [`Trixi.TreeMesh`](@extref).
 """
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation,
                                                     direction, x, t,
-                                                    surface_flux_function,
+                                                    surface_flux_functions,
                                                     equations::ShallowWaterMultiLayerEquations2D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
     # Extract internal values
     h = waterheight(u_inner, equations)
     h_v1, h_v2 = momentum(u_inner, equations)
@@ -381,11 +387,55 @@ Should be used together with [`TreeMesh`](@ref).
     # Calculate boundary flux
     if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
         flux = surface_flux_function(u_inner, u_boundary, orientation, equations)
+        noncons_flux = nonconservative_flux_function(u_inner, u_boundary, orientation,
+                                                     equations)
     else # u_boundary is "left" of boundary, u_inner is "right" of boundary
         flux = surface_flux_function(u_boundary, u_inner, orientation, equations)
+        noncons_flux = nonconservative_flux_function(u_boundary, u_inner, orientation,
+                                                     equations)
     end
 
-    return flux
+    return flux, noncons_flux
+end
+
+"""
+    Trixi.get_boundary_outer_state(u_inner, t,
+                                   boundary_condition::typeof(boundary_condition_slip_wall),
+                                   normal_direction,
+                                   mesh::Union{UnstructuredMesh2D, P4estMesh{2}},
+                                   equations::ShallowWaterMultiLayerEquations2D,
+                                   dg, cache, indices...)
+
+    For subcell limiting, the calculation of local bounds for non-periodic domains requires the boundary
+    outer state. This function returns the boundary value for [`Trixi.boundary_condition_slip_wall`](@extref)
+    for the [`ShallowWaterMultiLayerEquations2D`](@ref) at time `t` and for node with spatial 
+    indices `indices` at the boundary with meshes using a `normal_direction`.
+"""
+@inline function Trixi.get_boundary_outer_state(u_inner, t,
+                                                boundary_condition::typeof(boundary_condition_slip_wall),
+                                                normal_direction,
+                                                mesh::Union{P4estMesh{2},
+                                                            UnstructuredMesh2D},
+                                                equations::ShallowWaterMultiLayerEquations2D,
+                                                dg, cache, indices...)
+    # normalize the outward pointing direction
+    normal = normal_direction / norm(normal_direction)
+
+    # Extract internal values
+    h = waterheight(u_inner, equations)
+    h_v1, h_v2 = momentum(u_inner, equations)
+    b = u_inner[end]
+
+    # compute the normal velocity
+    u_normal = normal[1] * h_v1 + normal[2] * h_v2
+
+    # create the "external" boundary solution state
+    u_boundary = SVector(h...,
+                         (h_v1 - 2.0 * u_normal * normal[1])...,
+                         (h_v2 - 2.0 * u_normal * normal[2])...,
+                         b)
+
+    return u_boundary
 end
 
 # Calculate 2D advective portion of the flux for a single point
@@ -451,8 +501,7 @@ end
     flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
                                      equations::ShallowWaterMultiLayerEquations2D)
     flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                     normal_direction_ll::AbstractVector,
-                                     normal_direction_average::AbstractVector,
+                                     normal_direction::AbstractVector,
                                      equations::ShallowWaterMultiLayerEquations2D)
 
 Non-symmetric path-conservative two-point flux discretizing the nonconservative (source) term
@@ -463,7 +512,7 @@ When the bottom topography is nonzero this scheme will be well-balanced when use
 
 In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
-  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
+  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on
   curvilinear meshes
   [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
 """
@@ -485,7 +534,7 @@ In the two-layer setting this combination is equivalent to the fluxes in:
     f = zero(MVector{3 * nlayers(equations) + 1, real(equations)})
 
     # Compute the nonconservative flux in each layer
-    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the
     # density ratio of different layers
     for i in eachlayer(equations)
         f_hv = g * h_ll[i] * b_jump
@@ -509,8 +558,7 @@ In the two-layer setting this combination is equivalent to the fluxes in:
 end
 
 @inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
-                                                  normal_direction_ll::AbstractVector,
-                                                  normal_direction_average::AbstractVector,
+                                                  normal_direction::AbstractVector,
                                                   equations::ShallowWaterMultiLayerEquations2D)
     # Pull the necessary left and right state information
     h_ll = waterheight(u_ll, equations)
@@ -537,8 +585,243 @@ end
                 f_hv += g * h_ll[i] * h_jump[j]
             end
         end
-        setlayer!(f, f_h, f_hv * normal_direction_average[1],
-                  f_hv * normal_direction_average[2], i, equations)
+        setlayer!(f, f_h, f_hv * normal_direction[1],
+                  f_hv * normal_direction[2], i, equations)
+    end
+
+    return SVector(f)
+end
+
+# For `VolumeIntegralSubcellLimiting` the nonconservative flux is created as a callable struct to 
+# enable dispatch on the type of the nonconservative term (local / jump).
+struct FluxNonConservativeErsingLocalJump <:
+       Trixi.FluxNonConservative{Trixi.NonConservativeJump()}
+end
+
+Trixi.n_nonconservative_terms(::FluxNonConservativeErsingLocalJump) = 1
+
+const flux_nonconservative_ersing_etal_local_jump = FluxNonConservativeErsingLocalJump()
+
+"""
+    flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr, orientation::Integer,
+                                                equations::ShallowWaterMultiLayerEquations2D)
+    flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr,
+                                                normal_direction::AbstractVector,
+                                                equations::ShallowWaterMultiLayerEquations2D)
+
+Non-symmetric path-conservative two-point flux discretizing the nonconservative (source) term
+that contains the gradients of the bottom topography and waterheights from the coupling between layers
+and the nonconservative pressure formulation [`ShallowWaterMultiLayerEquations2D`](@ref).
+
+If the bottom topography is nonzero this scheme will be well-balanced
+when used together with [`flux_ersing_etal`](@ref).
+
+This implementation uses a non-conservative term that can be written as the product
+of local and jump parts. 
+
+The two other flux functions with the same name return either the local
+or jump portion of the non-conservative flux based on the type of the
+nonconservative_type argument, employing multiple dispatch. They are used to
+compute the subcell fluxes in [`Trixi.VolumeIntegralSubcellLimiting`](@extref).
+
+!!! note
+    While `flux_nonconservative_ersing_etal_local_jump` and [`flux_nonconservative_ersing_etal`](@ref)
+    are equivalent at interfaces, the volume formulation for [`Trixi.VolumeIntegralSubcellLimiting`](@extref)
+    differs as `flux_nonconservative_ersing_etal_local_jump` applies the local normal direction 
+    instead of the averaged one.
+
+## References
+- Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
+  Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
+
+In the two-layer setting this combination is equivalent to the fluxes in:
+- Patrick Ersing, Andrew R. Winters (2023)
+  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on
+  curvilinear meshes
+  [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
+"""
+@inline function (noncons_flux::FluxNonConservativeErsingLocalJump)(u_ll, u_rr,
+                                                                    orientation::Integer,
+                                                                    equations::ShallowWaterMultiLayerEquations2D)
+    return flux_nonconservative_ersing_etal(u_ll, u_rr, orientation, equations)
+end
+
+@inline function (noncons_flux::FluxNonConservativeErsingLocalJump)(u_ll, u_rr,
+                                                                    normal_direction::AbstractVector,
+                                                                    equations::ShallowWaterMultiLayerEquations2D)
+    return flux_nonconservative_ersing_etal(u_ll, u_rr, normal_direction, equations)
+end
+
+# Local part
+"""
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr, orientation::Integer,
+                                           equations::ShallowWaterMultiLayerEquations2D,
+                                           nonconservative_type::Trixi.NonConservativeLocal,
+                                           nonconservative_term::Integer)
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr,
+                                           normal_direction_ll::AbstractVector,
+                                           equations::ShallowWaterMultiLayerEquations2D,
+                                           nonconservative_type::Trixi.NonConservativeLocal,
+                                           nonconservative_term::Integer)
+
+Local part of the nonconservative term needed for the calculation of the non-conservative staggered
+"fluxes" for the subcell limiting in [`Trixi.VolumeIntegralSubcellLimiting`](@extref).
+
+## References
+- Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
+  Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
+"""
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll,
+                                                             orientation::Integer,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeLocal,
+                                                             nonconservative_term::Integer)
+    # Pull the necessary left and right state information
+    h_ll = waterheight(u_ll, equations)
+
+    g = equations.gravity
+
+    # Initialize flux vector
+    f = zero(Trixi.MVector{3 * nlayers(equations) + 1, real(equations)})
+
+    # Compute the local part of the nonconservative flux in each layer
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # density ratio of different layers
+    for i in eachlayer(equations)
+        f_hv = g * h_ll[i]
+
+        if orientation == 1
+            setindex!(f, f_hv, i + nlayers(equations))
+        else # orientation == 2
+            setindex!(f, f_hv, i + 2 * nlayers(equations))
+        end
+    end
+
+    return SVector(f)
+end
+
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll,
+                                                             normal_direction_ll::AbstractVector,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeLocal,
+                                                             nonconservative_term::Integer)
+    # Pull the necessary left and right state information
+    h_ll = waterheight(u_ll, equations)
+
+    g = equations.gravity
+
+    # Initialize flux vector
+    f = zero(Trixi.MVector{3 * nlayers(equations) + 1, real(equations)})
+
+    # Compute the local part of the nonconservative flux in each layer
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # density ratio of different layers
+    for i in eachlayer(equations)
+        f_h = zero(real(equations))
+        f_hv = g * h_ll[i]
+
+        setlayer!(f, f_h, f_hv * normal_direction_ll[1], f_hv * normal_direction_ll[2],
+                  i,
+                  equations)
+    end
+
+    return SVector(f)
+end
+
+# Jump part
+"""
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr, orientation::Integer,
+                                           equations::ShallowWaterMultiLayerEquations2D,
+                                           nonconservative_type::Trixi.NonConservativeJump,
+                                           nonconservative_term::Integer)
+    flux_nonconservative_ersing_local_jump(u_ll, u_rr,
+                                           normal_direction::AbstractVector,
+                                           equations::ShallowWaterMultiLayerEquations2D,
+                                           nonconservative_type::Trixi.NonConservativeJump,
+                                           nonconservative_term::Integer)
+
+Jump part of the nonconservative term needed for the calculation of the non-conservative staggered
+"fluxes" for the subcell limiting in [`Trixi.VolumeIntegralSubcellLimiting`](@extref).
+
+## References
+- Rueda-Ramírez, Gassner (2023). A Flux-Differencing Formula for Split-Form Summation By Parts
+  Discretizations of Non-Conservative Systems. https://arxiv.org/pdf/2211.14009.pdf.
+"""
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr,
+                                                             orientation::Integer,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeJump,
+                                                             nonconservative_term::Integer)
+    # Pull the necessary left and right state information
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    b_rr = u_rr[end]
+    b_ll = u_ll[end]
+
+    # Compute the jumps
+    h_jump = h_rr - h_ll
+    b_jump = b_rr - b_ll
+
+    # Initialize flux vector
+    f = zero(Trixi.MVector{3 * nlayers(equations) + 1, real(equations)})
+
+    # Compute the jump part of the nonconservative flux in each layer
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # density ratio of different layers
+    for i in eachlayer(equations)
+        f_hv = b_jump
+        for j in eachlayer(equations)
+            if j < i
+                f_hv += equations.rhos[j] / equations.rhos[i] * h_jump[j]
+            else # (i<j<nlayers) nonconservative formulation of the pressure
+                f_hv += h_jump[j]
+            end
+        end
+
+        if orientation == 1
+            setindex!(f, f_hv, i + nlayers(equations))
+        else # orientation == 2
+            setindex!(f, f_hv, i + 2 * nlayers(equations))
+        end
+    end
+
+    return SVector(f)
+end
+
+@inline function flux_nonconservative_ersing_etal_local_jump(u_ll, u_rr,
+                                                             normal_direction::AbstractVector,
+                                                             equations::ShallowWaterMultiLayerEquations2D,
+                                                             nonconservative_type::Trixi.NonConservativeJump,
+                                                             nonconservative_term::Integer)
+    # Pull the necessary left and right state information
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    b_rr = u_rr[end]
+    b_ll = u_ll[end]
+
+    # Compute the jumps
+    h_jump = h_rr - h_ll
+    b_jump = b_rr - b_ll
+    g = equations.gravity
+
+    # Initialize flux vector
+    f = zero(MVector{3 * nlayers(equations) + 1, real(equations)})
+
+    # Compute the jump part of the nonconservative flux in each layer
+    # where f_hv[i] = g * h[i] * (b + ∑h[k] + ∑σ[k] * h[k])_x and σ[k] = ρ[k] / ρ[i] denotes the 
+    # density ratio of different layers
+    for i in eachlayer(equations)
+        f_h = zero(real(equations))
+        f_hv = b_jump
+        for j in eachlayer(equations)
+            if j < i
+                f_hv += equations.rhos[j] / equations.rhos[i] * h_jump[j]
+            else # (i<j<nlayers) nonconservative formulation of the pressure
+                f_hv += h_jump[j]
+            end
+        end
+        setlayer!(f, f_h, f_hv,
+                  f_hv, i, equations)
     end
 
     return SVector(f)
@@ -552,7 +835,7 @@ end
 
 Total energy conservative (mathematical entropy for MLSWE) split form,
 without the hydrostatic pressure.
-When the bottom topography is nonzero this scheme will be well-balanced when used with the 
+When the bottom topography is nonzero this scheme will be well-balanced when used with the
 nonconservative [`flux_nonconservative_ersing_etal`](@ref).
 
 To obtain an entropy stable formulation the `surface_flux` can be set as
@@ -560,7 +843,7 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
 
 In the two-layer setting this combination is equivalent to the fluxes in:
 - Patrick Ersing, Andrew R. Winters (2023)
-  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on 
+  An entropy stable discontinuous Galerkin method for the two-layer shallow water equations on
   curvilinear meshes
   [DOI: 10.1007/s10915-024-02451-2](https://doi.org/10.1007/s10915-024-02451-2)
 """
@@ -640,17 +923,18 @@ end
 """
     hydrostatic_reconstruction_ersing_etal(u_ll, u_rr, equations::ShallowWaterMultiLayerEquations2D)
 
-A particular type of hydrostatic reconstruction of the water height and bottom topography to 
-guarantee well-balancedness in the presence of wet/dry transitions and entropy stability for the 
-[`ShallowWaterMultiLayerEquations2D`](@ref). 
-The reconstructed solution states `u_ll_star` and `u_rr_star` variables are used to evaluate the 
-surface numerical flux at the interface. The key idea is a piecewise linear reconstruction of the 
-bottom topography and water height interfaces using subcells, where the bottom topography is allowed 
-to be discontinuous. 
-Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostaticReconstruction`](@extref).
+A particular type of hydrostatic reconstruction of the water height and bottom topography to
+guarantee well-balancedness in the presence of wet/dry transitions and entropy stability for the
+[`ShallowWaterMultiLayerEquations2D`](@ref).
+The reconstructed solution states `u_ll_star` and `u_rr_star` variables are used to evaluate the
+surface numerical flux at the interface. The key idea is a piecewise linear reconstruction of the
+bottom topography and water height interfaces using subcells, where the bottom topography is allowed
+to be discontinuous.
+Use in combination with the generic numerical flux routine [`FluxHydrostaticReconstruction`](@ref).
 
-!!! warning "Experimental code"
-    This is an experimental feature and may change in future releases.
+- Patrick Ersing, Sven Goldberg, and Andrew R. Winters (2025)
+  Entropy stable hydrostatic reconstruction schemes for shallow water systems
+  [DOI: 10.1016/j.jcp.2025.113802](https://doi.org/10.1016/j.jcp.2025.113802)
 """
 @inline function hydrostatic_reconstruction_ersing_etal(u_ll, u_rr,
                                                         equations::ShallowWaterMultiLayerEquations2D)
@@ -717,7 +1001,8 @@ Use in combination with the generic numerical flux routine [`Trixi.FluxHydrostat
 end
 
 # Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom
-# topography
+# topography. For discontinuous bottom topography [`Trixi.DissipationLaxFriedrichsEntropyVariables`](@extref)
+# should be used instead as this version is not well-balanced.
 @inline function (dissipation::DissipationLocalLaxFriedrichs)(u_ll, u_rr,
                                                               orientation_or_normal_direction,
                                                               equations::ShallowWaterMultiLayerEquations2D)
@@ -725,6 +1010,37 @@ end
                                   equations)
     diss = -0.5 * λ * (u_rr - u_ll)
     return SVector(@views diss[1:(end - 1)]..., zero(eltype(u_ll)))
+end
+
+# Provably entropy stable and well-balanced local Lax-Friedrichs dissipation that avoids
+# spurious dissipation in the bottom topography.
+function (dissipation::DissipationLaxFriedrichsEntropyVariables)(u_ll, u_rr,
+                                                                 orientation_or_normal_direction,
+                                                                 equations::ShallowWaterMultiLayerEquations2D{4,
+                                                                                                              1,
+                                                                                                              T}) where {T}
+    λ = dissipation.max_abs_speed(u_ll, u_rr, orientation_or_normal_direction,
+                                  equations)
+    g = equations.gravity
+
+    # Compute averages
+    h_avg = 0.5f0 * (u_ll[1] + u_rr[1])
+    v1_avg = 0.5f0 * (u_ll[2] / u_ll[1] + u_rr[2] / u_rr[1])
+    v2_avg = 0.5f0 * (u_ll[3] / u_ll[1] + u_rr[3] / u_rr[1])
+
+    # Compute the jump in entropy variables
+    w_ll = cons2entropy(u_ll, equations)
+    w_rr = cons2entropy(u_rr, equations)
+    w_jump = SVector{3}(w_rr[1] - w_ll[1], w_rr[2] - w_ll[2], w_rr[3] - w_ll[3])
+
+    # Compute the H := du/dw
+    H = 1 / g * @SMatrix [1 v1_avg v2_avg;
+                  v1_avg g * h_avg+v1_avg^2 v1_avg*v2_avg;
+                  v2_avg v1_avg*v2_avg g * h_avg+v2_avg^2]
+
+    diss = SVector(-0.5f0 * λ * H * w_jump)
+
+    return SVector(diss..., 0)
 end
 
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterMultiLayerEquations2D)
@@ -767,7 +1083,7 @@ end
     c_ll = sqrt(equations.gravity * sum(h_ll))
     c_rr = sqrt(equations.gravity * sum(h_rr))
 
-    return max(abs(v_m_ll), abs(v_m_rr)) + max(c_ll, c_rr)
+    return (max(abs(v_m_ll), abs(v_m_rr)) + max(c_ll, c_rr))
 end
 
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr,
@@ -798,6 +1114,62 @@ end
             max(c_ll, c_rr) * norm(normal_direction))
 end
 
+# Less "cautious", i.e., less overestimating `λ_max` compared to `max_abs_speed_naive`
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     orientation::Integer,
+                                     equations::ShallowWaterMultiLayerEquations2D)
+    # Unpack left and right state
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+
+    # Get the momentum quantities in the appropriate direction
+    if orientation == 1
+        h_v_ll, _ = momentum(u_ll, equations)
+        h_v_rr, _ = momentum(u_rr, equations)
+    else
+        _, h_v_ll = momentum(u_ll, equations)
+        _, h_v_rr = momentum(u_rr, equations)
+    end
+
+    # Get the averaged velocity
+    v_m_ll = sum(h_v_ll) / sum(h_ll)
+    v_m_rr = sum(h_v_rr) / sum(h_rr)
+
+    # Calculate the wave celerity on the left and right
+    c_ll = sqrt(equations.gravity * sum(h_ll))
+    c_rr = sqrt(equations.gravity * sum(h_rr))
+
+    return (max(abs(v_m_ll) + c_ll, abs(v_m_rr) + c_rr))
+end
+
+@inline function Trixi.max_abs_speed(u_ll, u_rr,
+                                     normal_direction::AbstractVector,
+                                     equations::ShallowWaterMultiLayerEquations2D)
+    # Unpack left and right state
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    h_v1_ll, h_v2_ll = momentum(u_ll, equations)
+    h_v1_rr, h_v2_rr = momentum(u_rr, equations)
+
+    # Get the averaged velocity
+    v1_m_ll = sum(h_v1_ll) / sum(h_ll)
+    v2_m_ll = sum(h_v2_ll) / sum(h_ll)
+    v1_m_rr = sum(h_v1_rr) / sum(h_rr)
+    v2_m_rr = sum(h_v2_rr) / sum(h_rr)
+
+    # Compute velocity in the normal direction
+    v_dot_n_ll = v1_m_ll * normal_direction[1] + v2_m_ll * normal_direction[2]
+    v_dot_n_rr = v1_m_rr * normal_direction[1] + v2_m_rr * normal_direction[2]
+
+    # Calculate the wave celerity on the left and right
+    c_ll = sqrt(equations.gravity * sum(h_ll))
+    c_rr = sqrt(equations.gravity * sum(h_rr))
+
+    norm_ = norm(normal_direction)
+    # The normal velocities are already scaled by the norm
+    return (max(abs(v_dot_n_ll) + c_ll * norm_, abs(v_dot_n_rr) + c_rr * norm_))
+end
+
 # Convert conservative variables to primitive
 @inline function Trixi.cons2prim(u, equations::ShallowWaterMultiLayerEquations2D)
     # Extract waterheight
@@ -820,7 +1192,7 @@ end
 
 # Convert primitive to conservative variables
 @inline function Trixi.prim2cons(prim, equations::ShallowWaterMultiLayerEquations2D)
-    # To extract the total layer height and velocity we reuse the waterheight and momentum functions 
+    # To extract the total layer height and velocity we reuse the waterheight and momentum functions
     # from the conservative variables.
     H = waterheight(prim, equations)    # For primitive variables this extracts the total layer height
     v1, v2 = momentum(prim, equations)  # For primitive variables this extracts the velocities
@@ -862,7 +1234,7 @@ end
 
     # Calculate entropy variables in each layer
     for i in eachlayer(equations)
-        # Compute w1[i] = ρ[i] * g * (b + ∑h[k] + ∑σ[k] * h[k]) - 0.5 * ρ[i] * (v1[i]^2 + v2[i]^2), 
+        # Compute w1[i] = ρ[i] * g * (b + ∑h[k] + ∑σ[k] * h[k]) - 0.5 * ρ[i] * (v1[i]^2 + v2[i]^2),
         # where σ[k] = ρ[k] / ρ[i] denotes the density ratio of different layers
         w1 = equations.rhos[i] * (g * b) - 0.5 * equations.rhos[i] * (v1[i]^2 + v2[i]^2)
         for j in eachlayer(equations)
@@ -957,7 +1329,7 @@ end
 end
 
 # Calculate the error for the "lake-at-rest" test case where H = ∑h + b should
-# be a constant value over time. 
+# be a constant value over time.
 # Note, assumes there is a single reference water height `H0` with which to compare.
 @inline function Trixi.lake_at_rest_error(u,
                                           equations::ShallowWaterMultiLayerEquations2D)

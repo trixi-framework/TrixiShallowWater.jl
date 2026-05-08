@@ -1,17 +1,17 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# Semidiscretization of the multilayer shallow water equations for a dam break test with a 
+# Semidiscretization of the multilayer shallow water equations for a dam break test with a
 # discontinuous bottom topography function to test entropy conservation
 
-equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.0,
+equations = ShallowWaterMultiLayerEquations2D(gravity = 1.0,
                                               rhos = (0.9, 0.95, 1.0))
 
-# This test case uses a special work around to setup a truly discontinuous bottom topography 
-# function and initial condition for this academic testcase of entropy conservation. First, a 
+# This test case uses a special work around to setup a truly discontinuous bottom topography
+# function and initial condition for this academic testcase of entropy conservation. First, a
 # dummy initial_condition_dam_break is introduced to create the semidiscretization. Then the initial
 # condition is reset with the true discontinuous values from initial_condition_discontinuous_dam_break.
 
@@ -52,10 +52,10 @@ mesh_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000
 mesh = UnstructuredMesh2D(mesh_file, periodicity = false)
 
 # Boundary conditions
-boundary_condition = Dict(:Top => boundary_condition_slip_wall,
-                          :Left => boundary_condition_slip_wall,
-                          :Right => boundary_condition_slip_wall,
-                          :Bottom => boundary_condition_slip_wall)
+boundary_condition = (; Top = boundary_condition_slip_wall,
+                      Left = boundary_condition_slip_wall,
+                      Right = boundary_condition_slip_wall,
+                      Bottom = boundary_condition_slip_wall)
 
 # Create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition,
@@ -134,7 +134,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false);
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary
+            ode_default_options()..., callback = callbacks);

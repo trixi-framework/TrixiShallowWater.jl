@@ -1,17 +1,16 @@
 
-using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 1.875,
-                                          threshold_limiter = 1e-12, threshold_wet = 1e-14)
+equations = ShallowWaterEquations2D(gravity = 9.81, H0 = 1.875,
+                                    threshold_limiter = 1e-12, threshold_wet = 1e-14)
 
 """
-    initial_condition_three_mounds(x, t, equations::ShallowWaterEquationsWetDry2D)
+    initial_condition_three_mounds(x, t, equations::ShallowWaterEquations2D)
 
 Initial condition simulating a dam break. The bottom topography is given by one large and two smaller
 mounds. The mounds are flooded by the water for t > 0. To smooth the discontinuity, a logistic function
@@ -23,7 +22,7 @@ The initial conditions is taken from Section 6.3 of the paper:
   curvilinear meshes with wet/dry fronts accelerated by GPUs\n
   [DOI: 10.1016/j.jcp.2018.08.038](https://doi.org/10.1016/j.jcp.2018.08.038)
 """
-function initial_condition_three_mounds(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_three_mounds(x, t, equations::ShallowWaterEquations2D)
 
     # Set the background values
     v1 = 0.0
@@ -45,7 +44,7 @@ function initial_condition_three_mounds(x, t, equations::ShallowWaterEquationsWe
 
     # Avoid division by zero by adjusting the initial condition with a small dry state threshold
     # that defaults to 500*eps() ≈ 1e-13 in double precision and is set in the constructor above
-    # for the ShallowWaterEquationsWetDry struct.
+    # for the ShallowWaterEquations struct.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v1, v2, b), equations)
 end
@@ -53,21 +52,23 @@ end
 initial_condition = initial_condition_three_mounds
 
 function boundary_condition_outflow(u_inner, normal_direction::AbstractVector, x, t,
-                                    surface_flux_function,
-                                    equations::ShallowWaterEquationsWetDry2D)
+                                    surface_flux_functions,
+                                    equations::ShallowWaterEquations2D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
     # Impulse and bottom from inside, height from external state
     u_outer = SVector(equations.threshold_wet, u_inner[2], u_inner[3], u_inner[4])
 
     # calculate the boundary flux
     flux = surface_flux_function(u_inner, u_outer, normal_direction, equations)
-
-    return flux
+    noncons_flux = nonconservative_flux_function(u_inner, u_outer, normal_direction,
+                                                 equations)
+    return flux, noncons_flux
 end
 
-boundary_conditions = Dict(:Bottom => boundary_condition_slip_wall,
-                           :Top => boundary_condition_slip_wall,
-                           :Right => boundary_condition_outflow,
-                           :Left => boundary_condition_slip_wall)
+boundary_conditions = (; Bottom = boundary_condition_slip_wall,
+                       Top = boundary_condition_slip_wall,
+                       Right = boundary_condition_outflow,
+                       Left = boundary_condition_slip_wall)
 
 ###############################################################################
 # Get the DG approximation space
@@ -96,8 +97,8 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 default_meshfile = joinpath(@__DIR__, "mesh_three_mound.mesh")
 
 isfile(default_meshfile) ||
-    download("https://gist.githubusercontent.com/svengoldberg/c3c87fecb3fc6e46be7f0d1c7cb35f83/raw/e817ecd9e6c4686581d63c46128f9b6468d396d3/mesh_three_mound.mesh",
-             default_meshfile)
+    Trixi.download("https://gist.githubusercontent.com/svengoldberg/c3c87fecb3fc6e46be7f0d1c7cb35f83/raw/e817ecd9e6c4686581d63c46128f9b6468d396d3/mesh_three_mound.mesh",
+                   default_meshfile)
 
 meshfile = default_meshfile
 
@@ -132,8 +133,7 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 ###############################################################################
 # run the simulation
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()..., callback = callbacks);
-summary_callback() # print the timer summary

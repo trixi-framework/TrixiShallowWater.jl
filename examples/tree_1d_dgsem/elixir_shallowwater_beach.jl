@@ -1,15 +1,15 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry1D(gravity_constant = 9.812)
+equations = ShallowWaterEquations1D(gravity = 9.812)
 
 """
-    initial_condition_beach(x, t, equations:: ShallowWaterEquationsWetDry1D)
+    initial_condition_beach(x, t, equations:: ShallowWaterEquations1D)
 
 Initial condition to simulate a wave running towards a beach and crashing. Difficult test
 including both wetting and drying in the domain using slip wall boundary conditions.
@@ -22,7 +22,7 @@ found in section 5.2 of the paper:
     Finite volume evolution Galerkin methods for the shallow water equations with dry beds\n
     [DOI: 10.4208/cicp.220210.020710a](https://dx.doi.org/10.4208/cicp.220210.020710a)
 """
-function initial_condition_beach(x, t, equations::ShallowWaterEquationsWetDry1D)
+function initial_condition_beach(x, t, equations::ShallowWaterEquations1D)
     D = 1
     delta = 0.02
     gamma = sqrt((3 * delta) / (4 * D))
@@ -45,7 +45,7 @@ function initial_condition_beach(x, t, equations::ShallowWaterEquationsWetDry1D)
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v, b), equations)
@@ -112,12 +112,10 @@ save_solution = SaveSolutionCallback(dt = 0.5,
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation
 
 sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()..., callback = callbacks);
-
-summary_callback() # print the timer summary

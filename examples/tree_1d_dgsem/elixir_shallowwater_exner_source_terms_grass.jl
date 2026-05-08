@@ -1,4 +1,4 @@
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -6,7 +6,7 @@ using TrixiShallowWater
 # Semidiscretization of the SWE-Exner equations with source terms for convergence testing
 
 # Equations with Grass model
-equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
+equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
                                          rho_s = 1.0, porosity = 0.5,
                                          friction = ManningFriction(n = 0.0),
                                          sediment_model = GrassModel(A_g = 0.01))
@@ -35,7 +35,8 @@ mesh = TreeMesh(coordinates_min, coordinates_max,
 
 # create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
-                                    source_terms = source_terms_convergence_test)
+                                    source_terms = source_terms_convergence_test,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solvers, callbacks etc.
@@ -62,8 +63,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback,
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false);
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            save_everystep = false, callback = callbacks);
-
-summary_callback() # print the timer summary
+            ode_default_options()..., callback = callbacks);

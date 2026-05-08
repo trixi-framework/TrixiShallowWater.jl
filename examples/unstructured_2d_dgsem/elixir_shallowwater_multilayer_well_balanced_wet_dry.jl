@@ -1,6 +1,5 @@
 
-using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -8,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the multilayer shallow water equations with a discontinuous
 # bottom topography function (set in the initial conditions) and dry domains
 
-equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 9.81, H0 = 1.5,
+equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, H0 = 1.5,
                                               rhos = (0.9, 0.95, 1.0))
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
@@ -49,8 +48,15 @@ initial_condition = initial_condition_well_balancedness
 # Get the DG approximation space
 
 volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
+# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+# `DissipationLocalLaxFriedrichs(), i.e., `DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+# In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+# Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
+# To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
+# `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
-                                                                  DissipationLocalLaxFriedrichs()),
+                                                                  DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                                               hydrostatic_reconstruction_ersing_etal),
                 FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                               hydrostatic_reconstruction_ersing_etal))
@@ -73,14 +79,15 @@ solver = DGSEM(basis, surface_flux, volume_integral)
 # Get the unstructured quad mesh from a file (downloads the file if not available locally)
 default_mesh_file = joinpath(@__DIR__, "mesh_alfven_wave_with_twist_and_flip.mesh")
 isfile(default_mesh_file) ||
-    download("https://gist.githubusercontent.com/andrewwinters5000/8f8cd23df27fcd494553f2a89f3c1ba4/raw/85e3c8d976bbe57ca3d559d653087b0889535295/mesh_alfven_wave_with_twist_and_flip.mesh",
-             default_mesh_file)
+    Trixi.download("https://gist.githubusercontent.com/andrewwinters5000/8f8cd23df27fcd494553f2a89f3c1ba4/raw/85e3c8d976bbe57ca3d559d653087b0889535295/mesh_alfven_wave_with_twist_and_flip.mesh",
+                   default_mesh_file)
 mesh_file = default_mesh_file
 
 mesh = UnstructuredMesh2D(mesh_file, periodicity = true)
 
 # Create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solver
@@ -168,12 +175,10 @@ stepsize_callback = StepsizeCallback(cfl = 1.0)
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation
 
 sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()..., callback = callbacks, adaptive = false, dt = 1.0);
-
-summary_callback() # print the timer summary

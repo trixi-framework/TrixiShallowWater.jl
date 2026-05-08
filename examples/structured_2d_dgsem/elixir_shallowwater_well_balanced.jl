@@ -1,6 +1,5 @@
 
-using Downloads: download
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -8,12 +7,12 @@ using TrixiShallowWater
 # semidiscretization of the shallow water equations with a discontinuous
 # bottom topography function (set in the initial conditions)
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.81, H0 = 3.0)
+equations = ShallowWaterEquations2D(gravity = 9.81, H0 = 3.0)
 
 # An initial condition with constant total water height and zero velocities to test well-balancedness.
 # Note, this routine is used to compute errors in the analysis callback but the initialization is
 # overwritten by `initial_condition_discontinuous_well_balancedness` below.
-function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquationsWetDry2D)
+function initial_condition_well_balancedness(x, t, equations::ShallowWaterEquations2D)
     # Set the background values
     H = equations.H0
     v1 = 0.0
@@ -31,7 +30,14 @@ initial_condition = initial_condition_well_balancedness
 # Get the DG approximation space
 
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
-surface_flux = (FluxHydrostaticReconstruction(flux_lax_friedrichs,
+# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+# `const flux_lax_friedrichs = FluxLaxFriedrichs(), i.e., `FluxLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+# In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+# Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux to `max_abs_speed`.
+# To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
+# `StepsizeCallback` (CFL-Condition) and less diffusion.
+surface_flux = (FluxHydrostaticReconstruction(FluxLaxFriedrichs(max_abs_speed_naive),
                                               hydrostatic_reconstruction_audusse_etal),
                 flux_nonconservative_audusse_etal)
 solver = DGSEM(polydeg = 4, surface_flux = surface_flux,
@@ -45,10 +51,12 @@ coordinates_max = (2.0, 2.0)
 
 cells_per_dimension = (4, 4)
 
-mesh = StructuredMesh(cells_per_dimension, coordinates_min, coordinates_max)
+mesh = StructuredMesh(cells_per_dimension, coordinates_min, coordinates_max,
+                      periodicity = true)
 
 # Create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver;
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solver
@@ -67,7 +75,7 @@ ode = semidiscretize(semi, tspan)
 # `element_id` explicitly. In particular, this initial conditions works as intended
 # only for the specific mesh loaded above!
 function initial_condition_discontinuous_well_balancedness(x, t, element_id,
-                                                           equations::ShallowWaterEquationsWetDry2D)
+                                                           equations::ShallowWaterEquations2D)
     # Set the background values
     H = equations.H0
     v1 = 0.0
@@ -118,7 +126,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false),
+sol = solve(ode, CarpenterKennedy2N54(williamson_condition = false);
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
-            save_everystep = false, callback = callbacks);
-summary_callback() # print the timer summary
+            ode_default_options()..., callback = callbacks);

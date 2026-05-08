@@ -6,4 +6,5 @@
 #! format: noindent
 
 include("positivity_shallow_water.jl")
+include("velocity_desingularization.jl")
 end # @muladd

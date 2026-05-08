@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2023-present The Trixi.jl Authors (see [trixi-framework/Trixi.jl/AUTHORS.md](https://github.com/trixi-framework/Trixi.jl/blob/main/AUTHORS.md))
+Copyright (c) 2023-present The TrixiShallowWater.jl Authors (see [trixi-framework/TrixiShallowWater.jl/AUTHORS.md](https://github.com/trixi-framework/TrixiShallowWater.jl/blob/main/AUTHORS.md))
 
 Permission is hereby granted, free of charge, to any person obtaining a copy  
 of this software and associated documentation files (the "Software"), to deal  

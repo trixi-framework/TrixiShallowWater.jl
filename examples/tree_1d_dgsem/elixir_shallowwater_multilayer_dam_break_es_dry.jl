@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -7,11 +7,11 @@ using TrixiShallowWater
 # Semidiscretization of the multilayer shallow water equations for a dam break
 # test over a dry domain with a discontinuous bottom topography function
 
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81,
+equations = ShallowWaterMultiLayerEquations1D(gravity = 9.81,
                                               rhos = (0.8, 0.85, 0.9, 0.95, 1.0))
 
 # Initial condition of a dam break with a discontinuous water heights and bottom topography.
-# To test the wet/dry functionality this test case considers a dam break over a dry domain with 
+# To test the wet/dry functionality this test case considers a dam break over a dry domain with
 # multiple layers.
 # Works as intended for TreeMesh1D with `initial_refinement_level=5`. If the mesh
 # refinement level is changed the initial condition below may need changed as well to
@@ -53,8 +53,15 @@ initial_condition = initial_condition_dam_break
 # Get the DG approximation space
 
 volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
+# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+# `DissipationLocalLaxFriedrichs(), i.e., `DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+# In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+# Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
+# To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+# `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
-                                                                  DissipationLocalLaxFriedrichs()),
+                                                                  DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                                               hydrostatic_reconstruction_ersing_etal),
                 FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                               hydrostatic_reconstruction_ersing_etal))
@@ -114,11 +121,11 @@ save_solution = SaveSolutionCallback(interval = 500,
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback,
                         stepsize_callback, save_solution)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, SSPRK43(stage_limiter!), dt = 1.0,
-            save_everystep = false, callback = callbacks, adaptive = false);
-summary_callback() # print the timer summary
+sol = solve(ode, SSPRK43(stage_limiter!);
+            dt = 1.0, adaptive = false,
+            ode_default_options()..., callback = callbacks);

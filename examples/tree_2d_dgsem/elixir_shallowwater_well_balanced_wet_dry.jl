@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 using Printf: @printf, @sprintf
@@ -7,10 +7,10 @@ using Printf: @printf, @sprintf
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-equations = ShallowWaterEquationsWetDry2D(gravity_constant = 9.812)
+equations = ShallowWaterEquations2D(gravity = 9.812)
 
 """
-    initial_condition_well_balanced_chen_noelle(x, t, equations:: ShallowWaterEquationsWetDry2D)
+    initial_condition_well_balanced_chen_noelle(x, t, equations:: ShallowWaterEquations2D)
 
 Initial condition with a complex (discontinuous) bottom topography to test the well-balanced
 property for the [`hydrostatic_reconstruction_chen_noelle`](@ref) including dry areas within the
@@ -23,7 +23,7 @@ The initial condition is taken from Section 5.2 of the paper:
   [DOI:10.1137/15M1053074](https://dx.doi.org/10.1137/15M1053074)
 """
 function initial_condition_complex_bottom_well_balanced(x, t,
-                                                        equations::ShallowWaterEquationsWetDry2D)
+                                                        equations::ShallowWaterEquations2D)
     v1 = 0
     v2 = 0
     b = sin(4 * pi * x[1]) + 3
@@ -41,7 +41,7 @@ function initial_condition_complex_bottom_well_balanced(x, t,
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v1) / h. Therefore, a small dry state threshold
     # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
-    # for the ShallowWaterEquationsWetDry and added to the initial condition if h = 0.
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v1, v2, b), equations)
@@ -78,10 +78,12 @@ coordinates_max = (1.0, 1.0)
 
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 3,
-                n_cells_max = 10_000)
+                n_cells_max = 10_000,
+                periodicity = true)
 
 # create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solvers, callbacks etc.
@@ -107,7 +109,7 @@ for element in eachelement(semi.solver, semi.cache)
         x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations,
                                        semi.solver, i, j, element)
         # We know that the discontinuity is a vertical line. Slightly augment the x value by a factor
-        # of unit roundoff to avoid the repeted value from the LGL nodes at at interface.
+        # of unit roundoff to avoid the repeated value from the LGL nodes at at interface.
         if i == 1
             x_node = SVector(nextfloat(x_node[1]), x_node[2])
         elseif i == nnodes(semi.solver)
@@ -139,15 +141,13 @@ stepsize_callback = StepsizeCallback(cfl = 1.0)
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation
 
 sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
             ode_default_options()..., callback = callbacks, adaptive = false);
-
-summary_callback() # print the timer summary
 
 ###############################################################################
 # Workaround to compute the well-balancedness error for this particular problem
@@ -157,7 +157,7 @@ summary_callback() # print the timer summary
 
 # Declare a special version of the function to compute the lake-at-rest error
 # OBS! The reference water height values are hardcoded for convenience.
-function lake_at_rest_error_two_level(u, x, equations::ShallowWaterEquationsWetDry2D)
+function lake_at_rest_error_two_level(u, x, equations::ShallowWaterEquations2D)
     h, _, _, b = u
 
     # For well-balancedness testing with possible wet/dry regions the reference
@@ -175,7 +175,7 @@ function lake_at_rest_error_two_level(u, x, equations::ShallowWaterEquationsWetD
 end
 
 # point to the data we want to analyze
-u = Trixi.wrap_array(sol[end], semi)
+u = Trixi.wrap_array(sol.u[end], semi)
 # Perform the actual integration of the well-balancedness error over the domain
 l1_well_balance_error = Trixi.integrate_via_indices(u, mesh, equations, semi.solver,
                                                     semi.cache;
@@ -184,7 +184,7 @@ l1_well_balance_error = Trixi.integrate_via_indices(u, mesh, equations, semi.sol
     x_node = Trixi.get_node_coords(semi.cache.elements.node_coordinates, equations, solver,
                                    i, j, element)
     # We know that the discontinuity is a vertical line. Slightly augment the x value by a factor
-    # of unit roundoff to avoid the repeted value from the LGL nodes at at interface.
+    # of unit roundoff to avoid the repeated value from the LGL nodes at at interface.
     if i == 1
         x_node = SVector(nextfloat(x_node[1]), x_node[2])
     elseif i == nnodes(semi.solver)

@@ -1,12 +1,12 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations for a dam break test over a dry domain
 # with a discontinuous bottom topography function.
-equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.0,
+equations = ShallowWaterMultiLayerEquations2D(gravity = 1.0,
                                               rhos = (0.9, 0.95, 1.0))
 
 function initial_condition_dam_break(x, t, equations::ShallowWaterMultiLayerEquations2D)
@@ -50,8 +50,15 @@ boundary_conditions = boundary_condition_slip_wall
 ###############################################################################
 # Get the DG approximation space
 volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
+# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+# `DissipationLocalLaxFriedrichs(), i.e., `DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+# In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+# Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
+# To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+# `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
-                                                                  DissipationLocalLaxFriedrichs()),
+                                                                  DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                                               hydrostatic_reconstruction_ersing_etal),
                 FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                               hydrostatic_reconstruction_ersing_etal))
@@ -88,10 +95,10 @@ semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
 tspan = (0.0, 2.0)
 ode = semidiscretize(semi, tspan)
 ###############################################################################
-#= 
-Workaround for TreeMesh2D to set true discontinuities for debugging and testing. 
+#=
+Workaround for TreeMesh2D to set true discontinuities for debugging and testing.
 Essentially, this is a slight augmentation of the `compute_coefficients` where the `x` node values
-passed here are slightly perturbed in order to set a true discontinuity that avoids the doubled 
+passed here are slightly perturbed in order to set a true discontinuity that avoids the doubled
 value of the LGL nodes at a particular element interface.
 =#
 
@@ -152,7 +159,7 @@ stepsize_callback = StepsizeCallback(cfl = 0.3)
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation
@@ -160,4 +167,3 @@ stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.wate
 # use a Runge-Kutta method with CFL-based time step
 sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()..., callback = callbacks, adaptive = false, dt = 1.0);
-summary_callback() # print the timer summary

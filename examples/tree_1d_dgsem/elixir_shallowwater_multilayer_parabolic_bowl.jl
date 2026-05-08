@@ -1,5 +1,5 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
@@ -7,7 +7,7 @@ using TrixiShallowWater
 # Semidiscretization of the shallow water equations
 
 # By passing only a single value for rhos, the system recovers the standard shallow water equations
-equations = ShallowWaterMultiLayerEquations1D(gravity_constant = 9.81, rhos = 1.0)
+equations = ShallowWaterMultiLayerEquations1D(gravity = 9.81, rhos = 1.0)
 
 """
     initial_condition_parabolic_bowl(x, t, equations:: ShallowWaterMultiLayerEquations1D)
@@ -41,7 +41,7 @@ function initial_condition_parabolic_bowl(x, t,
 
     H = sigma * h_0 / a^2 * (2 * x[1] * cos(ω * t) - sigma) + h_0
 
-    #= 
+    #=
     It is mandatory to shift the water level at dry areas to make sure the water height h
     stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
@@ -59,8 +59,15 @@ initial_condition = initial_condition_parabolic_bowl
 # Get the DG approximation space
 
 volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
+# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+# `DissipationLocalLaxFriedrichs(), i.e., `DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+# In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+# Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
+# To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
+# `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
-                                                                  DissipationLocalLaxFriedrichs()),
+                                                                  DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                                               hydrostatic_reconstruction_ersing_etal),
                 FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                               hydrostatic_reconstruction_ersing_etal))
@@ -86,10 +93,12 @@ coordinates_max = 2.0
 
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 6,
-                n_cells_max = 10_000)
+                n_cells_max = 10_000,
+                periodicity = true)
 
 # create the semi discretization object
-semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver)
+semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
 # ODE solvers, callbacks etc.
@@ -113,12 +122,10 @@ save_solution = SaveSolutionCallback(interval = 1000,
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation
 
 sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()..., callback = callbacks);
-
-summary_callback() # print the timer summary

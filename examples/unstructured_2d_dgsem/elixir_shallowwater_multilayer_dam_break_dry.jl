@@ -1,17 +1,17 @@
 
-using OrdinaryDiffEq
+using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations for a dam break test over a dry domain
 # with a discontinuous bottom topography function
-equations = ShallowWaterMultiLayerEquations2D(gravity_constant = 1.0,
+equations = ShallowWaterMultiLayerEquations2D(gravity = 1.0,
                                               rhos = (0.9, 0.95, 1.0))
 
-# This test case uses a special work around to setup a truly discontinuous bottom topography 
+# This test case uses a special work around to setup a truly discontinuous bottom topography
 # function and initial condition. First, a dummy initial_condition_dam_break is introduced to create
-# the semidiscretization. Then the initial condition is reset with the true discontinuous values 
+# the semidiscretization. Then the initial condition is reset with the true discontinuous values
 # from initial_condition_discontinuous_dam_break.
 
 function initial_condition_dam_break(x, t, equations::ShallowWaterMultiLayerEquations2D)
@@ -52,8 +52,15 @@ initial_condition = initial_condition_dam_break
 # Get the DG approximation space
 
 volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
+# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
+# `DissipationLocalLaxFriedrichs(), i.e., `DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
+# In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
+# Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
+# To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
+# `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
-                                                                  DissipationLocalLaxFriedrichs()),
+                                                                  DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
                                               hydrostatic_reconstruction_ersing_etal),
                 FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                               hydrostatic_reconstruction_ersing_etal))
@@ -78,10 +85,10 @@ mesh_file = Trixi.download("https://gist.githubusercontent.com/andrewwinters5000
 mesh = UnstructuredMesh2D(mesh_file, periodicity = false)
 
 # Boundary conditions
-boundary_condition = Dict(:Top => boundary_condition_slip_wall,
-                          :Left => boundary_condition_slip_wall,
-                          :Right => boundary_condition_slip_wall,
-                          :Bottom => boundary_condition_slip_wall)
+boundary_condition = (; Top = boundary_condition_slip_wall,
+                      Left = boundary_condition_slip_wall,
+                      Right = boundary_condition_slip_wall,
+                      Bottom = boundary_condition_slip_wall)
 
 # Create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition,
@@ -172,11 +179,10 @@ stepsize_callback = StepsizeCallback(cfl = 0.5)
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (Trixi.waterheight,))
+stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
 ###############################################################################
 # run the simulation
 
 sol = solve(ode, SSPRK43(stage_limiter!);
             ode_default_options()..., callback = callbacks, adaptive = false, dt = 1.0);
-summary_callback() # print the timer summary

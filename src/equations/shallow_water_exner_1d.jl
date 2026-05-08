@@ -12,8 +12,8 @@ abstract type Friction{RealT} end
     ManningFriction(; n)
 
 Creates a Manning friction model for the bottom friction with Manning coefficient `n`.
-The type is used to dispatch on the respective friction law through the
-`shear_stress_coefficient` when computing the `shear_stress`.
+The type is used to dispatch on the respective friction law through the `shear_stress_coefficient` 
+when computing the `shear_stress`.
 """
 struct ManningFriction{RealT} <: Friction{RealT}
     n::RealT
@@ -29,7 +29,7 @@ abstract type SedimentModel{RealT} end
 @doc raw"""
     ShieldsStressModel(; m_1, m_2, m_3, k_1, k_2, k_3, theta_c, d_s)
 
-Create a Shields stress model to compute the sediment discharge `q_s` based on the generalized 
+Create a Shields stress model to compute the sediment discharge `q_s` based on the generalized
 formulation from equation (1.2) in the given reference.
 
 The choice of the real constants `m_1`, `m_2`, `m_3`, `k_1`, `k_2`, and `k_3` creates
@@ -40,7 +40,7 @@ The Shields stress represents the ratio of agitating and stabilizing forces in t
 the sediment grain size.
 
 - E.D. Fernández-Nieto, T.M. de Luna, G. Narbona-Reina and J. de Dieu Zabsonré (2017)\
-  Formal deduction of the Saint-Venant–Exner model including arbitrarily sloping sediment beds and 
+  Formal deduction of the Saint-Venant–Exner model including arbitrarily sloping sediment beds and
   associated energy\
   [DOI: 10.1051/m2an/2016018](https://doi.org/10.1051/m2an/2016018)
 """
@@ -63,15 +63,15 @@ Creates a Grass model to compute the sediment discharge `q_s` as
 q_s = A_g v^{m_g}
 ```
 with the coefficients `A_g` and `m_g`. The constant `A_g` lies in the interval ``[0,1]``
-and is a dimensional calibration constant that is usually measured experimental. It expresses
-the kind of interaction between the fluid and the sediment, the strength of which 
-increases as `A_g` approaches to 1. The factor `m_g` lies in the interval ``[1, 4]``.
+and is a dimensional calibration constant that is usually measured experimentally.
+It expresses the kind of interaction between the fluid and the sediment, the strength
+of which increases as `A_g` approaches to 1. The factor `m_g` lies in the interval ``[1, 4]``.
 Typically, one considers an odd integer value for `m_g` such that the sediment discharge
 `q_s` can be differentiated and the model remains valid for all values of the velocity `v`.
 
 An overview of different formulations to compute the sediment discharge can be found in:
 - M.J. Castro Díaz, E.D. Fernández-Nieto, A.M. Ferreiro (2008)\
-  Sediment transport models in Shallow Water equations and numerical approach by high order 
+  Sediment transport models in Shallow Water equations and numerical approach by high order
   finite volume methods\
   [DOI:10.1016/j.compfluid.2007.07.017](https://doi.org/10.1016/j.compfluid.2007.07.017)
 """
@@ -80,28 +80,31 @@ struct GrassModel{RealT} <: SedimentModel{RealT}
     m_g::RealT
 end
 
-function GrassModel(; A_g, m_g = 3.0)
-    return GrassModel(A_g, m_g)
+function GrassModel(; A_g, m_g = 3)
+    RealT = promote_type(typeof(A_g), typeof(m_g))
+    return GrassModel(RealT(A_g), RealT(m_g))
 end
 
 @doc raw"""
     MeyerPeterMueller(; theta_c, d_s)
 
-Creates a Meyer-Peter-Mueller model to compute the sediment discharge 
+Creates a Meyer-Peter-Mueller model to compute the sediment discharge
 `q_s` with the critical Shields stress `theta_c` and the grain diameter `d_s`.
 
 An overview of different formulations to compute the sediment discharge can be found in:
 - M.J. Castro Díaz, E.D. Fernández-Nieto, A.M. Ferreiro (2008)\
-  Sediment transport models in Shallow Water equations and numerical approach by high order 
+  Sediment transport models in Shallow Water equations and numerical approach by high order
   finite volume methods\
   [DOI:10.1016/j.compfluid.2007.07.017](https://doi.org/10.1016/j.compfluid.2007.07.017)
 """
 function MeyerPeterMueller(; theta_c, d_s)
-    return ShieldsStressModel(0.0, 1.5, 0.0, 8.0, 1.0, 0.0, theta_c, d_s)
+    RealT = promote_type(typeof(theta_c), typeof(d_s))
+    return ShieldsStressModel(RealT(0.0), RealT(1.5), RealT(0.0), RealT(8.0),
+                              RealT(1.0), RealT(0.0), RealT(theta_c), RealT(d_s))
 end
 
 @doc raw"""
-    ShallowWaterExnerEquations1D(;gravity_constant, H0 = 0.0,
+    ShallowWaterExnerEquations1D(;gravity, H0 = 0.0,
                                  friction = ManningFriction(n = 0.0),
                                  sediment_model,
                                  porosity,
@@ -116,23 +119,23 @@ entropy inequality. The equations are given by
 \end{cases}
 ```
 The unknown quantities are the water and sediment height ``h``, ``h_b`` and the velocity ``v``.
-The sediment discharge ``q_s(h, hv)`` is determined by the `sediment_model` and is used to determine 
-the active sediment height ``h_s = q_s / v``. 
-Furthermore ``\tau`` denotes the shear stress at the water-sediment interface and is determined by 
-the `friction` model.  
-The gravitational constant is denoted by ``g``, and ``\rho_f`` and ``\rho_s`` are the fluid and sediment
+The sediment discharge ``q_s(h, hv)`` is determined by the `sediment_model` and is used to determine
+the active sediment height ``h_s = q_s / v``.
+Furthermore ``\tau`` denotes the shear stress at the water-sediment interface and is determined by
+the `friction` model.
+The gravitational acceleration is denoted by ``g``, and ``\rho_f`` and ``\rho_s`` are the fluid and sediment
 densities, respectively. The density ratio is given by ``r = \rho_f / \rho_s``, where ``r`` lies between
 ``0 < r < 1`` as the fluid density ``\rho_f`` should be smaller than the sediment density ``\rho_s``.
 
 The conservative variable water height ``h`` is measured from the sediment height ``h_b``, therefore
 one also defines the total water height as ``H = h + h_b``.
 
-The additional quantity ``H_0`` is also available to store a reference value for the total water 
+The additional quantity ``H_0`` is also available to store a reference value for the total water
 height that is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 
 The entropy conservative formulation has been derived in the paper:
 - E.D. Fernández-Nieto, T.M. de Luna, G. Narbona-Reina and J. de Dieu Zabsonré (2017)\
-  Formal deduction of the Saint-Venant–Exner model including arbitrarily sloping sediment beds and 
+  Formal deduction of the Saint-Venant–Exner model including arbitrarily sloping sediment beds and
   associated energy\
   [DOI: 10.1051/m2an/2016018](https://doi.org/10.1051/m2an/2016018)
 """
@@ -140,9 +143,9 @@ struct ShallowWaterExnerEquations1D{RealT <: Real,
                                     FrictionT <: Friction{RealT},
                                     SedimentT <: SedimentModel{RealT}} <:
        Trixi.AbstractShallowWaterEquations{1, 3}
-    # This structure ensures that friction and sediment models are concrete types 
+    # This structure ensures that friction and sediment models are concrete types
     # to prevent allocations
-    gravity::RealT # gravitational constant
+    gravity::RealT # gravitational acceleration
     H0::RealT      # constant "lake-at-rest" total water height
     friction::FrictionT
     sediment_model::SedimentT
@@ -155,11 +158,11 @@ struct ShallowWaterExnerEquations1D{RealT <: Real,
     threshold_partially_wet::RealT  # threshold to define partially wet elements
 end
 
-# Allow for flexibility to set the gravitational constant within an elixir depending on the
-# application where `gravity_constant=1.0` or `gravity_constant=9.81` are common values.
+# Allow for flexibility to set the gravitational acceleration within an elixir depending on the
+# application where `gravity=1.0` or `gravity=9.81` are common values.
 # The reference total water height H0 defaults to 0.0 but is used for the "lake-at-rest"
 # well-balancedness test cases.
-function ShallowWaterExnerEquations1D(; gravity_constant, H0 = zero(gravity_constant),
+function ShallowWaterExnerEquations1D(; gravity, H0 = zero(gravity),
                                       friction = ManningFriction(n = 0.0),
                                       sediment_model,
                                       porosity, rho_f, rho_s,
@@ -183,7 +186,7 @@ function ShallowWaterExnerEquations1D(; gravity_constant, H0 = zero(gravity_cons
         threshold_partially_wet = default_threshold_partially_wet(RealT)
     end
 
-    return ShallowWaterExnerEquations1D(gravity_constant, H0, friction, sediment_model,
+    return ShallowWaterExnerEquations1D(gravity, H0, friction, sediment_model,
                                         porosity_inv, rho_f, rho_s, r,
                                         threshold_limiter,
                                         threshold_desingularization,
@@ -213,8 +216,10 @@ For details see Section 9.2.5 of the book:
 @inline function Trixi.boundary_condition_slip_wall(u_inner, orientation_or_normal,
                                                     direction,
                                                     x, t,
-                                                    surface_flux_function,
+                                                    surface_flux_functions,
                                                     equations::ShallowWaterExnerEquations1D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
     # create the "external" boundary solution state
     u_boundary = SVector(u_inner[1],
                          -u_inner[2],
@@ -224,12 +229,18 @@ For details see Section 9.2.5 of the book:
     if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
         flux = surface_flux_function(u_inner, u_boundary, orientation_or_normal,
                                      equations)
+        noncons_flux = nonconservative_flux_function(u_inner, u_boundary,
+                                                     orientation_or_normal,
+                                                     equations)
     else # u_boundary is "left" of boundary, u_inner is "right" of boundary
         flux = surface_flux_function(u_boundary, u_inner, orientation_or_normal,
                                      equations)
+        noncons_flux = nonconservative_flux_function(u_boundary, u_inner,
+                                                     orientation_or_normal,
+                                                     equations)
     end
 
-    return flux
+    return flux, noncons_flux
 end
 
 # Set initial conditions at physical location `x` for time `t`
@@ -243,25 +254,25 @@ A smooth initial condition used for convergence tests in combination with
                                                           equations::ShallowWaterExnerEquations1D)
     ω = sqrt(2) * pi
 
-    h = 2.0 + cos(ω * x[1]) * cos(ω * t)
-    v = 0.5
-    h_b = 2.0 + sin(ω * x[1]) * cos(ω * t)
+    h = 2 + cos(ω * x[1]) * cos(ω * t)
+    v = 0.5f0
+    h_b = 2 + sin(ω * x[1]) * cos(ω * t)
 
     return SVector(h, h * v, h_b)
 end
 
 """
     source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations1D{T, S, GrassModel{T}}) where {T, S}
-    
-Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref) 
+
+Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref)
 when using the the [`GrassModel`](@ref) model.
 
 To use this source term the equations must be set to:
 ```julia
-equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
+equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
                                             rho_s = 1.0, porosity = 0.5,
                                             friction = ManningFriction(n = 0.0),
-                                            sediment_model = GrassModel(A_g = 0.01)
+                                            sediment_model = GrassModel(A_g = 0.01))
 ```
 """
 @inline function Trixi.source_terms_convergence_test(u, x, t,
@@ -271,28 +282,29 @@ equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
                                                                                                                     T,
                                                                                                                     S
                                                                                                                     }
-    ω = sqrt(2.0) * pi
+    ω = sqrt(2) * pi
     A_g = equations.sediment_model.A_g
 
-    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5 * sin(x[1] * ω) * cos(t * ω) * ω
-    hv = -0.5 * cos(x[1] * ω) * sin(t * ω) * ω - 0.25 * sin(x[1] * ω) * cos(t * ω) * ω +
-         10.0 * A_g *
-         (cos(x[1] * ω) * cos(t * ω) * ω - 0.5 * sin(x[1] * ω) * cos(t * ω) * ω) +
-         10.0 * (2.0 + cos(x[1] * ω) * cos(t * ω)) *
+    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω
+    hv = -0.5f0 * cos(x[1] * ω) * sin(t * ω) * ω -
+         0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
+         10 * A_g *
+         (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω) +
+         10 * (2 + cos(x[1] * ω) * cos(t * ω)) *
          (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω)
     h_b = -sin(x[1] * ω) * sin(t * ω) * ω
     return SVector(h, hv, h_b)
 end
 
-"""
+""" 
     source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations1D{T, S, ShieldsStressModel{T}}) where {T, S}
 
-Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref) 
+Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref)
 when using the [`MeyerPeterMueller`](@ref) model.
 
 To use this source term the equations must be set to:
 ```julia
-equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
+equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
                                          rho_s = 1.0, porosity = 0.5,
                                          friction = ManningFriction(n = 0.01),
                                          sediment_model = MeyerPeterMueller(theta_c = 0.0,
@@ -306,27 +318,27 @@ equations = ShallowWaterExnerEquations1D(gravity_constant = 10.0, rho_f = 0.5,
                                                                                                                             T,
                                                                                                                             S
                                                                                                                             }
-    ω = sqrt(2.0) * pi
+    ω = sqrt(2) * pi
     (; gravity, porosity_inv, rho_f, rho_s, r) = equations
 
     n = equations.friction.n
 
     # Constant expression from the MPM model
-    c = sqrt(gravity * (1 / r - 1)) * 8.0 * porosity_inv *
+    c = sqrt(gravity * (1 / r - 1)) * 8 * porosity_inv *
         (rho_f / (rho_s - rho_f))^(3 / 2) * n^3
 
-    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5 * sin(x[1] * ω) * cos(t * ω) * ω
+    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω
 
-    hv = ((5.0 * c *
-           (cos(x[1] * ω) * cos(t * ω) * ω - 0.5 * sin(x[1] * ω) * cos(t * ω) * ω)) /
-          ((2.0 + cos(x[1] * ω) * cos(t * ω))^0.5) -
-          0.5 * cos(x[1] * ω) * sin(t * ω) * ω -
-          0.25 * sin(x[1] * ω) * cos(t * ω) * ω +
-          10.0 * (2.0 + cos(x[1] * ω) * cos(t * ω)) *
+    hv = ((5 * c *
+           (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω)) /
+          ((2 + cos(x[1] * ω) * cos(t * ω))^0.5) -
+          0.5f0 * cos(x[1] * ω) * sin(t * ω) * ω -
+          0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
+          10 * (2 + cos(x[1] * ω) * cos(t * ω)) *
           (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω))
 
-    h_b = ((0.5 * ((0.125 * c) / (2.0 + cos(x[1] * ω) * cos(t * ω))) * sin(x[1] * ω) *
-            cos(t * ω) * ω) / ((2.0 + cos(x[1] * ω) * cos(t * ω))^0.5) -
+    h_b = ((0.5f0 * ((0.125f0 * c) / (2 + cos(x[1] * ω) * cos(t * ω))) * sin(x[1] * ω) *
+            cos(t * ω) * ω) / ((2 + cos(x[1] * ω) * cos(t * ω))^0.5) -
            sin(x[1] * ω) * sin(t * ω) * ω)
 
     return SVector(h, hv, h_b)
@@ -335,7 +347,7 @@ end
 """
     source_term_bottom_friction(u, x, t, equations::ShallowWaterExnerEquations1D)
 
-Source term that accounts for the bottom friction in the [ShallowWaterExnerEquations1D](@ref). 
+Source term that accounts for the bottom friction in the [ShallowWaterExnerEquations1D](@ref).
 The actual friction law is determined through the friction model in `equations.friction`.
 """
 @inline function source_term_bottom_friction(u, x, t,
@@ -364,7 +376,7 @@ end
 
 Non-symmetric path-conservative two-point flux discretizing the nonconservative terms of the
 [`ShallowWaterExnerEquations1D`](@ref) which consists of the hydrostatic pressure of the fluid
-layer and an additional pressure contribution from the sediment layer to obtain an entropy 
+layer and an additional pressure contribution from the sediment layer to obtain an entropy
 inequality.
 
 This non-conservative flux should be used together with [`flux_ersing_etal`](@ref) to create a
@@ -382,8 +394,8 @@ scheme that is entropy conservative and well-balanced.
     h_b_jump = h_b_rr - h_b_ll
 
     # Workaround to avoid division by zero, when computing the effective sediment height
-    if velocity(u_ll, equations) < eps()
-        h_s_ll = 0.0
+    if abs(velocity(u_ll, equations)) < eps(typeof(h_ll))
+        h_s_ll = 0
     else
         h_s_ll = q_s(u_ll, equations) / velocity(u_ll, equations)
     end
@@ -402,8 +414,8 @@ end
     flux_ersing_etal(u_ll, u_rr, orientation::Integer,
                                      equations::ShallowWaterMultiLayerEquations1D)
 
-Entropy conservative split form, without the hydrostatic pressure. This flux should be used 
-together with the nonconservative [`flux_nonconservative_ersing_etal`](@ref) to create a scheme 
+Entropy conservative split form, without the hydrostatic pressure. This flux should be used
+together with the nonconservative [`flux_nonconservative_ersing_etal`](@ref) to create a scheme
 that is entropy conservative and well-balanced.
 
 To obtain an entropy stable formulation the `surface_flux` can be set as
@@ -420,12 +432,12 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
     v_rr = velocity(u_rr, equations)
 
     # Average each factor of products in flux
-    v_avg = 0.5 * (v_ll + v_rr)
+    v_avg = 0.5f0 * (v_ll + v_rr)
 
     # Calculate fluxes depending on orientation
-    f1 = 0.5 * (h_v_ll + h_v_rr)
+    f1 = 0.5f0 * (h_v_ll + h_v_rr)
     f2 = f1 * v_avg
-    f3 = 0.5 * (q_s(u_ll, equations) + q_s(u_rr, equations))
+    f3 = 0.5f0 * (q_s(u_ll, equations) + q_s(u_rr, equations))
 
     return SVector(f1, f2, f3)
 end
@@ -488,7 +500,7 @@ end
 """
     dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
                                     equations::ShallowWaterExnerEquations1D)
-Roe-type dissipation term for the [`ShallowWaterExnerEquations1D`](@ref) with an approximate Roe average 
+Roe-type dissipation term for the [`ShallowWaterExnerEquations1D`](@ref) with an approximate Roe average
 for the sediment discharge `q_s`.
 """
 @inline function dissipation_roe(u_ll, u_rr, orientation_or_normal_direction,
@@ -502,21 +514,24 @@ for the sediment discharge `q_s`.
     v_rr = velocity(u_rr, equations)
 
     # Compute approximate Roe averages.
-    # The actual Roe average for the sediment discharge `q_s` would depend on the sediment and 
-    # friction model and can be difficult to compute analytically. 
+    # The actual Roe average for the sediment height `h_b` depends on the sediment and
+    # friction model and an explicit formula is not always available.
     # Therefore we only use an approximation here.
-    h_avg = 0.5 * (u_ll[1] + u_rr[1])
+    h_avg = 0.5f0 * (u_ll[1] + u_rr[1])
     v_avg = (sqrt(u_ll[1]) * v_ll + sqrt(u_rr[1]) * v_rr) /
             (sqrt(u_ll[1]) + sqrt(u_rr[1]))
+    h_b_avg = 0.5f0 * (u_ll[3] + u_rr[3])
+
     # Workaround to avoid division by zero, when computing the effective sediment height
-    if v_avg < eps()
-        h_s_avg = 0.0
+    if abs(v_avg) < eps(typeof(h_avg))
+        h_s_avg = 0
     else
-        h_s_avg = 0.5 * (q_s(u_ll, equations) / v_ll + q_s(u_rr, equations) / v_rr)
+        h_s_avg = (q_s(SVector(h_avg, h_avg * v_avg, h_b_avg), equations) /
+                   v_avg)
     end
 
     # Compute the eigenvalues using Cardano's formula
-    λ1, λ2, λ3 = eigvals_cardano(SVector(h_avg, h_avg * v_avg, h_s_avg), equations)
+    λ1, λ2, λ3 = eigvals_cardano(SVector(h_avg, h_avg * v_avg, h_b_avg), equations)
 
     # Precompute some common expressions
     c1 = g * (h_avg + h_s_avg)
@@ -540,7 +555,7 @@ for the sediment discharge `q_s`.
     Λ_abs = @SMatrix [abs(λ1) z z; z abs(λ2) z; z z abs(λ3)]
 
     # Compute dissipation
-    diss = SVector(-0.5 * R * Λ_abs * R_inv * (u_rr - u_ll))
+    diss = SVector(-0.5f0 * R * Λ_abs * R_inv * (u_rr - u_ll))
 
     return SVector(diss[1], diss[2], diss[3])
 end
@@ -576,14 +591,14 @@ end
 
     theta = rho_f * abs(shear_stress(u, equations)) / (gravity * (rho_s - rho_f) * d_s)  # Shields stress
 
-    Q = d_s * sqrt(gravity * (rho_s / rho_f - 1.0) * d_s) # Characteristic discharge
+    Q = d_s * sqrt(gravity * (rho_s / rho_f - 1) * d_s) # Characteristic discharge
 
     return (porosity_inv * Q * sign(theta) * k_1 * theta^m_1 *
-            (max(theta - k_2 * theta_c, 0.0))^m_2 *
-            (max(sqrt(theta) - k_3 * sqrt(theta_c), 0.0))^m_3)
+            (max(theta - k_2 * theta_c, 0))^m_2 *
+            (max(sqrt(theta) - k_3 * sqrt(theta_c), 0))^m_3)
 end
 
-# Compute the sediment discharge for the Grass model 
+# Compute the sediment discharge for the Grass model
 @inline function q_s(u,
                      equations::ShallowWaterExnerEquations1D{T, S, GrassModel{T}}) where {
                                                                                           T,
@@ -623,7 +638,7 @@ end
 
     v = velocity(u, equations)
 
-    w1 = r * (gravity * (h + h_b) - 0.5 * v^2)
+    w1 = r * (gravity * (h + h_b) - 0.5f0 * v^2)
     w2 = r * v
     w3 = gravity * (r * h + h_b)
 
@@ -655,11 +670,12 @@ end
     v = velocity(u, equations)
     (; gravity, r) = equations
 
-    return 0.5 * r * h * v^2 + 0.5 * gravity * (r * h^2 + h_b^2) + r * gravity * h * h_b
+    return 0.5f0 * r * h * v^2 + 0.5f0 * gravity * (r * h^2 + h_b^2) +
+           r * gravity * h * h_b
 end
 
 # Calculate the error for the "lake-at-rest" test case where H = h + h_b should
-# be a constant value over time. 
+# be a constant value over time.
 @inline function Trixi.lake_at_rest_error(u, equations::ShallowWaterExnerEquations1D)
     h, _, h_b = u
     return abs(equations.H0 - (h + h_b))
@@ -675,16 +691,16 @@ end
     r = equations.r
 
     # Workaround to avoid division by zero, when computing the effective sediment height
-    if v > eps()
+    if abs(v) > eps(typeof(h))
         h_s = q_s(u, equations) / v
         # Compute gradients of q_s using automatic differentiation.
-        # Introduces a closure to make q_s a function of u only. This is necessary since the 
+        # Introduces a closure to make q_s a function of u only. This is necessary since the
         # gradient function only accepts functions of one variable.
         dq_s_dh, dq_s_dhv, _ = Trixi.ForwardDiff.gradient(u -> q_s(u, equations), u)
     else
-        h_s = 0.0
-        dq_s_dh = 0.0
-        dq_s_dhv = 0.0
+        h_s = 0
+        dq_s_dh = 0
+        dq_s_dhv = 0
     end
 
     # Coefficient for the original cubic equation ax^3 + bx^2 + cx + d
