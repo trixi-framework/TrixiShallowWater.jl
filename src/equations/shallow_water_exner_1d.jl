@@ -169,7 +169,7 @@ function ShallowWaterExnerEquations1D(; gravity, H0 = zero(gravity),
                                       threshold_limiter = nothing,
                                       threshold_desingularization = nothing,
                                       threshold_partially_wet = nothing)
-    RealT = typeof(gravity_constant)
+    RealT = typeof(gravity)
 
     # Precompute common expressions for the porosity and density ratio
     porosity_inv = inv(1 - porosity)
