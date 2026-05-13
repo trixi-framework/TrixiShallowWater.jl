@@ -319,7 +319,7 @@ scheme that is entropy conservative and well-balanced.
 
     if orientation == 1
         return SVector(z, f, z, z)
-    else # orentation == 2
+    else # orientation == 2
         return SVector(z, z, f, z)
     end
 end
