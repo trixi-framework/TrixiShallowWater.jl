@@ -74,10 +74,12 @@ function ShallowWaterExnerEquations2D(; gravity, H0 = zero(gravity),
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterExnerEquations2D) = True()
-Trixi.varnames(::typeof(cons2cons), ::ShallowWaterExnerEquations2D) = ("h", "hv1", "hv2", "h_b")
+Trixi.varnames(::typeof(cons2cons), ::ShallowWaterExnerEquations2D) = ("h", "hv1",
+                                                                       "hv2", "h_b")
 # Note, we use the total water height, H = h + h_b, as the first primitive variable for easier
 # visualization and setting initial conditions
-Trixi.varnames(::typeof(cons2prim), ::ShallowWaterExnerEquations2D) = ("H", "v1", "v2", "h_b")
+Trixi.varnames(::typeof(cons2prim), ::ShallowWaterExnerEquations2D) = ("H", "v1", "v2",
+                                                                       "h_b")
 
 @doc raw"""
     boundary_condition_slip_wall(u_inner, orientation_or_normal, x, t, surface_flux_function,
@@ -313,12 +315,13 @@ scheme that is entropy conservative and well-balanced.
     f = equations.gravity * h_ll * (h_jump + h_b_jump)
     # Additional nonconservative term to obtain entropy conservative formulation
     f += (equations.gravity / equations.r * h_s_ll *
-           (equations.r * h_jump + h_b_jump))
+          (equations.r * h_jump + h_b_jump))
 
     if orientation == 1
         return SVector(z, f, z, z)
     else # orentation == 2
         return SVector(z, z, f, z)
+    end
 end
 
 """
@@ -399,7 +402,8 @@ for the sediment discharge `q_s`.
                               orientation, equations)
 
     # Compute the sediment discharge at the averaged state
-    q_s1_tilde, q_s2_tilde = q_s(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg), equations)
+    q_s1_tilde, q_s2_tilde = q_s(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg,
+                                         h_b_avg), equations)
 
     # Build the right eigenvector matrix and its inverse in the appropriate direction
     if orientation == 1
@@ -421,8 +425,8 @@ for the sediment discharge `q_s`.
         min_err = abs(lambdas[1] - v1_avg)
         for i in 2:4
             err = abs(lambdas[i] - v1_avg)
-            if err < minerr
-                minerr = err
+            if err < min_err
+                min_err = err
                 contact_idx = i
             end
         end
@@ -440,16 +444,17 @@ for the sediment discharge `q_s`.
         r41 = ((v1_avg - λ1)^2 - c1) / c2
         r42 = ((v1_avg - λ2)^2 - c1) / c2
         r43 = ((v1_avg - λ3)^2 - c1) / c2
-        R = @SMatrix [[1 1 1 z]; [λ1 λ2 λ3 z]; [v2_avg v2_avg v2_avg 1]; [r41 r42 r43 z]]
+        R = @SMatrix [[1 1 1 z]; [λ1 λ2 λ3 z]; [v2_avg v2_avg v2_avg 1];
+                      [r41 r42 r43 z]]
 
         # Inverse eigenvector matrix
         d1 = (λ1 - λ2) * (λ1 - λ3)
         d2 = (λ2 - λ1) * (λ2 - λ3)
         d3 = (λ3 - λ2) * (λ3 - λ1)
         R_inv = @SMatrix [(c1 - v1_avg^2 + λ2 * λ3)/d1 (2 * v1_avg - λ2 - λ3)/d1 z c2/d1;
-                        (c1 - v1_avg^2 + λ1 * λ3)/d2 (2 * v1_avg - λ1 - λ3)/d2 z c2/d2;
-                        (c1 - v1_avg^2 + λ1 * λ2)/d3 (2 * v1_avg - λ2 - λ1)/d3 z c2/d3;
-                        -v2_avg z 1 z]
+                          (c1 - v1_avg^2 + λ1 * λ3)/d2 (2 * v1_avg - λ1 - λ3)/d2 z c2/d2;
+                          (c1 - v1_avg^2 + λ1 * λ2)/d3 (2 * v1_avg - λ2 - λ1)/d3 z c2/d3;
+                          -v2_avg z 1 z]
     else # orientation == 2
         # Workaround to avoid division by zero, when computing the effective sediment height
         if abs(v2_avg) < eps(typeof(h_avg))
@@ -469,8 +474,8 @@ for the sediment discharge `q_s`.
         min_err = abs(lambdas[1] - v2_avg)
         for i in 2:4
             err = abs(lambdas[i] - v2_avg)
-            if err < minerr
-                minerr = err
+            if err < min_err
+                min_err = err
                 contact_idx = i
             end
         end
@@ -488,16 +493,17 @@ for the sediment discharge `q_s`.
         r41 = ((v2_avg - λ1)^2 - c1) / c2
         r42 = ((v2_avg - λ2)^2 - c1) / c2
         r43 = ((v2_avg - λ3)^2 - c1) / c2
-        R = @SMatrix [[1 1 1 z]; [v1_avg v1_avg v1_avg 1]; [λ1 λ2 λ3 z]; [r41 r42 r43 z]]
+        R = @SMatrix [[1 1 1 z]; [v1_avg v1_avg v1_avg 1]; [λ1 λ2 λ3 z];
+                      [r41 r42 r43 z]]
 
         # Inverse eigenvector matrix
         d1 = (λ1 - λ2) * (λ1 - λ3)
         d2 = (λ2 - λ1) * (λ2 - λ3)
         d3 = (λ3 - λ2) * (λ3 - λ1)
         R_inv = @SMatrix [(c1 - v1_avg^2 + λ2 * λ3)/d1 z (2 * v1_avg - λ2 - λ3)/d1 c2/d1;
-                        (c1 - v1_avg^2 + λ1 * λ3)/d2 z (2 * v1_avg - λ1 - λ3)/d2 c2/d2;
-                        (c1 - v1_avg^2 + λ1 * λ2)/d3 z (2 * v1_avg - λ2 - λ1)/d3 c2/d3;
-                        -v1_avg 1 z z]
+                          (c1 - v1_avg^2 + λ1 * λ3)/d2 z (2 * v1_avg - λ1 - λ3)/d2 c2/d2;
+                          (c1 - v1_avg^2 + λ1 * λ2)/d3 z (2 * v1_avg - λ2 - λ1)/d3 c2/d3;
+                          -v1_avg 1 z z]
     end
 
     # Eigenvalue absolute value matrix
@@ -527,7 +533,6 @@ end
                maximum(abs, eigvals_ferrari(u_ll, orientation, equations)))
 end
 
-# TODO: Do we need this?
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterExnerEquations2D)
     return maximum(abs, eigvals_ferrari(u, orientation, equations))
 end
@@ -561,11 +566,11 @@ end
     Q = d_s * sqrt(gravity * (rho_s / rho_f - 1) * d_s) # Characteristic discharge
 
     return SVector((porosity_inv * Q * sign(theta1) * k_1 * theta1^m_1 *
-                   (max(theta1 - k_2 * theta_c, 0))^m_2 *
-                   (max(sqrt(theta1) - k_3 * sqrt(theta_c), 0))^m_3),
+                    (max(theta1 - k_2 * theta_c, 0))^m_2 *
+                    (max(sqrt(theta1) - k_3 * sqrt(theta_c), 0))^m_3),
                    (porosity_inv * Q * sign(theta2) * k_1 * theta2^m_1 *
-                   (max(theta2 - k_2 * theta_c, 0))^m_2 *
-                   (max(sqrt(theta2) - k_3 * sqrt(theta_c), 0))^m_3))
+                    (max(theta2 - k_2 * theta_c, 0))^m_2 *
+                    (max(sqrt(theta2) - k_3 * sqrt(theta_c), 0))^m_3))
 end
 
 # Compute the sediment discharge for the Grass model
@@ -577,8 +582,10 @@ end
     (; porosity_inv, sediment_model) = equations
     v1, v2 = velocity(u, equations)
     v_norm = sqrt(v1^2 + v2^2)
-    return SVector(porosity_inv * sediment_model.A_g * v1 * v_norm^(sediment_model.m_g - 1),
-                   porosity_inv * sediment_model.A_g * v2 * v_norm^(sediment_model.m_g - 1))
+    return SVector(porosity_inv * sediment_model.A_g * v1 *
+                   v_norm^(sediment_model.m_g - 1),
+                   porosity_inv * sediment_model.A_g * v2 *
+                   v_norm^(sediment_model.m_g - 1))
 end
 
 # Shear stress formulation using a coefficient to take into account different friction models
@@ -677,7 +684,8 @@ end
             # Compute gradients of q_s using automatic differentiation.
             # Introduces a closure to make q_s a function of u only. This is necessary since the
             # gradient function only accepts functions of one variable.
-            dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s1, u)
+            dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s1,
+                                                                             u)
         else
             h_s1 = 0
             dq_s1_dh = 0
@@ -687,7 +695,8 @@ end
         # Coefficients for the original quartic equation x^4 + bx^3 + cx^2 + dx + e
         b = -3 * v1
         c = 3 * v1^2 - g * (h + 1 / r * h_s1) * dq_s1_dhv1 - g * (h + h_s1)
-        d = -v1^3 + g * (h + hs1) * v1 + g * (h + 1 / r * h_s1) * (-dq_s1_dh + dq_s1_dhv1 * v1 - dq_s1_dhv2 * v2)
+        d = -v1^3 + g * (h + h_s1) * v1 +
+            g * (h + 1 / r * h_s1) * (-dq_s1_dh + dq_s1_dhv1 * v1 - dq_s1_dhv2 * v2)
         e = g * (h + 1 / r * h_s1) * v1 * (dq_s1_dh + v2 * dq_s1_dhv2)
     else # orientation == 2
         # Workaround to avoid division by zero, when computing the effective sediment height
@@ -697,7 +706,8 @@ end
             # Compute gradients of q_s using automatic differentiation.
             # Introduces a closure to make q_s a function of u only. This is necessary since the
             # gradient function only accepts functions of one variable.
-            dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s2, u)
+            dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s2,
+                                                                             u)
         else
             h_s2 = 0
             dq_s2_dh = 0
@@ -706,7 +716,8 @@ end
         end
         b = -3 * v2
         c = 3 * v2^2 - g * (h + 1 / r * h_s2) * dq_s2_dhv2 - g * (h + h_s2)
-        d = -v2^3 + g * (h + hs2) * v2 + g * (h + 1 / r * h_s2) * (-dq_s2_dh - dq_s2_dhv1 * v1 + dq_s2_dhv2 * v2)
+        d = -v2^3 + g * (h + h_s2) * v2 +
+            g * (h + 1 / r * h_s2) * (-dq_s2_dh - dq_s2_dhv1 * v1 + dq_s2_dhv2 * v2)
         e = g * (h + 1 / r * h_s2) * v2 * (dq_s2_dh + v1 * dq_s2_dhv1)
     end
 
@@ -727,17 +738,17 @@ end
 
     # Coefficient of the depressed cubic equation t^3 + Pt + Q = 0
     P = C - B^2 / 3
-    Q = 2 * B^3 / 27 - B * C / 3 +  D
+    Q = 2 * B^3 / 27 - B * C / 3 + D
 
     # Use trigonometric form of Cardano to compute the three roots
     λ1_c = -b / 3 +
-         2 * sqrt(-P / 3) * cos(1 / 3 * acos(3 * Q / (2 * P) * sqrt(-3 / P)))
+           2 * sqrt(-P / 3) * cos(1 / 3 * acos(3 * Q / (2 * P) * sqrt(-3 / P)))
     λ2_c = -b / 3 +
-         2 * sqrt(-P / 3) *
-         cos(1 / 3 * acos(3 * Q / (2 * P) * sqrt(-3 / P)) - 2 * π * 1 / 3)
+           2 * sqrt(-P / 3) *
+           cos(1 / 3 * acos(3 * Q / (2 * P) * sqrt(-3 / P)) - 2 * π * 1 / 3)
     λ3_c = -b / 3 +
-         2 * sqrt(-P / 3) *
-         cos(1 / 3 * acos(3 * Q / (2 * P) * sqrt(-3 / P)) - 2 * π * 2 / 3)
+           2 * sqrt(-P / 3) *
+           cos(1 / 3 * acos(3 * Q / (2 * P) * sqrt(-3 / P)) - 2 * π * 2 / 3)
 
     # Take the maximum root of the resolvant equation
     m = max(λ1_c, λ2_c, λ3_c)
@@ -746,7 +757,6 @@ end
     R = sqrt(max(0, b^2 / 4 - c + m))
 
     discriminant = -(3 * b^2 / 4 - 2 * c - m)
-    # t = iszero(R) ? 0.0 : q / R
     t = R < eps(typeof(h)) ? 0.0 : q / R
 
     D1 = sqrt(max(0, discriminant + t))
