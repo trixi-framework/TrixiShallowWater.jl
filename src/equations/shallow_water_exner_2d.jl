@@ -409,6 +409,7 @@ for the sediment discharge `q_s`.
         else
             h_s_avg = q_s1_tilde / v1_avg
         end
+
         # Precompute some common expressions
         c1 = g * (h_avg + h_s_avg)
         c2 = g * (h_avg + h_s_avg / r)
@@ -456,6 +457,7 @@ for the sediment discharge `q_s`.
         else
             h_s_avg = q_s2_tilde / v2_avg
         end
+
         # Precompute some common expressions
         c1 = g * (h_avg + h_s_avg)
         c2 = g * (h_avg + h_s_avg / r)
