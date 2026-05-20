@@ -69,7 +69,7 @@ function ShallowWaterExnerEquations2D(; gravity, H0 = zero(gravity),
     # Precompute common expressions for the porosity and density ratio
     porosity_inv = inv(1 - porosity)
     r = rho_f / rho_s
-    return ShallowWaterExnerEquations1D(gravity, H0, friction, sediment_model,
+    return ShallowWaterExnerEquations2D(gravity, H0, friction, sediment_model,
                                         porosity_inv, rho_f, rho_s, r)
 end
 
