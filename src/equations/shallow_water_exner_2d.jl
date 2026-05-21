@@ -338,8 +338,8 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
 @inline function flux_ersing_etal(u_ll, u_rr, orientation::Integer,
                                   equations::ShallowWaterExnerEquations2D)
     # Unpack left and right state
-    _, h_v1_ll, h_v1_ll, _ = u_ll
-    _, h_v2_rr, h_v2_rr, _ = u_rr
+    _, h_v1_ll, h_v2_ll, _ = u_ll
+    _, h_v1_rr, h_v2_rr, _ = u_rr
 
     # Get the velocities on either side
     v1_ll, v2_ll = velocity(u_ll, equations)
@@ -375,7 +375,6 @@ end
 Roe-type dissipation term for the [`ShallowWaterExnerEquations1D`](@ref) with an approximate Roe average
 for the sediment discharge `q_s`.
 """
-# TODO: need updated to be 4x4 matrix
 @inline function dissipation_roe(u_ll, u_rr, orientation,
                                  equations::ShallowWaterExnerEquations2D)
     r = equations.r
@@ -534,7 +533,9 @@ end
 end
 
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterExnerEquations2D)
-    return maximum(abs, eigvals_ferrari(u, orientation, equations))
+    lambdas_x = eigvals_ferrari(u, 1, equations)
+    lambdas_y = eigvals_ferrari(u, 2, equations)
+    return maximum(abs, lambdas_x), maximum(abs, lambdas_y)
 end
 
 #Helper function to extract the velocity vector from the conservative variables
@@ -740,15 +741,13 @@ end
     P = C - B^2 / 3
     Q = 2 * B^3 / 27 - B * C / 3 + D
 
+    # Avoid round-off errors
+    theta = clamp(3 * Q / (2 * P) * sqrt(-3 / P), -1.0, 1.0)
+
     # Use trigonometric form of Cardano to compute the three roots
-    λ1_c = -b / 3 +
-           2 * sqrt(-P / 3) * cos(1 / 3 * acos(3 * Q / (2 * P) * sqrt(-3 / P)))
-    λ2_c = -b / 3 +
-           2 * sqrt(-P / 3) *
-           cos(1 / 3 * acos(3 * Q / (2 * P) * sqrt(-3 / P)) - 2 * π * 1 / 3)
-    λ3_c = -b / 3 +
-           2 * sqrt(-P / 3) *
-           cos(1 / 3 * acos(3 * Q / (2 * P) * sqrt(-3 / P)) - 2 * π * 2 / 3)
+    λ1_c = -b / 3 + 2 * sqrt(-P / 3) * cos(1 / 3 * acos(theta))
+    λ2_c = -b / 3 + 2 * sqrt(-P / 3) * cos(1 / 3 * acos(theta) - 2 * π * 1 / 3)
+    λ3_c = -b / 3 + 2 * sqrt(-P / 3) * cos(1 / 3 * acos(theta) - 2 * π * 2 / 3)
 
     # Take the maximum root of the resolvant equation
     m = max(λ1_c, λ2_c, λ3_c)
