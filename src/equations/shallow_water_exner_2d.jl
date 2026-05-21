@@ -389,8 +389,8 @@ for the sediment discharge `q_s`.
                               orientation, equations)
 
     # Compute the sediment discharge at the averaged state
-    q_s1_tilde, q_s2_tilde = q_s(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg,
-                                         h_b_avg), equations)
+    q_s1_avg, q_s2_avg = q_s(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg),
+                             equations)
 
     # Build the right eigenvector matrix and its inverse in the appropriate direction
     if orientation == 1
@@ -398,7 +398,7 @@ for the sediment discharge `q_s`.
         if abs(v1_avg) < eps(typeof(h_avg))
             h_s_avg = z
         else
-            h_s_avg = q_s1_tilde / v1_avg
+            h_s_avg = q_s1_avg / v1_avg
         end
 
         # Precompute some common expressions
@@ -447,7 +447,7 @@ for the sediment discharge `q_s`.
         if abs(v2_avg) < eps(typeof(h_avg))
             h_s_avg = z
         else
-            h_s_avg = q_s2_tilde / v2_avg
+            h_s_avg = q_s2_avg / v2_avg
         end
 
         # Precompute some common expressions
@@ -657,7 +657,6 @@ end
 #   3) Compute the stable square root
 #   4) Compute the (paired) roots
 # Note, assumes only real roots.
-# TODO: benchmark against `eigenvalues` from LinearAlgebra
 @inline function eigvals_ferrari(u, orientation::Integer,
                                  equations::ShallowWaterExnerEquations2D)
     h = waterheight(u, equations)
@@ -719,11 +718,11 @@ end
     r = -3 * b^4 / 256 + b^2 * c / 16 - b * d / 4 + e
 
     # Next, we need the largest root of the resolvant cubic equation
-    #  m^3 + 5pm^2/2 + (2p^2 - r)m + p^3/2 - pr/2 - q^2/8 = 0
+    #  8m^3 - 4pm^2 - 8rm + 4pr - q^2 = 0
     # which is computed from the trigonometric version of Cardano's formula
-    B = 5 * p / 2
-    C = 2 * p^2 - r
-    D = p^3 / 2 - p * r / 2 - q^2 / 8
+    B = -p / 2
+    C = -r
+    D = (4 * p * r - q^2) / 8
 
     # Coefficient of the depressed cubic equation t^3 + Pt + Q = 0
     P = C - B^2 / 3
@@ -737,21 +736,18 @@ end
     coeff = 2 * sqrt(-P / 3)
 
     # Use trigonometric form of Cardano to compute the three roots
-    λ1_c = -b / 3 + coeff * cos(phi)
-    λ2_c = -b / 3 + coeff * cos(phi - 2 * π * / 3)
-    λ3_c = -b / 3 + coeff * cos(phi - 4 * π * / 3)
+    λ1_c = -B / 3 + coeff * cos(phi)
+    λ2_c = -B / 3 + coeff * cos(phi - 2 * π / 3)
+    λ3_c = -B / 3 + coeff * cos(phi - 4 * π / 3)
 
     # Take the maximum root of the resolvant equation
     m = max(λ1_c, λ2_c, λ3_c)
 
     # Compute stable square root (avoids cancellation in nested sqrt)
-    R = sqrt(max(0, b^2 / 4 - c + m))
-
-    discriminant = -(3 * b^2 / 4 - 2 * c - m)
-    t = R < eps(typeof(h)) ? 0.0 : q / R
-
-    D1 = sqrt(max(0, discriminant + t))
-    D2 = sqrt(max(0, discriminant - t))
+    R = sqrt(max(0, 2 * m - p))
+    t = R < eps(typeof(h)) ? 0 : 2 * q / R
+    D1 = sqrt(max(0, -(2 * m + p) - t))
+    D2 = sqrt(max(0, -(2 * m + p) + t))
 
     # Roots of the original cubic equation
     λ1 = -b / 4 + 0.5f0 * (R + D1)
