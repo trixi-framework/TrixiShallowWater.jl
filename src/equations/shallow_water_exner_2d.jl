@@ -81,45 +81,33 @@ Trixi.varnames(::typeof(cons2cons), ::ShallowWaterExnerEquations2D) = ("h", "hv1
 Trixi.varnames(::typeof(cons2prim), ::ShallowWaterExnerEquations2D) = ("H", "v1", "v2",
                                                                        "h_b")
 
-@doc raw"""
-    boundary_condition_slip_wall(u_inner, orientation_or_normal, x, t, surface_flux_function,
-                                  equations::ShallowWaterExnerEquations2D)
-
-Create a boundary state by reflecting the normal velocity component and keep
-the tangential velocity component unchanged. The boundary water height is taken from
-the internal value.
-
-For details see Section 9.2.5 of the book:
-- Eleuterio F. Toro (2001)\
-  Shock-Capturing Methods for Free-Surface Shallow Flows\
-  1st edition\
-  ISBN 0471987662
 """
-@inline function Trixi.boundary_condition_slip_wall(u_inner, orientation_or_normal,
-                                                    direction,
-                                                    x, t,
+    boundary_condition_slip_wall(u_inner, orientation, direction, x, t,
+                                 surface_flux_function, equations::ShallowWaterExnerEquations2D)
+
+Should be used together with [`Trixi.TreeMesh`](@extref).
+"""
+@inline function Trixi.boundary_condition_slip_wall(u_inner, orientation,
+                                                    direction, x, t,
                                                     surface_flux_functions,
                                                     equations::ShallowWaterExnerEquations2D)
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
 
-    # create the "external" boundary solution state
-    u_boundary = SVector(u_inner[1],
-                         -u_inner[2],
-                         -u_inner[3],
-                         u_inner[4])
+    # get the appropriate normal vector from the orientation
+    if orientation == 1
+        u_boundary = SVector(u_inner[1], -u_inner[2], u_inner[3], u_inner[4])
+    else # orientation == 2
+        u_boundary = SVector(u_inner[1], u_inner[2], -u_inner[3], u_inner[4])
+    end
 
-    # calculate the boundary flux
+    # Calculate boundary flux
     if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
-        flux = surface_flux_function(u_inner, u_boundary, orientation_or_normal,
-                                     equations)
-        noncons_flux = nonconservative_flux_function(u_inner, u_boundary,
-                                                     orientation_or_normal,
+        flux = surface_flux_function(u_inner, u_boundary, orientation, equations)
+        noncons_flux = nonconservative_flux_function(u_inner, u_boundary, orientation,
                                                      equations)
     else # u_boundary is "left" of boundary, u_inner is "right" of boundary
-        flux = surface_flux_function(u_boundary, u_inner, orientation_or_normal,
-                                     equations)
-        noncons_flux = nonconservative_flux_function(u_boundary, u_inner,
-                                                     orientation_or_normal,
+        flux = surface_flux_function(u_boundary, u_inner, orientation, equations)
+        noncons_flux = nonconservative_flux_function(u_boundary, u_inner, orientation,
                                                      equations)
     end
 
@@ -695,10 +683,10 @@ end
         end
         # Coefficients for the original quartic equation x^4 + bx^3 + cx^2 + dx + e
         b = -3 * v1
-        c = 3 * v1^2 - g * (h + 1 / r * h_s1) * dq_s1_dhv1 - g * (h + h_s1)
+        c = 3 * v1^2 - g * (h + h_s1 / r) * dq_s1_dhv1 - g * (h + h_s1)
         d = -v1^3 + g * (h + h_s1) * v1 +
-            g * (h + 1 / r * h_s1) * (-dq_s1_dh + dq_s1_dhv1 * v1 - dq_s1_dhv2 * v2)
-        e = g * (h + 1 / r * h_s1) * v1 * (dq_s1_dh + v2 * dq_s1_dhv2)
+            g * (h + h_s1 / r) * (-dq_s1_dh + dq_s1_dhv1 * v1 - dq_s1_dhv2 * v2)
+        e = g * (h + h_s1 / r) * v1 * (dq_s1_dh + v2 * dq_s1_dhv2)
     else # orientation == 2
         # Workaround to avoid division by zero, when computing the effective sediment height
         if abs(v2) > eps(typeof(h))
@@ -716,10 +704,10 @@ end
             dq_s2_dhv2 = 0
         end
         b = -3 * v2
-        c = 3 * v2^2 - g * (h + 1 / r * h_s2) * dq_s2_dhv2 - g * (h + h_s2)
+        c = 3 * v2^2 - g * (h + h_s2 / r) * dq_s2_dhv2 - g * (h + h_s2)
         d = -v2^3 + g * (h + h_s2) * v2 +
-            g * (h + 1 / r * h_s2) * (-dq_s2_dh - dq_s2_dhv1 * v1 + dq_s2_dhv2 * v2)
-        e = g * (h + 1 / r * h_s2) * v2 * (dq_s2_dh + v1 * dq_s2_dhv1)
+            g * (h + h_s2 / r) * (-dq_s2_dh - dq_s2_dhv1 * v1 + dq_s2_dhv2 * v2)
+        e = g * (h + h_s2 / r) * v2 * (dq_s2_dh + v1 * dq_s2_dhv1)
     end
 
     # Once coefficients are computed we apply the modified Ferrari method
@@ -744,10 +732,14 @@ end
     # Avoid round-off errors
     theta = clamp(3 * Q / (2 * P) * sqrt(-3 / P), -1.0, 1.0)
 
+    # Save common (but expensive) terms in the cubic roots
+    phi = acos(theta) / 3
+    coeff = 2 * sqrt(-P / 3)
+
     # Use trigonometric form of Cardano to compute the three roots
-    λ1_c = -b / 3 + 2 * sqrt(-P / 3) * cos(1 / 3 * acos(theta))
-    λ2_c = -b / 3 + 2 * sqrt(-P / 3) * cos(1 / 3 * acos(theta) - 2 * π * 1 / 3)
-    λ3_c = -b / 3 + 2 * sqrt(-P / 3) * cos(1 / 3 * acos(theta) - 2 * π * 2 / 3)
+    λ1_c = -b / 3 + coeff * cos(phi)
+    λ2_c = -b / 3 + coeff * cos(phi - 2 * π * / 3)
+    λ3_c = -b / 3 + coeff * cos(phi - 4 * π * / 3)
 
     # Take the maximum root of the resolvant equation
     m = max(λ1_c, λ2_c, λ3_c)
