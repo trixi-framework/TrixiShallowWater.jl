@@ -360,7 +360,7 @@ end
 """
     dissipation_roe(u_ll, u_rr, orientation,
                     equations::ShallowWaterExnerEquations2D)
-Roe-type dissipation term for the [`ShallowWaterExnerEquations1D`](@ref) with an approximate Roe average
+Roe-type dissipation term for the [`ShallowWaterExnerEquations2D`](@ref) with an approximate Roe average
 for the sediment discharge `q_s`.
 """
 @inline function dissipation_roe(u_ll, u_rr, orientation,
@@ -384,8 +384,9 @@ for the sediment discharge `q_s`.
              (sqrt(u_ll[1]) + sqrt(u_rr[1]))
     h_b_avg = 0.5f0 * (u_ll[4] + u_rr[4])
 
-    # Compute the eigenvalues using Ferrari's formula
-    lambdas = eigvals_ferrari(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg),
+    # Compute the nontrivial eigenvalues using Cardano's formula
+    # The known eigenvalue of `v1` or `v2` associated with the contact wave is returned last.
+    lambdas = eigvals_cardano(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg),
                               orientation, equations)
 
     # Compute the sediment discharge at the averaged state
@@ -405,27 +406,11 @@ for the sediment discharge `q_s`.
         c1 = g * (h_avg + h_s_avg)
         c2 = g * (h_avg + h_s_avg / r)
 
-        # Identify which eigenvalue is closest to `v1_avg` as it is associated
-        # with a contact wave with a degenerate eigenvector
-        tol = 1e-10 * max(1, abs(v1_avg), sqrt(c1))
-        contact_idx = 1
-        min_err = abs(lambdas[1] - v1_avg)
-        for i in 2:4
-            err = abs(lambdas[i] - v1_avg)
-            if err < min_err
-                min_err = err
-                contact_idx = i
-            end
-        end
-
-        # Swap the contact eigenvalue into the last slot
-        lambdas_swapped = swap_contact_ev_to_last(lambdas, contact_idx)
-
         # Unpack the eigenvalues for convenience
-        λ1 = lambdas_swapped[1]
-        λ2 = lambdas_swapped[2]
-        λ3 = lambdas_swapped[3]
-        λ4 = lambdas_swapped[4]
+        λ1 = lambdas[1]
+        λ2 = lambdas[2]
+        λ3 = lambdas[3]
+        λ4 = lambdas[4]
 
         # Eigenvector matrix
         r41 = ((v1_avg - λ1)^2 - c1) / c2
@@ -454,27 +439,11 @@ for the sediment discharge `q_s`.
         c1 = g * (h_avg + h_s_avg)
         c2 = g * (h_avg + h_s_avg / r)
 
-        # Identify which eigenvalue is closest to `v2_avg` as it is associated
-        # with a contact wave with a degenerate eigenvector
-        tol = 1e-10 * max(1, abs(v2_avg), sqrt(c1))
-        contact_idx = 1
-        min_err = abs(lambdas[1] - v2_avg)
-        for i in 2:4
-            err = abs(lambdas[i] - v2_avg)
-            if err < min_err
-                min_err = err
-                contact_idx = i
-            end
-        end
-
-        # Swap the contact eigenvalue into the last slot
-        lambdas_swapped = swap_contact_ev_to_last(lambdas, contact_idx)
-
         # Unpack the eigenvalues for convenience
-        λ1 = lambdas_swapped[1]
-        λ2 = lambdas_swapped[2]
-        λ3 = lambdas_swapped[3]
-        λ4 = lambdas_swapped[4]
+        λ1 = lambdas[1]
+        λ2 = lambdas[2]
+        λ3 = lambdas[3]
+        λ4 = lambdas[4]
 
         # Eigenvector matrix
         r41 = ((v2_avg - λ1)^2 - c1) / c2
@@ -502,27 +471,15 @@ for the sediment discharge `q_s`.
     return SVector(diss[1], diss[2], diss[3], diss[4])
 end
 
-@inline function swap_contact_ev_to_last(lambdas, contact_idx)
-    if contact_idx == 4
-        return lambdas
-    elseif contact_idx == 1
-        return SVector(lambdas[2], lambdas[3], lambdas[4], lambdas[1])
-    elseif contact_idx == 2
-        return SVector(lambdas[1], lambdas[3], lambdas[4], lambdas[2])
-    else # contact_idx == 3
-        return SVector(lambdas[1], lambdas[2], lambdas[4], lambdas[3])
-    end
-end
-
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr, orientation::Integer,
                                            equations::ShallowWaterExnerEquations2D)
-    return max(maximum(abs, eigvals_ferrari(u_rr, orientation, equations)),
-               maximum(abs, eigvals_ferrari(u_ll, orientation, equations)))
+    return max(maximum(abs, eigvals_cardano(u_rr, orientation, equations)),
+               maximum(abs, eigvals_cardano(u_ll, orientation, equations)))
 end
 
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterExnerEquations2D)
-    lambdas_x = eigvals_ferrari(u, 1, equations)
-    lambdas_y = eigvals_ferrari(u, 2, equations)
+    lambdas_x = eigvals_cardano(u, 1, equations)
+    lambdas_y = eigvals_cardano(u, 2, equations)
     return maximum(abs, lambdas_x), maximum(abs, lambdas_y)
 end
 
@@ -648,16 +605,19 @@ end
     return abs(equations.H0 - (h + h_b))
 end
 
-# Branch aware modified Ferrari formula to compute the roots of a quartic polynomial
-#   x^4 + bx^3 + cx^2 + dx + e = 0
-# in order to compute the eigenvalues of the [`ShallowWaterExnerEquations2D`[(@ref)].
-# Broad outline of the procedure below:
-#   1) Depress the quartic
-#   2) Use Trigonometric version of Cardano's method roots of a resolvant cubic polynomial
-#   3) Compute the stable square root
-#   4) Compute the (paired) roots
+# Trigonometric version of Cardano's method to compute the nontrivial roots of a cubic polynomial
+#   (x - v1,2)(x^3 + bx^2 + cx + d) = 0
+# for the eigenvalues of the [`ShallowWaterExnerEquations2D`[(@ref)] flux Jacobian.
+# This exploits that we know the either `v1` or `v2` is an eigenvalue (depneding on the orientation)
+# The eigenvalue that is equal to the velocity is associated with the contact wave
+# in the Riemann fan and is returned as the last entry of the eigenvalue vector
+# as expected by the `dissipation_roe`.
+# TODO: Write specialized function for a similar strategy with `normal_direction` where
+#       the characteristic polynomial is
+#          (x - vn)(x^3 + bx^2 + cx + d) = 0
+#       with vn = n1 v1 + n2 v2
 # Note, assumes only real roots.
-@inline function eigvals_ferrari(u, orientation::Integer,
+@inline function eigvals_cardano(u, orientation::Integer,
                                  equations::ShallowWaterExnerEquations2D)
     h = waterheight(u, equations)
     v1, v2 = velocity(u, equations)
@@ -680,12 +640,12 @@ end
             dq_s1_dhv1 = 0
             dq_s1_dhv2 = 0
         end
-        # Coefficients for the original quartic equation x^4 + bx^3 + cx^2 + dx + e
-        b = -3 * v1
-        c = 3 * v1^2 - g * (h + h_s1 / r) * dq_s1_dhv1 - g * (h + h_s1)
-        d = -v1^3 + g * (h + h_s1) * v1 +
-            g * (h + h_s1 / r) * (-dq_s1_dh + dq_s1_dhv1 * v1 - dq_s1_dhv2 * v2)
-        e = g * (h + h_s1 / r) * v1 * (dq_s1_dh + v2 * dq_s1_dhv2)
+        # Coefficients for the original cubic equation x^3 + bx^2 + cx + dx = 0
+        b = -2 * v1
+        c = v1^2 - g * (h + h_s1) - g * dq_s1_dhv1 * (h + h_s1 / r)
+        d = -g * dq_s1_dh * (h + h_s1 / r) - g * v2 * dq_s1_dhv2 * (h + h_s1 / r)
+        # Set the known eigenvalue
+        λ4 = v1
     else # orientation == 2
         # Workaround to avoid division by zero, when computing the effective sediment height
         if abs(v2) > eps(typeof(h))
@@ -702,58 +662,33 @@ end
             dq_s2_dhv1 = 0
             dq_s2_dhv2 = 0
         end
-        b = -3 * v2
-        c = 3 * v2^2 - g * (h + h_s2 / r) * dq_s2_dhv2 - g * (h + h_s2)
-        d = -v2^3 + g * (h + h_s2) * v2 +
-            g * (h + h_s2 / r) * (-dq_s2_dh - dq_s2_dhv1 * v1 + dq_s2_dhv2 * v2)
-        e = g * (h + h_s2 / r) * v2 * (dq_s2_dh + v1 * dq_s2_dhv1)
+        # Coefficients for the original cubic equation x^3 + bx^2 + cx + d = 0
+        b = -2 * v2
+        c = v2^2 - g * (h + h_s2) - g * dq_s2_dhv2 * (h + h_s2 / r)
+        d = -g * dq_s2_dh * (h + h_s2 / r) - g * v1 * dq_s2_dhv1 * (h + h_s2 / r)
+        # Set the known eigenvalue
+        λ4 = v2
     end
 
-    # Once coefficients are computed we apply the modified Ferrari method
+    # Once coefficients are computed we apply the trigonometric Cardano method
 
-    # Coefficients of the depressed quartic equation y^4 + py^2 + qy + r = 0
-    # where λ = y - b/4
-    p = c - 3 * b^2 / 8
-    q = b^3 / 8 - b * c / 2 + d
-    r = -3 * b^4 / 256 + b^2 * c / 16 - b * d / 4 + e
-
-    # Next, we need the largest root of the resolvant cubic equation
-    #  8m^3 - 4pm^2 - 8rm + 4pr - q^2 = 0
-    # which is computed from the trigonometric version of Cardano's formula
-    B = -p / 2
-    C = -r
-    D = (4 * p * r - q^2) / 8
-
-    # Coefficient of the depressed cubic equation t^3 + Pt + Q = 0
-    P = C - B^2 / 3
-    Q = 2 * B^3 / 27 - B * C / 3 + D
+    # Create the coefficients of the depressed cubic equation t^3 + pt + q = 0
+    p = c - b^2 / 3
+    q = 2 * b^3 / 27 - b * c / 3 + d
 
     # Avoid round-off errors
-    theta = clamp(3 * Q / (2 * P) * sqrt(-3 / P), -1.0, 1.0)
+    theta = clamp(3 * q / (2 * p) * sqrt(-3 / p), -1.0, 1.0)
 
-    # Save common (but expensive) terms in the cubic roots
+    # Save common (but expensive) terms in the cubic root formula
     phi = acos(theta) / 3
-    coeff = 2 * sqrt(-P / 3)
+    coeff = 2 * sqrt(-p / 3)
+    shift = -b / 3
 
     # Use trigonometric form of Cardano to compute the three roots
-    λ1_c = -B / 3 + coeff * cos(phi)
-    λ2_c = -B / 3 + coeff * cos(phi - 2 * π / 3)
-    λ3_c = -B / 3 + coeff * cos(phi - 4 * π / 3)
-
-    # Take the maximum root of the resolvant equation
-    m = max(λ1_c, λ2_c, λ3_c)
-
-    # Compute stable square root (avoids cancellation in nested sqrt)
-    R = sqrt(max(0, 2 * m - p))
-    t = R < eps(typeof(h)) ? 0 : 2 * q / R
-    D1 = sqrt(max(0, -(2 * m + p) - t))
-    D2 = sqrt(max(0, -(2 * m + p) + t))
-
-    # Roots of the original cubic equation
-    λ1 = -b / 4 + 0.5f0 * (R + D1)
-    λ2 = -b / 4 + 0.5f0 * (R - D1)
-    λ3 = -b / 4 + 0.5f0 * (-R + D2)
-    λ4 = -b / 4 + 0.5f0 * (-R - D2)
+    # Note, the fourth eigenvalue λ4 is set above in the if statement
+    λ1 = shift + coeff * cos(phi)
+    λ2 = shift + coeff * cos(phi - 2 * π / 3)
+    λ3 = shift + coeff * cos(phi - 4 * π / 3)
 
     return SVector(λ1, λ2, λ3, λ4)
 end
