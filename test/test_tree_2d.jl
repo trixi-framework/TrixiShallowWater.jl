@@ -913,7 +913,7 @@ end # MLSWE
                                 0.2532718517230055,
                                 0.00659847201172489
                             ],
-                            tspan = (0.0, 50.0))
+                            tspan=(0.0, 50.0))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
@@ -934,9 +934,10 @@ end # MLSWE
                                 0.2534735363408598,
                                 0.006599037749193668
                             ],
-                            tspan = (0.0, 50.0),
-                            surface_flux = (FluxPlusDissipation(flux_ersing_etal, DissipationLocalLaxFriedrichs()),
-                                            flux_nonconservative_ersing_etal))
+                            tspan=(0.0, 50.0),
+                            surface_flux=(FluxPlusDissipation(flux_ersing_etal,
+                                                              DissipationLocalLaxFriedrichs()),
+                                          flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
@@ -957,7 +958,7 @@ end # MLSWE
                                 0.25339691049710733,
                                 0.00659846970192717
                             ],
-                            tspan = (0.0, 50.0),
+                            tspan=(0.0, 50.0),
                             surface_flux=(flux_ersing_etal,
                                           flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
