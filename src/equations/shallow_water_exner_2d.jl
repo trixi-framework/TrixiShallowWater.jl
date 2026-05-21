@@ -431,13 +431,13 @@ for the sediment discharge `q_s`.
         end
 
         # Swap the contact eigenvalue into the last slot
-        swap_contact_ev_to_last(lambdas, contact_idx)
+        lambdas_swapped = swap_contact_ev_to_last(lambdas, contact_idx)
 
         # Unpack the eigenvalues for convenience
-        λ1 = lambdas[1]
-        λ2 = lambdas[2]
-        λ3 = lambdas[3]
-        λ4 = lambdas[4]
+        λ1 = lambdas_swapped[1]
+        λ2 = lambdas_swapped[2]
+        λ3 = lambdas_swapped[3]
+        λ4 = lambdas_swapped[4]
 
         # Eigenvector matrix
         r41 = ((v1_avg - λ1)^2 - c1) / c2
@@ -480,13 +480,13 @@ for the sediment discharge `q_s`.
         end
 
         # Swap the contact eigenvalue into the last slot
-        swap_contact_ev_to_last(lambdas, contact_idx)
+        lambdas_swapped = swap_contact_ev_to_last(lambdas, contact_idx)
 
         # Unpack the eigenvalues for convenience
-        λ1 = lambdas[1]
-        λ2 = lambdas[2]
-        λ3 = lambdas[3]
-        λ4 = lambdas[4]
+        λ1 = lambdas_swapped[1]
+        λ2 = lambdas_swapped[2]
+        λ3 = lambdas_swapped[3]
+        λ4 = lambdas_swapped[4]
 
         # Eigenvector matrix
         r41 = ((v2_avg - λ1)^2 - c1) / c2
@@ -499,9 +499,9 @@ for the sediment discharge `q_s`.
         d1 = (λ1 - λ2) * (λ1 - λ3)
         d2 = (λ2 - λ1) * (λ2 - λ3)
         d3 = (λ3 - λ2) * (λ3 - λ1)
-        R_inv = @SMatrix [(c1 - v1_avg^2 + λ2 * λ3)/d1 z (2 * v1_avg - λ2 - λ3)/d1 c2/d1;
-                          (c1 - v1_avg^2 + λ1 * λ3)/d2 z (2 * v1_avg - λ1 - λ3)/d2 c2/d2;
-                          (c1 - v1_avg^2 + λ1 * λ2)/d3 z (2 * v1_avg - λ2 - λ1)/d3 c2/d3;
+        R_inv = @SMatrix [(c1 - v2_avg^2 + λ2 * λ3)/d1 z (2 * v2_avg - λ2 - λ3)/d1 c2/d1;
+                          (c1 - v2_avg^2 + λ1 * λ3)/d2 z (2 * v2_avg - λ1 - λ3)/d2 c2/d2;
+                          (c1 - v2_avg^2 + λ1 * λ2)/d3 z (2 * v2_avg - λ2 - λ1)/d3 c2/d3;
                           -v1_avg 1 z z]
     end
 
