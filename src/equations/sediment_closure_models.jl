@@ -25,7 +25,7 @@ end
 
 # Model dependent shear stress coefficient
 @inline function shear_stress_coefficient(u, friction::ManningFriction)
-    h, _, _, _ = u
+    h = u[1]
     return friction.n^2 / h^(1 / 3)
 end
 
