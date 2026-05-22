@@ -386,8 +386,8 @@ for the sediment discharge `q_s`.
 
     # Compute the nontrivial eigenvalues using Cardano's formula
     # The known eigenvalue of `v1` or `v2` associated with the contact wave is returned last.
-    lambdas = eigvals_cardano(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg),
-                              orientation, equations)
+    λ1, λ2, λ3, λ4 = eigvals_cardano(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg),
+                                     orientation, equations)
 
     # Compute the sediment discharge at the averaged state
     q_s1_avg, q_s2_avg = q_s(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg),
@@ -405,12 +405,6 @@ for the sediment discharge `q_s`.
         # Precompute some common expressions
         c1 = g * (h_avg + h_s_avg)
         c2 = g * (h_avg + h_s_avg / r)
-
-        # Unpack the eigenvalues for convenience
-        λ1 = lambdas[1]
-        λ2 = lambdas[2]
-        λ3 = lambdas[3]
-        λ4 = lambdas[4]
 
         # Eigenvector matrix
         r41 = ((v1_avg - λ1)^2 - c1) / c2
@@ -438,12 +432,6 @@ for the sediment discharge `q_s`.
         # Precompute some common expressions
         c1 = g * (h_avg + h_s_avg)
         c2 = g * (h_avg + h_s_avg / r)
-
-        # Unpack the eigenvalues for convenience
-        λ1 = lambdas[1]
-        λ2 = lambdas[2]
-        λ3 = lambdas[3]
-        λ4 = lambdas[4]
 
         # Eigenvector matrix
         r41 = ((v2_avg - λ1)^2 - c1) / c2
@@ -494,6 +482,8 @@ end
 end
 
 # Compute the sediment discharge for Shields stress models
+# https://doi.org/10.1016/j.cma.2009.03.001
+# https://doi.org/10.1016/j.advwatres.2009.12.006
 # TODO: double check (somewhere?) that this 2d generalization makes sense
 # TODO: how would this work in a normal direction?
 @inline function q_s(u,
@@ -512,8 +502,8 @@ end
     Q = d_s * sqrt(gravity * (rho_s / rho_f - 1) * d_s) # Characteristic discharge
     q_s = porosity_inv * Q * k_1 * theta^m_1 *
                     (max(theta - k_2 * theta_c, 0))^m_2 *
-                    (max(sqrt(theta) - k_3 * sqrt(theta_c), 0))^m_3)  # sediment discharge coinciding with the velocity vector
-         
+                    (max(sqrt(theta) - k_3 * sqrt(theta_c), 0))^m_3  # sediment discharge coinciding with the velocity vector
+
     return SVector(v_1 / sqrt(v_1^2 + v_2^2) * q_s, v_2 / sqrt(v_1^2 + v_2^2) * q_s)
 end
 

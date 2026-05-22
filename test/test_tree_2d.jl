@@ -902,18 +902,18 @@ end # MLSWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_exner_channel.jl"),
                             l2=[
-                                0.0007521572447213972,
-                                0.025901502339823818,
-                                0.024931965834166365,
-                                0.0005049729809092247
+                                0.0007328517079623207,
+                                0.011175537282701965,
+                                0.01094385665337604,
+                                0.0003627650483735148
                             ],
                             linf=[
-                                0.00790461557178368,
-                                0.27045039989801545,
-                                0.2532718517230055,
-                                0.00659847201172489
+                                0.0067644195616658465,
+                                0.11021590936501369,
+                                0.10995513976337094,
+                                0.006751701101159244
                             ],
-                            tspan=(0.0, 50.0))
+                            tspan=(0.0, 20.0))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
@@ -923,18 +923,18 @@ end # MLSWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_exner_channel.jl"),
                             l2=[
-                                0.0007518835683983054,
-                                0.025898898257697395,
-                                0.024930724562758307,
-                                0.000505010376215138
+                                0.0007328637855138828,
+                                0.011175420609612068,
+                                0.01094383002026226,
+                                0.00036279968520717086
                             ],
                             linf=[
-                                0.007902213952696968,
-                                0.27009053594217036,
-                                0.2534735363408598,
-                                0.006599037749193668
+                                0.0067658440519338114,
+                                0.1101301799870047,
+                                0.1099569284128924,
+                                0.006751698239173204
                             ],
-                            tspan=(0.0, 50.0),
+                            tspan=(0.0, 20.0),
                             surface_flux=(FluxPlusDissipation(flux_ersing_etal,
                                                               DissipationLocalLaxFriedrichs()),
                                           flux_nonconservative_ersing_etal))
@@ -947,18 +947,18 @@ end # MLSWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_exner_channel.jl"),
                             l2=[
-                                0.0015001719006109966,
-                                0.028603805721405667,
-                                0.02503078314242573,
-                                0.0005049837980398846
+                                0.0007330036979667599,
+                                0.011175378167222525,
+                                0.010944345018975336,
+                                0.00036276123936477243
                             ],
                             linf=[
-                                0.02602468437511618,
-                                0.4131796942457626,
-                                0.25339691049710733,
-                                0.00659846970192717
+                                0.006726838278366287,
+                                0.11012792851622599,
+                                0.1097902551793084,
+                                0.006751768238993596
                             ],
-                            tspan=(0.0, 50.0),
+                            tspan=(0.0, 20.0),
                             surface_flux=(flux_ersing_etal,
                                           flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations

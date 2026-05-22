@@ -40,30 +40,6 @@ end
 
 initial_condition = initial_condition_channel
 
-function boundary_condition_subcritical_inflow(u_inner, orientation, direction,
-                                               x, t,
-                                               surface_flux_functions,
-                                               equations::ShallowWaterExnerEquations2D)
-    surface_flux_function, nonconservative_flux_function = surface_flux_functions
-
-    # Create full external background state and let the Riemann solver
-    # decide which pieces to penalize
-    u_boundary = initial_condition_channel(x, t, equations)
-
-    # Calculate boundary flux
-    if iseven(direction) # u_inner is "left" of boundary, u_boundary is "right" of boundary
-        flux = surface_flux_function(u_inner, u_boundary, orientation, equations)
-        noncons_flux = nonconservative_flux_function(u_inner, u_boundary, orientation,
-                                                     equations)
-    else # u_boundary is "left" of boundary, u_inner is "right" of boundary
-        flux = surface_flux_function(u_boundary, u_inner, orientation, equations)
-        noncons_flux = nonconservative_flux_function(u_boundary, u_inner, orientation,
-                                                     equations)
-    end
-
-    return flux, noncons_flux
-end
-
 function boundary_condition_subcritical_outflow(u_inner, orientation, direction,
                                                 x, t,
                                                 surface_flux_functions,
@@ -88,7 +64,7 @@ function boundary_condition_subcritical_outflow(u_inner, orientation, direction,
     return flux, noncons_flux
 end
 
-boundary_conditions = (; x_neg = boundary_condition_subcritical_inflow,
+boundary_conditions = (; x_neg = BoundaryConditionDirichlet(initial_condition_channel),
                        x_pos = boundary_condition_subcritical_outflow,
                        y_neg = boundary_condition_slip_wall,
                        y_pos = boundary_condition_slip_wall)
