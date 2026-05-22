@@ -182,8 +182,10 @@ end
                   Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)[1:(end - 1)]
 
             # Test flux consistencies
-            @test Trixi.flux(cons_vars, 1, equations) ≈ flux_ersing_etal(cons_vars, cons_vars, 1, equations)
-            @test Trixi.flux(cons_vars, 2, equations) ≈ flux_ersing_etal(cons_vars, cons_vars, 2, equations)
+            @test Trixi.flux(cons_vars, 1, equations) ≈
+                  flux_ersing_etal(cons_vars, cons_vars, 1, equations)
+            @test Trixi.flux(cons_vars, 2, equations) ≈
+                  flux_ersing_etal(cons_vars, cons_vars, 2, equations)
         end
     end
 
@@ -393,8 +395,8 @@ end
         dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s1, u)
 
         # flux Jacobian
-        A = [0 1 0 0; (g * (h + h_s1)-v1^2) (2*v1) 0 (g*(h + h_s1 / r));
-            -v1*v2 v2 v1 0; dq_s1_dh dq_s1_dhv1 dq_s1_dhv2 0]
+        A = [0 1 0 0; (g * (h + h_s1)-v1^2) (2*v1) 0 (g*(h + h_s1 / r)); -v1*v2 v2 v1 0;
+             dq_s1_dh dq_s1_dhv1 dq_s1_dhv2 0]
 
         # Compute the eigenvalues using Cardano's formula
         λ1, λ2, λ3, λ4 = TrixiShallowWater.eigvals_cardano(u, 1, equations)
@@ -419,7 +421,7 @@ end
                  -v2 0 1 0]
 
         # Eigenvalue vale matrix
-        Λ = [λ1 0 0 0; 0 λ2 0 0; 0 0 λ3 0; ;0 0 0 λ4]
+        Λ = [λ1 0 0 0; 0 λ2 0 0; 0 0 λ3 0; 0 0 0 λ4]
 
         @test R * R_inv ≈ [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]
         @test A ≈ R * Λ * R_inv
@@ -457,7 +459,7 @@ end
                           -v1 1 0 0]
 
         # Eigenvalue vale matrix
-        Λ = [λ1 0 0 0; 0 λ2 0 0; 0 0 λ3 0; ;0 0 0 λ4]
+        Λ = [λ1 0 0 0; 0 λ2 0 0; 0 0 λ3 0; 0 0 0 λ4]
 
         @test R * R_inv ≈ [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]
         @test A ≈ R * Λ * R_inv
