@@ -165,6 +165,26 @@ end
             @test entropy_vars[1:(end - 1)] ≈
                   Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)[1:(end - 1)]
         end
+
+        h, v1, v2, h_b = (1.1, 0.3, -0.65, 0.126)
+
+        let equations = ShallowWaterExnerEquations2D(gravity = 9.81, rho_f = 0.9,
+                                                     rho_s = 1.0, porosity = 0.4,
+                                                     sediment_model = GrassModel(A_g = 0.01))
+            # Test conversion between primitive and conservative variables
+            prim_vars = SVector(h, v1, v2, h_b)
+            cons_vars = prim2cons(prim_vars, equations)
+            @test prim_vars ≈ cons2prim(cons_vars, equations)
+
+            # Test conversion from conservative to entropy variables
+            entropy_vars = cons2entropy(cons_vars, equations)
+            @test entropy_vars[1:(end - 1)] ≈
+                  Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)[1:(end - 1)]
+
+            # Test flux consistencies
+            @test Trixi.flux(cons_vars, 1, equations) ≈ flux_ersing_etal(cons_vars, cons_vars, 1, equations)
+            @test Trixi.flux(cons_vars, 2, equations) ≈ flux_ersing_etal(cons_vars, cons_vars, 2, equations)
+        end
     end
 
     @timed_testset "ShallowWaterMomentEquations" begin
@@ -352,6 +372,94 @@ end
         Λ = [λ1 0 0; 0 λ2 0; 0 0 λ3]
 
         @test R * R_inv ≈ [1 0 0; 0 1 0; 0 0 1]
+        @test A ≈ R * Λ * R_inv
+    end
+
+    h, v1, v2, h_b = (1.1, 0.3, -0.65, 0.126)
+
+    let equations = ShallowWaterExnerEquations2D(gravity = 9.81, rho_f = 0.9,
+                                                 rho_s = 1.0, porosity = 0.4,
+                                                 sediment_model = GrassModel(A_g = 0.01))
+        u = SVector(h, h * v1, h * v2, h_b)
+        r = equations.r
+        g = equations.gravity
+
+        q_s1, q_s2 = TrixiShallowWater.q_s(u, equations)
+
+        # Check in the x-direction
+
+        # Compute effective sediment height
+        h_s1 = q_s1 / v1
+        dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s1, u)
+
+        # flux Jacobian
+        A = [0 1 0 0; (g * (h + h_s1)-v1^2) (2*v1) 0 (g*(h + h_s1 / r));
+            -v1*v2 v2 v1 0; dq_s1_dh dq_s1_dhv1 dq_s1_dhv2 0]
+
+        # Compute the eigenvalues using Cardano's formula
+        λ1, λ2, λ3, λ4 = TrixiShallowWater.eigvals_cardano(u, 1, equations)
+
+        # Precompute some common expressions
+        c1 = g * (h + h_s1)
+        c2 = g * (h + h_s1 / r)
+
+        # Eigenvector matrix
+        r41 = ((v1 - λ1)^2 - c1) / c2
+        r42 = ((v1 - λ2)^2 - c1) / c2
+        r43 = ((v1 - λ3)^2 - c1) / c2
+        R = [[1 1 1 0]; [λ1 λ2 λ3 0]; [v2 v2 v2 1]; [r41 r42 r43 0]]
+
+        # Inverse eigenvector matrix
+        d1 = (λ1 - λ2) * (λ1 - λ3)
+        d2 = (λ2 - λ1) * (λ2 - λ3)
+        d3 = (λ3 - λ2) * (λ3 - λ1)
+        R_inv = [(c1 - v1^2 + λ2 * λ3)/d1 (2 * v1 - λ2 - λ3)/d1 0 c2/d1;
+                 (c1 - v1^2 + λ1 * λ3)/d2 (2 * v1 - λ1 - λ3)/d2 0 c2/d2;
+                 (c1 - v1^2 + λ1 * λ2)/d3 (2 * v1 - λ2 - λ1)/d3 0 c2/d3;
+                 -v2 0 1 0]
+
+        # Eigenvalue vale matrix
+        Λ = [λ1 0 0 0; 0 λ2 0 0; 0 0 λ3 0; ;0 0 0 λ4]
+
+        @test R * R_inv ≈ [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]
+        @test A ≈ R * Λ * R_inv
+
+        # Check in the y-direction
+
+        # Compute effective sediment height
+        h_s2 = q_s2 / v2
+        dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s2, u)
+
+        # flux Jacobian
+        A = [0 0 1 0; -v1*v2 v2 v1 0; (g * (h + h_s2)-v2^2) 0 (2*v2) (g*(h + h_s2 / r));
+             dq_s2_dh dq_s2_dhv1 dq_s2_dhv2 0]
+
+        # Compute the eigenvalues using Cardano's formula
+        λ1, λ2, λ3, λ4 = TrixiShallowWater.eigvals_cardano(u, 2, equations)
+
+        # Precompute some common expressions
+        c1 = g * (h + h_s2)
+        c2 = g * (h + h_s2 / r)
+
+        # Eigenvector matrix
+        r41 = ((v2 - λ1)^2 - c1) / c2
+        r42 = ((v2 - λ2)^2 - c1) / c2
+        r43 = ((v2 - λ3)^2 - c1) / c2
+        R = [[1 1 1 0]; [v1 v1 v1 1]; [λ1 λ2 λ3 0]; [r41 r42 r43 0]]
+
+        # Inverse eigenvector matrix
+        d1 = (λ1 - λ2) * (λ1 - λ3)
+        d2 = (λ2 - λ1) * (λ2 - λ3)
+        d3 = (λ3 - λ2) * (λ3 - λ1)
+        R_inv = @SMatrix [(c1 - v2^2 + λ2 * λ3)/d1 0 (2 * v2 - λ2 - λ3)/d1 c2/d1;
+                          (c1 - v2^2 + λ1 * λ3)/d2 0 (2 * v2 - λ1 - λ3)/d2 c2/d2;
+                          (c1 - v2^2 + λ1 * λ2)/d3 0 (2 * v2 - λ2 - λ1)/d3 c2/d3;
+                          -v1 1 0 0]
+
+        # Eigenvalue vale matrix
+        Λ = [λ1 0 0 0; 0 λ2 0 0; 0 0 λ3 0; ;0 0 0 λ4]
+
+        @test R * R_inv ≈ [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]
         @test A ≈ R * Λ * R_inv
     end
 end

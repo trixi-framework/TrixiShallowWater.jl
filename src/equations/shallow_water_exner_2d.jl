@@ -607,7 +607,7 @@ end
 
 # Trigonometric version of Cardano's method to compute the nontrivial roots of a cubic polynomial
 #   (x - v1,2)(x^3 + bx^2 + cx + d) = 0
-# for the eigenvalues of the [`ShallowWaterExnerEquations2D`[(@ref)] flux Jacobian.
+# for the eigenvalues of that [`ShallowWaterExnerEquations2D`[(@ref)] flux Jacobian.
 # This exploits that we know the either `v1` or `v2` is an eigenvalue (depneding on the orientation)
 # The eigenvalue that is equal to the velocity is associated with the contact wave
 # in the Riemann fan and is returned as the last entry of the eigenvalue vector
