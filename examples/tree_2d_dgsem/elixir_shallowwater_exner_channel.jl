@@ -104,7 +104,7 @@ solver = DGSEM(polydeg = 4,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 ###############################################################################
-# Get the TreeMesh and setup a periodic mesh
+# Get the TreeMesh
 
 coordinates_min = (0.0, 0.0)
 coordinates_max = (1000.0, 1000.0)

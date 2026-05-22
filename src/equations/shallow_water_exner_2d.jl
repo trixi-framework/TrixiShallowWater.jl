@@ -36,7 +36,7 @@ one also defines the total water height as ``H = h + h_b``.
 The additional quantity ``H_0`` is also available to store a reference value for the total water
 height that is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 
-The entropy conservative formulation has been derived in the paper:
+The entropy conservative formulation in 1D has been derived in the paper:
 - E.D. Fernández-Nieto, T.M. de Luna, G. Narbona-Reina and J. de Dieu Zabsonré (2017)\
   Formal deduction of the Saint-Venant–Exner model including arbitrarily sloping sediment beds and
   associated energy\
@@ -314,7 +314,7 @@ end
 
 """
     flux_ersing_etal(u_ll, u_rr, orientation::Integer,
-                                     equations::ShallowWaterMultiLayerEquations2D)
+                                     equations::ShallowWaterExnerEquations2D)
 
 Entropy conservative split form, without the hydrostatic pressure. This flux should be used
 together with the nonconservative [`flux_nonconservative_ersing_etal`](@ref) to create a scheme
@@ -505,18 +505,16 @@ end
     (; gravity, rho_f, rho_s, porosity_inv) = equations
     (; m_1, m_2, m_3, k_1, k_2, k_3, theta_c, d_s) = equations.sediment_model
 
+    v_1, v_2 = velocity(u, equations)
     tau1, tau2 = shear_stress(u, equations)
-    theta1 = rho_f * abs(tau1) / (gravity * (rho_s - rho_f) * d_s)  # Shields stress in x-direction
-    theta2 = rho_f * abs(tau2) / (gravity * (rho_s - rho_f) * d_s)  # Shields stress in y-direction
+    theta = rho_f * sqrt(tau1^2 + tau2^2) / (gravity * (rho_s - rho_f) * d_s)  # Shields stress coinciding with the velocity vector
 
     Q = d_s * sqrt(gravity * (rho_s / rho_f - 1) * d_s) # Characteristic discharge
-
-    return SVector((porosity_inv * Q * sign(theta1) * k_1 * theta1^m_1 *
-                    (max(theta1 - k_2 * theta_c, 0))^m_2 *
-                    (max(sqrt(theta1) - k_3 * sqrt(theta_c), 0))^m_3),
-                   (porosity_inv * Q * sign(theta2) * k_1 * theta2^m_1 *
-                    (max(theta2 - k_2 * theta_c, 0))^m_2 *
-                    (max(sqrt(theta2) - k_3 * sqrt(theta_c), 0))^m_3))
+    q_s = porosity_inv * Q * k_1 * theta^m_1 *
+                    (max(theta - k_2 * theta_c, 0))^m_2 *
+                    (max(sqrt(theta) - k_3 * sqrt(theta_c), 0))^m_3)  # sediment discharge coinciding with the velocity vector
+         
+    return SVector(v_1 / sqrt(v_1^2 + v_2^2) * q_s, v_2 / sqrt(v_1^2 + v_2^2) * q_s)
 end
 
 # Compute the sediment discharge for the Grass model
@@ -608,7 +606,7 @@ end
 # Trigonometric version of Cardano's method to compute the nontrivial roots of a cubic polynomial
 #   (x - v1,2)(x^3 + bx^2 + cx + d) = 0
 # for the eigenvalues of that [`ShallowWaterExnerEquations2D`[(@ref)] flux Jacobian.
-# This exploits that we know the either `v1` or `v2` is an eigenvalue (depneding on the orientation)
+# This exploits that we know the either `v1` or `v2` is an eigenvalue (depending on the orientation)
 # The eigenvalue that is equal to the velocity is associated with the contact wave
 # in the Riemann fan and is returned as the last entry of the eigenvalue vector
 # as expected by the `dissipation_roe`.

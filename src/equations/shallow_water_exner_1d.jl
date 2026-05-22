@@ -291,7 +291,7 @@ end
 
 """
     flux_ersing_etal(u_ll, u_rr, orientation::Integer,
-                                     equations::ShallowWaterMultiLayerEquations1D)
+                                     equations::ShallowWaterExnerEquations1D)
 
 Entropy conservative split form, without the hydrostatic pressure. This flux should be used
 together with the nonconservative [`flux_nonconservative_ersing_etal`](@ref) to create a scheme
