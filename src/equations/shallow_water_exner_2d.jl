@@ -386,7 +386,8 @@ for the sediment discharge `q_s`.
 
     # Compute the nontrivial eigenvalues using Cardano's formula
     # The known eigenvalue of `v1` or `v2` associated with the contact wave is returned last.
-    λ1, λ2, λ3, λ4 = eigvals_cardano(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg),
+    λ1, λ2, λ3, λ4 = eigvals_cardano(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg,
+                                             h_b_avg),
                                      orientation, equations)
 
     # Compute the sediment discharge at the averaged state
@@ -501,8 +502,8 @@ end
 
     Q = d_s * sqrt(gravity * (rho_s / rho_f - 1) * d_s) # Characteristic discharge
     q_s = porosity_inv * Q * k_1 * theta^m_1 *
-                    (max(theta - k_2 * theta_c, 0))^m_2 *
-                    (max(sqrt(theta) - k_3 * sqrt(theta_c), 0))^m_3  # sediment discharge coinciding with the velocity vector
+          (max(theta - k_2 * theta_c, 0))^m_2 *
+          (max(sqrt(theta) - k_3 * sqrt(theta_c), 0))^m_3  # sediment discharge coinciding with the velocity vector
 
     return SVector(v_1 / sqrt(v_1^2 + v_2^2) * q_s, v_2 / sqrt(v_1^2 + v_2^2) * q_s)
 end
