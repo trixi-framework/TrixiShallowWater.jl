@@ -12,7 +12,6 @@ OrdinaryDiffEqSSPRK = "669c94d9-1f4b-4b64-b377-1aa079aa2388"
 Trixi = "a7f1ee26-1774-49b1-8366-f1abc58fbfcb"
 Trixi2Vtk = "bc1476a1-1ca6-4cc3-950b-c312b255ff95"
 TrixiBottomTopography = "86af9953-43df-404b-8eaa-d20d82623a82"
-TrixiShallowWater = "804cb1fc-5b08-4398-a671-a789bfe091b3"
 
 [compat]
 CSV = "0.10"
@@ -28,4 +27,3 @@ OrdinaryDiffEqSSPRK = "1.2, 2"
 Trixi = "0.15, 0.16"
 Trixi2Vtk = "0.3.16"
 TrixiBottomTopography = "0.1"
-TrixiShallowWater = "0.2.8"
