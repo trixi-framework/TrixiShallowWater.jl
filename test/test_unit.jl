@@ -315,10 +315,12 @@ end
         u = SVector(h, h * v, h_b)
         r = equations.r
         g = equations.gravity
+        orientation = 1
 
         # Compute effective sediment height
-        h_s = TrixiShallowWater.q_s(SVector(h, h * v, 0.0), equations) / v
+        h_s = TrixiShallowWater.h_s(SVector(h, h * v, 0.0), equations)
         dq_s_dh, dq_s_dhv, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.q_s(u,
+                                                                                     orientation,
                                                                                      equations),
                                                           u)
 
@@ -328,6 +330,7 @@ end
 
         # Compute the eigenvalues using Cardano's formula
         λ1, λ2, λ3 = TrixiShallowWater.eigvals_cardano(SVector(h, h * v, h_b),
+                                                       orientation,
                                                        equations)
 
         # Precompute some common expressions
