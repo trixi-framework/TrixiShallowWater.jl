@@ -545,7 +545,7 @@ end
 end
 
 # Compute the sediment discharge for a generic sediment model.
-# The dependecy on the sediment model, like Grass or Shields, is inside `h_s`
+# The dependency on the sediment model, like Grass or Shields, is inside `h_s`
 @inline function q_s(u, orientation::Integer,
                      equations::ShallowWaterExnerEquations1D)
     return h_s(u, equations) * velocity(u, equations)
