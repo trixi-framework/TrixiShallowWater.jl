@@ -238,18 +238,17 @@ end
                             equations::ShallowWaterExnerEquations2D)
     _, hv1, hv2, _ = u
     v1, v2 = velocity(u, equations)
-    qs1, qs2 = q_s(u, equations)
 
     if orientation == 1
         f1 = hv1
         f2 = hv1 * v1
         f3 = hv2 * v1
-        f4 = qs1
+        f4 = q_s(u, orientation, equations)
     else # orientation == 2
         f1 = hv2
         f2 = hv1 * v2
         f3 = hv2 * v2
-        f4 = qs2
+        f4 = q_s(u, orientation, equations)
     end
 
     return SVector(f1, f2, f3, f4)
@@ -277,26 +276,8 @@ scheme that is entropy conservative and well-balanced.
     h_jump = h_rr - h_ll
     h_b_jump = h_b_rr - h_b_ll
 
-    # Calculate velocities
-    v1_ll, v2_ll = velocity(u_ll, equations)
-
-    # Get the local sediment discharges
-    qs1_ll, qs2_ll = q_s(u_ll, equations)
-
-    # Workaround to avoid division by zero, when computing the effective sediment height
-    if orientation == 1
-        if abs(v1_ll) < eps(typeof(h_ll))
-            h_s_ll = 0
-        else
-            h_s_ll = qs1_ll / v1_ll
-        end
-    else # orientation == 2
-        if abs(v2_ll) < eps(typeof(h_ll))
-            h_s_ll = 0
-        else
-            h_s_ll = qs2_ll / v2_ll
-        end
-    end
+    # Compute the effective sediment height
+    h_s_ll = h_s(u, equations)
 
     z = zero(eltype(u_ll))
 
@@ -333,10 +314,6 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
     v1_ll, v2_ll = velocity(u_ll, equations)
     v1_rr, v2_rr = velocity(u_rr, equations)
 
-    # Get the sediment discharge on either side
-    qs1_ll, qs2_ll = q_s(u_ll, equations)
-    qs1_rr, qs2_rr = q_s(u_rr, equations)
-
     # Average each factor of products in flux
     v1_avg = 0.5f0 * (v1_ll + v1_rr)
     v2_avg = 0.5f0 * (v2_ll + v2_rr)
@@ -346,12 +323,14 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
         f1 = 0.5f0 * (h_v1_ll + h_v1_rr)
         f2 = f1 * v1_avg
         f3 = f1 * v2_avg
-        f4 = 0.5f0 * (qs1_ll + qs1_rr)
+        f4 = 0.5f0 *
+             (q_s(u_ll, orientation, equations) + q_s(u_rr, orientation, equations))
     else # orientation == 2
         f1 = 0.5f0 * (h_v2_ll + h_v2_rr)
         f2 = f1 * v1_avg
         f3 = f1 * v2_avg
-        f4 = 0.5f0 * (qs2_ll + qs2_rr)
+        f4 = 0.5f0 *
+             (q_s(u_ll, orientation, equations) + q_s(u_rr, orientation, equations))
     end
 
     return SVector(f1, f2, f3, f4)
@@ -390,19 +369,11 @@ for the sediment discharge `q_s`.
                                              h_b_avg),
                                      orientation, equations)
 
-    # Compute the sediment discharge at the averaged state
-    q_s1_avg, q_s2_avg = q_s(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg),
-                             equations)
+    # Compute the effective sediment height
+    h_s_avg = h_s(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg), equations)
 
     # Build the right eigenvector matrix and its inverse in the appropriate direction
     if orientation == 1
-        # Workaround to avoid division by zero, when computing the effective sediment height
-        if abs(v1_avg) < eps(typeof(h_avg))
-            h_s_avg = z
-        else
-            h_s_avg = q_s1_avg / v1_avg
-        end
-
         # Precompute some common expressions
         c1 = g * (h_avg + h_s_avg)
         c2 = g * (h_avg + h_s_avg / r)
@@ -423,13 +394,6 @@ for the sediment discharge `q_s`.
                           (c1 - v1_avg^2 + λ1 * λ2)/d3 (2 * v1_avg - λ2 - λ1)/d3 z c2/d3;
                           -v2_avg z 1 z]
     else # orientation == 2
-        # Workaround to avoid division by zero, when computing the effective sediment height
-        if abs(v2_avg) < eps(typeof(h_avg))
-            h_s_avg = z
-        else
-            h_s_avg = q_s2_avg / v2_avg
-        end
-
         # Precompute some common expressions
         c1 = g * (h_avg + h_s_avg)
         c2 = g * (h_avg + h_s_avg / r)
@@ -482,12 +446,25 @@ end
     return SVector(v1, v2)
 end
 
-# Compute the sediment discharge for Shields stress models
+# Compute the "effective" water height of the sediment discharge for the Grass model
+# Note, the inverse porosity scaling is put onto this quantity as a design decision.
+@inline function h_s(u,
+                     equations::ShallowWaterExnerEquations2D{T, S, GrassModel{T}}) where {
+                                                                                          T,
+                                                                                          S
+                                                                                          }
+    (; A_g, m_g) = equations.sediment_model
+    v1, v2 = velocity(u, equations)
+    v_norm = sqrt(v1^2 + v2^2)
+    return A_g * v_norm^(m_g - 1)
+end
+
+# TODO: docstring
+# Compute the "effective" water height of the sediment discharge for Shields stress models
+# Note, the inverse porosity scaling is put onto this quantity as a design decision.
 # https://doi.org/10.1016/j.cma.2009.03.001
 # https://doi.org/10.1016/j.advwatres.2009.12.006
-# TODO: double check (somewhere?) that this 2d generalization makes sense
-# TODO: how would this work in a normal direction?
-@inline function q_s(u,
+@inline function h_s(u,
                      equations::ShallowWaterExnerEquations2D{T, S,
                                                              ShieldsStressModel{T}}) where {
                                                                                             T,
@@ -496,31 +473,24 @@ end
     (; gravity, rho_f, rho_s, porosity_inv) = equations
     (; m_1, m_2, m_3, k_1, k_2, k_3, theta_c, d_s) = equations.sediment_model
 
-    v_1, v_2 = velocity(u, equations)
     tau1, tau2 = shear_stress(u, equations)
-    theta = rho_f * sqrt(tau1^2 + tau2^2) / (gravity * (rho_s - rho_f) * d_s)  # Shields stress coinciding with the velocity vector
 
-    Q = d_s * sqrt(gravity * (rho_s / rho_f - 1) * d_s) # Characteristic discharge
-    q_s = porosity_inv * Q * k_1 * theta^m_1 *
-          (max(theta - k_2 * theta_c, 0))^m_2 *
-          (max(sqrt(theta) - k_3 * sqrt(theta_c), 0))^m_3  # sediment discharge coinciding with the velocity vector
+    # Shields stress coinciding with the velocity vector
+    theta = rho_f * sqrt(tau1^2 + tau2^2) / (gravity * (rho_s - rho_f) * d_s)
 
-    return SVector(v_1 / sqrt(v_1^2 + v_2^2) * q_s, v_2 / sqrt(v_1^2 + v_2^2) * q_s)
-end
+    # Characteristic discharge
+    Q = d_s * sqrt(gravity * (rho_s / rho_f - 1) * d_s)
 
-# Compute the sediment discharge for the Grass model
-@inline function q_s(u,
-                     equations::ShallowWaterExnerEquations2D{T, S, GrassModel{T}}) where {
-                                                                                          T,
-                                                                                          S
-                                                                                          }
-    (; porosity_inv, sediment_model) = equations
+    # Compute the effective sediment height with workaround to avoid division by zero
     v1, v2 = velocity(u, equations)
-    v_norm = sqrt(v1^2 + v2^2)
-    return SVector(porosity_inv * sediment_model.A_g * v1 *
-                   v_norm^(sediment_model.m_g - 1),
-                   porosity_inv * sediment_model.A_g * v2 *
-                   v_norm^(sediment_model.m_g - 1))
+    v_norm = sqrt(v_1^2 + v_2^2)
+    h_s_ = zero(eltype(u))
+    if v_norm > eps(eltype(u))
+        h_s_ = (Q / v_norm * k_1 * theta^m_1 * (max(theta - k_2 * theta_c, 0))^m_2 *
+                (max(sqrt(theta) - k_3 * sqrt(theta_c), 0))^m_3)
+    end
+
+    return h_s_
 end
 
 # Shear stress formulation using a coefficient to take into account different friction models
@@ -530,6 +500,22 @@ end
     g = equations.gravity
     shear_coeff = shear_stress_coefficient(u, equations.friction)
     return SVector(g * shear_coeff * v1 * v_norm, g * shear_coeff * v2 * v_norm)
+end
+
+# Compute the sediment discharge for a generic sediment model.
+# The dependency on the sediment model, like Grass or Shields, is inside `h_s`
+# TODO: how would this work in a normal direction?
+#       just return vn instead svec of v1, v2
+@inline function q_s(u, orientation::Integer, equations::ShallowWaterExnerEquations2D)
+    h_s_ = h_s(u, equations)
+    v_1, v_2 = velocity(u, equations)
+    if orientation == 1
+        q_s_ = h_s_ * v_1
+    else # orientation == 2
+        q_s_ = h_s_ * v_2
+    end
+
+    return q_s_
 end
 
 # Convert conservative variables to primitive
@@ -613,48 +599,30 @@ end
     g = equations.gravity
     r = equations.r
 
+    # Compute the effective sediment height
+    h_s_ = h_s(u, equations)
+
+    # Compute gradients of q_s, in either x or y direction according to `orientation`,
+    # using automatic differentiation.
+    # Introduces a closure to make q_s a function of u only. This is necessary since the
+    # gradient function only accepts functions of one variable.
+    dq_s_dh, dq_s_dhv1, dq_s_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s(u,
+                                                                           orientation,
+                                                                           equations),
+                                                                  u)
+
+    # Set the coefficients for the original cubic equation x^3 + bx^2 + cx + dx = 0
+    # Note, some values change depending on orientation.
     if orientation == 1
-        # Workaround to avoid division by zero, when computing the effective sediment height
-        if abs(v1) > eps(typeof(h))
-            q_s1, _ = q_s(u, equations)
-            h_s1 = q_s1 / v1
-            # Compute gradients of q_s using automatic differentiation.
-            # Introduces a closure to make q_s a function of u only. This is necessary since the
-            # gradient function only accepts functions of one variable.
-            dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s1,
-                                                                             u)
-        else
-            h_s1 = 0
-            dq_s1_dh = 0
-            dq_s1_dhv1 = 0
-            dq_s1_dhv2 = 0
-        end
-        # Coefficients for the original cubic equation x^3 + bx^2 + cx + dx = 0
         b = -2 * v1
-        c = v1^2 - g * (h + h_s1) - g * dq_s1_dhv1 * (h + h_s1 / r)
-        d = -g * dq_s1_dh * (h + h_s1 / r) - g * v2 * dq_s1_dhv2 * (h + h_s1 / r)
+        c = v1^2 - g * (h + h_s_) - g * dq_s_dhv1 * (h + h_s_ / r)
+        d = -g * dq_s_dh * (h + h_s_ / r) - g * v2 * dq_s_dhv2 * (h + h_s_ / r)
         # Set the known eigenvalue
         λ4 = v1
     else # orientation == 2
-        # Workaround to avoid division by zero, when computing the effective sediment height
-        if abs(v2) > eps(typeof(h))
-            _, q_s2 = q_s(u, equations)
-            h_s2 = q_s2 / v2
-            # Compute gradients of q_s using automatic differentiation.
-            # Introduces a closure to make q_s a function of u only. This is necessary since the
-            # gradient function only accepts functions of one variable.
-            dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s2,
-                                                                             u)
-        else
-            h_s2 = 0
-            dq_s2_dh = 0
-            dq_s2_dhv1 = 0
-            dq_s2_dhv2 = 0
-        end
-        # Coefficients for the original cubic equation x^3 + bx^2 + cx + d = 0
         b = -2 * v2
-        c = v2^2 - g * (h + h_s2) - g * dq_s2_dhv2 * (h + h_s2 / r)
-        d = -g * dq_s2_dh * (h + h_s2 / r) - g * v1 * dq_s2_dhv1 * (h + h_s2 / r)
+        c = v2^2 - g * (h + h_s_) - g * dq_s_dhv2 * (h + h_s_ / r)
+        d = -g * dq_s_dh * (h + h_s_ / r) - g * v1 * dq_s_dhv1 * (h + h_s_ / r)
         # Set the known eigenvalue
         λ4 = v2
     end

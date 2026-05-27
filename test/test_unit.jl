@@ -386,24 +386,25 @@ end
         r = equations.r
         g = equations.gravity
 
-        q_s1, q_s2 = TrixiShallowWater.q_s(u, equations)
-
         # Check in the x-direction
 
         # Compute effective sediment height
-        h_s1 = q_s1 / v1
-        dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s1, u)
+        h_s_ = h_s(u, equations)
+        dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.q_s(u,
+                                                                                                    1,
+                                                                                                    equations),
+                                                                         u)
 
         # flux Jacobian
-        A = [0 1 0 0; (g * (h + h_s1)-v1^2) (2*v1) 0 (g*(h + h_s1 / r)); -v1*v2 v2 v1 0;
+        A = [0 1 0 0; (g * (h + h_s_)-v1^2) (2*v1) 0 (g*(h + h_s_ / r)); -v1*v2 v2 v1 0;
              dq_s1_dh dq_s1_dhv1 dq_s1_dhv2 0]
 
         # Compute the eigenvalues using Cardano's formula
         λ1, λ2, λ3, λ4 = TrixiShallowWater.eigvals_cardano(u, 1, equations)
 
         # Precompute some common expressions
-        c1 = g * (h + h_s1)
-        c2 = g * (h + h_s1 / r)
+        c1 = g * (h + h_s_)
+        c2 = g * (h + h_s_ / r)
 
         # Eigenvector matrix
         r41 = ((v1 - λ1)^2 - c1) / c2
@@ -429,19 +430,22 @@ end
         # Check in the y-direction
 
         # Compute effective sediment height
-        h_s2 = q_s2 / v2
-        dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> q_s2, u)
+        h_s_ = h_s(u, equations)
+        dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.q_s(u,
+                                                                                                    2,
+                                                                                                    equations),
+                                                                         u)
 
         # flux Jacobian
-        A = [0 0 1 0; -v1*v2 v2 v1 0; (g * (h + h_s2)-v2^2) 0 (2*v2) (g*(h + h_s2 / r));
+        A = [0 0 1 0; -v1*v2 v2 v1 0; (g * (h + h_s_)-v2^2) 0 (2*v2) (g*(h + h_s_ / r));
              dq_s2_dh dq_s2_dhv1 dq_s2_dhv2 0]
 
         # Compute the eigenvalues using Cardano's formula
         λ1, λ2, λ3, λ4 = TrixiShallowWater.eigvals_cardano(u, 2, equations)
 
         # Precompute some common expressions
-        c1 = g * (h + h_s2)
-        c2 = g * (h + h_s2 / r)
+        c1 = g * (h + h_s_)
+        c2 = g * (h + h_s_ / r)
 
         # Eigenvector matrix
         r41 = ((v2 - λ1)^2 - c1) / c2
