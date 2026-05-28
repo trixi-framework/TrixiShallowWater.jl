@@ -277,7 +277,7 @@ scheme that is entropy conservative and well-balanced.
     h_b_jump = h_b_rr - h_b_ll
 
     # Compute the effective sediment height
-    h_s_ll = h_s(u, equations)
+    h_s_ll = h_s(u_ll, equations)
 
     z = zero(eltype(u_ll))
 
