@@ -389,7 +389,7 @@ end
 
         # Check in the x-direction
 
-        # Compute effective sediment height
+        # Compute effective sediment height and discharge
         h_s_ = TrixiShallowWater.h_s(u, equations)
         dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.q_s(u,
                                                                                                     1,
@@ -412,19 +412,28 @@ end
         r41 = ((v1 - λ1)^2 - c1) / c2
         r42 = ((v1 - λ2)^2 - c1) / c2
         r43 = ((v1 - λ3)^2 - c1) / c2
-        R = [[1 1 1 1]; [λ1 λ2 λ3 λ4]; [v2 v2 v2 r34]; [r41 r42 r43 -c1/c2]]
+        R = [[1 1 1 1]; [λ1 λ2 λ3 λ4]; [v2 v2 v2 r34]; [r41 r42 r43 -c1 / c2]]
 
         # Inverse eigenvector matrix
         d1 = (λ1 - λ2) * (λ1 - λ3)
         d2 = (λ2 - λ1) * (λ2 - λ3)
         d3 = (λ3 - λ2) * (λ3 - λ1)
-        D = r34 - v2;
-        r_inv11 = (v2 * dq_s1_dhv2 * (v1 - λ2) * (v1 - λ3) + (v1^2 - λ2 * λ3 - c1) * (v2 * dq_s1_dhv2 + dq_s1_dh + (dq_s1_dhv1 + c1 / c2) * v1)) / (D * d1 * dq_s1_dhv2)
-        r_inv21 = (v2 * dq_s1_dhv2 * (v1 - λ1) * (v1 - λ3) + (v1^2 - λ1 * λ3 - c1) * (v2 * dq_s1_dhv2 + dq_s1_dh + (dq_s1_dhv1 + c1 / c2) * v1)) / (D * d2 * dq_s1_dhv2)
-        r_inv31 = (v2 * dq_s1_dhv2 * (v1 - λ1) * (v1 - λ2) + (v1^2 - λ1 * λ2 - c1) * (v2 * dq_s1_dhv2 + dq_s1_dh + (dq_s1_dhv1 + c1 / c2) * v1)) / (D * d3 * dq_s1_dhv2)
-        R_inv = [r_inv11 (2 * v1 - λ2 - λ3)/d1 -(v1-λ2)*(v1-λ3)/(D*d1) c2/d1;
-                 r_inv21 (2 * v1 - λ1 - λ3)/d2 -(v1-λ1)*(v1-λ3)/(D*d2) c2/d2;
-                 r_inv31 (2 * v1 - λ2 - λ1)/d3 -(v1-λ1)*(v1-λ2)/(D*d3) c2/d3;
+        D = r34 - v2
+        r_inv11 = (v2 * dq_s1_dhv2 * (v1 - λ2) * (v1 - λ3) +
+                   (v1^2 - λ2 * λ3 - c1) *
+                   (v2 * dq_s1_dhv2 + dq_s1_dh + (dq_s1_dhv1 + c1 / c2) * v1)) /
+                  (D * d1 * dq_s1_dhv2)
+        r_inv21 = (v2 * dq_s1_dhv2 * (v1 - λ1) * (v1 - λ3) +
+                   (v1^2 - λ1 * λ3 - c1) *
+                   (v2 * dq_s1_dhv2 + dq_s1_dh + (dq_s1_dhv1 + c1 / c2) * v1)) /
+                  (D * d2 * dq_s1_dhv2)
+        r_inv31 = (v2 * dq_s1_dhv2 * (v1 - λ1) * (v1 - λ2) +
+                   (v1^2 - λ1 * λ2 - c1) *
+                   (v2 * dq_s1_dhv2 + dq_s1_dh + (dq_s1_dhv1 + c1 / c2) * v1)) /
+                  (D * d3 * dq_s1_dhv2)
+        R_inv = [r_inv11 (2 * v1 - λ2 - λ3)/d1 -(v1 - λ2) * (v1 - λ3)/(D * d1) c2/d1;
+                 r_inv21 (2 * v1 - λ1 - λ3)/d2 -(v1 - λ1) * (v1 - λ3)/(D * d2) c2/d2;
+                 r_inv31 (2 * v1 - λ2 - λ1)/d3 -(v1 - λ1) * (v1 - λ2)/(D * d3) c2/d3;
                  -v2/D 0 1/D 0]
 
         # Eigenvalue vale matrix
@@ -435,7 +444,7 @@ end
 
         # Check in the y-direction
 
-        # Compute effective sediment height
+        # Compute effective sediment discharge
         dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.q_s(u,
                                                                                                     2,
                                                                                                     equations),
@@ -457,19 +466,28 @@ end
         r41 = ((v2 - λ1)^2 - c1) / c2
         r42 = ((v2 - λ2)^2 - c1) / c2
         r43 = ((v2 - λ3)^2 - c1) / c2
-        R = [[1 1 1 1]; [v1 v1 v1 r24]; [λ1 λ2 λ3 λ4]; [r41 r42 r43 -c1/c2]]
+        R = [[1 1 1 1]; [v1 v1 v1 r24]; [λ1 λ2 λ3 λ4]; [r41 r42 r43 -c1 / c2]]
 
         # Inverse eigenvector matrix
         d1 = (λ1 - λ2) * (λ1 - λ3)
         d2 = (λ2 - λ1) * (λ2 - λ3)
         d3 = (λ3 - λ2) * (λ3 - λ1)
-        D = r24 - v1;
-        r_inv11 = (v1 * dq_s2_dhv1 * (v2 - λ2) * (v2 - λ3) + (v2^2 - λ2 * λ3 - c1) * (v1 * dq_s2_dhv1 + dq_s2_dh + (dq_s2_dhv2 + c1 / c2) * v2)) / (D * d1 * dq_s2_dhv1)
-        r_inv21 = (v1 * dq_s2_dhv1 * (v2 - λ1) * (v2 - λ3) + (v2^2 - λ1 * λ3 - c1) * (v1 * dq_s2_dhv1 + dq_s2_dh + (dq_s2_dhv2 + c1 / c2) * v2)) / (D * d2 * dq_s2_dhv1)
-        r_inv31 = (v1 * dq_s2_dhv1 * (v2 - λ1) * (v2 - λ2) + (v2^2 - λ1 * λ2 - c1) * (v1 * dq_s2_dhv1 + dq_s2_dh + (dq_s2_dhv2 + c1 / c2) * v2)) / (D * d3 * dq_s2_dhv1)
-        R_inv = [r_inv11 -(v2-λ2)*(v2-λ3)/(D*d1) (2 * v2 - λ2 - λ3)/d1 c2/d1;
-                 r_inv21 -(v2-λ1)*(v2-λ3)/(D*d2) (2 * v2 - λ1 - λ3)/d2 c2/d2;
-                 r_inv31 -(v2-λ1)*(v2-λ2)/(D*d3) (2 * v2 - λ2 - λ1)/d3 c2/d3;
+        D = r24 - v1
+        r_inv11 = (v1 * dq_s2_dhv1 * (v2 - λ2) * (v2 - λ3) +
+                   (v2^2 - λ2 * λ3 - c1) *
+                   (v1 * dq_s2_dhv1 + dq_s2_dh + (dq_s2_dhv2 + c1 / c2) * v2)) /
+                  (D * d1 * dq_s2_dhv1)
+        r_inv21 = (v1 * dq_s2_dhv1 * (v2 - λ1) * (v2 - λ3) +
+                   (v2^2 - λ1 * λ3 - c1) *
+                   (v1 * dq_s2_dhv1 + dq_s2_dh + (dq_s2_dhv2 + c1 / c2) * v2)) /
+                  (D * d2 * dq_s2_dhv1)
+        r_inv31 = (v1 * dq_s2_dhv1 * (v2 - λ1) * (v2 - λ2) +
+                   (v2^2 - λ1 * λ2 - c1) *
+                   (v1 * dq_s2_dhv1 + dq_s2_dh + (dq_s2_dhv2 + c1 / c2) * v2)) /
+                  (D * d3 * dq_s2_dhv1)
+        R_inv = [r_inv11 -(v2 - λ2) * (v2 - λ3)/(D * d1) (2 * v2 - λ2 - λ3)/d1 c2/d1;
+                 r_inv21 -(v2 - λ1) * (v2 - λ3)/(D * d2) (2 * v2 - λ1 - λ3)/d2 c2/d2;
+                 r_inv31 -(v2 - λ1) * (v2 - λ2)/(D * d3) (2 * v2 - λ2 - λ1)/d3 c2/d3;
                  -v1/D 1/D 0 0]
 
         # Eigenvalue vale matrix
