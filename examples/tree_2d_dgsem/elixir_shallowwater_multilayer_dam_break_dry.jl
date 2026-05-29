@@ -55,7 +55,7 @@ volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
 # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
 # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
 # To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
-# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
 # `StepsizeCallback` (CFL-Condition) and less diffusion.
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
                                                                   DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
@@ -165,5 +165,5 @@ stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheigh
 # run the simulation
 
 # use a Runge-Kutta method with CFL-based time step
-sol = solve(ode, SSPRK43(stage_limiter!);
+sol = solve(ode, SSPRK43(; stage_limiter!);
             ode_default_options()..., callback = callbacks, adaptive = false, dt = 1.0);

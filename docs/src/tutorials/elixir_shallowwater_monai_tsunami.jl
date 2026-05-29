@@ -358,7 +358,7 @@ callbacks = CallbackSet(analysis_callback,
 # however, this is deactivated with `adaptive=false` as we use a CFL-based time step restriction.
 # ```julia
 # stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
-# sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
+# sol = solve(ode, SSPRK43(; stage_limiter!); dt = 1.0,
 #           ode_default_options()..., callback = callbacks, adaptive = false);
 # ```
 

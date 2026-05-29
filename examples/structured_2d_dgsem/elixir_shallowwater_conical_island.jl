@@ -109,5 +109,5 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 
 stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
-sol = solve(ode, SSPRK43(stage_limiter!);
+sol = solve(ode, SSPRK43(; stage_limiter!);
             ode_default_options()..., callback = callbacks);
