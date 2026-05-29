@@ -369,8 +369,13 @@ for the sediment discharge `q_s`.
                                              h_b_avg),
                                      orientation, equations)
 
-    # Compute the effective sediment height
-    h_s_avg = h_s(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg), equations)
+    # Compute the effective sediment height and discharge
+    u = SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg)
+    h_s_avg = h_s(u, equations)
+    dq_s_dh, dq_s_dhv1, dq_s_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.q_s(u,
+                                                                                             orientation,
+                                                                                             equations),
+                                                                  u)
 
     # Build the right eigenvector matrix and its inverse in the appropriate direction
     if orientation == 1
@@ -382,17 +387,43 @@ for the sediment discharge `q_s`.
         r41 = ((v1_avg - λ1)^2 - c1) / c2
         r42 = ((v1_avg - λ2)^2 - c1) / c2
         r43 = ((v1_avg - λ3)^2 - c1) / c2
-        R = @SMatrix [[1 1 1 z]; [λ1 λ2 λ3 z]; [v2_avg v2_avg v2_avg 1];
-                      [r41 r42 r43 z]]
+        if abs(dq_s_dhv2) > eps(eltype(u_ll))
+            r34 = -(dq_s_dh + λ4 * (dq_s_dhv1 + c1 / c2)) / dq_s_dhv2
+            R = @SMatrix [[1 1 1 1]; [λ1 λ2 λ3 λ4]; [v2_avg v2_avg v2_avg r34];
+                          [r41 r42 r43 -c1 / c2]]
+        else # dq_s_dhv2 ≈ 0
+            R = @SMatrix [[1 1 1 z]; [λ1 λ2 λ3 z]; [v2_avg v2_avg v2_avg 1];
+                          [r41 r42 r43 z]]
+        end
 
         # Inverse eigenvector matrix
         d1 = (λ1 - λ2) * (λ1 - λ3)
         d2 = (λ2 - λ1) * (λ2 - λ3)
         d3 = (λ3 - λ2) * (λ3 - λ1)
-        R_inv = @SMatrix [(c1 - v1_avg^2 + λ2 * λ3)/d1 (2 * v1_avg - λ2 - λ3)/d1 z c2/d1;
-                          (c1 - v1_avg^2 + λ1 * λ3)/d2 (2 * v1_avg - λ1 - λ3)/d2 z c2/d2;
-                          (c1 - v1_avg^2 + λ1 * λ2)/d3 (2 * v1_avg - λ2 - λ1)/d3 z c2/d3;
-                          -v2_avg z 1 z]
+        if abs(dq_s_dhv2) > eps(eltype(u_ll))
+            D = r34 - v2_avg
+            r_inv11 = (v2_avg * dq_s_dhv2 * (v1_avg - λ2) * (v1_avg - λ3) +
+                       (v1_avg^2 - λ2 * λ3 - c1) *
+                       (v2_avg * dq_s_dhv2 + dq_s_dh + (dq_s_dhv1 + c1 / c2) * v1_avg)) /
+                      (D * d1 * dq_s_dhv2)
+            r_inv21 = (v2_avg * dq_s_dhv2 * (v1_avg - λ1) * (v1_avg - λ3) +
+                       (v1_avg^2 - λ1 * λ3 - c1) *
+                       (v2_avg * dq_s_dhv2 + dq_s_dh + (dq_s_dhv1 + c1 / c2) * v1_avg)) /
+                      (D * d2 * dq_s_dhv2)
+            r_inv31 = (v2_avg * dq_s_dhv2 * (v1_avg - λ1) * (v1_avg - λ2) +
+                       (v1_avg^2 - λ1 * λ2 - c1) *
+                       (v2_avg * dq_s_dhv2 + dq_s_dh + (dq_s_dhv1 + c1 / c2) * v1_avg)) /
+                      (D * d3 * dq_s_dhv2)
+            R_inv = @SMatrix [r_inv11 (2 * v1_avg - λ2 - λ3)/d1 -(v1_avg - λ2) * (v1_avg - λ3)/(D * d1) c2/d1;
+                              r_inv21 (2 * v1_avg - λ1 - λ3)/d2 -(v1_avg - λ1) * (v1_avg - λ3)/(D * d2) c2/d2;
+                              r_inv31 (2 * v1_avg - λ2 - λ1)/d3 -(v1_avg - λ1) * (v1_avg - λ2)/(D * d3) c2/d3;
+                              -v2_avg/D 0 1/D 0]
+        else # dq_s_dhv2 ≈ 0
+            R_inv = @SMatrix [(c1 - v1_avg^2 + λ2 * λ3)/d1 (2 * v1_avg - λ2 - λ3)/d1 z c2/d1;
+                              (c1 - v1_avg^2 + λ1 * λ3)/d2 (2 * v1_avg - λ1 - λ3)/d2 z c2/d2;
+                              (c1 - v1_avg^2 + λ1 * λ2)/d3 (2 * v1_avg - λ2 - λ1)/d3 z c2/d3;
+                              -v2_avg z 1 z]
+        end
     else # orientation == 2
         # Precompute some common expressions
         c1 = g * (h_avg + h_s_avg)
@@ -402,17 +433,43 @@ for the sediment discharge `q_s`.
         r41 = ((v2_avg - λ1)^2 - c1) / c2
         r42 = ((v2_avg - λ2)^2 - c1) / c2
         r43 = ((v2_avg - λ3)^2 - c1) / c2
-        R = @SMatrix [[1 1 1 z]; [v1_avg v1_avg v1_avg 1]; [λ1 λ2 λ3 z];
-                      [r41 r42 r43 z]]
+        if abs(dq_s_dhv1) > eps(eltype(u_ll))
+            r24 = -(dq_s_dh + λ4 * (dq_s_dhv2 + c1 / c2)) / dq_s_dhv1
+            R = @SMatrix [[1 1 1 1]; [v1_avg v1_avg v1_avg r24]; [λ1 λ2 λ3 λ4];
+                          [r41 r42 r43 -c1 / c2]]
+        else # dq_s_dhv1 ≈ 0
+            R = @SMatrix [[1 1 1 z]; [v1_avg v1_avg v1_avg 1]; [λ1 λ2 λ3 z];
+                          [r41 r42 r43 z]]
+        end
 
         # Inverse eigenvector matrix
         d1 = (λ1 - λ2) * (λ1 - λ3)
         d2 = (λ2 - λ1) * (λ2 - λ3)
         d3 = (λ3 - λ2) * (λ3 - λ1)
-        R_inv = @SMatrix [(c1 - v2_avg^2 + λ2 * λ3)/d1 z (2 * v2_avg - λ2 - λ3)/d1 c2/d1;
-                          (c1 - v2_avg^2 + λ1 * λ3)/d2 z (2 * v2_avg - λ1 - λ3)/d2 c2/d2;
-                          (c1 - v2_avg^2 + λ1 * λ2)/d3 z (2 * v2_avg - λ2 - λ1)/d3 c2/d3;
-                          -v1_avg 1 z z]
+        if abs(dq_s_dhv1) > eps(eltype(u_ll))
+            D = r24 - v1_avg
+            r_inv11 = (v1_avg * dq_s_dhv1 * (v2_avg - λ2) * (v2_avg - λ3) +
+                       (v2_avg^2 - λ2 * λ3 - c1) *
+                       (v1_avg * dq_s_dhv1 + dq_s_dh + (dq_s_dhv2 + c1 / c2) * v2_avg)) /
+                      (D * d1 * dq_s_dhv1)
+            r_inv21 = (v1_avg * dq_s_dhv1 * (v2_avg - λ1) * (v2_avg - λ3) +
+                       (v2_avg^2 - λ1 * λ3 - c1) *
+                       (v1_avg * dq_s_dhv1 + dq_s_dh + (dq_s_dhv2 + c1 / c2) * v2_avg)) /
+                      (D * d2 * dq_s_dhv1)
+            r_inv31 = (v1_avg * dq_s_dhv1 * (v2_avg - λ1) * (v2_avg - λ2) +
+                       (v2_avg^2 - λ1 * λ2 - c1) *
+                       (v1_avg * dq_s_dhv1 + dq_s_dh + (dq_s_dhv2 + c1 / c2) * v2_avg)) /
+                      (D * d3 * dq_s_dhv1)
+            R_inv = @SMatrix [r_inv11 -(v2_avg - λ2) * (v2_avg - λ3)/(D * d1) (2 * v2_avg - λ2 - λ3)/d1 c2/d1;
+                              r_inv21 -(v2_avg - λ1) * (v2_avg - λ3)/(D * d2) (2 * v2_avg - λ1 - λ3)/d2 c2/d2;
+                              r_inv31 -(v2_avg - λ1) * (v2_avg - λ2)/(D * d3) (2 * v2_avg - λ2 - λ1)/d3 c2/d3;
+                              -v1_avg/D 1/D 0 0]
+        else # dq_s_dhv1 ≈ 0
+            R_inv = @SMatrix [(c1 - v2_avg^2 + λ2 * λ3)/d1 z (2 * v2_avg - λ2 - λ3)/d1 c2/d1;
+                              (c1 - v2_avg^2 + λ1 * λ3)/d2 z (2 * v2_avg - λ1 - λ3)/d2 c2/d2;
+                              (c1 - v2_avg^2 + λ1 * λ2)/d3 z (2 * v2_avg - λ2 - λ1)/d3 c2/d3;
+                              -v1_avg 1 z z]
+        end
     end
 
     # Eigenvalue absolute value matrix
@@ -456,7 +513,7 @@ end
     (; A_g, m_g) = equations.sediment_model
     v1, v2 = velocity(u, equations)
     v_norm = sqrt(v1^2 + v2^2)
-    return A_g * v_norm^(m_g - 1)
+    return equations.porosity_inv * A_g * v_norm^(m_g - 1)
 end
 
 # TODO: docstring
@@ -486,7 +543,8 @@ end
     v_norm = sqrt(v_1^2 + v_2^2)
     h_s_ = zero(eltype(u))
     if v_norm > eps(eltype(u))
-        h_s_ = (Q / v_norm * k_1 * theta^m_1 * (max(theta - k_2 * theta_c, 0))^m_2 *
+        h_s_ = (porosity_inv * Q / v_norm * k_1 * theta^m_1 *
+                (max(theta - k_2 * theta_c, 0))^m_2 *
                 (max(sqrt(theta) - k_3 * sqrt(theta_c), 0))^m_3)
     end
 
