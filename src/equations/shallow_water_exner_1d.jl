@@ -416,7 +416,7 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
 end
 
 """
-    dissipation_roe(u_ll, u_rr, orientation,
+    dissipation_roe(u_ll, u_rr, orientation::Integer,
                     equations::ShallowWaterExnerEquations1D)
 Roe-type dissipation term for the [`ShallowWaterExnerEquations1D`](@ref) with an approximate Roe average
 for the sediment discharge `q_s`.
@@ -519,7 +519,7 @@ end
 
     Q = d_s * sqrt(gravity * (rho_s / rho_f - 1) * d_s) # Characteristic discharge
 
-    # Compute the effective sediment height with workaround to avoid division by zero
+    # Compute the effective sediment height with workaround to avoid division by zero for vanishing velocity.
     h_s_ = zero(eltype(u))
     v = velocity(u, equations)
     if abs(v) > eps(eltype(u))
@@ -545,7 +545,7 @@ end
 end
 
 # Compute the sediment discharge for a generic sediment model.
-# The dependency on the sediment model, like Grass or Shields, is inside `h_s`
+# The dependency on the sediment model, like Grass or Shields, is inside `h_s`.
 @inline function q_s(u, orientation::Integer,
                      equations::ShallowWaterExnerEquations1D)
     return h_s(u, equations) * velocity(u, equations)
