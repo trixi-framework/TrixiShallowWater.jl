@@ -317,10 +317,11 @@ end
         g = equations.gravity
 
         # Compute effective sediment height
-        h_s = TrixiShallowWater.h_s(SVector(h, h * v, 0.0), equations)
-        dq_s_dh, dq_s_dhv, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.q_s(u,
-                                                                                     1,
-                                                                                     equations),
+        h_s = TrixiShallowWater.effective_sediment_height(SVector(h, h * v, 0.0),
+                                                          equations)
+        dq_s_dh, dq_s_dhv, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.sediment_discharge(u,
+                                                                                                    1,
+                                                                                                    equations),
                                                           u)
 
         # flux Jacobian
