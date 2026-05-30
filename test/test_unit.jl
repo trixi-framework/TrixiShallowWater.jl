@@ -3,7 +3,6 @@ module TestUnit
 using Test
 using Trixi
 using TrixiShallowWater
-using LinearAlgebra
 
 include("test_trixi.jl")
 
