@@ -18,12 +18,12 @@ entropy inequality. The equations are given by
 \partial_t h + \partial_x hv_1 + \partial_y hv_2 = 0, \\
 \partial_t hv_1 + \partial_x (hv_1^2) + \partial_y (hv_1v_2) + gh\partial_x (h + h_b) + g\frac{1}{r}h_s\partial_x (rh + h_b) + \frac{\tau_1}{\rho_f} = 0,\\
 \partial_t hv_2 + \partial_x (hv_1v_2) + \partial_y (hv_2^2) + gh\partial_y (h + h_b) + g\frac{1}{r}h_s\partial_y (rh + h_b) + \frac{\tau_2}{\rho_f} = 0,\\
-\partial_t h_b + \partial_x q_s + \partial_y q_s = 0,
+\partial_t h_b + \partial_x q_{s,1} + \partial_y q_{s,2} = 0,
 \end{cases}
 ```
 The unknown quantities are the water and sediment height ``h``, ``h_b`` and the velocities ``v_1``, ``v_2``.
-The sediment discharges ``q_s1(h, hv)`` and ``q_s1(h, hv)`` are determined by the `sediment_model` and is used to determine
-the active sediment heights ``h_s1 = q_s1 / v_1`` and ``h_s2 = q_s2 / v_2``.
+The sediment discharges ``q_{s,1}(h, hv)`` and ``q_{s,2}(h, hv)`` are determined by the `sediment_model`.
+The sediment model also determines the active sediment height, e.g., ``h_s = q_s1 / v_1``.
 Furthermore ``\tau`` denotes the shear stress at the water-sediment interface and is determined by
 the `friction` model.
 The gravitational acceleration is denoted by ``g``, and ``\rho_f`` and ``\rho_s`` are the fluid and sediment
@@ -516,7 +516,7 @@ end
     return SVector(v1, v2)
 end
 
-# Compute the "effective" water height of the sediment discharge for the Grass model
+# Compute the "effective" water height `h_s` of the sediment discharge for the Grass model
 # Note, the inverse porosity scaling is put onto this quantity as a design decision.
 @inline function effective_sediment_height(u,
                                            equations::ShallowWaterExnerEquations2D{T, S,
@@ -531,7 +531,7 @@ end
     return equations.porosity_inv * A_g * v_norm^(m_g - 1)
 end
 
-# Compute the "effective" water height of the sediment discharge for Shields stress models.
+# Compute the "effective" water height `h_s` of the sediment discharge for Shields stress models.
 # This 2D version is based upon the Meyer-Peter-Müller discussed
 # in Castro Díaz et al. (https://doi.org/10.1016/j.cma.2009.03.001).
 # Note, the inverse porosity scaling is put onto this quantity as a design decision.
@@ -575,7 +575,7 @@ end
     return SVector(g * shear_coeff * v1 * v_norm, g * shear_coeff * v2 * v_norm)
 end
 
-# Compute the sediment discharge for a generic sediment model.
+# Compute the sediment discharge `q_s = h_s * v` for a generic sediment model.
 # The dependency on the sediment model, like Grass or Shields, is inside `effective_sediment_height`
 # TODO: how would this work in a normal direction?
 #       handled inside the flux to compute the `q_s` in the normal direction
