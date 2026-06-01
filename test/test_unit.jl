@@ -320,7 +320,6 @@ end
         h_s = TrixiShallowWater.effective_sediment_height(SVector(h, h * v, 0.0),
                                                           equations)
         dq_s_dh, dq_s_dhv, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.sediment_discharge(u,
-                                                                                                    1,
                                                                                                     equations),
                                                           u)
 

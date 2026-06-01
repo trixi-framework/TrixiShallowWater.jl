@@ -343,7 +343,7 @@ end
 
     f1 = hv
     f2 = hv * v
-    f3 = sediment_discharge(u, orientation, equations)
+    f3 = sediment_discharge(u, equations)
 
     return SVector(f1, f2, f3)
 end
@@ -405,8 +405,8 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
     v_rr = velocity(u_rr, equations)
 
     # Get the sediment discharge on either side
-    q_s_ll = sediment_discharge(u_ll, orientation, equations)
-    q_s_rr = sediment_discharge(u_rr, orientation, equations)
+    q_s_ll = sediment_discharge(u_ll, equations)
+    q_s_rr = sediment_discharge(u_rr, equations)
 
     # Average each factor of products in flux
     v_avg = 0.5f0 * (v_ll + v_rr)
@@ -553,8 +553,7 @@ end
 # Compute the sediment discharge for a generic sediment model.
 # The dependency on the sediment model, like Grass or Shields,
 # is inside the function `effective_sediment_height`.
-@inline function sediment_discharge(u, orientation::Integer,
-                                    equations::ShallowWaterExnerEquations1D)
+@inline function sediment_discharge(u, equations::ShallowWaterExnerEquations1D)
     return effective_sediment_height(u, equations) * velocity(u, equations)
 end
 
@@ -635,7 +634,6 @@ end
     # Introduces a closure to make q_s a function of u only. This is necessary since the
     # gradient function only accepts functions of one variable.
     dq_s_dh, dq_s_dhv, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
-                                                                              orientation,
                                                                               equations),
                                                       u)
 
