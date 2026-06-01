@@ -340,10 +340,11 @@ end
     _, hv, _ = u
 
     v = velocity(u, equations)
+    q_s = sediment_discharge(u, equations)
 
     f1 = hv
     f2 = hv * v
-    f3 = sediment_discharge(u, equations)
+    f3 = q_s
 
     return SVector(f1, f2, f3)
 end
@@ -409,12 +410,14 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
     q_s_rr = sediment_discharge(u_rr, equations)
 
     # Average each factor of products in flux
+    h_v_avg = 0.5f0 * (h_v_ll + h_v_rr)
     v_avg = 0.5f0 * (v_ll + v_rr)
+    q_s_avg = 0.5f0 * (q_s_ll + q_s_rr)
 
     # Calculate fluxes depending on orientation
-    f1 = 0.5f0 * (h_v_ll + h_v_rr)
+    f1 = h_v_avg
     f2 = f1 * v_avg
-    f3 = 0.5f0 * (q_s_ll + q_s_rr)
+    f3 = q_s_avg
 
     return SVector(f1, f2, f3)
 end
