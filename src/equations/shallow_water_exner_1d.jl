@@ -141,41 +141,6 @@ A smooth initial condition used for convergence tests in combination with
 end
 
 """
-    source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations1D{T, S, GrassModel{T}}) where {T, S}
-
-Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref)
-when using the the [`GrassModel`](@ref) model.
-
-To use this source term the equations must be set to:
-```julia
-equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
-                                            rho_s = 1.0, porosity = 0.5,
-                                            friction = ManningFriction(n = 0.0),
-                                            sediment_model = GrassModel(A_g = 0.01))
-```
-"""
-@inline function Trixi.source_terms_convergence_test(u, x, t,
-                                                     equations::ShallowWaterExnerEquations1D{T,
-                                                                                             S,
-                                                                                             GrassModel{T}}) where {
-                                                                                                                    T,
-                                                                                                                    S
-                                                                                                                    }
-    ω = sqrt(2) * pi
-    A_g = equations.sediment_model.A_g
-
-    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω
-    hv = -0.5f0 * cos(x[1] * ω) * sin(t * ω) * ω -
-         0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
-         10 * A_g *
-         (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω) +
-         10 * (2 + cos(x[1] * ω) * cos(t * ω)) *
-         (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω)
-    h_b = -sin(x[1] * ω) * sin(t * ω) * ω
-    return SVector(h, hv, h_b)
-end
-
-"""
     source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations1D{T, S, ShieldsStressModel{T}}) where {T, S}
 
 Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref)
