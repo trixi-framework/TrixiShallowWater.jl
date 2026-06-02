@@ -1,6 +1,7 @@
 using OrdinaryDiffEqSSPRK, OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
+using Symbolics
 
 ###############################################################################
 # Semidiscretization of the SWE-Exner equations with source terms for convergence testing
@@ -11,7 +12,70 @@ equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
                                          friction = ManningFriction(n = 0.0),
                                          sediment_model = GrassModel(A_g = 0.01))
 
-initial_condition = initial_condition_convergence_test
+##################################################################################################
+### Create manufactured solution for method of manufactured solutions (MMS)
+
+# Symbolic Variables
+@variables x_sym, t_sym, g, r
+
+# Define Differentials
+Dt, Dx = Differential(t_sym), Differential(x_sym)
+
+##################################################################################################
+##  Initial condition
+h = 2 + cos(pi * x_sym) * cos(pi * t_sym)
+v = -0.35 * cos(0.5 * pi * x_sym)
+h_b = 1 + sin(pi * x_sym) * cos(pi * t_sym)
+
+# directly write in terms of the conservative variables
+init = [h, h * v, h_b]
+
+##################################################################################################
+##  PDE
+# Helper variables for Grass sediment closure
+# where we hard code that m_g = 3 to simplify expressions
+@variables porosity_inv Ag
+h_s = porosity_inv * Ag * v^2
+q_s = h_s * v
+
+# PDE Source Terms
+eqs = [Dt(h) + Dx(h * v),
+    Dt(h * v) + Dx(h * v^2) + g * h * Dx(h + h_b) + g * (h_s / r) * Dx(r * h + h_b),
+    Dt(h_b) + Dx(q_s)]
+
+###################################################################################################
+## Create the functions for the manufactured solution
+# Expand derivatives
+du_exprs = expand_derivatives.(eqs)
+
+# Build functions
+du_f1 = build_function(du_exprs[1], x_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false))
+du_f2 = build_function(du_exprs[2], x_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false))
+du_f3 = build_function(du_exprs[3], x_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false))
+
+init_funcs = build_function.(init, Ref(x_sym), t_sym, expression = Val(false))
+
+# Trixi functions
+function initial_condition_convergence(x, t, equations::ShallowWaterExnerEquations1D)
+    return SVector(init_funcs[1](x[1], t),
+                   init_funcs[2](x[1], t),
+                   init_funcs[3](x[1], t))
+end
+
+function source_terms_convergence(u, x, t, equations::ShallowWaterExnerEquations1D)
+    g = equations.gravity
+    r = equations.r
+    porosity_inv = equations.porosity_inv
+    Ag = equations.sediment_model.A_g
+    return SVector{3, eltype(u)}(du_f1(x[1], t, g, r, porosity_inv, Ag),
+                                 du_f2(x[1], t, g, r, porosity_inv, Ag),
+                                 du_f3(x[1], t, g, r, porosity_inv, Ag))
+end
+
+initial_condition = initial_condition_convergence
 
 ###############################################################################
 # Get the DG approximation space
@@ -26,8 +90,8 @@ solver = DGSEM(polydeg = 4,
 ###############################################################################
 # Get the TreeMesh and setup a periodic mesh
 
-coordinates_min = 0.0
-coordinates_max = sqrt(2.0)
+coordinates_min = -1.0
+coordinates_max = 1.0
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 2,
                 n_cells_max = 10_000,
@@ -35,7 +99,7 @@ mesh = TreeMesh(coordinates_min, coordinates_max,
 
 # create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
-                                    source_terms = source_terms_convergence_test,
+                                    source_terms = source_terms_convergence,
                                     boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################

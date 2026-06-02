@@ -5,8 +5,7 @@ using TrixiShallowWater
 using Symbolics
 
 ###############################################################################
-# Semidiscretization of the shallow water Exner equations for a channel flow problem
-# with sediment transport
+# Semidiscretization of the shallow water Exner equations with source terms for convergence testing
 
 equations = ShallowWaterExnerEquations2D(gravity = 9.81, H0 = 10.0,
                                          rho_f = 0.5, rho_s = 1.0,
@@ -24,7 +23,7 @@ Dt, Dx, Dy = Differential(t_sym), Differential(x_sym), Differential(y_sym)
 
 ##################################################################################################
 ##  Initial condition
-h  = 2 + cos(pi * x_sym) * cos(pi * y_sym) * cos(pi * t_sym)
+h = 2 + cos(pi * x_sym) * cos(pi * y_sym) * cos(pi * t_sym)
 v1 = 0.5 * cos(0.5 * pi * x_sym) * cos(0.5 * pi * y_sym)
 v2 = -0.65 * cos(0.5 * pi * x_sym) * cos(0.5 * pi * y_sym)
 h_b = 1 + sin(pi * x_sym) * sin(pi * y_sym) * cos(pi * t_sym)
@@ -42,12 +41,12 @@ q_s1 = h_s * v1
 q_s2 = h_s * v2
 
 # PDE Source Terms
-eqs = [
-    Dt(h) + Dx(h * v1) + Dy(h * v2),
-    Dt(h * v1) + Dx(h * v1^2) + Dy(h * v1 * v2) + g * h * Dx(h + h_b) + g * (h_s / r) * Dx(r * h + h_b),
-    Dt(h * v2) + Dx(h * v1 * v2) + Dy(h * v2^2) + g * h * Dy(h + h_b) + g * (h_s / r) * Dy(r * h + h_b),
-    Dt(h_b) + Dx(q_s1) + Dy(q_s2)
-]
+eqs = [Dt(h) + Dx(h * v1) + Dy(h * v2),
+    Dt(h * v1) + Dx(h * v1^2) + Dy(h * v1 * v2) + g * h * Dx(h + h_b) +
+    g * (h_s / r) * Dx(r * h + h_b),
+    Dt(h * v2) + Dx(h * v1 * v2) + Dy(h * v2^2) + g * h * Dy(h + h_b) +
+    g * (h_s / r) * Dy(r * h + h_b),
+    Dt(h_b) + Dx(q_s1) + Dy(q_s2)]
 
 ###################################################################################################
 ## Create the functions for the manufactured solution
@@ -55,22 +54,14 @@ eqs = [
 du_exprs = expand_derivatives.(eqs)
 
 # Build functions
-du_f1 = build_function(du_exprs[1],
-                   x_sym, y_sym, t_sym,
-                   g, r, porosity_inv, Ag,
-                   expression = Val(false))
-du_f2 = build_function(du_exprs[2],
-                   x_sym, y_sym, t_sym,
-                   g, r, porosity_inv, Ag,
-                   expression = Val(false))
-du_f3 = build_function(du_exprs[3],
-                   x_sym, y_sym, t_sym,
-                   g, r, porosity_inv, Ag,
-                   expression = Val(false))
-du_f4 = build_function(du_exprs[4],
-                   x_sym, y_sym, t_sym,
-                   g, r, porosity_inv, Ag,
-                   expression = Val(false))
+du_f1 = build_function(du_exprs[1], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false))
+du_f2 = build_function(du_exprs[2], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false))
+du_f3 = build_function(du_exprs[3], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false))
+du_f4 = build_function(du_exprs[4], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false))
 
 init_funcs = build_function.(init, Ref(x_sym), Ref(y_sym), t_sym, expression = Val(false))
 
