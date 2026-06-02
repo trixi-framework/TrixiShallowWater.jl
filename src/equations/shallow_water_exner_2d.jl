@@ -114,110 +114,6 @@ Should be used together with [`Trixi.TreeMesh`](@extref).
     return flux, noncons_flux
 end
 
-# Set initial conditions at physical location `x` for time `t`
-"""
-    initial_condition_convergence_test(x, t, equations::ShallowWaterExnerEquations2D)
-
-A smooth initial condition used for convergence tests in combination with
-[`Trixi.source_terms_convergence_test`](@ref).
-"""
-@inline function Trixi.initial_condition_convergence_test(x, t,
-                                                          equations::ShallowWaterExnerEquations2D)
-    ω = sqrt(2) * pi
-
-    h = 2 + cos(ω * x[1]) * cos(ω * x[2]) * cos(ω * t)
-    v1 = 0.5f0
-    v2 = -0.65f0
-    h_b = 2 + sin(ω * x[1]) * sin(ω * x[2]) * cos(ω * t)
-
-    return SVector(h, h * v1, h * v2, h_b)
-end
-
-# """
-#     source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations1D{T, S, GrassModel{T}}) where {T, S}
-
-# Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref)
-# when using the the [`GrassModel`](@ref) model.
-
-# To use this source term the equations must be set to:
-# ```julia
-# equations = ShallowWaterExnerEquations2D(gravity = 10.0, rho_f = 0.5,
-#                                             rho_s = 1.0, porosity = 0.5,
-#                                             friction = ManningFriction(n = 0.0),
-#                                             sediment_model = GrassModel(A_g = 0.01))
-# ```
-# """
-# # TODO: needs updated
-# @inline function Trixi.source_terms_convergence_test(u, x, t,
-#                                                      equations::ShallowWaterExnerEquations2D{T,
-#                                                                                              S,
-#                                                                                              GrassModel{T}}) where {
-#                                                                                                                     T,
-#                                                                                                                     S
-#                                                                                                                     }
-#     ω = sqrt(2) * pi
-#     A_g = equations.sediment_model.A_g
-
-#     h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω
-#     hv = -0.5f0 * cos(x[1] * ω) * sin(t * ω) * ω -
-#          0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
-#          10 * A_g *
-#          (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω) +
-#          10 * (2 + cos(x[1] * ω) * cos(t * ω)) *
-#          (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω)
-#     h_b = -sin(x[1] * ω) * sin(t * ω) * ω
-#     return SVector(h, hv, h_b)
-# end
-
-# """
-#     source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations2D{T, S, ShieldsStressModel{T}}) where {T, S}
-
-# Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref)
-# when using the [`MeyerPeterMueller`](@ref) model.
-
-# To use this source term the equations must be set to:
-# ```julia
-# equations = ShallowWaterExnerEquations2D(gravity = 10.0, rho_f = 0.5,
-#                                          rho_s = 1.0, porosity = 0.5,
-#                                          friction = ManningFriction(n = 0.01),
-#                                          sediment_model = MeyerPeterMueller(theta_c = 0.0,
-#                                                                             d_s = 1e-3))
-# ```
-# """
-# #TODO: needs updated
-# @inline function Trixi.source_terms_convergence_test(u, x, t,
-#                                                      equations::ShallowWaterExnerEquations2D{T,
-#                                                                                              S,
-#                                                                                              ShieldsStressModel{T}}) where {
-#                                                                                                                             T,
-#                                                                                                                             S
-#                                                                                                                             }
-#     ω = sqrt(2) * pi
-#     (; gravity, porosity_inv, rho_f, rho_s, r) = equations
-
-#     n = equations.friction.n
-
-#     # Constant expression from the MPM model
-#     c = sqrt(gravity * (1 / r - 1)) * 8 * porosity_inv *
-#         (rho_f / (rho_s - rho_f))^(3 / 2) * n^3
-
-#     h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω
-
-#     hv = ((5 * c *
-#            (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω)) /
-#           ((2 + cos(x[1] * ω) * cos(t * ω))^0.5) -
-#           0.5f0 * cos(x[1] * ω) * sin(t * ω) * ω -
-#           0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
-#           10 * (2 + cos(x[1] * ω) * cos(t * ω)) *
-#           (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω))
-
-#     h_b = ((0.5f0 * ((0.125f0 * c) / (2 + cos(x[1] * ω) * cos(t * ω))) * sin(x[1] * ω) *
-#             cos(t * ω) * ω) / ((2 + cos(x[1] * ω) * cos(t * ω))^0.5) -
-#            sin(x[1] * ω) * sin(t * ω) * ω)
-
-#     return SVector(h, hv, h_b)
-# end
-
 """
     source_term_bottom_friction(u, x, t, equations::ShallowWaterExnerEquations2D)
 
@@ -320,27 +216,31 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
     q_s1_rr, q_s2_rr = sediment_discharge(u_rr, equations)
 
     # Average each factor of products in flux
+    h_v1_avg = 0.5f0 * (h_v1_ll + h_v1_rr)
+    h_v2_avg = 0.5f0 * (h_v2_ll + h_v2_rr)
     v1_avg = 0.5f0 * (v1_ll + v1_rr)
     v2_avg = 0.5f0 * (v2_ll + v2_rr)
+    q_s1_avg = 0.5f0 * (q_s1_ll + q_s1_rr)
+    q_s2_avg = 0.5f0 * (q_s2_ll + q_s2_rr)
 
     # Calculate fluxes depending on orientation
     if orientation == 1
-        f1 = 0.5f0 * (h_v1_ll + h_v1_rr)
+        f1 = h_v1_avg
         f2 = f1 * v1_avg
         f3 = f1 * v2_avg
-        f4 = 0.5f0 * (q_s1_ll + q_s1_rr)
+        f4 = q_s1_avg
     else # orientation == 2
-        f1 = 0.5f0 * (h_v2_ll + h_v2_rr)
+        f1 = h_v2_avg
         f2 = f1 * v1_avg
         f3 = f1 * v2_avg
-        f4 = 0.5f0 * (q_s2_ll + q_s2_rr)
+        f4 = q_s2_avg
     end
 
     return SVector(f1, f2, f3, f4)
 end
 
 """
-    dissipation_roe(u_ll, u_rr, orientation,
+    dissipation_roe(u_ll, u_rr, orientation::Integer,
                     equations::ShallowWaterExnerEquations2D)
 Roe-type dissipation term for the [`ShallowWaterExnerEquations2D`](@ref) with an approximate Roe average
 for the sediment discharge `q_s`.
@@ -516,8 +416,17 @@ end
     return SVector(v1, v2)
 end
 
-# Compute the "effective" water height `h_s` of the sediment discharge for the Grass model
-# Note, the inverse porosity scaling is put onto this quantity as a design decision.
+"""
+    effective_sediment_height(u, equations::ShallowWaterExnerEquations2D)
+
+Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s v_{1,2}`
+for the Grass model.
+Note, the inverse porosity scaling is put onto this quantity as a design decision.
+
+- F. Benkhaldoun, S. Sahmim, M. Seaïd (2010)
+  A two-dimensional finite volume morphodynamic model on unstructured triangular grids
+  [DOI: 10.1002/fld.2129](https://doi.org/10.1002/fld.2129)
+"""
 @inline function effective_sediment_height(u,
                                            equations::ShallowWaterExnerEquations2D{T, S,
                                                                                    GrassModel{T}}) where {
@@ -531,10 +440,19 @@ end
     return equations.porosity_inv * A_g * v_norm^(m_g - 1)
 end
 
-# Compute the "effective" water height `h_s` of the sediment discharge for Shields stress models.
-# This 2D version is based upon the Meyer-Peter-Müller discussed
-# in Castro Díaz et al. (https://doi.org/10.1016/j.cma.2009.03.001).
-# Note, the inverse porosity scaling is put onto this quantity as a design decision.
+"""
+    effective_sediment_height(u, equations::ShallowWaterExnerEquations2D)
+
+Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s v_{1,2}`
+for Shields stress models.
+This 2D extension is based upon the Meyer-Peter-Müller model described in the given reference.
+Note, the inverse porosity scaling is put onto this quantity as a design decision.
+
+- M.J. Castro Díaz, E.D. Fernández-Nieto, A.M. Ferreiro, and C. Parés (2009)\
+  Two-dimensional sediment transport models in shallow water equations.
+  A second order finite volume approach on unstructured meshes\
+  [DOI: 10.1016/j.cma.2009.03.001](https://doi.org/10.1016/j.cma.2009.03.001)
+"""
 @inline function effective_sediment_height(u,
                                            equations::ShallowWaterExnerEquations2D{T, S,
                                                                                    ShieldsStressModel{T}}) where {
@@ -575,10 +493,14 @@ end
     return SVector(g * shear_coeff * v1 * v_norm, g * shear_coeff * v2 * v_norm)
 end
 
-# Compute the sediment discharge `q_s = h_s * v` for a generic sediment model.
-# The dependency on the sediment model, like Grass or Shields, is inside `effective_sediment_height`
 # TODO: how would this work in a normal direction?
 #       handled inside the flux to compute the `q_s` in the normal direction
+"""
+    sediment_discharge(u, equations::ShallowWaterExnerEquations2D)
+
+Compute the sediment discharge `q_s = h_s v_{1,2}` for a generic sediment model.
+The dependency on the sediment model, like Grass or Shields, is inside [`effective_sediment_height`](@ref).
+"""
 @inline function sediment_discharge(u, equations::ShallowWaterExnerEquations2D)
     h_s = effective_sediment_height(u, equations)
     v_1, v_2 = velocity(u, equations)

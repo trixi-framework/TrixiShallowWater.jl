@@ -403,8 +403,13 @@ end
     return v
 end
 
-# Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s * v` for the Grass model
-# Note, the inverse porosity scaling is put onto this quantity as a design decision.
+"""
+    effective_sediment_height(u, equations::ShallowWaterExnerEquations1D)
+
+Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s v`
+for the Grass model.
+Note, the inverse porosity scaling is put onto this quantity as a design decision.
+"""
 @inline function effective_sediment_height(u,
                                            equations::ShallowWaterExnerEquations1D{T, S,
                                                                                    GrassModel{T}}) where {
@@ -415,8 +420,13 @@ end
     return equations.porosity_inv * A_g * abs(velocity(u, equations))^(m_g - 1)
 end
 
-# Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s * v` for Shields stress models
-# Note, the inverse porosity scaling is put onto this quantity as a design decision.
+"""
+    effective_sediment_height(u, equations::ShallowWaterExnerEquations1D)
+
+Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s v`
+for Shields stress models.
+Note, the inverse porosity scaling is put onto this quantity as a design decision.
+"""
 @inline function effective_sediment_height(u,
                                            equations::ShallowWaterExnerEquations1D{T, S,
                                                                                    ShieldsStressModel{T}}) where {
@@ -449,9 +459,12 @@ end
            abs(v)
 end
 
-# Compute the sediment discharge `q_s = h_s * v` for a generic sediment model.
-# The dependency on the sediment model, like Grass or Shields,
-# is inside the function `effective_sediment_height`.
+"""
+    sediment_discharge(u, equations::ShallowWaterExnerEquations1D)
+
+Compute the sediment discharge `q_s = h_s v` for a generic sediment model.
+The dependency on the sediment model, like Grass or Shields, is inside [`effective_sediment_height`](@ref).
+"""
 @inline function sediment_discharge(u, equations::ShallowWaterExnerEquations1D)
     return effective_sediment_height(u, equations) * velocity(u, equations)
 end
