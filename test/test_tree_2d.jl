@@ -898,6 +898,27 @@ end # 2LSWE
 end # MLSWE
 
 @testset "Shallow Water - Exner" begin
+    @trixi_testset "elixir_shallowwater_exner_convergence_grass.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_convergence_grass.jl"),
+                            l2=[
+                                0.00023083195015226286,
+                                0.0007824021308347563,
+                                0.0007873863942946297,
+                                8.729259405861812e-5
+                            ],
+                            linf=[
+                                0.001546813818602999,
+                                0.003798370373272464,
+                                0.003953101606038123,
+                                0.0003318709262813968
+                            ],
+                            tspan=(0.0, 0.05))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
     @trixi_testset "elixir_shallowwater_exner_channel.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_exner_channel.jl"),
