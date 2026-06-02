@@ -919,6 +919,27 @@ end # MLSWE
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
+    @trixi_testset "elixir_shallowwater_exner_ec_mpm.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_ec_mpm.jl"),
+                            l2=[
+                                1.015295402506698,
+                                0.45308757275986433,
+                                0.5469442084445147,
+                                0.5875350919069469
+                            ],
+                            linf=[
+                                1.9277578092804213,
+                                1.8075744307087256,
+                                1.9682105055215897,
+                                3.000000142312767
+                            ],
+                            tspan=(0.0, 0.2))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
     @trixi_testset "elixir_shallowwater_exner_channel.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_exner_channel.jl"),

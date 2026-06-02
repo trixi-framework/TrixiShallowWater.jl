@@ -472,7 +472,7 @@ Note, the inverse porosity scaling is put onto this quantity as a design decisio
 
     # Compute the effective sediment height with workaround to avoid division by zero
     v1, v2 = velocity(u, equations)
-    v_norm = sqrt(v_1^2 + v_2^2)
+    v_norm = sqrt(v1^2 + v2^2)
     h_s = zero(eltype(u))
     if v_norm > eps(eltype(u))
         h_s = (porosity_inv * Q / v_norm * k_1 * theta^m_1 *
@@ -503,9 +503,9 @@ The dependency on the sediment model, like Grass or Shields, is inside [`effecti
 """
 @inline function sediment_discharge(u, equations::ShallowWaterExnerEquations2D)
     h_s = effective_sediment_height(u, equations)
-    v_1, v_2 = velocity(u, equations)
+    v1, v2 = velocity(u, equations)
 
-    return SVector(h_s * v_1, h_s * v_2)
+    return SVector(h_s * v1, h_s * v2)
 end
 
 # Convert conservative variables to primitive
