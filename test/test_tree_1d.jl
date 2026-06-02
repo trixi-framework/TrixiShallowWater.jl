@@ -860,14 +860,14 @@ end # MLSWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_exner_convergence_grass.jl"),
                             l2=[
-                                0.0004102960441666415,
-                                0.0024123111823754154,
-                                2.855259772927741e-5
+                                0.00043016517363404197,
+                                0.0017167621982279299,
+                                0.00010557949952318088
                             ],
                             linf=[
-                                0.0008005791155958342,
-                                0.0075032017005062235,
-                                4.7151297207559395e-5
+                                0.0013682082623218683,
+                                0.0067371421762773,
+                                0.00017118383822367633
                             ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
