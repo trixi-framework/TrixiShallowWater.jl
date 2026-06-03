@@ -186,6 +186,9 @@ end
                   flux_ersing_etal(cons_vars, cons_vars, 1, equations)
             @test Trixi.flux(cons_vars, 2, equations) ≈
                   flux_ersing_etal(cons_vars, cons_vars, 2, equations)
+
+            # Test consistency
+            @test water_sediment_height(prim_vars, equations) ≈ equations.gravity * h * h_b
         end
     end
 

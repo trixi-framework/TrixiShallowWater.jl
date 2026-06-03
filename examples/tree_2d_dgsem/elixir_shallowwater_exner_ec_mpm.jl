@@ -7,6 +7,11 @@ using TrixiShallowWater
 # semidiscretization of the shallow water Exner equations with Meyer-Peter-Mueller
 # sediment closure and discontinuous initial data
 
+# Academic test case of entropy conservation.
+# The errors from the analysis callback are not important but `∑∂S/∂U ⋅ Uₜ` is.
+# If the Manning coefficient `n = 0`, then `∑∂S/∂U ⋅ Uₜ` should be around machine roundoff.
+# If the Manning coefficient `n > 0`, then `∑∂S/∂U ⋅ Uₜ` should be negative.
+
 # Equations with Meyer-Peter-Mueller model
 equations = ShallowWaterExnerEquations2D(gravity = 10.0, rho_f = 0.5,
                                          rho_s = 1.0, porosity = 0.5,
@@ -60,6 +65,7 @@ mesh = TreeMesh(coordinates_min, coordinates_max,
 
 # Create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    source_terms = source_term_bottom_friction,
                                     boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
@@ -71,9 +77,8 @@ ode = semidiscretize(semi, tspan)
 ###############################################################################
 # Workaround to set a discontinuous bottom topography and initial condition for debugging and testing.
 
-# alternative version of the initial condition used to setup a truly discontinuous
-# bottom topography function and initial condition for this academic testcase of entropy conservation.
-# The errors from the analysis callback are not important but `∑∂S/∂U ⋅ Uₜ` should be around machine roundoff
+# Alternative version of the initial condition used to setup a truly discontinuous
+# bottom topography function and initial condition.
 # In contrast to the usual signature of initial conditions, this one get passed the
 # `element_id` explicitly. In particular, this initial conditions works as intended
 # only for the TreeMesh2D with initial_refinement_level=2.
@@ -127,7 +132,8 @@ end
 summary_callback = SummaryCallback()
 
 analysis_interval = 1000
-analysis_callback = AnalysisCallback(semi, interval = analysis_interval)
+analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
+                                     extra_analysis_integrals = (lake_at_rest_error,))
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
