@@ -55,21 +55,22 @@ du_exprs = expand_derivatives.(eqs)
 
 # Build functions
 const du_f1 = eval(build_function(du_exprs[1], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
-                       expression = Val(false)))
+                                  expression = Val(false)))
 const du_f2 = eval(build_function(du_exprs[2], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
-                       expression = Val(false)))
+                                  expression = Val(false)))
 const du_f3 = eval(build_function(du_exprs[3], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
-                       expression = Val(false)))
+                                  expression = Val(false)))
 const du_f4 = eval(build_function(du_exprs[4], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
-                       expression = Val(false)))
+                                  expression = Val(false)))
 
-const init_f1 = eval(build_function(init[1], x_sym,  y_sym, t_sym, expression = Val(false)))
-const init_f2 = eval(build_function(init[2], x_sym,  y_sym, t_sym, expression = Val(false)))
-const init_f3 = eval(build_function(init[3], x_sym,  y_sym, t_sym, expression = Val(false)))
-const init_f4 = eval(build_function(init[4], x_sym,  y_sym, t_sym, expression = Val(false)))
+const init_f1 = eval(build_function(init[1], x_sym, y_sym, t_sym, expression = Val(false)))
+const init_f2 = eval(build_function(init[2], x_sym, y_sym, t_sym, expression = Val(false)))
+const init_f3 = eval(build_function(init[3], x_sym, y_sym, t_sym, expression = Val(false)))
+const init_f4 = eval(build_function(init[4], x_sym, y_sym, t_sym, expression = Val(false)))
 
 # Trixi functions
-function initial_condition_convergence(x, t, equations::ShallowWaterExnerEquations2D)
+@inline function initial_condition_convergence(x, t,
+                                               equations::ShallowWaterExnerEquations2D)
     x1, x2 = x
     T = eltype(x)
     return SVector{4, T}(init_f1(x1, x2, t),
@@ -78,7 +79,7 @@ function initial_condition_convergence(x, t, equations::ShallowWaterExnerEquatio
                          init_f4(x1, x2, t))
 end
 
-function source_terms_convergence(u, x, t, equations::ShallowWaterExnerEquations2D)
+@inline function source_terms_convergence(u, x, t, equations::ShallowWaterExnerEquations2D)
     g = equations.gravity
     r = equations.r
     porosity_inv = equations.porosity_inv
