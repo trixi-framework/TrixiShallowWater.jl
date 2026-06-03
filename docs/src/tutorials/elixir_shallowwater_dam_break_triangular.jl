@@ -1,5 +1,5 @@
 # # Dam break over triangular bottom topography
-# In this tutorial we will use the shallow water equations to simulate a dam break over triangular 
+# In this tutorial we will use the shallow water equations to simulate a dam break over triangular
 # bottom topography with wetting and drying and compare the results to experimental data. The test
 # case is based on a dam break experiment and has been discussed in:
 # - S. Gu et al. (2017)
@@ -153,14 +153,14 @@ callbacks = CallbackSet(analysis_callback,
                         time_series,
                         stepsize_callback);
 
-# Finally, we can go ahead an solve the ODE problem using a strong stability-preserving Runge-Kutta 
-# (SSPRK) method. The [`PositivityPreservingLimiterShallowWater`](@ref PositivityPreservingLimiterShallowWater) is used as a stage limiter to ensure 
-# positivity of the water height during the simulation. The [`SSPRK43`](https://docs.sciml.ai/OrdinaryDiffEq/stable/explicit/SSPRK/#OrdinaryDiffEqSSPRK.SSPRK43) integrator supports adaptive 
+# Finally, we can go ahead an solve the ODE problem using a strong stability-preserving Runge-Kutta
+# (SSPRK) method. The [`PositivityPreservingLimiterShallowWater`](@ref PositivityPreservingLimiterShallowWater) is used as a stage limiter to ensure
+# positivity of the water height during the simulation. The [`SSPRK43`](https://docs.sciml.ai/OrdinaryDiffEq/stable/explicit/SSPRK/#OrdinaryDiffEqSSPRK.SSPRK43) integrator supports adaptive
 # timestepping, but since we use a CFL-based time step we set (`adaptive = false`). For visualization
 # purposes, we also use the `saveat` option to the solution at specific times.
 stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
 
-sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
+sol = solve(ode, SSPRK43(; stage_limiter!); dt = 1.0,
             ode_default_options()..., callback = callbacks, adaptive = false,
             saveat = (0, 3.5, 40));
 
@@ -198,7 +198,7 @@ G4_data = Trixi.download("https://raw.githubusercontent.com/patrickersing/paper-
                          joinpath(@__DIR__, "G4_Experimental.csv"))
 pd_G4 = CSV.read(G4_data, DataFrame);
 
-# The simulation data at the gauge location has been saved to the `time_series` variable. To 
+# The simulation data at the gauge location has been saved to the `time_series` variable. To
 # reformat the data for visualization, we use the [`PlotData1D`](@extref Trixi.PlotData1D) function.
 pd = PlotData1D(time_series, 1);
 

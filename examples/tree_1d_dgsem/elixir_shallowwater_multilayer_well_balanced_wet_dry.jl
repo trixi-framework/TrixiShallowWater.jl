@@ -174,5 +174,5 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 # run the simulation
 
 # use a Runge-Kutta method with CFL-based time step
-sol = solve(ode, SSPRK43(stage_limiter!);
+sol = solve(ode, SSPRK43(; stage_limiter!);
             ode_default_options()..., callback = callbacks, adaptive = false, dt = 1.0);

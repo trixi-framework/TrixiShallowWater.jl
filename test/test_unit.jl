@@ -317,9 +317,10 @@ end
         g = equations.gravity
 
         # Compute effective sediment height
-        h_s = TrixiShallowWater.q_s(SVector(h, h * v, 0.0), equations) / v
-        dq_s_dh, dq_s_dhv, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.q_s(u,
-                                                                                     equations),
+        h_s = TrixiShallowWater.effective_sediment_height(SVector(h, h * v, 0.0),
+                                                          equations)
+        dq_s_dh, dq_s_dhv, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.sediment_discharge(u,
+                                                                                                    equations),
                                                           u)
 
         # flux Jacobian
@@ -327,7 +328,7 @@ end
              dq_s_dh dq_s_dhv 0]
 
         # Compute the eigenvalues using Cardano's formula
-        λ1, λ2, λ3 = TrixiShallowWater.eigvals_cardano(SVector(h, h * v, h_b),
+        λ1, λ2, λ3 = TrixiShallowWater.eigvals_cardano(SVector(h, h * v, h_b), 1,
                                                        equations)
 
         # Precompute some common expressions

@@ -148,7 +148,7 @@ stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheigh
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
+sol = solve(ode, SSPRK43(; stage_limiter!); dt = 1.0,
             ode_default_options()..., callback = callbacks, adaptive = false);
 
 ###############################################################################
