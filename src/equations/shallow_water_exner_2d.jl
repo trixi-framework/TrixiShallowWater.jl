@@ -340,7 +340,7 @@ for the sediment discharge `q_s`.
         # gradient function only accepts functions of one variable.
         dq_s_dh, dq_s_dhv1, dq_s_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
                                                                                               equations)[2],
-                                                                      u)
+                                                                      u_avg)
 
         # Precompute some common expressions
         c1 = g * (h_avg + h_s_avg)
