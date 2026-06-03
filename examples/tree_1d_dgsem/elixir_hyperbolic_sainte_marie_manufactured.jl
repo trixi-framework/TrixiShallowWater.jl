@@ -60,10 +60,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback)
 ###############################################################################
 # run the simulation
 
-# use an adaptive Runge-Kutta method so that the temporal error stays well below the
-# spatial error on all refinement levels of the convergence test. The tolerances are
-# exposed as top-level variables so that they can be tightened (e.g. for longer `tspan`
-# or more refinement levels) via `convergence_test`/`trixi_include` keyword arguments.
 abstol = 1.0e-9
 reltol = 1.0e-9
 sol = solve(ode, SSPRK43(thread = Trixi.Threaded());
