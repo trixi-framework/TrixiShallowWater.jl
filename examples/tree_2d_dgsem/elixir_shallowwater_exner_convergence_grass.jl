@@ -54,23 +54,28 @@ eqs = [Dt(h) + Dx(h * v1) + Dy(h * v2),
 du_exprs = expand_derivatives.(eqs)
 
 # Build functions
-du_f1 = build_function(du_exprs[1], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
-                       expression = Val(false))
-du_f2 = build_function(du_exprs[2], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
-                       expression = Val(false))
-du_f3 = build_function(du_exprs[3], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
-                       expression = Val(false))
-du_f4 = build_function(du_exprs[4], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
-                       expression = Val(false))
+const du_f1 = eval(build_function(du_exprs[1], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false)))
+const du_f2 = eval(build_function(du_exprs[2], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false)))
+const du_f3 = eval(build_function(du_exprs[3], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false)))
+const du_f4 = eval(build_function(du_exprs[4], x_sym, y_sym, t_sym, g, r, porosity_inv, Ag,
+                       expression = Val(false)))
 
-init_funcs = build_function.(init, Ref(x_sym), Ref(y_sym), t_sym, expression = Val(false))
+const init_f1 = eval(build_function(init[1], x_sym,  y_sym, t_sym, expression = Val(false)))
+const init_f2 = eval(build_function(init[2], x_sym,  y_sym, t_sym, expression = Val(false)))
+const init_f3 = eval(build_function(init[3], x_sym,  y_sym, t_sym, expression = Val(false)))
+const init_f4 = eval(build_function(init[4], x_sym,  y_sym, t_sym, expression = Val(false)))
 
 # Trixi functions
 function initial_condition_convergence(x, t, equations::ShallowWaterExnerEquations2D)
-    return SVector(init_funcs[1](x[1], x[2], t),
-                   init_funcs[2](x[1], x[2], t),
-                   init_funcs[3](x[1], x[2], t),
-                   init_funcs[4](x[1], x[2], t))
+    x1, x2 = x
+    T = eltype(x)
+    return SVector{4, T}(init_f1(x1, x2, t),
+                         init_f2(x1, x2, t),
+                         init_f3(x1, x2, t),
+                         init_f4(x1, x2, t))
 end
 
 function source_terms_convergence(u, x, t, equations::ShallowWaterExnerEquations2D)
@@ -78,10 +83,12 @@ function source_terms_convergence(u, x, t, equations::ShallowWaterExnerEquations
     r = equations.r
     porosity_inv = equations.porosity_inv
     Ag = equations.sediment_model.A_g
-    return SVector{4, eltype(u)}(du_f1(x[1], x[2], t, g, r, porosity_inv, Ag),
-                                 du_f2(x[1], x[2], t, g, r, porosity_inv, Ag),
-                                 du_f3(x[1], x[2], t, g, r, porosity_inv, Ag),
-                                 du_f4(x[1], x[2], t, g, r, porosity_inv, Ag))
+    x1, x2 = x
+    T = eltype(u)
+    return SVector{4, T}(du_f1(x1, x2, t, g, r, porosity_inv, Ag),
+                         du_f2(x1, x2, t, g, r, porosity_inv, Ag),
+                         du_f3(x1, x2, t, g, r, porosity_inv, Ag),
+                         du_f4(x1, x2, t, g, r, porosity_inv, Ag))
 end
 
 initial_condition = initial_condition_convergence
