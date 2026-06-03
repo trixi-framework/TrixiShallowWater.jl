@@ -3,8 +3,7 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# semidiscretization of the shallow water equations with a discontinuous
-# bottom topography function for a fully wet configuration
+# semidiscretization of the hyperbolic sainte-marie equations for a smooth and periodic initial condition to test entropy conservation
 
 equations = HyperbolicSainteMarieEquations1D(gravity = 1.0, b0 = 0.1)
 
