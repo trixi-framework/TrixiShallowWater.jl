@@ -351,8 +351,6 @@ end
 @inline function Trixi.lake_at_rest_error(u,
                                           equations::HyperbolicSainteMarieEquations1D)
     h, _, _, _, b = u
-    H0_wet_dry = max(equations.H0, b + equations.threshold_limiter)
-
-    return abs(H0_wet_dry - (h + b))
+    return abs(equations.H0 - (h + b))
 end
 end # @muladd
