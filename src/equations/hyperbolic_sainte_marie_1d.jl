@@ -26,10 +26,10 @@ The gravitational acceleration `gravity` is denoted by ``g`` and the (possibly) 
 also defines the total water height as ``H = h + b``.
 There are two auxiliary variables:``w \approx -h v_x / 2 + v b_x`` and the non-hydrostatic pressure ``p``.
 In the formal limit ``c_ref^2 \to \infty``, the hyperbolic approximation recovers the original Sainte-Marie system.
-The additional quantity ``H_0`` is also available to store a reference value for the total water height that
+The additional quantity ``h_0`` is also available to store a reference value for the total water height that
 is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
-Escalante, Dumbser and Castro (2019) choose the hyperbolization parameter as ``c_ref = \alpha \sqrt{g h_0}`` for some background water height ``h_0``.
-Thus, the hyperbolization parameter ``c_ref^2`` is set by the keyword arguments `alpha` (``\alpha``), `gravity` (``g``), and `h_0` (``h_0``).
+Escalante, Dumbser and Castro (2019) choose the hyperbolization parameter as ``c_ref = \alpha \sqrt{g h_{ref}}`` for some background water height ``h_{ref}``.
+Thus, the hyperbolization parameter ``c_ref^2`` is set by the keyword arguments `alpha` (``\alpha``), `gravity` (``g``), and `h_ref` (``h_{ref}``).
 The larger the value of ``\alpha``, the better the approximation of the original system, but also the stiffer the system.
 Typically, ``\alpha`` should be chosen larger than 1 to get a good approximation of the original system, but the system also becomes stiffer for larger values of ``\alpha``.
 Escalante, Dumbser and Castro (2019) often use the value ``\alpha = 3`` in their numerical experiments, which is also the default value in `HyperbolicSainteMarieEquations1D`.
