@@ -294,7 +294,7 @@ isdir(outdir) && rm(outdir, recursive = true)
     @timed_testset "Hyperbolic Sainte-Marie Equations 1D" begin
         for RealT in (Float32, Float64)
             equations = @inferred HyperbolicSainteMarieEquations1D(gravity = RealT(9.81),
-                                                                   b0 = RealT(0.1))
+                                                                   h_ref = RealT(0.1))
 
             x = SVector(zero(RealT))
             t = zero(RealT)

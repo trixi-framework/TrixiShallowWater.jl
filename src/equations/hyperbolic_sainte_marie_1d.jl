@@ -3,7 +3,7 @@
 
 @doc raw"""
     HyperbolicSainteMarieEquations1D(; gravity, h_0 = zero(gravity),
-					  b0 = one(gravity), alpha = 3)
+					  h_ref = one(gravity), alpha = 3)
 
 Hyperbolic approximation of the Sainte-Marie system in one spatial dimension
 (with parameter ``\gamma = 2`` compared to the original literature)
@@ -61,7 +61,6 @@ end
 
 function HyperbolicSainteMarieEquations1D(; gravity, h_0 = zero(gravity),
                                           h_ref = one(gravity), alpha = 3)
-
     T = promote_type(typeof(gravity), typeof(h_0), typeof(h_ref), typeof(alpha))
 
     celerity_square = alpha^2 * gravity * h_ref
@@ -124,14 +123,12 @@ For details see Section 9.2.5 of the book:
     return flux, noncons_flux
 end
 
-
 """
     source_term_hyperbolic_sainte_marie(u, x, t,
                                         equations::HyperbolicSainteMarieEquations1D)
 
-Source term collecting the point-wise source contributions of the
+Point-wise source contributions of the
 [`HyperbolicSainteMarieEquations1D`](@ref) for the variables `h_w` and `h_p`.
-The bottom topography terms are instead treated as nonconservative flux contributions.
 
 - Escalante, Dumbser and Castro (2019)
   An efficient hyperbolic relaxation system for dispersive non-hydrostatic
@@ -152,6 +149,77 @@ The bottom topography terms are instead treated as nonconservative flux contribu
     du5 = zero(eltype(u))
 
     return SVector(du1, du2, du3, du4, du5)
+end
+
+"""
+    initial_condition_manufactured(x, t, equations::HyperbolicSainteMarieEquations1D)
+
+A smooth, periodic manufactured solution used for convergence tests in combination with
+[`source_terms_manufactured`](@ref). 
+"""
+function initial_condition_manufactured(x, t,
+                                        equations::HyperbolicSainteMarieEquations1D)
+    H = 2 + cospi(2 * (x[1] - 2 * t))
+    v = sinpi(2 * x[1] - t)
+    b = -5 - 2 * cospi(2 * x[1])
+    p = cospi(2 * x[1] - 3 * t)
+    h = H - b
+    w = -pi * cospi(t - 2 * x[1]) * h - 4 * pi * sinpi(t - 2 * x[1]) * sinpi(2 * x[1])
+
+    return prim2cons(SVector(H, v, w, p, b), equations)
+end
+
+"""
+    source_terms_manufactured(u, x, t, equations::HyperbolicSainteMarieEquations1D)
+
+Source terms used for convergence tests in combination with
+[`initial_condition_manufactured`](@ref).
+"""
+@inline function source_terms_manufactured(u, x, t,
+                                           equations::HyperbolicSainteMarieEquations1D)
+    g = equations.gravity
+    celerity_square = equations.celerity_square
+
+    sinpi_2x = sinpi(2 * x[1])
+    cospi_2x = cospi(2 * x[1])
+    sinpi_v = sinpi(2 * x[1] - t)
+    cospi_v = cospi(2 * x[1] - t)
+    sinpi_h = sinpi(2 * x[1] - 4 * t)
+    sinpi_p = sinpi(2 * x[1] - 3 * t)
+
+    h = 7 + 2 * cospi_2x + cospi(2 * x[1] - 4 * t)
+    h_x = -4 * pi * sinpi_2x - 2 * pi * sinpi_h
+    h_t = 4 * pi * sinpi_h
+
+    v = sinpi_v
+    v_x = 2 * pi * cospi_v
+    v_t = -pi * cospi_v
+    v_xx = -4 * pi^2 * sinpi_v
+    v_xt = 2 * pi^2 * sinpi_v
+
+    b_x = 4 * pi * sinpi_2x
+    b_xx = 8 * pi^2 * cospi_2x
+
+    p = cospi(2 * x[1] - 3 * t)
+    p_x = -2 * pi * sinpi_p
+    p_t = 3 * pi * sinpi_p
+
+    w = -h * v_x / 2 + v * b_x
+    w_x = -(h_x * v_x + h * v_xx) / 2 + v_x * b_x + v * b_xx
+    w_t = -(h_t * v_x + h * v_xt) / 2 + v_t * b_x
+
+    du1 = h_t + h_x * v + h * v_x
+    du2 = (h_t * v + h * v_t) +
+          (h_x * v^2 + 2 * h * v * v_x + g * h * h_x + h_x * p + h * p_x) +
+          (g * h + 2 * p) * b_x
+    du3 = (h_t * w + h * w_t) + (h_x * v * w + h * v_x * w + h * v * w_x) - 2 * p
+    du4 = (h_t * p + h * p_t) + (h_x * v * p + h * v_x * p + h * v * p_x) +
+          celerity_square * h * v_x - 2 * celerity_square * v * b_x +
+          2 * celerity_square * w
+    du5 = zero(eltype(u))
+
+    return SVector(du1, du2, du3, du4, du5) +
+           source_term_hyperbolic_sainte_marie(u, x, t, equations)
 end
 
 """
@@ -325,7 +393,8 @@ end
     w = h_w / h
     p = h_p / h
 
-    w1 = equations.gravity * (h + b) - 0.5f0 * (v^2 + w^2 + p^2 / equations.celerity_square)
+    w1 = equations.gravity * (h + b) -
+         0.5f0 * (v^2 + w^2 + p^2 / equations.celerity_square)
     w2 = v
     w3 = w
     w4 = p / equations.celerity_square

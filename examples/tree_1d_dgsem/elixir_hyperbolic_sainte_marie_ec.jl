@@ -5,7 +5,7 @@ using TrixiShallowWater
 ###############################################################################
 # semidiscretization of the hyperbolic sainte-marie equations for a smooth and periodic initial condition to test entropy conservation
 
-equations = HyperbolicSainteMarieEquations1D(gravity = 1.0, b0 = 0.1)
+equations = HyperbolicSainteMarieEquations1D(gravity = 1.0, h_ref = 0.1)
 
 function initial_condition_periodic(x, t, equations::HyperbolicSainteMarieEquations1D)
     h = 1 + exp(sinpi(2 * x[1]))
