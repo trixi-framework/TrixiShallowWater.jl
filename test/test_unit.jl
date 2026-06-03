@@ -188,7 +188,8 @@ end
                   flux_ersing_etal(cons_vars, cons_vars, 2, equations)
 
             # Test consistency
-            @test water_sediment_height(prim_vars, equations) ≈ equations.gravity * h * h_b
+            @test water_sediment_height(prim_vars, equations) ≈
+                  equations.gravity * h * h_b
         end
     end
 
