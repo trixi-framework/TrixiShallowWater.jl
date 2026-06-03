@@ -501,8 +501,6 @@ end
     return SVector(g * shear_coeff * v1 * v_norm, g * shear_coeff * v2 * v_norm)
 end
 
-# TODO: how would this work in a normal direction?
-#       handled inside the flux to compute the `q_s` in the normal direction
 """
     sediment_discharge(u, equations::ShallowWaterExnerEquations2D)
 
@@ -585,10 +583,6 @@ end
 # The eigenvalue that is equal to the velocity is associated with the contact wave
 # in the Riemann fan and is returned as the last entry of the eigenvalue vector
 # as expected by the `dissipation_roe`.
-# TODO: Write specialized function for a similar strategy with `normal_direction` where
-#       the characteristic polynomial is
-#          (x - vn)(x^3 + bx^2 + cx + d) = 0
-#       with vn = n1 v1 + n2 v2
 # Note, assumes only real roots.
 @inline function eigvals_cardano(u, orientation::Integer,
                                  equations::ShallowWaterExnerEquations2D)
