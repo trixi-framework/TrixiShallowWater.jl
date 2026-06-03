@@ -1,4 +1,4 @@
-OrdinaryDiffEqLowStorageRK
+using OrdinaryDiffEqLowStorageRK
 using Trixi
 using TrixiShallowWater
 using Symbolics
