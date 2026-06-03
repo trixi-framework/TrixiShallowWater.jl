@@ -273,8 +273,8 @@ for the sediment discharge `q_s`.
                                      orientation, equations)
 
     # Compute the effective sediment height at the averaged solution state
-    u = SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg)
-    h_s_avg = effective_sediment_height(u, equations)
+    u_avg = SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg)
+    h_s_avg = effective_sediment_height(u_avg, equations)
 
     # Build the right eigenvector matrix and its inverse in the appropriate direction
     if orientation == 1
@@ -283,7 +283,7 @@ for the sediment discharge `q_s`.
         # gradient function only accepts functions of one variable.
         dq_s_dh, dq_s_dhv1, dq_s_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
                                                                                               equations)[1],
-                                                                      u)
+                                                                      u_avg)
 
         # Precompute some common expressions
         c1 = g * (h_avg + h_s_avg)
@@ -293,6 +293,8 @@ for the sediment discharge `q_s`.
         r41 = ((v1_avg - λ1)^2 - c1) / c2
         r42 = ((v1_avg - λ2)^2 - c1) / c2
         r43 = ((v1_avg - λ3)^2 - c1) / c2
+
+        # Workaround to avoid division by zero if `dq_s_dhv2` is close to zero.
         if abs(dq_s_dhv2) > eps(eltype(u_ll))
             r34 = -(dq_s_dh + λ4 * (dq_s_dhv1 + c1 / c2)) / dq_s_dhv2
             R = @SMatrix [[1 1 1 1]; [λ1 λ2 λ3 λ4]; [v2_avg v2_avg v2_avg r34];
@@ -306,6 +308,8 @@ for the sediment discharge `q_s`.
         d1 = (λ1 - λ2) * (λ1 - λ3)
         d2 = (λ2 - λ1) * (λ2 - λ3)
         d3 = (λ3 - λ2) * (λ3 - λ1)
+
+        # Workaround to avoid division by zero if `dq_s_dhv2` is close to zero.
         if abs(dq_s_dhv2) > eps(eltype(u_ll))
             D = r34 - v2_avg
             r_inv11 = (v2_avg * dq_s_dhv2 * (v1_avg - λ2) * (v1_avg - λ3) +
@@ -346,6 +350,8 @@ for the sediment discharge `q_s`.
         r41 = ((v2_avg - λ1)^2 - c1) / c2
         r42 = ((v2_avg - λ2)^2 - c1) / c2
         r43 = ((v2_avg - λ3)^2 - c1) / c2
+
+        # Workaround to avoid division by zero if `dq_s_dhv1` is close to zero.
         if abs(dq_s_dhv1) > eps(eltype(u_ll))
             r24 = -(dq_s_dh + λ4 * (dq_s_dhv2 + c1 / c2)) / dq_s_dhv1
             R = @SMatrix [[1 1 1 1]; [v1_avg v1_avg v1_avg r24]; [λ1 λ2 λ3 λ4];
@@ -359,6 +365,8 @@ for the sediment discharge `q_s`.
         d1 = (λ1 - λ2) * (λ1 - λ3)
         d2 = (λ2 - λ1) * (λ2 - λ3)
         d3 = (λ3 - λ2) * (λ3 - λ1)
+
+        # Workaround to avoid division by zero if `dq_s_dhv1` is close to zero.
         if abs(dq_s_dhv1) > eps(eltype(u_ll))
             D = r24 - v1_avg
             r_inv11 = (v1_avg * dq_s_dhv1 * (v2_avg - λ2) * (v2_avg - λ3) +
@@ -406,7 +414,7 @@ end
     return maximum(abs, lambdas_x), maximum(abs, lambdas_y)
 end
 
-#Helper function to extract the velocity vector from the conservative variables
+# Helper function to extract the velocity vector from the conservative variables
 @inline function Trixi.velocity(u, equations::ShallowWaterExnerEquations2D)
     h, hv1, hv2, _ = u
 
@@ -419,7 +427,7 @@ end
 """
     effective_sediment_height(u, equations::ShallowWaterExnerEquations2D)
 
-Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s v_{1,2}`
+Compute the "effective" sediment height `h_s` of the sediment discharge `q_s = h_s v_{1,2}`
 for the Grass model.
 Note, the inverse porosity scaling is put onto this quantity as a design decision.
 
@@ -443,7 +451,7 @@ end
 """
     effective_sediment_height(u, equations::ShallowWaterExnerEquations2D)
 
-Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s v_{1,2}`
+Compute the "effective" sediment height `h_s` of the sediment discharge `q_s = h_s v_{1,2}`
 for Shields stress models.
 This 2D extension is based upon the Meyer-Peter-Müller model described in the given reference.
 Note, the inverse porosity scaling is put onto this quantity as a design decision.
@@ -572,8 +580,8 @@ end
 
 # Trigonometric version of Cardano's method to compute the nontrivial roots of a cubic polynomial
 #   (x - v1,2)(x^3 + bx^2 + cx + d) = 0
-# for the eigenvalues of that [`ShallowWaterExnerEquations2D`[(@ref)] flux Jacobian.
-# This exploits that we know the either `v1` or `v2` is an eigenvalue (depending on the orientation)
+# for the eigenvalues of the [`ShallowWaterExnerEquations2D`[(@ref)] flux Jacobian.
+# This exploits that we know that either `v1` or `v2` is an eigenvalue (depending on the orientation)
 # The eigenvalue that is equal to the velocity is associated with the contact wave
 # in the Riemann fan and is returned as the last entry of the eigenvalue vector
 # as expected by the `dissipation_roe`.

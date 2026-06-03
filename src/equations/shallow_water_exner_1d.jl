@@ -371,7 +371,7 @@ end
 """
     effective_sediment_height(u, equations::ShallowWaterExnerEquations1D)
 
-Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s v`
+Compute the "effective" sediment height `h_s` of the sediment discharge `q_s = h_s v`
 for the Grass model.
 Note, the inverse porosity scaling is put onto this quantity as a design decision.
 """
@@ -388,7 +388,7 @@ end
 """
     effective_sediment_height(u, equations::ShallowWaterExnerEquations1D)
 
-Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s v`
+Compute the "effective" sediment height `h_s` of the sediment discharge `q_s = h_s v`
 for Shields stress models.
 Note, the inverse porosity scaling is put onto this quantity as a design decision.
 """
