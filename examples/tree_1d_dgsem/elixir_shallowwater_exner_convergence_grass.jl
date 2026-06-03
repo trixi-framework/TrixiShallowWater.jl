@@ -45,44 +45,51 @@ eqs = [Dt(h) + Dx(h * v),
 
 ###################################################################################################
 ## Create the functions for the manufactured solution
-# Expand derivatives
-du_exprs = expand_derivatives.(eqs)
 
-# Build functions
-const du_f1 = eval(build_function(du_exprs[1], x_sym, t_sym, g, r, porosity_inv, Ag,
-                                  expression = Val(false)))
-const du_f2 = eval(build_function(du_exprs[2], x_sym, t_sym, g, r, porosity_inv, Ag,
-                                  expression = Val(false)))
-const du_f3 = eval(build_function(du_exprs[3], x_sym, t_sym, g, r, porosity_inv, Ag,
-                                  expression = Val(false)))
-
-const init_f1 = eval(build_function(init[1], x_sym, t_sym, expression = Val(false)))
-const init_f2 = eval(build_function(init[2], x_sym, t_sym, expression = Val(false)))
-const init_f3 = eval(build_function(init[3], x_sym, t_sym, expression = Val(false)))
-
-# Trixi functions
-@inline function initial_condition_convergence(x, t,
-                                               equations::ShallowWaterExnerEquations1D)
-    x1 = x[1]
-    T = eltype(x)
-    return SVector{3, T}(init_f1(x1, t),
-                         init_f2(x1, t),
-                         init_f3(x1, t))
+function initial_condition_convergence(equations::ShallowWaterExnerEquations1D)
+    # Build functions from the symbolic expressions
+    init_f1 = build_function(init[1], x_sym, t_sym, expression = Val(false))
+    init_f2 = build_function(init[2], x_sym, t_sym, expression = Val(false))
+    init_f3 = build_function(init[3], x_sym, t_sym, expression = Val(false))
+    function initial_condition_convergence(x, t,
+                                           equations::ShallowWaterExnerEquations1D)
+        x1 = x[1]
+        T = eltype(x)
+        return SVector{3, T}(init_f1(x1, t),
+                             init_f2(x1, t),
+                             init_f3(x1, t))
+    end
 end
 
-@inline function source_terms_convergence(u, x, t, equations::ShallowWaterExnerEquations1D)
-    g = equations.gravity
-    r = equations.r
-    porosity_inv = equations.porosity_inv
-    Ag = equations.sediment_model.A_g
-    x1 = x[1]
-    T = eltype(u)
-    return SVector{3, T}(du_f1(x1, t, g, r, porosity_inv, Ag),
-                         du_f2(x1, t, g, r, porosity_inv, Ag),
-                         du_f3(x1, t, g, r, porosity_inv, Ag))
+function source_terms_convergence(equations::ShallowWaterExnerEquations1D)
+    # Build functions from the symbolic expressions
+    du_f1 = build_function(expand_derivatives(eqs[1]),
+                           x_sym, t_sym,
+                           g, r, porosity_inv, Ag,
+                           expression = Val(false))
+    du_f2 = build_function(expand_derivatives(eqs[2]),
+                           x_sym, t_sym,
+                           g, r, porosity_inv, Ag,
+                           expression = Val(false))
+    du_f3 = build_function(expand_derivatives(eqs[3]),
+                           x_sym, t_sym,
+                           g, r, porosity_inv, Ag,
+                           expression = Val(false))
+    return function source_terms_convergence(u, x, t,
+                                             equations::ShallowWaterExnerEquations1D)
+        g = equations.gravity
+        r = equations.r
+        porosity_inv = equations.porosity_inv
+        Ag = equations.sediment_model.A_g
+        x1 = x[1]
+        T = eltype(u)
+        return SVector{3, T}(du_f1(x1, t, g, r, porosity_inv, Ag),
+                             du_f2(x1, t, g, r, porosity_inv, Ag),
+                             du_f3(x1, t, g, r, porosity_inv, Ag))
+    end
 end
 
-initial_condition = initial_condition_convergence
+initial_condition = initial_condition_convergence(equations)
 
 ###############################################################################
 # Get the DG approximation space
@@ -106,7 +113,7 @@ mesh = TreeMesh(coordinates_min, coordinates_max,
 
 # create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
-                                    source_terms = source_terms_convergence,
+                                    source_terms = source_terms_convergence(equations),
                                     boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
