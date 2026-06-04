@@ -332,6 +332,25 @@ end
     end
 end
 
+
+@timed_testset "Exception check Cardano's formula" begin
+    error_message = "DomainError with Negative discriminant in Cardano's formula. Would give complex roots."
+
+    let equations = ShallowWaterExnerEquations1D(gravity = 9.81, rho_f = 0.9,
+                                                 rho_s = 1.0, porosity = 0.4,
+                                                 sediment_model = GrassModel(A_g = 0.01))
+        u = SVector(-1.1, 4.5, 1.2)
+        @test_throws error_message TrixiShallowWater.eigvals_cardano(u, 1, equations)
+    end
+
+    let equations = ShallowWaterExnerEquations2D(gravity = 9.81, rho_f = 0.9,
+                                                 rho_s = 1.0, porosity = 0.4,
+                                                 sediment_model = GrassModel(A_g = 0.01))
+        u = SVector(-1.1, 4.5, -3.5, 1.2)
+        @test_throws error_message TrixiShallowWater.eigvals_cardano(u, 1, equations)
+    end
+end
+
 @timed_testset "SWE-Exner eigenvalue / eigenvector computation" begin
     h, v, h_b = (1.0, 0.3, 0.1)
 
