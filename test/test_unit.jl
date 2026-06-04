@@ -165,6 +165,32 @@ end
             @test entropy_vars[1:(end - 1)] ≈
                   Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)[1:(end - 1)]
         end
+
+        h, v1, v2, h_b = (1.1, 0.3, -0.65, 0.126)
+
+        let equations = ShallowWaterExnerEquations2D(gravity = 9.81, rho_f = 0.9,
+                                                     rho_s = 1.0, porosity = 0.4,
+                                                     sediment_model = GrassModel(A_g = 0.01))
+            # Test conversion between primitive and conservative variables
+            prim_vars = SVector(h, v1, v2, h_b)
+            cons_vars = prim2cons(prim_vars, equations)
+            @test prim_vars ≈ cons2prim(cons_vars, equations)
+
+            # Test conversion from conservative to entropy variables
+            entropy_vars = cons2entropy(cons_vars, equations)
+            @test entropy_vars[1:(end - 1)] ≈
+                  Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)[1:(end - 1)]
+
+            # Test flux consistencies
+            @test Trixi.flux(cons_vars, 1, equations) ≈
+                  flux_ersing_etal(cons_vars, cons_vars, 1, equations)
+            @test Trixi.flux(cons_vars, 2, equations) ≈
+                  flux_ersing_etal(cons_vars, cons_vars, 2, equations)
+
+            # Test consistency
+            @test water_sediment_height(prim_vars, equations) ≈
+                  equations.gravity * h * h_b
+        end
     end
 
     @timed_testset "ShallowWaterMomentEquations" begin
@@ -306,6 +332,24 @@ end
     end
 end
 
+@timed_testset "Exception check Cardano's formula" begin
+    error_message = "DomainError with Negative discriminant in Cardano's formula. Would give complex roots."
+
+    let equations = ShallowWaterExnerEquations1D(gravity = 9.81, rho_f = 0.9,
+                                                 rho_s = 1.0, porosity = 0.4,
+                                                 sediment_model = GrassModel(A_g = 0.01))
+        u = SVector(-1.1, 4.5, 1.2)
+        @test_throws error_message TrixiShallowWater.eigvals_cardano(u, 1, equations)
+    end
+
+    let equations = ShallowWaterExnerEquations2D(gravity = 9.81, rho_f = 0.9,
+                                                 rho_s = 1.0, porosity = 0.4,
+                                                 sediment_model = GrassModel(A_g = 0.01))
+        u = SVector(-1.1, 4.5, -3.5, 1.2)
+        @test_throws error_message TrixiShallowWater.eigvals_cardano(u, 1, equations)
+    end
+end
+
 @timed_testset "SWE-Exner eigenvalue / eigenvector computation" begin
     h, v, h_b = (1.0, 0.3, 0.1)
 
@@ -353,6 +397,123 @@ end
         Λ = [λ1 0 0; 0 λ2 0; 0 0 λ3]
 
         @test R * R_inv ≈ [1 0 0; 0 1 0; 0 0 1]
+        @test A ≈ R * Λ * R_inv
+    end
+
+    h, v1, v2, h_b = (1.1, 0.3, -0.65, 0.126)
+
+    let equations = ShallowWaterExnerEquations2D(gravity = 9.81, rho_f = 0.9,
+                                                 rho_s = 1.0, porosity = 0.4,
+                                                 sediment_model = GrassModel(A_g = 0.01))
+        u = SVector(h, h * v1, h * v2, h_b)
+        r = equations.r
+        g = equations.gravity
+
+        # Check in the x-direction
+
+        # Compute effective sediment height and discharge
+        h_s = TrixiShallowWater.effective_sediment_height(u, equations)
+        dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.sediment_discharge(u,
+                                                                                                                   equations)[1],
+                                                                         u)
+
+        # flux Jacobian
+        A = [0 1 0 0; (g * (h + h_s)-v1^2) (2*v1) 0 (g*(h + h_s / r)); -v1*v2 v2 v1 0;
+             dq_s1_dh dq_s1_dhv1 dq_s1_dhv2 0]
+
+        # Compute the eigenvalues using Cardano's formula
+        λ1, λ2, λ3, λ4 = TrixiShallowWater.eigvals_cardano(u, 1, equations)
+
+        # Precompute some common expressions
+        c1 = g * (h + h_s)
+        c2 = g * (h + h_s / r)
+
+        # Eigenvector matrix
+        r34 = -(dq_s1_dh + λ4 * (dq_s1_dhv1 + c1 / c2)) / dq_s1_dhv2
+        r41 = ((v1 - λ1)^2 - c1) / c2
+        r42 = ((v1 - λ2)^2 - c1) / c2
+        r43 = ((v1 - λ3)^2 - c1) / c2
+        R = [[1 1 1 1]; [λ1 λ2 λ3 λ4]; [v2 v2 v2 r34]; [r41 r42 r43 -c1 / c2]]
+
+        # Inverse eigenvector matrix
+        d1 = (λ1 - λ2) * (λ1 - λ3)
+        d2 = (λ2 - λ1) * (λ2 - λ3)
+        d3 = (λ3 - λ2) * (λ3 - λ1)
+        D = r34 - v2
+        r_inv11 = (v2 * dq_s1_dhv2 * (v1 - λ2) * (v1 - λ3) +
+                   (v1^2 - λ2 * λ3 - c1) *
+                   (v2 * dq_s1_dhv2 + dq_s1_dh + (dq_s1_dhv1 + c1 / c2) * v1)) /
+                  (D * d1 * dq_s1_dhv2)
+        r_inv21 = (v2 * dq_s1_dhv2 * (v1 - λ1) * (v1 - λ3) +
+                   (v1^2 - λ1 * λ3 - c1) *
+                   (v2 * dq_s1_dhv2 + dq_s1_dh + (dq_s1_dhv1 + c1 / c2) * v1)) /
+                  (D * d2 * dq_s1_dhv2)
+        r_inv31 = (v2 * dq_s1_dhv2 * (v1 - λ1) * (v1 - λ2) +
+                   (v1^2 - λ1 * λ2 - c1) *
+                   (v2 * dq_s1_dhv2 + dq_s1_dh + (dq_s1_dhv1 + c1 / c2) * v1)) /
+                  (D * d3 * dq_s1_dhv2)
+        R_inv = [r_inv11 (2 * v1 - λ2 - λ3)/d1 -(v1 - λ2) * (v1 - λ3)/(D * d1) c2/d1;
+                 r_inv21 (2 * v1 - λ1 - λ3)/d2 -(v1 - λ1) * (v1 - λ3)/(D * d2) c2/d2;
+                 r_inv31 (2 * v1 - λ2 - λ1)/d3 -(v1 - λ1) * (v1 - λ2)/(D * d3) c2/d3;
+                 -v2/D 0 1/D 0]
+
+        # Eigenvalue vale matrix
+        Λ = [λ1 0 0 0; 0 λ2 0 0; 0 0 λ3 0; 0 0 0 λ4]
+
+        @test R * R_inv ≈ [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]
+        @test A ≈ R * Λ * R_inv
+
+        # Check in the y-direction
+
+        # Compute effective sediment discharge
+        dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.sediment_discharge(u,
+                                                                                                                   equations)[2],
+                                                                         u)
+
+        # flux Jacobian
+        A = [0 0 1 0; -v1*v2 v2 v1 0; (g * (h + h_s)-v2^2) 0 (2*v2) (g*(h + h_s / r));
+             dq_s2_dh dq_s2_dhv1 dq_s2_dhv2 0]
+
+        # Compute the eigenvalues using Cardano's formula
+        λ1, λ2, λ3, λ4 = TrixiShallowWater.eigvals_cardano(u, 2, equations)
+
+        # Precompute some common expressions
+        c1 = g * (h + h_s)
+        c2 = g * (h + h_s / r)
+
+        # Eigenvector matrix
+        r24 = -(dq_s2_dh + λ4 * (dq_s2_dhv2 + c1 / c2)) / dq_s2_dhv1
+        r41 = ((v2 - λ1)^2 - c1) / c2
+        r42 = ((v2 - λ2)^2 - c1) / c2
+        r43 = ((v2 - λ3)^2 - c1) / c2
+        R = [[1 1 1 1]; [v1 v1 v1 r24]; [λ1 λ2 λ3 λ4]; [r41 r42 r43 -c1 / c2]]
+
+        # Inverse eigenvector matrix
+        d1 = (λ1 - λ2) * (λ1 - λ3)
+        d2 = (λ2 - λ1) * (λ2 - λ3)
+        d3 = (λ3 - λ2) * (λ3 - λ1)
+        D = r24 - v1
+        r_inv11 = (v1 * dq_s2_dhv1 * (v2 - λ2) * (v2 - λ3) +
+                   (v2^2 - λ2 * λ3 - c1) *
+                   (v1 * dq_s2_dhv1 + dq_s2_dh + (dq_s2_dhv2 + c1 / c2) * v2)) /
+                  (D * d1 * dq_s2_dhv1)
+        r_inv21 = (v1 * dq_s2_dhv1 * (v2 - λ1) * (v2 - λ3) +
+                   (v2^2 - λ1 * λ3 - c1) *
+                   (v1 * dq_s2_dhv1 + dq_s2_dh + (dq_s2_dhv2 + c1 / c2) * v2)) /
+                  (D * d2 * dq_s2_dhv1)
+        r_inv31 = (v1 * dq_s2_dhv1 * (v2 - λ1) * (v2 - λ2) +
+                   (v2^2 - λ1 * λ2 - c1) *
+                   (v1 * dq_s2_dhv1 + dq_s2_dh + (dq_s2_dhv2 + c1 / c2) * v2)) /
+                  (D * d3 * dq_s2_dhv1)
+        R_inv = [r_inv11 -(v2 - λ2) * (v2 - λ3)/(D * d1) (2 * v2 - λ2 - λ3)/d1 c2/d1;
+                 r_inv21 -(v2 - λ1) * (v2 - λ3)/(D * d2) (2 * v2 - λ1 - λ3)/d2 c2/d2;
+                 r_inv31 -(v2 - λ1) * (v2 - λ2)/(D * d3) (2 * v2 - λ2 - λ1)/d3 c2/d3;
+                 -v1/D 1/D 0 0]
+
+        # Eigenvalue vale matrix
+        Λ = [λ1 0 0 0; 0 λ2 0 0; 0 0 λ3 0; 0 0 0 λ4]
+
+        @test R * R_inv ≈ [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]
         @test A ≈ R * Λ * R_inv
     end
 end

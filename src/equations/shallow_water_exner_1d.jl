@@ -5,104 +5,6 @@
 @muladd begin
 #! format: noindent
 
-# Abstract type for the different bottom friction models
-abstract type Friction{RealT} end
-
-"""
-    ManningFriction(; n)
-
-Creates a Manning friction model for the bottom friction with Manning coefficient `n`.
-The type is used to dispatch on the respective friction law through the `shear_stress_coefficient`
-when computing the `shear_stress`.
-"""
-struct ManningFriction{RealT} <: Friction{RealT}
-    n::RealT
-end
-
-function ManningFriction(; n)
-    ManningFriction(n)
-end
-
-# Abstract type for the different models to compute sediment discharge
-abstract type SedimentModel{RealT} end
-
-@doc raw"""
-    ShieldsStressModel(; m_1, m_2, m_3, k_1, k_2, k_3, theta_c, d_s)
-
-Create a Shields stress model to compute the sediment discharge `q_s` based on the generalized
-formulation from equation (1.2) in the given reference.
-
-The choice of the real constants `m_1`, `m_2`, `m_3`, `k_1`, `k_2`, and `k_3` creates
-different models. For example, setting `m_1=0`, `m_2=1.5`, `m_3=0`, `k_1=8`, `k_2=1`, and `k_3=0`
-yields the sedimentation model of Meyer-Peter and Müller as given in [`MeyerPeterMueller`](@ref) below.
-The Shields stress represents the ratio of agitating and stabilizing forces in the sediment bed where
-`theta_c` is the critical Shields stress for incipient motion and `d_s` is the mean diameter of
-the sediment grain size.
-
-- E.D. Fernández-Nieto, T.M. de Luna, G. Narbona-Reina and J. de Dieu Zabsonré (2017)\
-  Formal deduction of the Saint-Venant–Exner model including arbitrarily sloping sediment beds and
-  associated energy\
-  [DOI: 10.1051/m2an/2016018](https://doi.org/10.1051/m2an/2016018)
-"""
-struct ShieldsStressModel{RealT} <: SedimentModel{RealT}
-    m_1::RealT
-    m_2::RealT
-    m_3::RealT
-    k_1::RealT
-    k_2::RealT
-    k_3::RealT
-    theta_c::RealT    # critical shields stress
-    d_s::RealT        # grain diameter
-end
-
-@doc raw"""
-    GrassModel(; A_g, m_g=3)
-
-Creates a Grass model to compute the sediment discharge `q_s` as
-```math
-q_s = A_g v^{m_g}
-```
-with the coefficients `A_g` and `m_g`. The constant `A_g` lies in the interval ``[0,1]``
-and is a dimensional calibration constant that is usually measured experimentally.
-It expresses the kind of interaction between the fluid and the sediment, the strength
-of which increases as `A_g` approaches to 1. The factor `m_g` lies in the interval ``[1, 4]``.
-Typically, one considers an odd integer value for `m_g` such that the sediment discharge
-`q_s` can be differentiated and the model remains valid for all values of the velocity `v`.
-
-An overview of different formulations to compute the sediment discharge can be found in:
-- M.J. Castro Díaz, E.D. Fernández-Nieto, A.M. Ferreiro (2008)\
-  Sediment transport models in Shallow Water equations and numerical approach by high order
-  finite volume methods\
-  [DOI:10.1016/j.compfluid.2007.07.017](https://doi.org/10.1016/j.compfluid.2007.07.017)
-"""
-struct GrassModel{RealT} <: SedimentModel{RealT}
-    A_g::RealT
-    m_g::RealT
-end
-
-function GrassModel(; A_g, m_g = 3)
-    RealT = promote_type(typeof(A_g), typeof(m_g))
-    return GrassModel(RealT(A_g), RealT(m_g))
-end
-
-@doc raw"""
-    MeyerPeterMueller(; theta_c, d_s)
-
-Creates a Meyer-Peter-Mueller model to compute the sediment discharge
-`q_s` with the critical Shields stress `theta_c` and the grain diameter `d_s`.
-
-An overview of different formulations to compute the sediment discharge can be found in:
-- M.J. Castro Díaz, E.D. Fernández-Nieto, A.M. Ferreiro (2008)\
-  Sediment transport models in Shallow Water equations and numerical approach by high order
-  finite volume methods\
-  [DOI:10.1016/j.compfluid.2007.07.017](https://doi.org/10.1016/j.compfluid.2007.07.017)
-"""
-function MeyerPeterMueller(; theta_c, d_s)
-    RealT = promote_type(typeof(theta_c), typeof(d_s))
-    return ShieldsStressModel(RealT(0.0), RealT(1.5), RealT(0.0), RealT(8.0),
-                              RealT(1.0), RealT(0.0), RealT(theta_c), RealT(d_s))
-end
-
 @doc raw"""
     ShallowWaterExnerEquations1D(;gravity, H0 = 0.0,
                                  friction = ManningFriction(n = 0.0),
@@ -239,41 +141,6 @@ A smooth initial condition used for convergence tests in combination with
 end
 
 """
-    source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations1D{T, S, GrassModel{T}}) where {T, S}
-
-Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref)
-when using the the [`GrassModel`](@ref) model.
-
-To use this source term the equations must be set to:
-```julia
-equations = ShallowWaterExnerEquations1D(gravity = 10.0, rho_f = 0.5,
-                                            rho_s = 1.0, porosity = 0.5,
-                                            friction = ManningFriction(n = 0.0),
-                                            sediment_model = GrassModel(A_g = 0.01))
-```
-"""
-@inline function Trixi.source_terms_convergence_test(u, x, t,
-                                                     equations::ShallowWaterExnerEquations1D{T,
-                                                                                             S,
-                                                                                             GrassModel{T}}) where {
-                                                                                                                    T,
-                                                                                                                    S
-                                                                                                                    }
-    ω = sqrt(2) * pi
-    A_g = equations.sediment_model.A_g
-
-    h = -cos(x[1] * ω) * sin(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω
-    hv = -0.5f0 * cos(x[1] * ω) * sin(t * ω) * ω -
-         0.25f0 * sin(x[1] * ω) * cos(t * ω) * ω +
-         10 * A_g *
-         (cos(x[1] * ω) * cos(t * ω) * ω - 0.5f0 * sin(x[1] * ω) * cos(t * ω) * ω) +
-         10 * (2 + cos(x[1] * ω) * cos(t * ω)) *
-         (cos(x[1] * ω) * cos(t * ω) * ω - sin(x[1] * ω) * cos(t * ω) * ω)
-    h_b = -sin(x[1] * ω) * sin(t * ω) * ω
-    return SVector(h, hv, h_b)
-end
-
-"""
     source_terms_convergence_test(u, x, t, equations::ShallowWaterExnerEquations1D{T, S, ShieldsStressModel{T}}) where {T, S}
 
 Source terms used for convergence tests in combination with [`Trixi.initial_condition_convergence_test`](@ref)
@@ -386,7 +253,7 @@ end
 
 """
     flux_ersing_etal(u_ll, u_rr, orientation::Integer,
-                                     equations::ShallowWaterMultiLayerEquations1D)
+                                     equations::ShallowWaterExnerEquations1D)
 
 Entropy conservative split form, without the hydrostatic pressure. This flux should be used
 together with the nonconservative [`flux_nonconservative_ersing_etal`](@ref) to create a scheme
@@ -434,7 +301,7 @@ for the sediment discharge `q_s`.
     g = equations.gravity
     z = zero(eltype(u_ll))
 
-    # Get entropy variables and velocities
+    # Get the velocities
     v_ll = velocity(u_ll, equations)
     v_rr = velocity(u_rr, equations)
 
@@ -501,8 +368,13 @@ end
     return v
 end
 
-# Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s * v` for the Grass model
-# Note, the inverse porosity scaling is put onto this quantity as a design decision.
+"""
+    effective_sediment_height(u, equations::ShallowWaterExnerEquations1D)
+
+Compute the "effective" sediment height `h_s` of the sediment discharge `q_s = h_s v`
+for the Grass model.
+Note, the inverse porosity scaling is put onto this quantity as a design decision.
+"""
 @inline function effective_sediment_height(u,
                                            equations::ShallowWaterExnerEquations1D{T, S,
                                                                                    GrassModel{T}}) where {
@@ -513,8 +385,13 @@ end
     return equations.porosity_inv * A_g * abs(velocity(u, equations))^(m_g - 1)
 end
 
-# Compute the "effective" water height `h_s` of the sediment discharge `q_s = h_s * v` for Shields stress models
-# Note, the inverse porosity scaling is put onto this quantity as a design decision.
+"""
+    effective_sediment_height(u, equations::ShallowWaterExnerEquations1D)
+
+Compute the "effective" sediment height `h_s` of the sediment discharge `q_s = h_s v`
+for Shields stress models.
+Note, the inverse porosity scaling is put onto this quantity as a design decision.
+"""
 @inline function effective_sediment_height(u,
                                            equations::ShallowWaterExnerEquations1D{T, S,
                                                                                    ShieldsStressModel{T}}) where {
@@ -547,15 +424,12 @@ end
            abs(v)
 end
 
-# Model dependent shear stress coefficient
-@inline function shear_stress_coefficient(u, friction::ManningFriction)
-    h, _, _ = u
-    return friction.n^2 / h^(1 / 3)
-end
+"""
+    sediment_discharge(u, equations::ShallowWaterExnerEquations1D)
 
-# Compute the sediment discharge `q_s = h_s * v` for a generic sediment model.
-# The dependency on the sediment model, like Grass or Shields,
-# is inside the function `effective_sediment_height`.
+Compute the sediment discharge `q_s = h_s v` for a generic sediment model.
+The dependency on the sediment model, like Grass or Shields, is inside [`effective_sediment_height`](@ref).
+"""
 @inline function sediment_discharge(u, equations::ShallowWaterExnerEquations1D)
     return effective_sediment_height(u, equations) * velocity(u, equations)
 end
@@ -650,15 +524,22 @@ end
     p = (3 * a * c - b^2) / (3 * a^2)
     q = (2 * b^3 - 9 * a * b * c + 27 * a^2 * d) / (27 * a^3)
 
-    # Roots of the original cubic equation
-    λ1 = -b / (3 * a) +
-         2 * sqrt(-p / 3) * cos(1 / 3 * acos(3 * q / (2 * p) * sqrt(-3 / p)))
-    λ2 = -b / (3 * a) +
-         2 * sqrt(-p / 3) *
-         cos(1 / 3 * acos(3 * q / (2 * p) * sqrt(-3 / p)) - 2 * π * 1 / 3)
-    λ3 = -b / (3 * a) +
-         2 * sqrt(-p / 3) *
-         cos(1 / 3 * acos(3 * q / (2 * p) * sqrt(-3 / p)) - 2 * π * 2 / 3)
+    # Check if only real roots are present
+    discriminant = -4 * p^3 - 27 * q^2
+    if discriminant <= 0
+        throw(DomainError("Negative discriminant in Cardano's formula. Would give complex roots."))
+    end
+
+    # Save common (but expensive) terms in the cubic root formula
+    theta = 3 * q / (2 * p) * sqrt(-3 / p)
+    phi = acos(theta) / 3
+    coeff = 2 * sqrt(-p / 3)
+    shift = -b / (3 * a)
+
+    # # Roots of the original cubic equation
+    λ1 = shift + coeff * cos(phi)
+    λ2 = shift + coeff * cos(phi - 2 * π / 3)
+    λ3 = shift + coeff * cos(phi - 4 * π / 3)
 
     return SVector(λ1, λ2, λ3)
 end
