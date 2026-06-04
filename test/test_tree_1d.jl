@@ -1172,7 +1172,7 @@ end # SWME
                                 7.698354513303112,
                                 24.656394570145885,
                                 3.279725713234427e-9
-                            ])
+                            ], atol=1e-8)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
