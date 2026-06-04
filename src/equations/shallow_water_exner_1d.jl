@@ -55,6 +55,9 @@ struct ShallowWaterExnerEquations1D{RealT <: Real,
     rho_f::RealT    # density of fluid
     rho_s::RealT    # density of sediment
     r::RealT       # density ratio
+    threshold_limiter::RealT    # threshold for the positivity-limiter
+    threshold_desingularization::RealT  # threshold for velocity desingularization
+    threshold_partially_wet::RealT  # threshold to define partially wet elements
 end
 
 # Allow for flexibility to set the gravitational acceleration within an elixir depending on the
@@ -64,12 +67,32 @@ end
 function ShallowWaterExnerEquations1D(; gravity, H0 = zero(gravity),
                                       friction = ManningFriction(n = 0.0),
                                       sediment_model,
-                                      porosity, rho_f, rho_s)
+                                      porosity, rho_f, rho_s,
+                                      threshold_limiter = nothing,
+                                      threshold_desingularization = nothing,
+                                      threshold_partially_wet = nothing)
+    RealT = typeof(gravity)
+
     # Precompute common expressions for the porosity and density ratio
     porosity_inv = inv(1 - porosity)
     r = rho_f / rho_s
+
+    # Set default values for thresholds
+    if threshold_limiter === nothing
+        threshold_limiter = 5 * eps(RealT)
+    end
+    if threshold_desingularization === nothing
+        threshold_desingularization = default_threshold_desingularization(RealT)
+    end
+    if threshold_partially_wet === nothing
+        threshold_partially_wet = default_threshold_partially_wet(RealT)
+    end
+
     return ShallowWaterExnerEquations1D(gravity, H0, friction, sediment_model,
-                                        porosity_inv, rho_f, rho_s, r)
+                                        porosity_inv, rho_f, rho_s, r,
+                                        threshold_limiter,
+                                        threshold_desingularization,
+                                        threshold_partially_wet)
 end
 
 Trixi.have_nonconservative_terms(::ShallowWaterExnerEquations1D) = True()
@@ -287,6 +310,61 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
     f3 = q_s_avg
 
     return SVector(f1, f2, f3)
+end
+
+# TODO: This reconstruction is not well-balanced if used with LLF-Dissipation due to the discontinuous
+# sediment layer. Instead this currently applies the Audusse reconstruction, but without accounting 
+# for the nonconservative terms. We should either find find a dissipation that is WB or use the Audusse
+# reconstruction with a corresponding nonconservative term.
+@inline function hydrostatic_reconstruction_ersing_etal(u_ll, u_rr,
+                                                        equations::ShallowWaterExnerEquations1D)
+    # Unpack waterheight and bottom topographies
+    h_ll = waterheight(u_ll, equations)
+    h_rr = waterheight(u_rr, equations)
+    h_b_ll = u_ll[end]
+    h_b_rr = u_rr[end]
+
+    # Get the velocities on either side
+    v_ll = velocity(u_ll, equations)
+    v_rr = velocity(u_rr, equations)
+
+    threshold = equations.threshold_limiter
+
+    # Calculate total layer heights
+    H_ll = waterheight(cons2prim(u_ll, equations), equations)
+    H_rr = waterheight(cons2prim(u_rr, equations), equations)
+
+    # Discontinuous reconstruction of the bottom topography - This is not WB, because the discontinuous
+    # reconstruction introduces non-zero dissipation at steady states 
+    #h_b_ll_star = min(H_ll, max(h_b_rr, h_b_ll))
+    #h_b_rr_star = min(H_rr, max(h_b_rr, h_b_ll))
+
+    # Audusse style reconstruction is needed for WB - note that the NC terms from the reconstruction are
+    # not accounted for in nonconservative_flux_ersing_etal
+    h_b_ll_star = max(h_b_rr, h_b_ll)
+    h_b_rr_star = max(h_b_rr, h_b_ll)
+
+    # Calculate reconstructed total layer heights
+    H_ll_star = max(H_ll, h_b_ll_star)
+    H_rr_star = max(H_rr, h_b_rr_star)
+
+    # Reconstruct the waterheights
+    h_ll_star = max(H_ll_star - h_b_ll_star, threshold)
+    h_rr_star = max(H_rr_star - h_b_rr_star, threshold)
+
+    # Ensure zero velocities at dry states
+    if h_ll_star <= threshold
+        v_ll = zero(eltype(u_ll))
+    end
+    if h_rr_star <= threshold
+        v_rr = zero(eltype(u_rr))
+    end
+
+    # Reconstructed states
+    u_ll_star = SVector(h_ll_star, (h_ll_star * v_ll), h_b_ll_star)
+    u_rr_star = SVector(h_rr_star, (h_rr_star * v_rr), h_b_rr_star)
+
+    return SVector(u_ll_star, u_rr_star)
 end
 
 """
