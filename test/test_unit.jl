@@ -332,7 +332,6 @@ end
     end
 end
 
-
 @timed_testset "Exception check Cardano's formula" begin
     error_message = "DomainError with Negative discriminant in Cardano's formula. Would give complex roots."
 
