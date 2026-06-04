@@ -524,15 +524,22 @@ end
     p = (3 * a * c - b^2) / (3 * a^2)
     q = (2 * b^3 - 9 * a * b * c + 27 * a^2 * d) / (27 * a^3)
 
-    # Roots of the original cubic equation
-    λ1 = -b / (3 * a) +
-         2 * sqrt(-p / 3) * cos(1 / 3 * acos(3 * q / (2 * p) * sqrt(-3 / p)))
-    λ2 = -b / (3 * a) +
-         2 * sqrt(-p / 3) *
-         cos(1 / 3 * acos(3 * q / (2 * p) * sqrt(-3 / p)) - 2 * π * 1 / 3)
-    λ3 = -b / (3 * a) +
-         2 * sqrt(-p / 3) *
-         cos(1 / 3 * acos(3 * q / (2 * p) * sqrt(-3 / p)) - 2 * π * 2 / 3)
+    # Check if only real roots are present
+    discriminant = -4 * p^3 - 27 * q^2
+    if discriminant <= 0
+        throw(DomainError("Negative discriminant in Cardano's formula. Would give complex roots."))
+    end
+
+    # Save common (but expensive) terms in the cubic root formula
+    theta = 3 * q / (2 * p) * sqrt(-3 / p)
+    phi = acos(theta) / 3
+    coeff = 2 * sqrt(-p / 3)
+    shift = -b / (3 * a)
+
+    # # Roots of the original cubic equation
+    λ1 = shift + coeff * cos(phi)
+    λ2 = shift + coeff * cos(phi - 2 * π / 3)
+    λ3 = shift + coeff * cos(phi - 4 * π / 3)
 
     return SVector(λ1, λ2, λ3)
 end

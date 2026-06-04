@@ -583,7 +583,6 @@ end
 # The eigenvalue that is equal to the velocity is associated with the contact wave
 # in the Riemann fan and is returned as the last entry of the eigenvalue vector
 # as expected by the `dissipation_roe`.
-# Note, assumes only real roots.
 @inline function eigvals_cardano(u, orientation::Integer,
                                  equations::ShallowWaterExnerEquations2D)
     h = waterheight(u, equations)
@@ -630,10 +629,14 @@ end
     p = c - b^2 / 3
     q = 2 * b^3 / 27 - b * c / 3 + d
 
-    # Avoid round-off errors
-    theta = clamp(3 * q / (2 * p) * sqrt(-3 / p), -1.0, 1.0)
+    # Check if only real roots are present
+    discriminant = -4 * p^3 - 27 * q^2
+    if discriminant <= 0
+        throw(DomainError("Negative discriminant in Cardano's formula. Would give complex roots."))
+    end
 
     # Save common (but expensive) terms in the cubic root formula
+    theta = 3 * q / (2 * p) * sqrt(-3 / p)
     phi = acos(theta) / 3
     coeff = 2 * sqrt(-p / 3)
     shift = -b / 3
