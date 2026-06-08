@@ -223,30 +223,26 @@ Source terms used for convergence tests in combination with
 end
 
 """
-	FluxConservativeEC(beta_1, beta_2, beta_3)(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
+	FluxConservativeEC(alpha_1, alpha_2, alpha_3)(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
 
-Total energy conserving and well-balanced two-point flux.
-
-The coefficients `beta_i` correspond to the parameters `alpha_i` in the reference below.
-
-## Rerefence
+Total energy conserving and well-balanced two-point flux by
 -  Marco Artiano, Hendrik Ranocha (2026)
    On Affordable High-Order Entropy-Conservative/Stable and 
    Well-Balanced Methods for Nonconservative Hyperbolic Systems
    [DOI: 10.48550/arXiv.2603.18978](https://arxiv.org/abs/2603.18978)
 """
 struct FluxConservativeEC{RealT <: Real}
-    beta_1::RealT
-    beta_2::RealT
-    beta_3::RealT
+    alpha_1::RealT
+    alpha_2::RealT
+    alpha_3::RealT
 end
 
 @inline function (flux_conservative_ec::FluxConservativeEC)(u_ll, u_rr,
                                                             orientation::Integer,
                                                             equations::HyperbolicSainteMarieEquations1D)
-    beta_1 = flux_conservative_ec.beta_1
-    beta_2 = flux_conservative_ec.beta_2
-    beta_3 = flux_conservative_ec.beta_3
+    alpha_1 = flux_conservative_ec.alpha_1
+    alpha_2 = flux_conservative_ec.alpha_2
+    alpha_3 = flux_conservative_ec.alpha_3
 
     # Pull the necessary left and right state information
     h_ll, h_v_ll, h_w_ll, h_p_ll, b_ll = u_ll
@@ -269,10 +265,10 @@ end
     h_p_avg = 0.5f0 * (h_p_ll + h_p_rr)
     h2_avg = 0.5f0 * (h_ll^2 + h_rr^2)
 
-    f1 = beta_1 * h_avg * v_avg + (1 - beta_1) * h_v_avg
-    pressure_terms = equations.gravity * (1 - beta_1) * h_avg^2 +
-                     equations.gravity * (beta_1 - 0.5f0) * h2_avg +
-                     beta_3 * h_avg * p_avg + (1 - beta_3) * h_p_avg
+    f1 = alpha_1 * h_avg * v_avg + (1 - alpha_1) * h_v_avg
+    pressure_terms = equations.gravity * (1 - alpha_1) * h_avg^2 +
+                     equations.gravity * (alpha_1 - 0.5f0) * h2_avg +
+                     alpha_3 * h_avg * p_avg + (1 - alpha_3) * h_p_avg
     f2 = f1 * v_avg + pressure_terms
     f3 = f1 * w_avg
     f4 = f1 * p_avg
@@ -283,30 +279,26 @@ end
 end
 
 """
-	FluxNonConservativeEC(beta_1, beta_2, beta_3)(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
+	FluxNonConservativeEC(alpha_1, alpha_2, alpha_3)(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
 
-Total energy conserving and well-balanced two-point flux.
-
-The coefficients `beta_i` correspond to the parameters `alpha_i` in the reference below.
-
-## Rerefence
+Total energy conserving and well-balanced two-point flux by
 -  Marco Artiano, Hendrik Ranocha (2026)
    On Affordable High-Order Entropy-Conservative/Stable and 
    Well-Balanced Methods for Nonconservative Hyperbolic Systems
    [DOI: 10.48550/arXiv.2603.18978](https://arxiv.org/abs/2603.18978)
 """
 struct FluxNonConservativeEC{RealT <: Real}
-    beta_1::RealT
-    beta_2::RealT
-    beta_3::RealT
+    alpha_1::RealT
+    alpha_2::RealT
+    alpha_3::RealT
 end
 
 @inline function (flux_nonconservative_ec::FluxNonConservativeEC)(u_ll, u_rr,
                                                                   orientation::Integer,
                                                                   equations::HyperbolicSainteMarieEquations1D)
-    beta_1 = flux_nonconservative_ec.beta_1
-    beta_2 = flux_nonconservative_ec.beta_2
-    beta_3 = flux_nonconservative_ec.beta_3
+    alpha_1 = flux_nonconservative_ec.alpha_1
+    alpha_2 = flux_nonconservative_ec.alpha_2
+    alpha_3 = flux_nonconservative_ec.alpha_3
     # Pull the necessary left and right state information
     h_ll, h_v_ll, h_w_ll, h_p_ll, b_ll = u_ll
     h_rr, h_v_rr, h_w_rr, h_p_rr, b_rr = u_rr
@@ -325,17 +317,17 @@ end
     v_jump = v_rr - v_ll
 
     f1 = zero(eltype(u_ll))
-    f2_fluxdiff = beta_1 * equations.gravity * h_avg * b_jump +
-                  beta_2 * 2 * p_avg * b_jump
-    f2_pointwise = (1 - beta_1) * equations.gravity * h_ll * b_jump +
-                   (1 - beta_2) * 2 * p_ll * b_jump
+    f2_fluxdiff = alpha_1 * equations.gravity * h_avg * b_jump +
+                  alpha_2 * 2 * p_avg * b_jump
+    f2_pointwise = (1 - alpha_1) * equations.gravity * h_ll * b_jump +
+                   (1 - alpha_2) * 2 * p_ll * b_jump
     f2 = f2_fluxdiff + f2_pointwise
     f3 = zero(eltype(u_ll))
 
-    f4_fluxdiff = beta_3 * equations.celerity_square * h_avg * v_jump -
-                  2 * beta_2 * equations.celerity_square * v_avg * b_jump
-    f4_pointwise = (1 - beta_3) * equations.celerity_square * h_ll * v_jump -
-                   2 * (1 - beta_2) * equations.celerity_square * v_ll * b_jump
+    f4_fluxdiff = alpha_3 * equations.celerity_square * h_avg * v_jump -
+                  2 * alpha_2 * equations.celerity_square * v_avg * b_jump
+    f4_pointwise = (1 - alpha_3) * equations.celerity_square * h_ll * v_jump -
+                   2 * (1 - alpha_2) * equations.celerity_square * v_ll * b_jump
     f4 = f4_fluxdiff + f4_pointwise
 
     return SVector(f1,
