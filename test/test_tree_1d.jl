@@ -82,7 +82,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
                             # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux to `max_abs_speed`.
                             # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
-                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
                             # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxHydrostaticReconstruction(FluxLaxFriedrichs(max_abs_speed_naive),
                                                                         hydrostatic_reconstruction_audusse_etal),
@@ -602,7 +602,7 @@ end # 2LSWE
                             # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
                             # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux to `max_abs_speed`.
                             # To ensure that every example still runs we specify explicitly `FluxLaxFriedrichs(max_abs_speed_naive)`.
-                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
                             # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxLaxFriedrichs(max_abs_speed_naive),
                                           flux_nonconservative_ersing_etal),
@@ -638,7 +638,7 @@ end # 2LSWE
                             # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
                             # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
                             # To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
-                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
                             # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
                                                                                             DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
@@ -856,27 +856,27 @@ end # 2LSWE
 end # MLSWE
 
 @testset "Shallow Water - Exner" begin
-    @trixi_testset "elixir_shallowwater_exner_source_terms_grass.jl with EC fluxes" begin
+    @trixi_testset "elixir_shallowwater_exner_convergence_grass.jl with EC fluxes" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_exner_source_terms_grass.jl"),
+                                     "elixir_shallowwater_exner_convergence_grass.jl"),
                             l2=[
-                                0.0004102960441666415,
-                                0.0024123111823754154,
-                                2.855259772927741e-5
+                                0.00043016517363404197,
+                                0.0017167621982279299,
+                                0.00010557949952318088
                             ],
                             linf=[
-                                0.0008005791155958342,
-                                0.0075032017005062235,
-                                4.7151297207559395e-5
+                                0.0013682082623218683,
+                                0.0067371421762773,
+                                0.00017118383822367633
                             ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
-    @trixi_testset "elixir_shallowwater_exner_source_terms_mpm.jl with Roe dissipation" begin
+    @trixi_testset "elixir_shallowwater_exner_convergence_mpm.jl with Roe dissipation" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_exner_source_terms_mpm.jl"),
+                                     "elixir_shallowwater_exner_convergence_mpm.jl"),
                             l2=[
                                 8.314340397306541e-5,
                                 0.0003737050980420925,
@@ -895,9 +895,9 @@ end # MLSWE
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 
-    @trixi_testset "elixir_shallowwater_exner_source_terms_mpm.jl with LLF dissipation" begin
+    @trixi_testset "elixir_shallowwater_exner_convergence_mpm.jl with LLF dissipation" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
-                                     "elixir_shallowwater_exner_source_terms_mpm.jl"),
+                                     "elixir_shallowwater_exner_convergence_mpm.jl"),
                             l2=[
                                 8.494087939853228e-5,
                                 0.00037012479603853885,
@@ -913,7 +913,7 @@ end # MLSWE
                             # In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
                             # Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
                             # To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
-                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the 
+                            # We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
                             # `StepsizeCallback` (CFL-Condition) and less diffusion.
                             surface_flux=(FluxPlusDissipation(flux_ersing_etal,
                                                               DissipationLocalLaxFriedrichs(max_abs_speed_naive)),

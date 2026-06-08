@@ -24,7 +24,7 @@ include("callbacks_step/callbacks_step.jl")
 
 # Export types/functions that define the public API of TrixiShallowWater.jl
 export ShallowWaterEquations1D, ShallowWaterEquations2D,
-       ShallowWaterExnerEquations1D,
+       ShallowWaterExnerEquations1D, ShallowWaterExnerEquations2D,
        ShallowWaterTwoLayerEquations1D, ShallowWaterTwoLayerEquations2D,
        ShallowWaterMultiLayerEquations1D, ShallowWaterMultiLayerEquations2D,
        ShallowWaterEquationsQuasi1D,
