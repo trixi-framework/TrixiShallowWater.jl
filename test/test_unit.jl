@@ -352,7 +352,8 @@ end
         u = SVector(-1.1, 4.5, -3.5, 1.2)
         normal_direction = SVector(0.01812947482438032, -0.20620930120920572)
         @test_throws error_message TrixiShallowWater.eigvals_cardano(u, 1, equations)
-        @test_throws error_message TrixiShallowWater.eigvals_cardano(u, normal_direction,
+        @test_throws error_message TrixiShallowWater.eigvals_cardano(u,
+                                                                     normal_direction,
                                                                      equations)
     end
 end
@@ -543,11 +544,11 @@ end
         # Introduces a closure to make them a function of u only. This is necessary since the
         # gradient function only accepts functions of one variable.
         dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.sediment_discharge(u,
-                                                                                            equations)[1],
-                                                                    u)
+                                                                                                                   equations)[1],
+                                                                         u)
         dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.sediment_discharge(u,
-                                                                                            equations)[2],
-                                                                    u)
+                                                                                                                   equations)[2],
+                                                                         u)
 
         # Compute the normal gradients
         dq_sn_dh = n1 * dq_s1_dh + n2 * dq_s2_dh
@@ -556,18 +557,22 @@ end
 
         # flux Jacobian
         A = [[0 n1 n2 0];
-             [g*n1*(h+h_s)-v1*vn vn+n1*v1 n2*v1 g*n1*(h+h_s/r)];
-             [g*n2*(h+h_s)-v2*vn n1*v2 vn+n2*v2 g*n2*(h+h_s/r)];
+             [(g * n1 * (h + h_s) - v1 * vn) (vn + n1 * v1) (n2 * v1) (g * n1 *
+                                                                       (h + h_s / r))]
+             [(g * n2 * (h + h_s) - v2 * vn) (n1 * v2) (vn + n2 * v2) (g * n2 *
+                                                                       (h + h_s / r))]
              [dq_sn_dh dq_sn_dhv1 dq_sn_dhv2 0]]
 
         # Compute the nontrivial eigenvalues using Cardano's formula
         # The known eigenvalue of `vn` associated with the contact wave is returned last.
-        λ1, λ2, λ3, λ4 = TrixiShallowWater.eigvals_cardano(u, normal_direction, equations)
+        λ1, λ2, λ3, λ4 = TrixiShallowWater.eigvals_cardano(u, normal_direction,
+                                                           equations)
 
         # Precompute some common expressions
         c1 = g * (h + h_s)
         c2 = g * (h + h_s / r)
-        kappa = (dq_sn_dh + vn * (n1 * dq_sn_dhv1 + n2 * dq_sn_dhv2 + c1 / c2)) / (n1 * dq_sn_dhv2 - n2 * dq_sn_dhv1)
+        kappa = (dq_sn_dh + vn * (n1 * dq_sn_dhv1 + n2 * dq_sn_dhv2 + c1 / c2)) /
+                (n1 * dq_sn_dhv2 - n2 * dq_sn_dhv1)
 
         # Eigenvector matrix
         r41 = ((vn - λ1)^2 - c1) / c2
@@ -576,9 +581,11 @@ end
 
         # Build the right eigenvector matrix and its inverse in the normal direction
         R = [[1 1 1 1];
-             [(λ1*n1-n2*vt) (λ2*n1-n2*vt) (λ3*n1-n2*vt) (n1*vn+n2*kappa)];
-             [(λ1*n2+n1*vt) (λ2*n2+n1*vt) (λ3*n2+n1*vt) (n2*vn-n1*kappa)];
-             [r41 r42 r43 -c1/c2]]
+             [(λ1 * n1 - n2 * vt) (λ2 * n1 - n2 * vt) (λ3 * n1 - n2 * vt) (n1 * vn +
+                                                                           n2 * kappa)]
+             [(λ1 * n2 + n1 * vt) (λ2 * n2 + n1 * vt) (λ3 * n2 + n1 * vt) (n2 * vn -
+                                                                           n1 * kappa)]
+             [r41 r42 r43 -c1 / c2]]
 
         # Inverse eigenvector matrix
         d1 = (λ1 - λ2) * (λ1 - λ3)
