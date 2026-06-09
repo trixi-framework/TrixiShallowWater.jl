@@ -1154,6 +1154,52 @@ end # SWE-Exner
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
 end # SWME
+
+@testset "Hyperbolic Sainte-Marie Equations" begin
+    @trixi_testset "elixir_hyperbolic_sainte_marie_ec.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_hyperbolic_sainte_marie_ec.jl"),
+                            l2=[
+                                1.04414543691663,
+                                2.558246888374208,
+                                4.125808229229794,
+                                10.814871293594669,
+                                8.077199796761241e-10
+                            ],
+                            linf=[
+                                2.319148179083543,
+                                8.969818998484058,
+                                7.698519853856002,
+                                24.656639487334857,
+                                3.279725713234427e-9
+                            ], atol=1e-8)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
+    @trixi_testset "elixir_hyperbolic_sainte_marie_manufactured.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_hyperbolic_sainte_marie_manufactured.jl"),
+                            l2=[
+                                1.261711796959136e-02,
+                                8.930109138600031e-03,
+                                1.061102585632080e+00,
+                                1.265926590309996e-01,
+                                1.774596690248905e-04
+                            ],
+                            linf=[
+                                6.302570798417761e-02,
+                                3.640253626812218e-02,
+                                5.503785544059838e+00,
+                                7.249345736369781e-01,
+                                3.639351910953437e-04
+                            ])
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+end # HYPSM
 end # TreeMesh1D
 
 # Clean up afterwards: delete TrixiShallowWater.jl output directory
