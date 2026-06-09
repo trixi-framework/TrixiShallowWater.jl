@@ -13,11 +13,11 @@ initial_condition = initial_condition_manufactured
 ###############################################################################
 # Get the DG approximation space
 alpha_coefficients = (1 / 2, 1.0, 2 / 3)
-volume_flux = (FluxConservativeEC(alpha_coefficients...),
-               FluxNonConservativeEC(alpha_coefficients...))
-surface_flux = (FluxPlusDissipation(FluxConservativeEC(alpha_coefficients...),
+volume_flux = (FluxArtianoEtal(alpha_coefficients...),
+               FluxNonConservativeArtianoEtal(alpha_coefficients...))
+surface_flux = (FluxPlusDissipation(FluxArtianoEtal(alpha_coefficients...),
                                     DissipationLocalLaxFriedrichs(Trixi.max_abs_speed)),
-                FluxNonConservativeEC(alpha_coefficients...))
+                FluxNonConservativeArtianoEtal(alpha_coefficients...))
 
 solver = DGSEM(polydeg = 3,
                surface_flux = surface_flux,

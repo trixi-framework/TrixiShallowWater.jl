@@ -223,7 +223,7 @@ Source terms used for convergence tests in combination with
 end
 
 """
-	FluxConservativeEC(alpha_1, alpha_2, alpha_3)(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
+	FluxArtianoEtal(alpha_1, alpha_2, alpha_3)(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
 
 Total energy conserving and well-balanced two-point flux by
 -  Marco Artiano, Hendrik Ranocha (2026)
@@ -231,18 +231,18 @@ Total energy conserving and well-balanced two-point flux by
    Well-Balanced Methods for Nonconservative Hyperbolic Systems
    [DOI: 10.48550/arXiv.2603.18978](https://arxiv.org/abs/2603.18978)
 """
-struct FluxConservativeEC{RealT <: Real}
+struct FluxArtianoEtal{RealT <: Real}
     alpha_1::RealT
     alpha_2::RealT
     alpha_3::RealT
 end
 
-@inline function (flux_conservative_ec::FluxConservativeEC)(u_ll, u_rr,
-                                                            orientation::Integer,
-                                                            equations::HyperbolicSainteMarieEquations1D)
-    alpha_1 = flux_conservative_ec.alpha_1
-    alpha_2 = flux_conservative_ec.alpha_2
-    alpha_3 = flux_conservative_ec.alpha_3
+@inline function (flux_artiano_etal::FluxArtianoEtal)(u_ll, u_rr,
+                                                      orientation::Integer,
+                                                      equations::HyperbolicSainteMarieEquations1D)
+    alpha_1 = flux_artiano_etal.alpha_1
+    alpha_2 = flux_artiano_etal.alpha_2
+    alpha_3 = flux_artiano_etal.alpha_3
 
     # Pull the necessary left and right state information
     h_ll, h_v_ll, h_w_ll, h_p_ll, b_ll = u_ll
@@ -279,7 +279,7 @@ end
 end
 
 """
-	FluxNonConservativeEC(alpha_1, alpha_2, alpha_3)(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
+	FluxNonConservativeArtianoEtal(alpha_1, alpha_2, alpha_3)(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
 
 Total energy conserving and well-balanced two-point flux by
 -  Marco Artiano, Hendrik Ranocha (2026)
@@ -287,18 +287,19 @@ Total energy conserving and well-balanced two-point flux by
    Well-Balanced Methods for Nonconservative Hyperbolic Systems
    [DOI: 10.48550/arXiv.2603.18978](https://arxiv.org/abs/2603.18978)
 """
-struct FluxNonConservativeEC{RealT <: Real}
+struct FluxNonConservativeArtianoEtal{RealT <: Real}
     alpha_1::RealT
     alpha_2::RealT
     alpha_3::RealT
 end
 
-@inline function (flux_nonconservative_ec::FluxNonConservativeEC)(u_ll, u_rr,
-                                                                  orientation::Integer,
-                                                                  equations::HyperbolicSainteMarieEquations1D)
-    alpha_1 = flux_nonconservative_ec.alpha_1
-    alpha_2 = flux_nonconservative_ec.alpha_2
-    alpha_3 = flux_nonconservative_ec.alpha_3
+@inline function (flux_nonconservative_artiano_etal::FluxNonConservativeArtianoEtal)(u_ll,
+                                                                                     u_rr,
+                                                                                     orientation::Integer,
+                                                                                     equations::HyperbolicSainteMarieEquations1D)
+    alpha_1 = flux_nonconservative_artiano_etal.alpha_1
+    alpha_2 = flux_nonconservative_artiano_etal.alpha_2
+    alpha_3 = flux_nonconservative_artiano_etal.alpha_3
     # Pull the necessary left and right state information
     h_ll, h_v_ll, h_w_ll, h_p_ll, b_ll = u_ll
     h_rr, h_v_rr, h_w_rr, h_p_rr, b_rr = u_rr
