@@ -437,13 +437,13 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_rainfall_inclined_plane.jl"),
                             l2=[
-                                0.00032204136659530675,
-                                2.3029251867202115e-6,
+                                0.00032207021140467684,
+                                2.302769240645074e-6,
                                 1.3042254631717584e-15
                             ],
                             linf=[
-                                0.0003539426383438092,
-                                4.949297041373785e-6,
+                                0.0003231150986243637,
+                                2.314345512316177e-6,
                                 4.440892098500626e-15
                             ],
                             precipitation_rate=(x, t) -> 1e-3 * t,
@@ -457,13 +457,13 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_rainfall_inclined_plane.jl"),
                             l2=[
-                                6.74409522519318e-5,
-                                3.088146623897291e-7,
-                                1.3083014427544231e-15
+                                6.744115851709234e-5,
+                                3.0877901828495006e-7,
+                                1.3140785893485128e-15
                             ],
                             linf=[
-                                6.759625829810111e-5,
-                                8.040704425621343e-7,
+                                6.7565187670141e-5,
+                                8.035004140894328e-7,
                                 4.440892098500626e-15
                             ],
                             infiltration_model=GreenAmptModel(3.272e-5, 0.0495, 0.38),
