@@ -11,7 +11,7 @@ equations = ShallowWaterEquations1D(gravity = 9.81)
 # Initial condition with zero water height and a linearly inclined bottom topography to test
 # rainfall and infiltration source terms. The setup for this test case is described in the paper:
 #
-# - Javier Fernández-Pato, Daniel Caviedes-Voullième, Pilar García-Navarro (2016)
+# - J. Fernández-Pato, D. Caviedes-Voullième, P. García-Navarro (2016)
 #   "Rainfall/runoff simulation with 2D full shallow water equations: Sensitivity analysis and
 #   calibration of infiltration parameters"
 #   [doi: 10.1016/j.jhydrol.2016.03.021](http://dx.doi.org/10.1016/j.jhydrol.2016.03.021)
