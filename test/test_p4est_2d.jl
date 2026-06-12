@@ -363,6 +363,52 @@ end # SWE
         @test_allocations(Trixi.rhs!, semi, sol, 15000)
     end
 end # MLSWE
+
+@testset "Shallow Water Exner" begin
+    @trixi_testset "elixir_shallowwater_exner_convergence_grass.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_convergence_grass.jl"),
+                            l2=[
+                                0.0007843486672958833,
+                                0.006981545959119388,
+                                0.007421898782394062,
+                                0.00029960154134387536
+                            ],
+                            linf=[
+                                0.007656547860054097,
+                                0.0787603790906501,
+                                0.10597723748192145,
+                                0.0013988745083841625
+                            ],
+                            tspan=(0.0, 0.1))
+
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
+    @trixi_testset "elixir_shallowwater_exner_ec_mpm.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_exner_ec_mpm.jl"),
+                            l2=[
+                                0.986149555848126,
+                                0.5932609575163937,
+                                0.6914673712046375,
+                                0.456334310322704
+                            ],
+                            linf=[
+                                2.393836392004942,
+                                5.890081608550117,
+                                4.336747775293612,
+                                2.9436585171018947
+                            ],
+                            tspan=(0.0, 0.05))
+
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+end # Shallow Water Exner
 end # P4estMesh2D
 
 # Clean up afterwards: delete TrixiShallowWater.jl output directory
