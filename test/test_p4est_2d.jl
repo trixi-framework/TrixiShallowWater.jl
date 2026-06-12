@@ -402,7 +402,7 @@ end # MLSWE
                                 4.336747775293612,
                                 2.9436585171018947
                             ],
-                            tspan=(0.0, 0.05)
+                            tspan=(0.0, 0.05))
 
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
