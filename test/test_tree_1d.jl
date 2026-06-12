@@ -437,14 +437,14 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_rainfall_inclined_plane.jl"),
                             l2=[
-                                0.0003220702114062544,
-                                2.302767902226071e-6,
-                                1.645248861526204e-11
+                                0.00032204136659530675,
+                                2.3029251867202115e-6,
+                                1.3042254631717584e-15
                             ],
                             linf=[
-                                0.00032311509780718836,
-                                2.3143441612032494e-6,
-                                9.414868884505267e-11
+                                0.0003539426383438092,
+                                4.949297041373785e-6,
+                                4.440892098500626e-15
                             ],
                             precipitation_rate=(x, t) -> 1e-3 * t,
                             tspan=(0.0, 1.0))
@@ -457,14 +457,14 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_rainfall_inclined_plane.jl"),
                             l2=[
-                                6.744115851733849e-5,
-                                3.0877816405076824e-7,
-                                1.645241928881755e-11
+                                6.74409522519318e-5,
+                                3.088146623897291e-7,
+                                1.3083014427544231e-15
                             ],
                             linf=[
-                                6.756518728215836e-5,
-                                8.034992062843856e-7,
-                                9.414868884505267e-11
+                                6.759625829810111e-5,
+                                8.040704425621343e-7,
+                                4.440892098500626e-15
                             ],
                             infiltration_model=GreenAmptModel(3.272e-5, 0.0495, 0.38),
                             precipitation_rate=(x, t) -> 1e-3 * t,

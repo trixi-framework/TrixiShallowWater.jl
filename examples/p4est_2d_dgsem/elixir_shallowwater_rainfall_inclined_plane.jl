@@ -6,7 +6,7 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations with a rainfall and infiltration source term
 
-equations = ShallowWaterEquations2D(gravity = 9.81)
+equations = ShallowWaterEquations2D(gravity = 9.81, threshold_limiter = 1e-10)
 
 # Initial condition with zero water height and a linearly inclined bottom topography to test
 # rainfall and infiltration source terms. The setup for this test case is described in the paper:
@@ -56,10 +56,6 @@ end
 volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
 surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_wintermeyer_etal,
                                                                   DissipationLocalLaxFriedrichs()),
-                                              hydrostatic_reconstruction_chen_noelle),
-                flux_nonconservative_chen_noelle)
-
-surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle,
                                               hydrostatic_reconstruction_chen_noelle),
                 flux_nonconservative_chen_noelle)
 
