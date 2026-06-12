@@ -20,6 +20,7 @@ end
 
 include("shallow_water_quasi_1d.jl")
 
+include("infiltration_models.jl")
 include("shallow_water_1d.jl")
 include("shallow_water_2d.jl")
 

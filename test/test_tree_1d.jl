@@ -432,6 +432,45 @@ isdir(outdir) && rm(outdir, recursive = true)
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
+
+    @trixi_testset "elixir_shallowwater_rainfall_inclined_plane.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_rainfall_inclined_plane.jl"),
+                            l2=[
+                                3.9691828213275573e-16,
+                                3.141673474498579e-33,
+                                1.645241929518934e-11
+                            ],
+                            linf=[
+                                8.884559157573642e-16,
+                                2.3931259898371658e-31,
+                                9.414868884505267e-11
+                            ],
+                            tspan=(0.0, 1.0))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
+    @trixi_testset "elixir_shallowwater_rainfall_inclined_plane.jl with GreenAmptModel" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_rainfall_inclined_plane.jl"),
+                            l2=[
+                                3.9691828213275573e-16,
+                                3.141673474498579e-33,
+                                1.645241929518934e-11
+                            ],
+                            linf=[
+                                8.884559157573642e-16,
+                                2.3931259898371658e-31,
+                                9.414868884505267e-11
+                            ],
+                            infiltration_model=GreenAmptModel(3.272e-5, 0.0495, 0.38),
+                            tspan=(0.0, 1.0))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
 end # SWE
 
 @testset "Shallow Water Quasi-1D" begin
