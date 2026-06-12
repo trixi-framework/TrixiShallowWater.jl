@@ -16,7 +16,7 @@ struct BoundaryConditionMomentum{F <: Function}
 end
 
 ####################################################################################################
-# Include files with actual implementations for different systems of equations. 
+# Include files with actual implementations for different systems of equations.
 
 include("shallow_water_quasi_1d.jl")
 
@@ -24,7 +24,9 @@ include("infiltration_models.jl")
 include("shallow_water_1d.jl")
 include("shallow_water_2d.jl")
 
+include("sediment_closure_models.jl")
 include("shallow_water_exner_1d.jl")
+include("shallow_water_exner_2d.jl")
 
 include("shallow_water_two_layer_1d.jl")
 include("shallow_water_two_layer_2d.jl")
@@ -68,9 +70,9 @@ include("shallow_water_moments_1d.jl")
 
 """
     eachmoment(equations::AbstractMomentEquations)
-    
+
 Return an iterator over the indices that specify the location in relevant data structures
-for the moments in `AbstractMomentEquations`. 
+for the moments in `AbstractMomentEquations`.
 """
 @inline function eachmoment(equations::AbstractMomentEquations)
     Base.OneTo(nmoments(equations))

@@ -153,10 +153,8 @@ generate_mesh(monai);
 
 # For this example we solve the two-dimensional shallow water equations,
 # so we use the [`ShallowWaterEquations2D`](@ref)
-# and specify the gravitational acceleration to `gravity = 9.812`
+# and specify the gravitational acceleration to `gravity = 9.81`
 # as well as a background water height `H0 = 0.0`.
-# In contrast to the [`ShallowWaterEquations2D`](@ref) type,
-# this equation type allows contains additional parameters and methods needed to handle wetting and drying.
 equations = ShallowWaterEquations2D(gravity = 9.81, H0 = 0.0)
 
 # Next, we construct an approximation to the bathymetry with TrixiBottomTopography.jl using
@@ -360,7 +358,7 @@ callbacks = CallbackSet(analysis_callback,
 # however, this is deactivated with `adaptive=false` as we use a CFL-based time step restriction.
 # ```julia
 # stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
-# sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
+# sol = solve(ode, SSPRK43(; stage_limiter!); dt = 1.0,
 #           ode_default_options()..., callback = callbacks, adaptive = false);
 # ```
 

@@ -5,7 +5,7 @@
 @muladd begin
 #! format: noindent
 @doc raw"""
-    ShallowWaterEquations2D(; gravity, H0 = 0, threshold_limiter = nothing, threshold_wet = nothing, 
+    ShallowWaterEquations2D(; gravity, H0 = 0, threshold_limiter = nothing, threshold_wet = nothing,
                               threshold_partially_wet = nothing, threshold_desingularization = nothing)
 
 Shallow water equations (SWE) in two space dimensions. The equations are given by
@@ -269,7 +269,7 @@ Should be used together with [`Trixi.TreeMesh`](@extref).
                                                     equations::ShallowWaterEquations2D)
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
 
-    ## get the appropriate normal vector from the orientation
+    # get the appropriate normal vector from the orientation
     if orientation == 1
         u_boundary = SVector(u_inner[1], -u_inner[2], u_inner[3], u_inner[4])
     else # orientation == 2
