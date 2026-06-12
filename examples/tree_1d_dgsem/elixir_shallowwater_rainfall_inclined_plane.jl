@@ -13,7 +13,7 @@ equations = ShallowWaterEquations1D(gravity = 9.81)
 #
 # - Javier Fernández-Pato, Daniel Caviedes-Voullième, Pilar García-Navarro (2016)
 #   "Rainfall/runoff simulation with 2D full shallow water equations: Sensitivity analysis and
-#   calibration of infiltration paramters"
+#   calibration of infiltration parameters"
 #   [doi: 10.1016/j.jhydrol.2016.03.021](http://dx.doi.org/10.1016/j.jhydrol.2016.03.021)
 function initial_condition_inclined_plane(x, t,
                                           equations::ShallowWaterEquations1D)
@@ -92,9 +92,9 @@ boundary_conditions = (; x_neg = boundary_condition_slip_wall,
 
 # Prescribed time-dependent and spatially uniform rainfall pattern corresponding to Case 1-1 in 
 # Section 3.2 of the reference:
-# - Javier Fernández-Pato, Daniel Caviedes-Voullième, Pilar García-Navarro (2016)
+# - J. Fernández-Pato, D. Caviedes-Voullième, P. García-Navarro (2016)
 #  "Rainfall/runoff simulation with 2D full shallow water equations: Sensitivity analysis and
-#  calibration of infiltration paramters"
+#  calibration of infiltration parameters"
 #  [doi: 10.1016/j.jhydrol.2016.03.021](http://dx.doi.org/10.1016/j.jhydrol.2016.03.021)
 function rain_pattern(x, t)
     if t <= 250 * 60
@@ -118,7 +118,9 @@ end
 # Combined source term that includes rainfall / infiltration and bottom friction
 function source_terms(u, x, t, equations::ShallowWaterEquations1D)
     infiltration_model = HortonModel(1.977e-4, 3.272e-5, 2.43e-3)
-    src_rain = SourceTermsRain(rain_pattern, infiltration_model)(u, x, t, equations)
+    precipitation_rate = rain_pattern
+    src_rain = SourceTermsRain(precipitation_rate, infiltration_model, equations)(u, x, t,
+                                                                                  equations)
     src_friction = source_term_manning_friction(u, x, t, equations)
     return src_rain + src_friction
 end

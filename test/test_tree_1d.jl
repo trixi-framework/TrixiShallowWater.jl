@@ -437,15 +437,16 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_rainfall_inclined_plane.jl"),
                             l2=[
-                                3.9691828213275573e-16,
-                                3.141673474498579e-33,
-                                1.645241929518934e-11
+                                0.0003220702114062544,
+                                2.302767902226071e-6,
+                                1.645248861526204e-11
                             ],
                             linf=[
-                                8.884559157573642e-16,
-                                2.3931259898371658e-31,
+                                0.00032311509780718836,
+                                2.3143441612032494e-6,
                                 9.414868884505267e-11
                             ],
+                            precipitation_rate=(x, t) -> 1e-3 * t,
                             tspan=(0.0, 1.0))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
@@ -456,16 +457,17 @@ isdir(outdir) && rm(outdir, recursive = true)
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_rainfall_inclined_plane.jl"),
                             l2=[
-                                3.9691828213275573e-16,
-                                3.141673474498579e-33,
-                                1.645241929518934e-11
+                                6.744115851733849e-5,
+                                3.0877816405076824e-7,
+                                1.645241928881755e-11
                             ],
                             linf=[
-                                8.884559157573642e-16,
-                                2.3931259898371658e-31,
+                                6.756518728215836e-5,
+                                8.034992062843856e-7,
                                 9.414868884505267e-11
                             ],
                             infiltration_model=GreenAmptModel(3.272e-5, 0.0495, 0.38),
+                            precipitation_rate=(x, t) -> 1e-3 * t,
                             tspan=(0.0, 1.0))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
