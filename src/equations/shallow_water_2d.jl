@@ -298,8 +298,8 @@ boundary and extrapolates the velocity from the incoming Riemann invariant.
 
 The external water height `h_boundary` can be specified as a constant value or as a function of time, e.g.
 ```julia
-   BoundaryConditionWaterHeight(h_boundary, equations))
-   BoundaryConditionWaterHeight(t -> h_boundary(t), equations))
+   BoundaryConditionWaterHeight(h_boundary, equations)
+   BoundaryConditionWaterHeight(t -> h_boundary(t), equations)
 ```
 
 More details can be found in the paper:
@@ -586,6 +586,19 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
     # Return the conservative and nonconservative fluxes. The nonconservative part is zero as we assume
     # a constant bottom topography at the boundary.
     return (flux, zero(u_inner))
+end
+
+function (source_term::SourceTermsRain)(u, x, t, equations::ShallowWaterEquations2D)
+    z = zero(eltype(x))
+    R = source_term.precipitation_rate(x, t)
+    F = infiltration_rate(x, t, source_term.infiltration_model)
+
+    # Check for surface ponding
+    if R <= F && waterheight(u, equations) <= equations.threshold_partially_wet
+        return SVector(z, z, z, z)
+    else
+        return SVector(R - F, z, z, z)
+    end
 end
 
 # Calculate 1D flux for a single point
