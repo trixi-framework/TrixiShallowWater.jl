@@ -399,7 +399,8 @@ end
     w2 = v
     w3 = w
     w4 = p / equations.celerity_square
-    return SVector(w1, w2, w3, w4, zero(eltype(u)))
+    w5 = b
+    return SVector(w1, w2, w3, w4, w5)
 end
 
 # Convert primitive to conservative variables
