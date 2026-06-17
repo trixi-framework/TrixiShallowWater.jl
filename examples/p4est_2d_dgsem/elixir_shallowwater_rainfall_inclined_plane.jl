@@ -111,7 +111,7 @@ end
                                               equations::ShallowWaterEquations2D)
     h, hv_1, hv_2, _ = u
 
-    n = 0.001 # friction coefficient
+    n = 0.03 # friction coefficient
     h = (h^2 + max(h^2, 1e-8)) / (2 * h) # desingularization procedure
 
     # Compute the common friction term
