@@ -101,7 +101,7 @@ For details see Section 9.2.5 of the book:
     surface_flux_function, nonconservative_flux_function = surface_flux_functions
 
     # normalize the outward pointing direction
-    normal = normal_direction / norm(normal_direction)
+    normal = normal_direction / Trixi.norm(normal_direction)
 
     # compute the normal velocity
     u_normal = normal[1] * u_inner[2] + normal[2] * u_inner[3]
@@ -529,7 +529,7 @@ end
     g = equations.gravity
     z = zero(eltype(u_ll))
 
-    norm_ = norm(normal_direction)
+    norm_ = Trixi.norm(normal_direction)
     normal = normal_direction / norm_
     n1, n2 = normal
 
@@ -562,11 +562,11 @@ end
     # Introduces a closure to make them a function of u_avg only. This is necessary since the
     # gradient function only accepts functions of one variable.
     dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
-                                                                                          equations)[1],
-                                                                  u_avg)
+                                                                                             equations)[1],
+                                                                     u_avg)
     dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
-                                                                                          equations)[2],
-                                                                  u_avg)
+                                                                                             equations)[2],
+                                                                     u_avg)
 
     # Compute normal and tangential velocity and normal gradients
     vn_avg = n1 * v1_avg + n2 * v2_avg
@@ -578,7 +578,6 @@ end
     # Precompute some common expressions
     c1 = g * (h_avg + h_s_avg)
     c2 = g * (h_avg + h_s_avg / r)
-    kappa = (dq_sn_dh_avg + vn_avg * (n1 * dq_sn_dhv1_avg + n2 * dq_sn_dhv2_avg + c1 / c2)) / (n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg)
 
     # Eigenvector matrix
     r41 = ((vn_avg - λ1)^2 - c1) / c2
@@ -589,14 +588,27 @@ end
 
     # Workaround to avoid division by zero if `n1 dq_sn_dhv2 - n2 dq_sn_dhv1` is close to zero.
     if abs(n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg) > eps(eltype(u_ll))
+        kappa = (dq_sn_dh_avg +
+                 vn_avg * (n1 * dq_sn_dhv1_avg + n2 * dq_sn_dhv2_avg + c1 / c2)) /
+                (n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg)
         R = @SMatrix [[1 1 1 1];
-                      [λ1*n1-n2*vt_avg λ2*n1-n2*vt_avg λ3*n1-n2*vt_avg n1*vn_avg+n2*kappa];
-                      [λ1*n2+n1*vt_avg λ2*n2+n1*vt_avg λ3*n2+n1*vt_avg n2*vn_avg-n1*kappa];
-                      [r41 r42 r43 -c1/c2]]
+                      [(λ1 * n1 - n2 * vt_avg) (λ2 * n1 - n2 * vt_avg) (λ3 * n1 -
+                                                                        n2 * vt_avg) (n1 *
+                                                                                      vn_avg +
+                                                                                      n2 *
+                                                                                      kappa)]
+                      [(λ1 * n2 + n1 * vt_avg) (λ2 * n2 + n1 * vt_avg) (λ3 * n2 +
+                                                                        n1 * vt_avg) (n2 *
+                                                                                      vn_avg -
+                                                                                      n1 *
+                                                                                      kappa)]
+                      [r41 r42 r43 -c1 / c2]]
     else # n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg ≈ 0
         R = @SMatrix [[1 1 1 z];
-                      [λ1*n1-n2*vt_avg λ2*n1-n2*vt_avg λ3*n1-n2*vt_avg -n2];
-                      [λ1*n2+n1*vt_avg λ2*n2+n1*vt_avg λ3*n2+n1*vt_avg n1];
+                      [(λ1 * n1 - n2 * vt_avg) (λ2 * n1 - n2 * vt_avg) (λ3 * n1 -
+                                                                        n2 * vt_avg) -n2]
+                      [(λ1 * n2 + n1 * vt_avg) (λ2 * n2 + n1 * vt_avg) (λ3 * n2 +
+                                                                        n1 * vt_avg) n1]
                       [r41 r42 r43 z]]
     end
 
@@ -610,28 +622,37 @@ end
         D = vt_avg + kappa
 
         # first column
-        r_inv11 = -(vt_avg * (vn_avg - λ2) * (vn_avg - λ3) + D * (vn_avg^2 - λ2 * λ3 - c1)) / (d1 * D)
-        r_inv21 = -(vt_avg * (vn_avg - λ1) * (vn_avg - λ3) + D * (vn_avg^2 - λ1 * λ3 - c1)) / (d2 * D)
-        r_inv31 = -(vt_avg * (vn_avg - λ1) * (vn_avg - λ2) + D * (vn_avg^2 - λ1 * λ2 - c1)) / (d3 * D)
+        r_inv11 = -(vt_avg * (vn_avg - λ2) * (vn_avg - λ3) +
+                    D * (vn_avg^2 - λ2 * λ3 - c1)) / (d1 * D)
+        r_inv21 = -(vt_avg * (vn_avg - λ1) * (vn_avg - λ3) +
+                    D * (vn_avg^2 - λ1 * λ3 - c1)) / (d2 * D)
+        r_inv31 = -(vt_avg * (vn_avg - λ1) * (vn_avg - λ2) +
+                    D * (vn_avg^2 - λ1 * λ2 - c1)) / (d3 * D)
 
         # second column
-        r_inv12 = (-n2 * (vn_avg - λ2) * (vn_avg - λ3) + n1 * D * (2 * vn_avg - λ2 - λ3)) / (d1 * D)
-        r_inv22 = (-n2 * (vn_avg - λ1) * (vn_avg - λ3) + n1 * D * (2 * vn_avg - λ1 - λ3)) / (d2 * D)
-        r_inv32 = (-n2 * (vn_avg - λ1) * (vn_avg - λ2) + n1 * D * (2 * vn_avg - λ2 - λ1)) / (d3 * D)
+        r_inv12 = (-n2 * (vn_avg - λ2) * (vn_avg - λ3) +
+                   n1 * D * (2 * vn_avg - λ2 - λ3)) / (d1 * D)
+        r_inv22 = (-n2 * (vn_avg - λ1) * (vn_avg - λ3) +
+                   n1 * D * (2 * vn_avg - λ1 - λ3)) / (d2 * D)
+        r_inv32 = (-n2 * (vn_avg - λ1) * (vn_avg - λ2) +
+                   n1 * D * (2 * vn_avg - λ2 - λ1)) / (d3 * D)
 
         # third column
-        r_inv13 = (n1 * (vn_avg - λ2) * (vn_avg - λ3) + n2 * D * (2 * vn_avg - λ2 - λ3)) / (d1 * D)
-        r_inv23 = (n1 * (vn_avg - λ1) * (vn_avg - λ3) + n2 * D * (2 * vn_avg - λ1 - λ3)) / (d2 * D)
-        r_inv33 = (n1 * (vn_avg - λ1) * (vn_avg - λ2) + n2 * D * (2 * vn_avg - λ2 - λ1)) / (d3 * D)
+        r_inv13 = (n1 * (vn_avg - λ2) * (vn_avg - λ3) + n2 * D * (2 * vn_avg - λ2 - λ3)) /
+                  (d1 * D)
+        r_inv23 = (n1 * (vn_avg - λ1) * (vn_avg - λ3) + n2 * D * (2 * vn_avg - λ1 - λ3)) /
+                  (d2 * D)
+        r_inv33 = (n1 * (vn_avg - λ1) * (vn_avg - λ2) + n2 * D * (2 * vn_avg - λ2 - λ1)) /
+                  (d3 * D)
 
         R_inv = @SMatrix [r_inv11 r_inv12 r_inv13 c2/d1;
                           r_inv21 r_inv22 r_inv23 c2/d2;
                           r_inv31 r_inv32 r_inv33 c2/d3;
                           vt_avg/D n2/D -n1/D z]
     else # n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg ≈ 0
-        R_inv = @SMatrix [(c1 - vn_avg^2 + λ2 * λ3)/d1 n1*(2 * vn_avg - λ2 - λ3)/d1 n2*(2 * vn_avg - λ2 - λ3)/d1 c2/d1;
-                          (c1 - vn_avg^2 + λ1 * λ3)/d2 n1*(2 * vn_avg - λ1 - λ3)/d2 n2*(2 * vn_avg - λ1 - λ3)/d2 c2/d2;
-                          (c1 - vn_avg^2 + λ1 * λ2)/d3 n1*(2 * vn_avg - λ2 - λ1)/d3 n2*(2 * vn_avg - λ2 - λ1)/d3 c2/d3;
+        R_inv = @SMatrix [((c1 - vn_avg^2 + λ2 * λ3)/d1) (n1 * (2 * vn_avg - λ2 - λ3)/d1) (n2 * (2 * vn_avg - λ2 - λ3)/d1) (c2/d1);
+                          ((c1 - vn_avg^2 + λ1 * λ3)/d2) (n1 * (2 * vn_avg - λ1 - λ3)/d2) (n2 * (2 * vn_avg - λ1 - λ3)/d2) (c2/d2);
+                          ((c1 - vn_avg^2 + λ1 * λ2)/d3) (n1 * (2 * vn_avg - λ2 - λ1)/d3) (n2 * (2 * vn_avg - λ2 - λ1)/d3) (c2/d3);
                           -vt_avg -n2 n1 z]
     end
 
@@ -653,7 +674,8 @@ end
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr, normal_direction::AbstractVector,
                                            equations::ShallowWaterExnerEquations2D)
     return max(maximum(abs, eigvals_cardano(u_rr, normal_direction, equations)),
-               maximum(abs, eigvals_cardano(u_ll, normal_direction, equations))) * Trixi.norm(normal_direction)
+               maximum(abs, eigvals_cardano(u_ll, normal_direction, equations))) *
+           Trixi.norm(normal_direction)
 end
 
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterExnerEquations2D)
@@ -692,8 +714,12 @@ Note, the inverse porosity scaling is put onto this quantity as a design decisio
     (; A_g, m_g) = equations.sediment_model
     v1, v2 = velocity(u, equations)
     v_norm = sqrt(v1^2 + v2^2)
+    h_s = zero(eltype(u))
+    if v_norm > eps(eltype(u))
+        h_s = equations.porosity_inv * A_g * v_norm^(m_g - 1)
+    end
 
-    return equations.porosity_inv * A_g * v_norm^(m_g - 1)
+    return h_s
 end
 
 """
@@ -923,11 +949,11 @@ end
     # Introduces a closure to make them a function of u only. This is necessary since the
     # gradient function only accepts functions of one variable.
     dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
-                                                                                          equations)[1],
-                                                                  u)
+                                                                                             equations)[1],
+                                                                     u)
     dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
-                                                                                          equations)[2],
-                                                                  u)
+                                                                                             equations)[2],
+                                                                     u)
 
     # Compute normal and tangential velocity and normal gradients
     vn = normal[1] * v1 + normal[2] * v2
@@ -938,8 +964,10 @@ end
 
     # Set the coefficients for the original cubic equation x^3 + bx^2 + cx + dx = 0
     b = -2 * vn
-    c = vn^2 - g * (h + h_s) - g * (h + h_s / r) * (normal[1] * dq_sn_dhv1 + normal[2] * dq_sn_dhv2)
-    d = -g * (h + h_s / r) * (dq_sn_dh  + vt * (-normal[2] * dq_sn_dhv1 + normal[1] * dq_sn_dhv2))
+    c = vn^2 - g * (h + h_s) -
+        g * (h + h_s / r) * (normal[1] * dq_sn_dhv1 + normal[2] * dq_sn_dhv2)
+    d = -g * (h + h_s / r) *
+        (dq_sn_dh + vt * (-normal[2] * dq_sn_dhv1 + normal[1] * dq_sn_dhv2))
 
     # Set the known eigenvalue
     λ4 = vn

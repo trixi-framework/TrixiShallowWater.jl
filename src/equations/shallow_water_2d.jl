@@ -1623,7 +1623,8 @@ end
 end
 
 @inline function Trixi.rotate_to_x(u, normal_vector,
-                                   equations::ShallowWaterEquations2D)
+                                   equations::Union{ShallowWaterEquations2D,
+                                                    ShallowWaterExnerEquations2D})
     # cos and sin of the angle between the x-axis and the normalized normal_vector are
     # the normalized vector's x and y coordinates respectively (see unit circle).
     c = normal_vector[1]
@@ -1643,7 +1644,8 @@ end
 end
 
 @inline function Trixi.rotate_from_x(u, normal_vector,
-                                     equations::ShallowWaterEquations2D)
+                                     equations::Union{ShallowWaterEquations2D,
+                                                      ShallowWaterExnerEquations2D})
     # cos and sin of the angle between the x-axis and the normalized normal_vector are
     # the normalized vector's x and y coordinates respectively (see unit circle).
     c = normal_vector[1]
