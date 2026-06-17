@@ -73,7 +73,7 @@ volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
 solver = DGSEM(basis, surface_flux, volume_integral)
 
 ###############################################################################
-# Get the TreeMesh and setup a periodic mesh
+# Get the P4estMesh
 
 coordinates_min = (0.0, 0.0)
 coordinates_max = (2000.0, 20.0)
@@ -114,7 +114,7 @@ end
     n = 0.001 # friction coefficient
     h = (h^2 + max(h^2, 1e-8)) / (2 * h) # desingularization procedure
 
-    ## Compute the common friction term
+    # Compute the common friction term
     Sf = -equations.gravity * n^2 * h^(-7 / 3) * sqrt(hv_1^2 + hv_2^2)
 
     return SVector(zero(eltype(x)), Sf * hv_1, Sf * hv_2, zero(eltype(x)))
