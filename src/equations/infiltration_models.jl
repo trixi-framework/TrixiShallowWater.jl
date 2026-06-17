@@ -8,6 +8,10 @@
 # Infiltration models
 abstract type InfiltrationModel{RealT} end
 
+# TODO: For now the infiltration models are limited to uniform soil properties. This could be
+# extended in the future to allow for spatially varying soil properties. A possible approach could
+# be to define the infiltration parameters as a `Function` of space and time, instead of a `RealT`.
+
 """
     HortonModel(f_0, f_c, k)
 
