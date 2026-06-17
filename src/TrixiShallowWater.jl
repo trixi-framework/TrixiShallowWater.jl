@@ -52,4 +52,6 @@ export PositivityPreservingLimiterShallowWater, VelocityDesingularization
 
 export IndicatorHennemannGassnerShallowWater
 
+export SourceTermsRain, HortonModel, GreenAmptModel
+
 end
