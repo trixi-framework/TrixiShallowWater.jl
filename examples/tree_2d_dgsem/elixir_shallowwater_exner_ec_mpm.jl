@@ -9,6 +9,8 @@ using TrixiShallowWater
 
 # Academic test case of entropy conservation.
 # The errors from the analysis callback are not important but `∑∂S/∂U ⋅ Uₜ` is.
+# Without the friction source term then the approximation is EC. However, if one
+# includes `source_terms = source_term_bottom_friction` in the `SemidiscretizationHyperbolic`.
 # If the Manning coefficient `n = 0`, then `∑∂S/∂U ⋅ Uₜ` should be around machine roundoff.
 # If the Manning coefficient `n > 0`, then `∑∂S/∂U ⋅ Uₜ` should be negative.
 
