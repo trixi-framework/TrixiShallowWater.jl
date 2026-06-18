@@ -60,8 +60,8 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback)
 ###############################################################################
 # run the simulation
 
-abstol = 1.0e-9
-reltol = 1.0e-9
+abstol = 1.0e-6
+reltol = 1.0e-6
 sol = solve(ode, SSPRK43(thread = Trixi.Threaded());
             abstol = abstol, reltol = reltol,
             save_everystep = false, callback = callbacks);

@@ -1172,7 +1172,7 @@ end # SWME
                                 7.698519853856002,
                                 24.656639487334857,
                                 3.279725713234427e-9
-                            ], atol=1e-8)
+                            ], abstol = 1e-13, reltol = 1e-13)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
@@ -1194,7 +1194,7 @@ end # SWME
                                 5.503785544059838e+00,
                                 7.249345736369781e-01,
                                 3.639351910953437e-04
-                            ])
+                            ], abstol = 1e-13, reltol = 1e-13)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
