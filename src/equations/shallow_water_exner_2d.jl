@@ -620,6 +620,18 @@ end
     c2 = g * (h_avg + h_s_avg / r)
 
     # Eigenvector matrix
+
+    # second row
+    r21 = λ1 * n1 - n2 * vt_avg
+    r22 = λ2 * n1 - n2 * vt_avg
+    r23 = λ3 * n1 - n2 * vt_avg
+
+    # third row
+    r31 = λ1 * n2 + n1 * vt_avg
+    r32 = λ2 * n2 + n1 * vt_avg
+    r33 = λ3 * n2 + n1 * vt_avg
+
+    # fourth row
     r41 = ((vn_avg - λ1)^2 - c1) / c2
     r42 = ((vn_avg - λ2)^2 - c1) / c2
     r43 = ((vn_avg - λ3)^2 - c1) / c2
@@ -632,23 +644,13 @@ end
                  vn_avg * (n1 * dq_sn_dhv1_avg + n2 * dq_sn_dhv2_avg + c1 / c2)) /
                 (n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg)
         R = @SMatrix [[1 1 1 1];
-                      [(λ1 * n1 - n2 * vt_avg) (λ2 * n1 - n2 * vt_avg) (λ3 * n1 -
-                                                                        n2 * vt_avg) (n1 *
-                                                                                      vn_avg +
-                                                                                      n2 *
-                                                                                      kappa)]
-                      [(λ1 * n2 + n1 * vt_avg) (λ2 * n2 + n1 * vt_avg) (λ3 * n2 +
-                                                                        n1 * vt_avg) (n2 *
-                                                                                      vn_avg -
-                                                                                      n1 *
-                                                                                      kappa)]
-                      [r41 r42 r43 -c1 / c2]]
+                      [r21 r22 r23 (n1 * vn_avg + n2 * kappa)]
+                      [r31 r32 r33 (n2 * vn_avg - n1 * kappa)]
+                      [r41 r42 r43 -c1/c2]]
     else # n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg ≈ 0
         R = @SMatrix [[1 1 1 z];
-                      [(λ1 * n1 - n2 * vt_avg) (λ2 * n1 - n2 * vt_avg) (λ3 * n1 -
-                                                                        n2 * vt_avg) -n2]
-                      [(λ1 * n2 + n1 * vt_avg) (λ2 * n2 + n1 * vt_avg) (λ3 * n2 +
-                                                                        n1 * vt_avg) n1]
+                      [r21 r22 r23 -n2]
+                      [r31 r32 r33 n1]
                       [r41 r42 r43 z]]
     end
 
