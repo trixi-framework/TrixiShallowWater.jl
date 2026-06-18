@@ -9,13 +9,15 @@ using TrixiShallowWater
 
 # Academic test case of entropy conservation.
 # The errors from the analysis callback are not important but `∑∂S/∂U ⋅ Uₜ` is.
+# Without the friction source term then the approximation is EC. However, if one
+# includes `source_terms = source_term_bottom_friction` in the `SemidiscretizationHyperbolic`.
 # If the Manning coefficient `n = 0`, then `∑∂S/∂U ⋅ Uₜ` should be around machine roundoff.
 # If the Manning coefficient `n > 0`, then `∑∂S/∂U ⋅ Uₜ` should be negative.
 
 # Equations with Meyer-Peter-Mueller model
 equations = ShallowWaterExnerEquations2D(gravity = 10.0, rho_f = 0.5,
                                          rho_s = 1.0, porosity = 0.5,
-                                         friction = ManningFriction(n = 0.0),
+                                         friction = ManningFriction(n = 0.01),
                                          sediment_model = MeyerPeterMueller(theta_c = 0.0,
                                                                             d_s = 1e-3))
 
@@ -72,7 +74,6 @@ mesh = P4estMesh(trees_per_dimension, polydeg = 3,
 
 # Create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
-                                    source_terms = source_term_bottom_friction,
                                     boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
