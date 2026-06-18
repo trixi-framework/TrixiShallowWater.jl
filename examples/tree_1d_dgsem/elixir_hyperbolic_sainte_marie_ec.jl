@@ -3,7 +3,8 @@ using Trixi
 using TrixiShallowWater
 
 ###############################################################################
-# semidiscretization of the hyperbolic sainte-marie equations for a smooth and periodic initial condition to test entropy conservation
+# semidiscretization of the hyperbolic Sainte-Marie equations
+# for a smooth and periodic initial condition to test entropy conservation
 
 equations = HyperbolicSainteMarieEquations1D(gravity = 1.0, h_ref = 0.1)
 
@@ -23,9 +24,7 @@ initial_condition = initial_condition_periodic
 alpha_coefficients = (1 / 2, 1.0, 2 / 3)
 volume_flux = (FluxArtianoEtal(alpha_coefficients...),
                FluxNonConservativeArtianoEtal(alpha_coefficients...))
-surface_flux = volume_flux
-polydeg = 3
-solver = DGSEM(polydeg = polydeg, surface_flux = surface_flux,
+solver = DGSEM(polydeg = 3, surface_flux = volume_flux,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 boundary_condition = BoundaryConditionDirichlet(initial_condition)
 ###############################################################################
@@ -67,5 +66,5 @@ callbacks = CallbackSet(summary_callback,
 
 sol = solve(ode,
             SSPRK43(thread = Trixi.Threaded());
-            dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
+            dt = 1, # solve needs some value here but it will be overwritten by the stepsize_callback
             ode_default_options()..., callback = callbacks);
