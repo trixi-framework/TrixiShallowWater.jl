@@ -152,6 +152,46 @@ Should be used together with [`Trixi.TreeMesh`](@extref).
     return flux, noncons_flux
 end
 
+@inline function Trixi.rotate_to_x(u, normal_vector,
+                                   equations::ShallowWaterExnerEquations2D)
+    # cos and sin of the angle between the x-axis and the normalized normal_vector are
+    # the normalized vector's x and y coordinates respectively (see unit circle).
+    c = normal_vector[1]
+    s = normal_vector[2]
+
+    # Apply the 2D rotation matrix with normal and tangent directions of the form
+    # [ 1    0    0   0;
+    #   0   n_1  n_2  0;
+    #   0   t_1  t_2  0;
+    #   0    0    0   1 ]
+    # where t_1 = -n_2 and t_2 = n_1
+
+    return SVector(u[1],
+                   c * u[2] + s * u[3],
+                   -s * u[2] + c * u[3],
+                   u[4])
+end
+
+@inline function Trixi.rotate_from_x(u, normal_vector,
+                                     equations::ShallowWaterExnerEquations2D)
+    # cos and sin of the angle between the x-axis and the normalized normal_vector are
+    # the normalized vector's x and y coordinates respectively (see unit circle).
+    c = normal_vector[1]
+    s = normal_vector[2]
+
+    # Apply the 2D back-rotation matrix with normal and tangent directions of the form
+    # [ 1    0    0   0;
+    #   0   n_1  t_1  0;
+    #   0   n_2  t_2  0;
+    #   0    0    0   1 ]
+    # where t_1 = -n_2 and t_2 = n_1
+
+    return SVector(u[1],
+                   c * u[2] - s * u[3],
+                   s * u[2] + c * u[3],
+                   u[4])
+end
+
 """
     source_term_bottom_friction(u, x, t, equations::ShallowWaterExnerEquations2D)
 

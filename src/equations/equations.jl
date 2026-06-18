@@ -20,12 +20,12 @@ end
 
 include("shallow_water_quasi_1d.jl")
 
+include("shallow_water_1d.jl")
+include("shallow_water_2d.jl")
+
 include("sediment_closure_models.jl")
 include("shallow_water_exner_1d.jl")
 include("shallow_water_exner_2d.jl")
-
-include("shallow_water_1d.jl")
-include("shallow_water_2d.jl")
 
 include("shallow_water_two_layer_1d.jl")
 include("shallow_water_two_layer_2d.jl")
