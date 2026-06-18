@@ -73,6 +73,9 @@ function (boundary_condition::TrixiShallowWater.BoundaryConditionWaterHeight)(u_
     h_b = 0.1
 
     # In the case of inflow we fallback to setting a wall boundary condition.
+    # TODO: Could try alternative of forcing outflow by taking the absolute value#
+    # of the normal velocity and setting the external pressure like in FUN3D or FLEXI.
+    # Big question is how to set the external pressure in this situation.
     if v_inner_normal < 0
         return Trixi.boundary_condition_slip_wall(u_inner, normal_direction, x, t,
                                                   surface_flux_functions, equations)
@@ -138,9 +141,6 @@ function (boundary_condition::TrixiShallowWater.BoundaryConditionMomentum)(u_inn
     hv_boundary_normal = hv1_boundary * normal[1] + hv2_boundary * normal[2]
     hv_boundary_tangential = -hv1_boundary * normal[2] + hv2_boundary * normal[1]
 
-    # External sediment height
-    h_b = 0.1
-
     # Calculate the boundary state in the rotated coordinate system.
     # To extrapolate the external water height `h_boundary` assume that the Riemann invariant remains
     # constant across the incoming characteristic.
@@ -153,8 +153,7 @@ function (boundary_condition::TrixiShallowWater.BoundaryConditionMomentum)(u_inn
 
     hv_boundary_normal < 0 ? nothing : hv_boundary_tangential = u_rotated[3]
 
-    u_boundary = SVector(h_boundary, hv_boundary_normal, hv_boundary_tangential, h_b)
-    #  u_inner[4])
+    u_boundary = SVector(h_boundary, hv_boundary_normal, hv_boundary_tangential, u_inner[4])
 
     # Compute the boundary flux in the rotated coordinate system.
     flux = Trixi.flux(u_boundary, 1, equations)
