@@ -400,6 +400,19 @@ function (boundary_condition::BoundaryConditionMomentum)(u_inner,
     return (flux, zero(u_inner))
 end
 
+function (source_term::SourceTermsRain)(u, x, t, equations::ShallowWaterEquations1D)
+    z = zero(eltype(x))
+    R = source_term.precipitation_rate(x, t)
+    F = infiltration_rate(x, t, source_term.infiltration_model)
+
+    # Check for surface ponding
+    if R <= F && waterheight(u, equations) <= equations.threshold_partially_wet
+        return SVector(z, z, z)
+    else
+        return SVector(R - F, z, z)
+    end
+end
+
 # Calculate 1D flux for a single point
 # Note, the bottom topography has no flux
 @inline function Trixi.flux(u, orientation::Integer,

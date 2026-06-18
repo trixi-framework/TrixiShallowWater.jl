@@ -125,6 +125,28 @@ isdir(outdir) && rm(outdir, recursive = true)
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
+
+    @trixi_testset "elixir_shallowwater_rainfall_inclined_plane.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_rainfall_inclined_plane.jl"),
+                            l2=[
+                                0.00032207028548645125,
+                                2.30277557795753e-6,
+                                4.44997187575836e-19,
+                                1.8433475390376417e-15
+                            ],
+                            linf=[
+                                0.000324115924751592,
+                                2.3248063411922284e-6,
+                                1.9913550038729716e-17,
+                                8.881784197001252e-15
+                            ],
+                            precipitation_rate=(x, t) -> 1e-3 * t,
+                            tspan=(0.0, 1.0))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
 end # SWE
 
 @testset "Multilayer Shallow Water" begin
