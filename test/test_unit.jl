@@ -559,6 +559,29 @@ end
     end
 end
 
+@timed_testset "Constructor for rain/infiltration source term" begin
+    let equations = ShallowWaterEquations1D(gravity = 9.81)
+        precipitation_rate = 0.1
+        infiltration_model = HortonModel(0.2, 0.1, 0.1)
+        ref_source_term = SourceTermsRain((x, t) -> 0.1, infiltration_model)
+        x = 0.3
+        t = 0.2
+        u = SVector(1.0, 0.5, 0.1)
+
+        @test SourceTermsRain(0.1, infiltration_model, equations)(u, x, t, equations) ≈
+              ref_source_term(u, x, t, equations)
+        @test SourceTermsRain((x, t) -> 0.1, infiltration_model, equations)(u, x, t,
+                                                                            equations) ≈
+              ref_source_term(u, x, t, equations)
+        @test_throws ArgumentError SourceTermsRain((x, t) -> 0.1f0, infiltration_model,
+                                                   equations)(u, x, t,
+                                                              equations)≈ref_source_term(u,
+                                                                                         x,
+                                                                                         t,
+                                                                                         equations)
+    end
+end
+
 @testset "Equivalent Wave Speed Estimates: max_abs_speed(naive)" begin
     @timed_testset "ShallowWaterEquations1D" begin
         equations = ShallowWaterEquations1D(gravity = 9.81)
