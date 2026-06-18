@@ -88,7 +88,7 @@ ode = semidiscretize(semi, tspan)
 # bottom topography function and initial condition.
 # In contrast to the usual signature of initial conditions, this one get passed the
 # `element_id` explicitly. In particular, this initial conditions works as intended
-# only for the TreeMesh2D with initial_refinement_level=2.
+# only for the P4estMesh2D with initial_refinement_level=2.
 function initial_condition_ec_discontinuous_bottom(x, t, element_id,
                                                    equations::ShallowWaterExnerEquations2D)
     # Set up polar coordinates
@@ -141,8 +141,7 @@ end
 summary_callback = SummaryCallback()
 
 analysis_interval = 1000
-analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
-                                     extra_analysis_integrals = (lake_at_rest_error,))
+analysis_callback = AnalysisCallback(semi, interval = analysis_interval)
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
