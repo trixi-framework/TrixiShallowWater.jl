@@ -646,7 +646,7 @@ end
         R = @SMatrix [[1 1 1 1];
                       [r21 r22 r23 (n1 * vn_avg + n2 * kappa)]
                       [r31 r32 r33 (n2 * vn_avg - n1 * kappa)]
-                      [r41 r42 r43 -c1/c2]]
+                      [r41 r42 r43 -c1 / c2]]
     else # n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg ≈ 0
         R = @SMatrix [[1 1 1 z];
                       [r21 r22 r23 -n2]
