@@ -1213,7 +1213,9 @@ end # SWME
                                 0.30648295197901554,
                                 1.222773006933629,
                                 3.279725713234427e-9
-                            ], abstol=1e-13, reltol=1e-13, tspan=(0.0, 0.01))
+                            ],
+                            # Decrease tolerance of adaptive time stepping to get similar results across different systems
+                            abstol=1e-13, reltol=1e-13, tspan=(0.0, 0.01))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
@@ -1235,7 +1237,9 @@ end # SWME
                                 5.503785544059838e+00,
                                 7.249345736369781e-01,
                                 3.639351910953437e-04
-                            ], abstol=1e-13, reltol=1e-13)
+                            ],
+                            # Decrease tolerance of adaptive time stepping to get similar results across different systems
+                            abstol=1e-13, reltol=1e-13)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
