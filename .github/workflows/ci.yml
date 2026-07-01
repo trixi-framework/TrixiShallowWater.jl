@@ -105,4 +105,3 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: ./lcov.info
           format: lcov
-          debug: true
