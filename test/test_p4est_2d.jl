@@ -105,22 +105,23 @@ isdir(outdir) && rm(outdir, recursive = true)
     # Note, these values may change as the functionality of well-balanced mortars
     # with AMR and wet/dry are further developed according to the issue
     # https://github.com/trixi-framework/TrixiShallowWater.jl/issues/77
+    # This is run longer to activate the pieces of the refine portion of the limiter
     @trixi_testset "elixir_shallowwater_perturbation_wet_dry_amr.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_perturbation_wet_dry_amr.jl"),
                             l2=[
-                                0.399907298565006,
-                                0.3899824006669886,
-                                0.44130722321781896,
-                                0.4564350570616199
+                                0.3899235524025539,
+                                0.26580367915490366,
+                                0.2716620012147776,
+                                0.45643510424305106
                             ],
                             linf=[
-                                1.3905078647694498,
-                                3.3601802680830555,
-                                3.576650520299362,
+                                2.0303770084320374,
+                                1.9308010967252287,
+                                2.173823340700085,
                                 0.7495177590247986
                             ],
-                            tspan=(0.0, 0.025))
+                            tspan=(0.0, 0.121))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
