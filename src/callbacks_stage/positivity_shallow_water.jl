@@ -10,7 +10,7 @@
 
 The limiter is specifically designed for the shallow water equations.
 It is applied to all scalar `variables` in their given order
-using the defined `threshold_limiter` from the equations struct 
+using the defined `threshold_limiter` from the equations struct
 (e.g. in [`ShallowWaterEquations1D`](@ref)) to determine the minimal acceptable values.
 The order of the `variables` is important and might have a strong influence
 on the robustness. The limiter is available for the [`ShallowWaterEquations1D`](@ref),
@@ -27,14 +27,14 @@ should not be changed. That is why, it is not limited.
 After the limiting process is applied to all degrees of freedom, for safety reasons,
 the `threshold_limiter` is applied again on all the DG nodes in order to avoid water height below.
 In the case where the cell mean value is below the threshold before applying the limiter,
-there could still be dry nodes afterwards due to the logic of the limiter. Additionally, a velocity 
+there could still be dry nodes afterwards due to the logic of the limiter. Additionally, a velocity
 desingularization is applied after the limiting to avoid numerical problems near dry states. Details
 about the desingularization strategy can be found in Section 2.2 of the paper
 - A. Kurganov, G. Petrova (2007)
   A second-order well-balanced positivity preserving central-upwind scheme for the Saint-Venant system
   [doi: 10.4310/CMS.2007.v5.n1.a6](https://dx.doi.org/10.4310/CMS.2007.v5.n1.a6)
 
-For the [`ShallowWaterMultiLayerEquations1D`](@ref) the implementation differs. In this case the 
+For the [`ShallowWaterMultiLayerEquations1D`](@ref) the implementation differs. In this case the
 positivity limiter is applied layerwise and only the waterheight `h` is limited within each layer.
 
 This fully-discrete positivity-preserving limiter is based on the work of
@@ -65,6 +65,14 @@ function (limiter!::PositivityPreservingLimiterShallowWater)(u_ode, integrator,
                                                                                              Trixi.mesh_equations_solver_cache(semi)...)
 end
 
+# Version used by the AMR callback
+function (limiter!::PositivityPreservingLimiterShallowWater)(u, mesh, equations, solver,
+                                                             cache, args...)
+    limiter_shallow_water!(u, limiter!.variables, mesh, equations,
+                           solver, cache, args...)
+end
+
+
 # Iterate over tuples in a type-stable way using "lispy tuple programming",
 # similar to https://stackoverflow.com/a/55849398:
 # Iterating over tuples of different functions isn't type-stable in general
@@ -79,13 +87,13 @@ function limiter_shallow_water!(u, variables::NTuple{N, Any},
                                                  ShallowWaterEquations2D,
                                                  ShallowWaterMultiLayerEquations1D,
                                                  ShallowWaterMultiLayerEquations2D},
-                                solver, cache) where {N}
+                                solver, cache, args...) where {N}
     variable = first(variables)
     remaining_variables = Base.tail(variables)
 
     limiter_shallow_water!(u, equations.threshold_limiter, variable, mesh, equations,
-                           solver, cache)
-    limiter_shallow_water!(u, remaining_variables, mesh, equations, solver, cache)
+                           solver, cache, args...)
+    limiter_shallow_water!(u, remaining_variables, mesh, equations, solver, cache, args...)
     return nothing
 end
 
@@ -96,7 +104,7 @@ function limiter_shallow_water!(u, variables::Tuple{},
                                                  ShallowWaterEquations2D,
                                                  ShallowWaterMultiLayerEquations1D,
                                                  ShallowWaterMultiLayerEquations2D},
-                                solver, cache)
+                                solver, cache, args...)
     nothing
 end
 
