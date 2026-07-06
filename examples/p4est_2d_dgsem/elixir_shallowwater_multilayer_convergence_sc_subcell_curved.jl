@@ -5,7 +5,7 @@ using Symbolics
 
 ###############################################################################
 # Semidiscretization of the multilayer shallow water equations with a single layer to test
-# convergence. The initial condition and source term are created using the 
+# convergence. The initial condition and source term are created using the
 # method of manufactured solutions (MMS) with the help of Symbolics.jl.
 
 equations = ShallowWaterMultiLayerEquations2D(gravity = 1.1, rhos = (1.0))
@@ -49,16 +49,13 @@ du_funcs = build_function.(du_exprs, Ref(x_sym), t_sym, g, expression = Val(fals
 
 init_funcs = build_function.(init, Ref(x_sym), t_sym, expression = Val(false))
 
-function initial_condition_convergence_mms(x,
-                                           t,
+function initial_condition_convergence_mms(x, t,
                                            equations::ShallowWaterMultiLayerEquations2D)
     prim = SVector{4, Float64}([f(x, t) for f in init_funcs]...)
     return prim2cons(prim, equations)
 end
 
-function source_terms_convergence_mms(u,
-                                      x,
-                                      t,
+function source_terms_convergence_mms(u, x, t,
                                       equations::ShallowWaterMultiLayerEquations2D)
     g = equations.gravity
     return SVector{4, Float64}([f(x, t, g) for f in du_funcs]...)
