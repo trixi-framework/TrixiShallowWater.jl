@@ -121,14 +121,10 @@ amr_controller = ControllerThreeLevel(semi,
                                       med_level = 2, med_threshold = 2.01,
                                       max_level = 4, max_threshold = 2.15)
 
-# positivity limiter for safety to ensure that solution remains valid with AMR
-positivity_limiter = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
-
 amr_callback = AMRCallback(semi, amr_controller,
                            interval = 1,
                            adapt_initial_condition = false,
-                           adapt_initial_condition_only_refine = false,
-                           limiter! = positivity_limiter)
+                           adapt_initial_condition_only_refine = false)
 
 stepsize_callback = StepsizeCallback(cfl = 1.0)
 
