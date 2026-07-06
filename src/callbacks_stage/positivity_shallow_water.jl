@@ -72,7 +72,6 @@ function (limiter!::PositivityPreservingLimiterShallowWater)(u, mesh, equations,
                            solver, cache, args...)
 end
 
-
 # Iterate over tuples in a type-stable way using "lispy tuple programming",
 # similar to https://stackoverflow.com/a/55849398:
 # Iterating over tuples of different functions isn't type-stable in general
@@ -93,7 +92,8 @@ function limiter_shallow_water!(u, variables::NTuple{N, Any},
 
     limiter_shallow_water!(u, equations.threshold_limiter, variable, mesh, equations,
                            solver, cache, args...)
-    limiter_shallow_water!(u, remaining_variables, mesh, equations, solver, cache, args...)
+    limiter_shallow_water!(u, remaining_variables, mesh, equations, solver, cache,
+                           args...)
     return nothing
 end
 

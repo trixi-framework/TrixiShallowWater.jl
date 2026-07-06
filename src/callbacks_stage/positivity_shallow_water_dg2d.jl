@@ -78,7 +78,8 @@ end
 #   Lax-Wendroff flux reconstruction on adaptive curvilinear meshes with
 #   error based time stepping for hyperbolic conservation laws
 #   [doi: 10.1016/j.jcp.2024.113622](https://doi.org/10.1016/j.jcp.2024.113622)
-function limiter_shallow_water!(u, threshold::Real, variable, mesh::Trixi.AbstractMesh{2},
+function limiter_shallow_water!(u, threshold::Real, variable,
+                                mesh::Trixi.AbstractMesh{2},
                                 equations::ShallowWaterEquations2D, dg::DGSEM, cache,
                                 element_ids_new, u_mean_refined_elements)
     @assert length(element_ids_new)==size(u_mean_refined_elements, 2) "The length of `element_ids_new` must match the second dimension of `u_mean_refined_elements`."
@@ -155,7 +156,8 @@ end
 # Modified version of the limiter used in the coarsening step of the AMR callback.
 # To ensure admissibility after the coarsening step, we apply the limiter to
 # the coarsened elements.
-function limiter_shallow_water!(u, threshold::Real, variable, mesh::Trixi.AbstractMesh{2},
+function limiter_shallow_water!(u, threshold::Real, variable,
+                                mesh::Trixi.AbstractMesh{2},
                                 equations::ShallowWaterEquations2D, dg::DGSEM, cache,
                                 element_ids_new)
     # Apply limiter to coarsened elements
@@ -275,8 +277,10 @@ end
 #   Lax-Wendroff flux reconstruction on adaptive curvilinear meshes with
 #   error based time stepping for hyperbolic conservation laws
 #   [doi: 10.1016/j.jcp.2024.113622](https://doi.org/10.1016/j.jcp.2024.113622)
-function limiter_shallow_water!(u, threshold::Real, variable, mesh::Trixi.AbstractMesh{2},
-                                equations::ShallowWaterMultiLayerEquations2D, dg::DGSEM, cache,
+function limiter_shallow_water!(u, threshold::Real, variable,
+                                mesh::Trixi.AbstractMesh{2},
+                                equations::ShallowWaterMultiLayerEquations2D, dg::DGSEM,
+                                cache,
                                 element_ids_new, u_mean_refined_elements)
     @assert length(element_ids_new)==size(u_mean_refined_elements, 2) "The length of `element_ids_new` must match the second dimension of `u_mean_refined_elements`."
 
@@ -338,8 +342,10 @@ end
 # Modified version of the limiter used in the coarsening step of the AMR callback.
 # To ensure admissibility after the coarsening step, we apply the limiter to
 # the coarsened elements.
-function limiter_shallow_water!(u, threshold::Real, variable, mesh::Trixi.AbstractMesh{2},
-                                equations::ShallowWaterMultiLayerEquations2D, dg::DGSEM, cache,
+function limiter_shallow_water!(u, threshold::Real, variable,
+                                mesh::Trixi.AbstractMesh{2},
+                                equations::ShallowWaterMultiLayerEquations2D, dg::DGSEM,
+                                cache,
                                 element_ids_new)
     # Apply limiter to coarsened elements
     Trixi.@threaded for element in element_ids_new
