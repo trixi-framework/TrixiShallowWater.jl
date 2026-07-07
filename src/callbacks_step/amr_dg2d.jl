@@ -43,7 +43,7 @@ function Trixi.refine!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
     old_n_elements = nelements(dg, cache)
     old_u_ode = copy(u_ode)
     old_inverse_jacobian = copy(cache.elements.inverse_jacobian)
-    # OBS! If we don't GC.@preserve old_u_ode and old_inverse_jacobian, they might be GC'ed
+    # Note: If we don't GC.@preserve old_u_ode and old_inverse_jacobian, they might be GC'ed
     GC.@preserve old_u_ode old_inverse_jacobian begin
         old_u = Trixi.wrap_array(old_u_ode, mesh, equations, dg, cache)
 
@@ -148,7 +148,7 @@ function Trixi.coarsen!(u_ode::AbstractVector, adaptor, mesh::P4estMesh{2},
     old_n_elements = nelements(dg, cache)
     old_u_ode = copy(u_ode)
     old_inverse_jacobian = copy(cache.elements.inverse_jacobian)
-    # OBS! If we don't GC.@preserve old_u_ode and old_inverse_jacobian, they might be GC'ed
+    # Note: If we don't GC.@preserve old_u_ode and old_inverse_jacobian, they might be GC'ed
     GC.@preserve old_u_ode old_inverse_jacobian begin
         old_u = Trixi.wrap_array(old_u_ode, mesh, equations, dg, cache)
 
