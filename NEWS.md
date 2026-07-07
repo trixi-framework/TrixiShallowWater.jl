@@ -8,9 +8,9 @@ for human readability.
 ## Changes in the v0.2 lifecycle
 
 #### Added
-- `ShallowWaterExner` extended to 2D on `TreeMesh` ([#150]) and curvilinear meshes ([#159]).
 - Introduce node-wise limiting functionality for the `ShallowWaterMultiLayerEquations2D`. ([#111])
 - New equation types `ShallowWaterMomentEquations1D` and `ShallowWaterLinearizedMomentEquations1D` have been added. ([#128])
+- `ShallowWaterExner` extended to 2D on `TreeMesh` ([#150]) and curvilinear meshes ([#159]).
 - Experimental support for rainfall & soil infiltration source terms for `ShallowWaterEquations1D` and `ShallowWaterEquations2D`. ([#158])
 
 #### Changed
