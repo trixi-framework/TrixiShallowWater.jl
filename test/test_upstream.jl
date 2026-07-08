@@ -145,24 +145,26 @@ end
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 # P4estMesh2D - AMR with positivity limiter
-@trixi_testset "P4estMesh2D: elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl" begin
-    @test_trixi_include(joinpath(EXAMPLES_DIR, "p4est_2d_dgsem",
-                                 "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl"),
-                        l2=[
-                            0.4177955194235321,
-                            0.2818773677696145,
-                            0.33178075151092923,
-                            0.45643505879802193],
-                        linf=[
-                            2.129878820442652,
-                            3.292431218004944,
-                            3.3701108685790135,
-                            0.7495177590247986],
-                        tspan=(0.0, 0.01))
+if Base.pkgversion(Trixi) >= v"0.16.24"
+    @trixi_testset "P4estMesh2D: elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR, "p4est_2d_dgsem",
+                                     "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl"),
+                            l2=[
+                                0.4177955194235321,
+                                0.2818773677696145,
+                                0.33178075151092923,
+                                0.45643505879802193],
+                            linf=[
+                                2.129878820442652,
+                                3.292431218004944,
+                                3.3701108685790135,
+                                0.7495177590247986],
+                            tspan=(0.0, 0.01))
 
-    # Ensure that we do not have excessive memory allocations
-    # (e.g., from type instabilities)
-    @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
 end
 # P4estMesh2D - Subcell limiting
 @trixi_testset "P4estMesh2D: elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell.jl" begin
