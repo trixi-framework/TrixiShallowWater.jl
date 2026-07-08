@@ -3,9 +3,10 @@ module TestExamplesUpstream
 using Test
 using TrixiShallowWater
 
-# Get the version of the Trixi from the dependecy list
+# Get the version of the Trixi from the dependency list
 using Pkg
-trixi_version = only(deps.version for deps in values(Pkg.dependencies()) if deps.name == "Trixi")
+trixi_version = only(deps.version
+                     for deps in values(Pkg.dependencies()) if deps.name == "Trixi")
 
 include("test_trixi.jl")
 
