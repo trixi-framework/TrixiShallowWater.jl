@@ -146,7 +146,7 @@ end
 end
 # P4estMesh2D - AMR with positivity limiter
 @trixi_testset "P4estMesh2D: elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl" begin
-    @test_trixi_include(joinpath(EXAMPLES_DIR,  "p4est_2d_dgsem",
+    @test_trixi_include(joinpath(EXAMPLES_DIR, "p4est_2d_dgsem",
                                  "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl"),
                         l2=[
                             0.4177955194235321,
