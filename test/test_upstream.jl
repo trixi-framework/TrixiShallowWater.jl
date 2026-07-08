@@ -4,7 +4,7 @@ using Test
 using TrixiShallowWater
 
 # Get the version of the Trixi from the dependency list
-using Pkg
+import Pkg
 trixi_version = only(deps.version
                      for deps in values(Pkg.dependencies()) if deps.name == "Trixi")
 
