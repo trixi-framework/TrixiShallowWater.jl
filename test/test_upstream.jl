@@ -1,12 +1,8 @@
 module TestExamplesUpstream
 
 using Test
+using Trixi # Explicitly use Trixi in order to check its version
 using TrixiShallowWater
-
-# Get the version of the Trixi from the dependency list
-import Pkg
-trixi_version = only(deps.version
-                     for deps in values(Pkg.dependencies()) if deps.name == "Trixi")
 
 include("test_trixi.jl")
 
@@ -150,7 +146,7 @@ end
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 # P4estMesh2D - AMR with positivity limiter
-if trixi_version >= v"0.16.24"
+if Base.pkgversion(Trixi) >= v"0.16.24"
     @trixi_testset "P4estMesh2D: elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR, "p4est_2d_dgsem",
                                      "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl"),
