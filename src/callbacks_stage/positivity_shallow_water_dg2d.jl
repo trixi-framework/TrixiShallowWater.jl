@@ -24,6 +24,8 @@ function limiter_shallow_water!(u, threshold::Real, variable,
 
         # We compute the value directly with the mean values, as we assume that
         # Jensen's inequality holds (e.g. pressure for compressible Euler equations).
+        # However, we only need linear variables such as the `waterheight` here,
+        # where this is satisfied.
         value_mean = variable(u_mean, equations)
         theta = (value_mean - threshold) / (value_mean - value_min)
 
@@ -36,26 +38,16 @@ function limiter_shallow_water!(u, threshold::Real, variable,
         for j in eachnode(dg), i in eachnode(dg)
             u_node = get_node_vars(u, equations, dg, i, j, element)
 
-            # Cut off velocity in case that the water height is smaller than the threshold
-
-            h_node, h_v1_node, h_v2_node, b_node = u_node
-            h_mean, h_v1_mean, h_v2_mean, _ = u_mean # b_mean is not used as it must not be overwritten
-
-            if h_node <= threshold
-                h_v1_node = zero(eltype(u))
-                h_v2_node = zero(eltype(u))
-                h_v1_mean = zero(eltype(u))
-                h_v2_mean = zero(eltype(u))
-            end
-
-            u_node = SVector(h_node, h_v1_node, h_v2_node, b_node)
-            u_mean = SVector(h_mean, h_v1_mean, h_v2_mean, b_node)
+            # Cut off velocity in case that the water height is smaller than the threshold.
+            # Here the (possibly) cut off mean values are saved in a local variable
+            # to ensure that it only influences the current node `i,j`.
+            u_node, u_mean_local = zero_velocity_if_dry_node(u_node, u_mean, threshold)
 
             # When velocities are cut off, the only averaged value is the water height,
             # because the velocities are set to zero and this value is passed.
             # Otherwise, the velocities are averaged, as well.
             # Note that the auxiliary bottom topography variable `b` is never limited.
-            set_node_vars!(u, theta * u_node + (1 - theta) * u_mean,
+            set_node_vars!(u, theta * u_node + (1 - theta) * u_mean_local,
                            equations, dg, i, j, element)
         end
     end
@@ -67,6 +59,26 @@ function limiter_shallow_water!(u, threshold::Real, variable,
     velocity_desingularization!(u, mesh, equations, dg, cache)
 
     return nothing
+end
+
+# Cut off velocity (and thus the momenta) in case that the water height
+# is smaller than the threshold.
+@inline function zero_velocity_if_dry_node(u_node, u_mean, threshold)
+    h_node, h_v1_node, h_v2_node, b_node = u_node
+    # b_mean is not used as it must not be overwritten
+    h_mean, h_v1_mean, h_v2_mean, _ = u_mean
+
+    if h_node <= threshold
+        h_v1_node = zero(eltype(u_node))
+        h_v2_node = zero(eltype(u_node))
+        h_v1_mean = zero(eltype(u_node))
+        h_v2_mean = zero(eltype(u_node))
+    end
+
+    u_node = SVector(h_node, h_v1_node, h_v2_node, b_node)
+    u_mean_local = SVector(h_mean, h_v1_mean, h_v2_mean, b_node)
+
+    return u_node, u_mean_local
 end
 
 # Modified version of the limiter used in the refinement step of the AMR callback.
@@ -90,6 +102,8 @@ function limiter_shallow_water!(u, threshold::Real, variable,
 
         # We compute the value directly with the mean values, as we assume that
         # Jensen's inequality holds (e.g. pressure for compressible Euler equations).
+        # However, we only need linear variables such as the `waterheight` here,
+        # where this is satisfied.
         value_mean = variable(u_mean, equations)
         theta = one(eltype(u)) # Limiting coefficient
 
@@ -119,26 +133,16 @@ function limiter_shallow_water!(u, threshold::Real, variable,
             for j in eachnode(dg), i in eachnode(dg)
                 u_node = get_node_vars(u, equations, dg, i, j, new_element_id)
 
-                # Cut off velocity in case that the water height is smaller than the threshold
-
-                h_node, h_v1_node, h_v2_node, b_node = u_node
-                h_mean, h_v1_mean, h_v2_mean, _ = u_mean # b_mean is not used as it must not be overwritten
-
-                if h_node <= threshold
-                    h_v1_node = zero(eltype(u))
-                    h_v2_node = zero(eltype(u))
-                    h_v1_mean = zero(eltype(u))
-                    h_v2_mean = zero(eltype(u))
-                end
-
-                u_node = SVector(h_node, h_v1_node, h_v2_node, b_node)
-                u_mean = SVector(h_mean, h_v1_mean, h_v2_mean, b_node)
+                # Cut off velocity in case that the water height is smaller than the threshold.
+                # Here the (possibly) cut off mean values are saved in a local variable
+                # to ensure that it only influences the current node `i,j`.
+                u_node, u_mean_local = zero_velocity_if_dry_node(u_node, u_mean, threshold)
 
                 # When velocities are cut off, the only averaged value is the water height,
                 # because the velocities are set to zero and this value is passed.
                 # Otherwise, the velocities are averaged, as well.
                 # Note that the auxiliary bottom topography variable `b` is never limited.
-                set_node_vars!(u, theta * u_node + (1 - theta) * u_mean,
+                set_node_vars!(u, theta * u_node + (1 - theta) * u_mean_local,
                                equations, dg, i, j, new_element_id)
             end
         end
@@ -174,6 +178,8 @@ function limiter_shallow_water!(u, threshold::Real, variable,
 
         # We compute the value directly with the mean values, as we assume that
         # Jensen's inequality holds (e.g. pressure for compressible Euler equations).
+        # However, we only need linear variables such as the `waterheight` here,
+        # where this is satisfied.
         value_mean = variable(u_mean, equations)
         theta = (value_mean - threshold) / (value_mean - value_min)
 
@@ -186,26 +192,16 @@ function limiter_shallow_water!(u, threshold::Real, variable,
         for j in eachnode(dg), i in eachnode(dg)
             u_node = get_node_vars(u, equations, dg, i, j, element)
 
-            # Cut off velocity in case that the water height is smaller than the threshold
-
-            h_node, h_v1_node, h_v2_node, b_node = u_node
-            h_mean, h_v1_mean, h_v2_mean, _ = u_mean # b_mean is not used as it must not be overwritten
-
-            if h_node <= threshold
-                h_v1_node = zero(eltype(u))
-                h_v2_node = zero(eltype(u))
-                h_v1_mean = zero(eltype(u))
-                h_v2_mean = zero(eltype(u))
-            end
-
-            u_node = SVector(h_node, h_v1_node, h_v2_node, b_node)
-            u_mean = SVector(h_mean, h_v1_mean, h_v2_mean, b_node)
+            # Cut off velocity in case that the water height is smaller than the threshold.
+            # Here the (possibly) cut off mean values are saved in a local variable
+            # to ensure that it only influences the current node `i,j`.
+            u_node, u_mean_local = zero_velocity_if_dry_node(u_node, u_mean, threshold)
 
             # When velocities are cut off, the only averaged value is the water height,
             # because the velocities are set to zero and this value is passed.
             # Otherwise, the velocities are averaged, as well.
             # Note that the auxiliary bottom topography variable `b` is never limited.
-            set_node_vars!(u, theta * u_node + (1 - theta) * u_mean,
+            set_node_vars!(u, theta * u_node + (1 - theta) * u_mean_local,
                            equations, dg, i, j, element)
         end
     end
@@ -292,7 +288,9 @@ function limiter_shallow_water!(u, threshold::Real, variable,
 
             # We compute the value directly with the mean values, as we assume that
             # Jensen's inequality holds (e.g. pressure for compressible Euler equations).
-            # The waterheight `h` is limited independently in each layer.
+            # However, we only need linear variables such as the `waterheight` here,
+            # where this is satisfied.
+            # Note: The waterheight `h` is limited independently in each layer.
             value_mean = variable(u_mean, equations)[m]
             theta = one(eltype(u)) # Limiting coefficient
 
@@ -363,7 +361,9 @@ function limiter_shallow_water!(u, threshold::Real, variable,
 
             # We compute the value directly with the mean values, as we assume that
             # Jensen's inequality holds (e.g. pressure for compressible Euler equations).
-            # The waterheight `h` is limited independently in each layer.
+            # However, we only need linear variables such as the `waterheight` here,
+            # where this is satisfied.
+            # Note: The waterheight `h` is limited independently in each layer.
             value_mean = variable(u_mean, equations)[m]
             theta = (value_mean - threshold) / (value_mean - value_min)
 
