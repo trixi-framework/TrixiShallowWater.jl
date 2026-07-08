@@ -17,7 +17,7 @@ isdir(outdir) && rm(outdir, recursive = true)
 
 # Run tests for TreeMesh
 # Shallow water wet/dry 1D
-@trixi_testset "elixir_shallowwater_ec.jl" begin
+@trixi_testset "TreeMesh1D: elixir_shallowwater_ec.jl" begin
     @test_trixi_include(joinpath(EXAMPLES_DIR, "tree_1d_dgsem",
                                  "elixir_shallowwater_ec.jl"),
                         l2=[
@@ -107,15 +107,15 @@ end
     @test_trixi_include(joinpath(EXAMPLES_DIR, "structured_2d_dgsem",
                                  "elixir_shallowwater_conical_island.jl"),
                         l2=[
-                            0.04592856895636503,
-                            0.16446498697148132,
-                            0.16446498697148126,
+                            0.04592690203657511,
+                            0.16446330188638156,
+                            0.16446330188638167,
                             0.0011537702354532122
                         ],
                         linf=[
-                            0.21098104635388404,
-                            0.950182641244522,
-                            0.950182641244521,
+                            0.21098104581979793,
+                            0.950182637749094,
+                            0.9501826377490933,
                             0.021790250683516296
                         ],
                         tspan=(0.0, 0.025))
@@ -145,8 +145,8 @@ end
     @test_allocations(Trixi.rhs!, semi, sol, 1000)
 end
 # P4estMesh2D - AMR with positivity limiter
-@trixi_testset "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl" begin
-    @test_trixi_include(joinpath(EXAMPLES_DIR,
+@trixi_testset "P4estMesh2D: elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl" begin
+    @test_trixi_include(joinpath(EXAMPLES_DIR,  "p4est_2d_dgsem",
                                  "elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl"),
                         l2=[
                             0.4177955194235321,
