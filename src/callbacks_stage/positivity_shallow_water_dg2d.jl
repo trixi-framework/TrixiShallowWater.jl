@@ -219,6 +219,9 @@ function limiter_shallow_water!(u, threshold::Real, variable,
     return nothing
 end
 
+# Note that for the `ShallowWaterMultiLayerEquations1D` only the waterheight `h` is limited in
+# each layer. Furthermore, a velocity desingularization is applied after the limiting to avoid
+# numerical problems near dry states.
 function limiter_shallow_water!(u, threshold::Real, variable,
                                 mesh::Trixi.AbstractMesh{2},
                                 equations::ShallowWaterMultiLayerEquations2D, dg::DGSEM,
