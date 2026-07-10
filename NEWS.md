@@ -12,6 +12,7 @@ for human readability.
 - Introduce node-wise limiting functionality for the `ShallowWaterMultiLayerEquations2D`. ([#111])
 - New equation types `ShallowWaterMomentEquations1D` and `ShallowWaterLinearizedMomentEquations1D` have been added. ([#128])
 - Experimental support for rainfall & soil infiltration source terms for `ShallowWaterEquations1D` and `ShallowWaterEquations2D`. ([#158])
+- New equation type `HyperbolicSainteMarieEquations1D` has been added. ([#135])
 
 #### Changed
 - Velocity desingularization procedure has been moved into a distinct `VelocityDesingularization`

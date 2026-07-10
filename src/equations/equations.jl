@@ -91,6 +91,8 @@ Retrieve the number of moments from an equation instance of the `AbstractMomentE
     NMOMENTS
 end
 
+include("hyperbolic_sainte_marie_1d.jl")
+
 # TODO: Add suitable default thresholds for Float32
 # Provide default thresholds dependent on number format (Currently default thresholds are only provided
 # for Float64)

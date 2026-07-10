@@ -221,6 +221,26 @@ end
                   Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)[1:(end - 1)]
         end
     end
+
+    @timed_testset "HyperbolicSainteMarieEquations" begin
+        H, v, w, p, b = (1.0, 0.3, 0.15, 0.15, 0.1)
+
+        let equations = HyperbolicSainteMarieEquations1D(gravity = 9.81, h_ref = 2.0,
+                                                         alpha = 3.0)
+            # Test conversion between primitive and conservative variables
+            prim_vars = SVector(H, v, w, p, b)
+            cons_vars = prim2cons(prim_vars, equations)
+            @test prim_vars ≈ cons2prim(cons_vars, equations)
+
+            # The total energy is the mathematical entropy
+            @test energy_total(cons_vars, equations) ≈ entropy(cons_vars, equations)
+
+            # Test conversion from conservative to entropy variables
+            entropy_vars = cons2entropy(cons_vars, equations)
+            @test entropy_vars[1:(end - 1)] ≈
+                  Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)[1:(end - 1)]
+        end
+    end
 end
 
 @timed_testset "Consistency check for HLL flux (naive): SWE" begin
@@ -330,6 +350,11 @@ end
         @test isapprox(velocity(u, orientation, shallow_water_2d),
                        v_vector[orientation])
     end
+
+    hyperbolic_sainte_marie = HyperbolicSainteMarieEquations1D(; gravity)
+    p = 10.0
+    u = prim2cons(SVector(H, v1, v2, p, b), hyperbolic_sainte_marie)
+    @test isapprox(velocity(u, hyperbolic_sainte_marie), v1)
 end
 
 @timed_testset "Exception check Cardano's formula" begin
