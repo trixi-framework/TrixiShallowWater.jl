@@ -159,7 +159,7 @@ sol = Trixi.solve(ode, Trixi.SimpleSSPRK33(stage_callbacks = stage_callbacks);
 # right of the discontinuous bottom topography `H0_lower = 1.5`.
 
 # Declare a special version of the function to compute the lake-at-rest error
-# OBS! The reference water height values are hardcoded for convenience.
+# Note: The reference water height values are hardcoded for convenience.
 function lake_at_rest_error_two_level(u, x, equations::ShallowWaterMultiLayerEquations2D)
     h, _, _, b = u
 
