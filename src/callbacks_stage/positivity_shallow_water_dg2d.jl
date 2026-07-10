@@ -41,7 +41,8 @@ function limiter_shallow_water!(u, threshold::Real, variable,
             # Cut off velocity in case that the water height is smaller than the threshold.
             # Here the (possibly) cut off mean values are saved in a local variable
             # to ensure that it only influences the current node `i,j`.
-            u_node, u_mean_local = zero_velocity_if_dry_node(u_node, u_mean, threshold)
+            u_node, u_mean_local = zero_velocity_if_dry_node(u_node, u_mean, threshold,
+                                                             equations)
 
             # When velocities are cut off, the only averaged value is the water height,
             # because the velocities are set to zero and this value is passed.
@@ -63,7 +64,8 @@ end
 
 # Cut off velocity (and thus the momenta) in case that the water height
 # is smaller than the threshold.
-@inline function zero_velocity_if_dry_node(u_node, u_mean, threshold)
+@inline function zero_velocity_if_dry_node(u_node, u_mean, threshold,
+                                           equations::ShallowWaterEquations2D)
     h_node, h_v1_node, h_v2_node, b_node = u_node
     # b_mean is not used as it must not be overwritten
     h_mean, h_v1_mean, h_v2_mean, _ = u_mean
@@ -137,7 +139,7 @@ function limiter_shallow_water!(u, threshold::Real, variable,
                 # Here the (possibly) cut off mean values are saved in a local variable
                 # to ensure that it only influences the current node `i,j`.
                 u_node, u_mean_local = zero_velocity_if_dry_node(u_node, u_mean,
-                                                                 threshold)
+                                                                 threshold, equations)
 
                 # When velocities are cut off, the only averaged value is the water height,
                 # because the velocities are set to zero and this value is passed.
@@ -196,7 +198,8 @@ function limiter_shallow_water!(u, threshold::Real, variable,
             # Cut off velocity in case that the water height is smaller than the threshold.
             # Here the (possibly) cut off mean values are saved in a local variable
             # to ensure that it only influences the current node `i,j`.
-            u_node, u_mean_local = zero_velocity_if_dry_node(u_node, u_mean, threshold)
+            u_node, u_mean_local = zero_velocity_if_dry_node(u_node, u_mean, threshold,
+                                                             equations)
 
             # When velocities are cut off, the only averaged value is the water height,
             # because the velocities are set to zero and this value is passed.
