@@ -15,8 +15,8 @@ isdir(outdir) && rm(outdir, recursive = true)
 #! format: noindent
 
 @timed_testset "Printing indicators/controllers" begin
-    # OBS! Constructing indicators/controllers using the parameters below doesn't make sense. It's
-    # just useful to run basic tests of `show` methods.
+    # Note: Constructing indicators/controllers using the parameters below doesn't make sense.
+    # It's just useful to run basic tests of `show` methods.
 
     indicator_hg_swe = IndicatorHennemannGassnerShallowWater(1.0, 0.0, true, "variable",
                                                              "cache")
