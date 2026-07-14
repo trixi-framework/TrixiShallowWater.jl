@@ -298,7 +298,7 @@ end
         j in eachmoment(equations),
         k in eachmoment(equations)
 
-        f_moments[i] += equations.A[i, j, k] * a[j] * a[k]
+        f_moments[i] += equations.A[i, j, k] * ha[j] * a[k]
     end
 
     return SVector{nmoments(equations) + 3, real(equations)}(f1, f2, f_moments..., 0)
