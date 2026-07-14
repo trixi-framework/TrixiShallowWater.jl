@@ -82,7 +82,7 @@ coordinates_min = 0.0
 coordinates_max = 8.0
 
 mesh = TreeMesh(coordinates_min, coordinates_max,
-                initial_refinement_level = 5,
+                initial_refinement_level = 6,
                 n_cells_max = 10_000,
                 periodicity = false)
 

@@ -477,14 +477,14 @@ isdir(outdir) && rm(outdir, recursive = true)
     @trixi_testset "elixir_shallowwater_beach_amr.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR, "elixir_shallowwater_beach_amr.jl"),
                             l2=[
-                                0.17873463476140447,
-                                1.2355762153364056,
-                                1.5922076606709238e-5
+                                0.17972307563501136,
+                                1.2380931771551882,
+                                9.520982270210175e-6
                             ],
                             linf=[
-                                0.8627122260331002,
-                                3.374742302102591,
-                                0.00010020743187588721
+                                0.8433772707725395,
+                                3.411753533148842,
+                                0.00011436764321715032
                             ],
                             tspan=(0.0, 0.05))
         # Ensure that we do not have excessive memory allocations
