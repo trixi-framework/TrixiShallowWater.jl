@@ -473,6 +473,24 @@ isdir(outdir) && rm(outdir, recursive = true)
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
+
+    @trixi_testset "elixir_shallowwater_beach_amr.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR, "elixir_shallowwater_beach_amr.jl"),
+                            l2=[
+                                0.17972307563501136,
+                                1.2380931771551882,
+                                9.520982270210175e-6
+                            ],
+                            linf=[
+                                0.8433772707725395,
+                                3.411753533148842,
+                                0.00011436764321715032
+                            ],
+                            tspan=(0.0, 0.05))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
 end # SWE
 
 @testset "Shallow Water Quasi-1D" begin
@@ -890,6 +908,27 @@ end # 2LSWE
                             ],
                             tspan=(0.0, 0.25),
                             atol=1e-9)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
+    @trixi_testset "elixir_shallowwater_multilayer_beach_amr.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_beach_amr.jl"),
+                            l2=[
+                                1.22570505187571,
+                                4.9581241184022735,
+                                1.161315654378121e-5
+                            ],
+                            linf=[
+                                2.4550283772713746,
+                                9.75692621468066,
+                                0.00010020743187588721
+                            ],
+                            # longer time for the positivity in coarsening to fire
+                            tspan=(0.0, 0.85),
+                            atol=1e-2) # see https://github.com/trixi-framework/Trixi.jl/issues/1617
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
