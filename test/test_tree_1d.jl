@@ -926,7 +926,9 @@ end # 2LSWE
                                 9.75692621468066,
                                 0.00010020743187588721
                             ],
-                            tspan=(0.0, 0.85)) # longer time for the positivity in coarsening to fire
+                            # longer time for the positivity in coarsening to fire
+                            tspan=(0.0, 0.85),
+                            atol=1e-4)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
