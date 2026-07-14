@@ -105,22 +105,23 @@ isdir(outdir) && rm(outdir, recursive = true)
     # Note, these values may change as the functionality of well-balanced mortars
     # with AMR and wet/dry are further developed according to the issue
     # https://github.com/trixi-framework/TrixiShallowWater.jl/issues/77
+    # This is run longer to activate the pieces of the refine portion of the limiter
     @trixi_testset "elixir_shallowwater_perturbation_wet_dry_amr.jl" begin
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_perturbation_wet_dry_amr.jl"),
                             l2=[
-                                0.399907298565006,
-                                0.3899824006669886,
-                                0.44130722321781896,
-                                0.4564350570616199
+                                0.38992332005657065,
+                                0.2658037399348242,
+                                0.27166206980738195,
+                                0.45643510424305106
                             ],
                             linf=[
-                                1.3905078647694498,
-                                3.3601802680830555,
-                                3.576650520299362,
+                                2.030377008431841,
+                                1.930801096724945,
+                                2.173823340700309,
                                 0.7495177590247986
                             ],
-                            tspan=(0.0, 0.025))
+                            tspan=(0.0, 0.121))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
@@ -278,14 +279,14 @@ end # SWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_three_mound_dam_break_amr.jl"),
                             l2=[
-                                0.1307018038119991,
-                                0.35570420514229945,
-                                9.300123179370889e-14,
-                                0.0019606480801663984],
+                                0.13070149058594405,
+                                0.3557070936603237,
+                                3.391658168396266e-14,
+                                0.001960648080166412],
                             linf=[
-                                1.1241023021698624,
-                                2.4980720394823885,
-                                1.324711724284584e-11,
+                                1.1241019512063912,
+                                2.4986126972245994,
+                                3.782627199174957e-12,
                                 0.044079775502972124],
                             tspan=(0.0, 0.3),
                             atol=1e-10)

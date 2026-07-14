@@ -12,6 +12,7 @@ for human readability.
 - New equation types `ShallowWaterMomentEquations1D` and `ShallowWaterLinearizedMomentEquations1D` have been added. ([#128])
 - `ShallowWaterExner` extended to 2D on `TreeMesh` ([#150]) and curvilinear meshes ([#159]).
 - Experimental support for rainfall & soil infiltration source terms for `ShallowWaterEquations1D` and `ShallowWaterEquations2D`. ([#158])
+- New variants of `limiter_shallow_water!` needed to ensure positivity preservation after coarsening and refinement steps in AMR via the keyword argument `limiter!` in `AMRCallback` ([#164]). For details on this callback see ([#2396](https://github.com/trixi-framework/Trixi.jl/pull/2396)) in Trixi.jl. This made the specialized `refine!` and `coarsen!` introduced in [#97] obsolete, which is why they were removed ([#164]).
 
 #### Changed
 - Velocity desingularization procedure has been moved into a distinct `VelocityDesingularization`

@@ -15,8 +15,8 @@ isdir(outdir) && rm(outdir, recursive = true)
 #! format: noindent
 
 @timed_testset "Printing indicators/controllers" begin
-    # OBS! Constructing indicators/controllers using the parameters below doesn't make sense. It's
-    # just useful to run basic tests of `show` methods.
+    # Note: Constructing indicators/controllers using the parameters below doesn't make sense.
+    # It's just useful to run basic tests of `show` methods.
 
     indicator_hg_swe = IndicatorHennemannGassnerShallowWater(1.0, 0.0, true, "variable",
                                                              "cache")
@@ -929,7 +929,7 @@ end
     equations_lin = ShallowWaterLinearizedMomentEquations1D(gravity = 9.81,
                                                             n_moments = 2)
 
-    u = SVector(1.0, 0.3, 0.15, 0.15, 0.1)
+    u = SVector(0.7, 0.3, 0.15, 0.15, 0.1)
 
     @test flux_careaga_etal(u, u, 1, equations) ≈ flux(u, 1, equations)
     @test flux_careaga_etal(u, u, 1, equations_lin) ≈ flux(u, 1, equations_lin)
@@ -947,7 +947,7 @@ end
 @testset "Consistency check for DissipationLaxFriedrichsEntropyVariables" begin
     @timed_testset "ShallowWaterEquations2D" begin
         equations = ShallowWaterEquations2D(gravity = 9.81)
-        u_ll = SVector(1.0, 0.3, 0.2, 0.2)
+        u_ll = SVector(0.7, 0.3, 0.2, 0.2)
         u_rr = SVector(1.5, 0.1, -0.1, 0.2)
         @test DissipationLaxFriedrichsEntropyVariables()(u_ll, u_rr, 1, equations) ≈
               DissipationLocalLaxFriedrichs()(u_ll, u_rr, 1, equations)
@@ -955,13 +955,13 @@ end
 
     @timed_testset "ShalloWaterMultiLayerEquations2D (single layer)" begin
         equations = ShallowWaterMultiLayerEquations2D(gravity = 9.81, rhos = (1.0))
-        u_ll = SVector(1.0, 0.3, 0.2, 0.1)
+        u_ll = SVector(0.7, 0.3, 0.2, 0.1)
         u_rr = SVector(1.5, 0.1, -0.1, 0.1)
         @test DissipationLaxFriedrichsEntropyVariables()(u_ll, u_rr, 1, equations) ≈
               DissipationLocalLaxFriedrichs()(u_ll, u_rr, 1, equations)
 
         # For a single layer the dissipation should be consistent with the 2D SWE
-        u_ll = SVector(1.0, 0.3, 0.2, 0.1)
+        u_ll = SVector(0.7, 0.3, 0.2, 0.1)
         u_rr = SVector(1.5, 0.1, -0.1, 0.2)
         equations_swe = ShallowWaterEquations2D(gravity = 9.81)
         @test DissipationLaxFriedrichsEntropyVariables()(u_ll, u_rr, 1, equations) ≈
@@ -972,7 +972,7 @@ end
         equations = ShallowWaterMomentEquations1D(gravity = 9.81, n_moments = 2)
         equations_lin = ShallowWaterLinearizedMomentEquations1D(gravity = 9.81,
                                                                 n_moments = 2)
-        u_ll = SVector(1.0, 0.3, 0.15, 0.15, 0.1)
+        u_ll = SVector(0.7, 0.3, 0.15, 0.15, 0.1)
         u_rr = SVector(1.5, 0.1, 0.25, 0.35, 0.1)
 
         diss_lf = DissipationLocalLaxFriedrichs()
