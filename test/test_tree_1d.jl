@@ -473,6 +473,24 @@ isdir(outdir) && rm(outdir, recursive = true)
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
     end
+
+    @trixi_testset "elixir_shallowwater_beach_amr.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR, "elixir_shallowwater_beach_amr.jl"),
+                            l2=[
+                                0.17873463476140447,
+                                1.2355762153364056,
+                                1.5922076606709238e-5
+                            ],
+                            linf=[
+                                0.8627122260331002,
+                                3.374742302102591,
+                                0.00010020743187588721
+                            ],
+                            tspan=(0.0, 0.05))
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
 end # SWE
 
 @testset "Shallow Water Quasi-1D" begin
@@ -890,6 +908,25 @@ end # 2LSWE
                             ],
                             tspan=(0.0, 0.25),
                             atol=1e-9)
+        # Ensure that we do not have excessive memory allocations
+        # (e.g., from type instabilities)
+        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    end
+
+    @trixi_testset "elixir_shallowwater_multilayer_beach_amr.jl" begin
+        @test_trixi_include(joinpath(EXAMPLES_DIR,
+                                     "elixir_shallowwater_multilayer_beach_amr.jl"),
+                            l2=[
+                                0.17996513221136373,
+                                1.2405243366861927,
+                                6.760918237808445e-6
+                            ],
+                            linf=[
+                                0.809798061281449,
+                                3.3967013076883963,
+                                0.00011674161724251064
+                            ],
+                            tspan=(0.0, 0.05))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
