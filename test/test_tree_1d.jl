@@ -928,7 +928,7 @@ end # 2LSWE
                             ],
                             # longer time for the positivity in coarsening to fire
                             tspan=(0.0, 0.85),
-                            atol=1e-4)
+                            atol=1e-2) # see https://github.com/trixi-framework/Trixi.jl/issues/1617
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
