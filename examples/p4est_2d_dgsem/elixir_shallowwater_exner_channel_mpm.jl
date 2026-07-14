@@ -33,24 +33,23 @@ end
 
 initial_condition = initial_condition_L_shaped_channel
 
-# From Castro et al. inflow needs v1=0, v2=-0.5, h_b=0.1 and outflow is "free".
-# Here we set the inflow momentum to recover (approximately) these velocity values.
-# At outflow, we set the water height. These boundary condition routines are modified
-# versions of the standard shallow water case. Though not exactly characteristic BCs,
-# they work because the sediment mode evolves very slowly and the shallow water part
-# dominates.
-function TrixiShallowWater.BoundaryConditionWaterHeight(h_boundary::Real,
-                                                        equations::ShallowWaterExnerEquations2D{RealT}) where {RealT}
-    # Convert function output to the correct type
-    h_boundary = convert(RealT, h_boundary)
-    return TrixiShallowWater.BoundaryConditionWaterHeight(t -> h_boundary)
-end
-
-function (boundary_condition::TrixiShallowWater.BoundaryConditionWaterHeight)(u_inner,
-                                                                              normal_direction,
-                                                                              x, t,
-                                                                              surface_flux_functions,
-                                                                              equations::ShallowWaterExnerEquations2D)
+# Open outflow boundary condition strategy first described by Flather that is a special type
+# of a Sommerfeld style radiation condition for tidal flows.
+# Its goal is to allow flow to radiate outward even if small regions become locally
+# inflow (due to eddies). Flather's strategy prescribes a reference water height and velocity
+# and uses this in the Riemann fan to construct an external velocity state.
+# Then, the external water height is reverse engineered from the Riemann invariant.
+# The original paper from Flather (1976) is often cited but unavailable digitally.
+# However, the paper of Oddo and Pinardi (2008) gives a good derivation in Section 2.4.
+#
+# - Richard A. Flather (1976)
+#   A tidal model of the northwest European continental shelf
+# - P. Oddo and N. Pinardi (2008)
+#   Lateral open boundary conditions for nested limited area models: A scale selective approach
+#   [DOI: 10.1016/j.ocemod.2007.08.001](https://doi.org/10.1016/j.ocemod.2007.08.001)
+function boundary_condition_outflow_flather(u_inner, normal_direction, x, t,
+                                            surface_flux_functions,
+                                            equations::ShallowWaterExnerEquations2D)
     surface_flux, nonconservative_flux_function = surface_flux_functions
 
     # Extract the gravitational acceleration
@@ -63,49 +62,64 @@ function (boundary_condition::TrixiShallowWater.BoundaryConditionWaterHeight)(u_
     # Apply the rotation that maps `normal` onto the x-axis to `u_inner`.
     u_rotated = Trixi.rotate_to_x(u_inner, normal, equations)
 
-    # Get the water height and velocity from the inner state
+    # Get the water height, velocity, and sediment height from the inner state
     h_inner = waterheight(u_rotated, equations)
     v1, v2 = velocity(u_inner, equations)
     v_inner_normal, v_inner_tangential = velocity(u_rotated, equations)
+    h_b_inner = u_rotated[4]
 
-    # Extract the external water height from the boundary condition and set sediment height
-    h_boundary = boundary_condition.h_boundary(t)
-    h_b = 0.1
+    # Set the background values for water height, velocity, and sediment
+    h_reference = 0.9
+    v_reference = 0.0
+    h_b_reference = 0.1
 
-    # In the case of inflow we fallback to setting a wall boundary condition.
-    # TODO: Could try alternative of forcing outflow by taking the absolute value#
-    # of the normal velocity and setting the external pressure like in FUN3D or FLEXI.
-    # Big question is how to set the external pressure in this situation.
-    if v_inner_normal < 0
-        return Trixi.boundary_condition_slip_wall(u_inner, normal_direction, x, t,
-                                                  surface_flux_functions, equations)
-    else
-        # Calculate the boundary state in the rotated coordinate system.
-        # To extrapolate the external velocity assume that the Riemann invariant remains constant across
-        # the incoming characteristic. In the case of inflow we assume that the tangential velocity at
-        # the boundary is zero.
-        v_boundary_normal = v_inner_normal - 2 * (sqrt(g * h_boundary) - sqrt(g * h_inner))
-        v_boundary_normal < 0 ? hv_boundary_tangential = zero(u_rotated[3]) :
-        hv_boundary_tangential = u_rotated[3]
+    # Outgoing Riemann invariant from the interior solution
+    c_inner = sqrt(g * h_inner)
+    R_plus = v_inner_normal + 2 * c_inner
 
-        u_boundary = SVector(h_boundary, h_boundary * v_boundary_normal,
-                             hv_boundary_tangential, h_b)
+    # Flather incoming relation on the normal velocity
+    v_boundary_normal = v_reference + sqrt(g / h_reference) * (h_inner - h_reference)
 
-        # Compute the boundary flux in the rotated coordinate system using LLF
-        local_lax_friedrichs_flux = FluxPlusDissipation(flux_ersing_etal,
-                                                        DissipationLocalLaxFriedrichs())
-        flux = local_lax_friedrichs_flux(u_rotated, u_boundary, 1, equations)
-        noncons_flux = nonconservative_flux_function(u_rotated, u_boundary, 1, equations)
+    # Recover water height from outgoing characteristic
+    c_boundary = 0.5 * (R_plus - v_boundary_normal)
+    h_boundary = c_boundary^2 / g
 
-        # Apply the back-rotation that maps the x-axis onto `normal` to the boundary flux.
-        flux = Trixi.rotate_from_x(flux, normal, equations) * norm_
-        noncons_flux = Trixi.rotate_from_x(noncons_flux, normal, equations) * norm_
+    # Copy tangential velocity
+    v_boundary_tangential = v_inner_tangential
 
-        # Return the conservative and nonconservative fluxes.
-        return (flux, noncons_flux)
-    end
+    # TODO: Treatment of the sediment at the boundary is an open question.
+    # The Flather radiation condition is built from the Riemann invariants
+    # of the standard shallow water equations. Below we set the boundary state of
+    # the sediment height as a blending of the internal and background states
+    # depending on the normal Froude number. In the case of reverse flow (when the
+    # boundary switches to inflow) it sets the background state.
+    alpha = clamp(-v_inner_normal / c_inner, 0, 1)
+    h_b = alpha * h_b_inner + (1 - alpha) * h_b_reference
+
+    # Set the external boundary state
+    u_boundary = SVector(h_boundary,
+                         h_boundary * v_boundary_normal,
+                         h_boundary * v_boundary_tangential,
+                         h_b)
+
+    # Compute the boundary flux in the rotated coordinate system using LLF
+    local_lax_friedrichs_flux = FluxPlusDissipation(flux_ersing_etal,
+                                                    DissipationLocalLaxFriedrichs())
+    flux = local_lax_friedrichs_flux(u_rotated, u_boundary, 1, equations)
+    noncons_flux = nonconservative_flux_function(u_rotated, u_boundary, 1, equations)
+
+    # Apply the back-rotation that maps the x-axis onto `normal` to the boundary flux.
+    flux = Trixi.rotate_from_x(flux, normal, equations) * norm_
+    noncons_flux = Trixi.rotate_from_x(noncons_flux, normal, equations) * norm_
+
+    # Return the conservative and nonconservative fluxes.
+    return (flux, noncons_flux)
 end
 
+# Here we set the inflow momentum to recover (approximately) these velocity values.
+# These boundary condition routines are modified versions of the standard shallow water case.
+# Though not exactly characteristic BCs, they work because the sediment mode evolves very
+# slowly and the shallow water part dominates.
 function TrixiShallowWater.BoundaryConditionMomentum(hv1_boundary::Real, hv2_boundary::Real,
                                                      equations::ShallowWaterExnerEquations2D{RealT}) where {RealT}
     # Convert function output to the correct type
@@ -167,8 +181,10 @@ function (boundary_condition::TrixiShallowWater.BoundaryConditionMomentum)(u_inn
     return (flux, noncons_flux)
 end
 
+# From Castro et al. the boundary conditions are that subcritical inflow
+# needs v1 = 0, v2 = -0.5, h_b = 0.1 and subcritical outflow is "free".
 boundary_condition_inflow = BoundaryConditionMomentum(0.0, -0.45, equations)
-boundary_condition_outflow = BoundaryConditionWaterHeight(0.9, equations)
+boundary_condition_outflow = boundary_condition_outflow_flather
 
 boundary_conditions = (; Channel = boundary_condition_slip_wall,
                        Inflow = boundary_condition_inflow,
@@ -182,7 +198,7 @@ volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
 surface_flux = (FluxPlusDissipation(flux_ersing_etal, dissipation_roe),
                 flux_nonconservative_ersing_etal)
 
-basis = LobattoLegendreBasis(3)
+basis = LobattoLegendreBasis(4)
 
 indicator_sc = IndicatorHennemannGassner(equations, basis,
                                          alpha_max = 0.5,
@@ -230,11 +246,11 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval)
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(dt = 50.0,
+save_solution = SaveSolutionCallback(dt = 20.0,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-stepsize_callback = StepsizeCallback(cfl = 1.0)
+stepsize_callback = StepsizeCallback(cfl = 0.7)
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         stepsize_callback)
