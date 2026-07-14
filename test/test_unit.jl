@@ -313,6 +313,39 @@ end
     end
 end
 
+@timed_testset "Consistency check for entropy conservative fluxes with normal direction: SWE 1D" begin
+    equations = ShallowWaterEquations1D(gravity = 9.81)
+    normal_directions = [SVector(1.0),
+        SVector(-1.0),
+        SVector(0.5),
+        SVector(-1.2)]
+
+    u = prim2cons(SVector(3.5, 0.25, 0.4), equations)
+    u_ll = prim2cons(SVector(3.5, 0.25, 0.4), equations)
+    u_rr = prim2cons(SVector(2.5, -0.1, 0.3), equations)
+
+    for normal_direction in normal_directions
+        # Consistency with the physical flux in the normal direction
+        @test flux_wintermeyer_etal(u, u, normal_direction, equations) ≈
+              flux(u, normal_direction, equations)
+        @test flux_fjordholm_etal(u, u, normal_direction, equations) ≈
+              flux(u, normal_direction, equations)
+        # The 1D flux in normal direction is the orientation flux scaled by the normal
+        @test flux_wintermeyer_etal(u_ll, u_rr, normal_direction, equations) ≈
+              normal_direction[1] * flux_wintermeyer_etal(u_ll, u_rr, 1, equations)
+        @test flux_fjordholm_etal(u_ll, u_rr, normal_direction, equations) ≈
+              normal_direction[1] * flux_fjordholm_etal(u_ll, u_rr, 1, equations)
+        @test flux_nonconservative_wintermeyer_etal(u_ll, u_rr, normal_direction,
+                                                    equations) ≈
+              normal_direction[1] *
+              flux_nonconservative_wintermeyer_etal(u_ll, u_rr, 1, equations)
+        @test flux_nonconservative_fjordholm_etal(u_ll, u_rr, normal_direction,
+                                                  equations) ≈
+              normal_direction[1] *
+              flux_nonconservative_fjordholm_etal(u_ll, u_rr, 1, equations)
+    end
+end
+
 @testset "Velocity functions for different equations" begin
     v1, v2 = pi, exp(1.0) # use pi, exp to test with non-trivial numbers
     v_vector = SVector(v1, v2)
