@@ -56,18 +56,24 @@ solver = DGSEM(polydeg = 4,
                volume_integral = VolumeIntegralFluxDifferencing(volume_flux))
 
 ###############################################################################
-# Get the TreeMesh and setup a periodic mesh
+# Get the P4estMesh and setup a periodic mesh
 
-coordinates_min = (-1.0, -1.0)
-coordinates_max = (1.0, 1.0)
-mesh = TreeMesh(coordinates_min, coordinates_max,
-                initial_refinement_level = 2,
-                n_cells_max = 10_000,
-                periodicity = true)
+# Affine type mapping to take the [-1,1]^2 domain from the mesh file
+# and warp it as described in https://arxiv.org/abs/2012.12040
+function mapping_twist(xi, eta)
+    y = eta + 0.1 * cos(1.5 * pi * xi) * cos(0.5 * pi * eta)
+    x = xi + 0.1 * cos(0.5 * pi * xi) * cos(2.0 * pi * y)
+    return SVector(x, y)
+end
+
+trees_per_dimension = (2, 2)
+mesh = P4estMesh(trees_per_dimension, polydeg = 3,
+                 mapping = mapping_twist,
+                 initial_refinement_level = 2,
+                 periodicity = true)
 
 # Create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
-                                    source_terms = source_term_bottom_friction,
                                     boundary_conditions = boundary_condition_periodic)
 
 ###############################################################################
@@ -83,7 +89,7 @@ ode = semidiscretize(semi, tspan)
 # bottom topography function and initial condition.
 # In contrast to the usual signature of initial conditions, this one get passed the
 # `element_id` explicitly. In particular, this initial conditions works as intended
-# only for the TreeMesh2D with initial_refinement_level=2.
+# only for the P4estMesh2D with initial_refinement_level=2.
 function initial_condition_ec_discontinuous_bottom(x, t, element_id,
                                                    equations::ShallowWaterExnerEquations2D)
     # Set up polar coordinates
@@ -101,14 +107,16 @@ function initial_condition_ec_discontinuous_bottom(x, t, element_id,
     h_b = 0.0
 
     # setup the discontinuous water height and velocities
-    if element_id == 10
+    IDs = [10, 16, 30, 50]
+    if element_id in IDs
         H = 5.0
         v1 = 0.1882 * cos_phi
         v2 = 0.1882 * sin_phi
     end
 
     # Setup a discontinuous bottom topography using the element id number
-    if element_id == 7
+    IDs = [7, 28, 39, 55]
+    if element_id in IDs
         h_b = 2.0 + 0.5 * sin(2.0 * pi * x[1]) + 0.5 * cos(2.0 * pi * x[2])
     end
 
@@ -134,8 +142,7 @@ end
 summary_callback = SummaryCallback()
 
 analysis_interval = 1000
-analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
-                                     extra_analysis_integrals = (lake_at_rest_error,))
+analysis_callback = AnalysisCallback(semi, interval = analysis_interval)
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 

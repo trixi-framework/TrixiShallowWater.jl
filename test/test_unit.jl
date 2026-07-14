@@ -187,6 +187,10 @@ end
             @test Trixi.flux(cons_vars, 2, equations) ≈
                   flux_ersing_etal(cons_vars, cons_vars, 2, equations)
 
+            normal_direction = SVector(0.01812947482438032, -0.20620930120920572)
+            @test Trixi.flux(cons_vars, normal_direction, equations) ≈
+                  flux_ersing_etal(cons_vars, cons_vars, normal_direction, equations)
+
             # Test consistency
             @test water_sediment_height(prim_vars, equations) ≈
                   equations.gravity * h * h_b
@@ -379,7 +383,11 @@ end
                                                  rho_s = 1.0, porosity = 0.4,
                                                  sediment_model = GrassModel(A_g = 0.01))
         u = SVector(-1.1, 4.5, -3.5, 1.2)
+        normal_direction = SVector(0.01812947482438032, -0.20620930120920572)
         @test_throws error_message TrixiShallowWater.eigvals_cardano(u, 1, equations)
+        @test_throws error_message TrixiShallowWater.eigvals_cardano(u,
+                                                                     normal_direction,
+                                                                     equations)
     end
 end
 
@@ -544,6 +552,102 @@ end
                  -v1/D 1/D 0 0]
 
         # Eigenvalue vale matrix
+        Λ = [λ1 0 0 0; 0 λ2 0 0; 0 0 λ3 0; 0 0 0 λ4]
+
+        @test R * R_inv ≈ [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]
+        @test A ≈ R * Λ * R_inv
+
+        # Check in the normal direction
+
+        normal_direction = SVector(0.01812947482438032, -0.20620930120920572)
+
+        norm_ = Trixi.norm(normal_direction)
+        normal = normal_direction / norm_
+        n1, n2 = normal
+
+        # Get the velocities
+        v1, v2 = TrixiShallowWater.velocity(u, equations)
+        vn = n1 * v1 + n2 * v2
+        vt = -n2 * v1 + n1 * v2
+
+        # Compute the effective sediment height at the averaged solution state
+        h_s = TrixiShallowWater.effective_sediment_height(u, equations)
+
+        # Compute gradients of q_s1 and q_s2 using automatic differentiation.
+        # Introduces a closure to make them a function of u only. This is necessary since the
+        # gradient function only accepts functions of one variable.
+        dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.sediment_discharge(u,
+                                                                                                                   equations)[1],
+                                                                         u)
+        dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> TrixiShallowWater.sediment_discharge(u,
+                                                                                                                   equations)[2],
+                                                                         u)
+
+        # Compute the normal gradients
+        dq_sn_dh = n1 * dq_s1_dh + n2 * dq_s2_dh
+        dq_sn_dhv1 = n1 * dq_s1_dhv1 + n2 * dq_s2_dhv1
+        dq_sn_dhv2 = n1 * dq_s1_dhv2 + n2 * dq_s2_dhv2
+
+        # flux Jacobian
+        A = [[0 n1 n2 0];
+             [(g * n1 * (h + h_s) - v1 * vn) (vn + n1 * v1) (n2 * v1) (g * n1 *
+                                                                       (h + h_s / r))]
+             [(g * n2 * (h + h_s) - v2 * vn) (n1 * v2) (vn + n2 * v2) (g * n2 *
+                                                                       (h + h_s / r))]
+             [dq_sn_dh dq_sn_dhv1 dq_sn_dhv2 0]]
+
+        # Compute the nontrivial eigenvalues using Cardano's formula
+        # The known eigenvalue of `vn` associated with the contact wave is returned last.
+        λ1, λ2, λ3, λ4 = TrixiShallowWater.eigvals_cardano(u, normal_direction,
+                                                           equations)
+
+        # Precompute some common expressions
+        c1 = g * (h + h_s)
+        c2 = g * (h + h_s / r)
+        kappa = (dq_sn_dh + vn * (n1 * dq_sn_dhv1 + n2 * dq_sn_dhv2 + c1 / c2)) /
+                (n1 * dq_sn_dhv2 - n2 * dq_sn_dhv1)
+
+        # Eigenvector matrix
+        r41 = ((vn - λ1)^2 - c1) / c2
+        r42 = ((vn - λ2)^2 - c1) / c2
+        r43 = ((vn - λ3)^2 - c1) / c2
+
+        # Build the right eigenvector matrix and its inverse in the normal direction
+        R = [[1 1 1 1];
+             [(λ1 * n1 - n2 * vt) (λ2 * n1 - n2 * vt) (λ3 * n1 - n2 * vt) (n1 * vn +
+                                                                           n2 * kappa)]
+             [(λ1 * n2 + n1 * vt) (λ2 * n2 + n1 * vt) (λ3 * n2 + n1 * vt) (n2 * vn -
+                                                                           n1 * kappa)]
+             [r41 r42 r43 -c1 / c2]]
+
+        # Inverse eigenvector matrix
+        d1 = (λ1 - λ2) * (λ1 - λ3)
+        d2 = (λ2 - λ1) * (λ2 - λ3)
+        d3 = (λ3 - λ2) * (λ3 - λ1)
+
+        D = vt + kappa
+
+        # first column
+        r_inv11 = -(vt * (vn - λ2) * (vn - λ3) + D * (vn^2 - λ2 * λ3 - c1)) / (d1 * D)
+        r_inv21 = -(vt * (vn - λ1) * (vn - λ3) + D * (vn^2 - λ1 * λ3 - c1)) / (d2 * D)
+        r_inv31 = -(vt * (vn - λ1) * (vn - λ2) + D * (vn^2 - λ1 * λ2 - c1)) / (d3 * D)
+
+        # second column
+        r_inv12 = (-n2 * (vn - λ2) * (vn - λ3) + n1 * D * (2 * vn - λ2 - λ3)) / (d1 * D)
+        r_inv22 = (-n2 * (vn - λ1) * (vn - λ3) + n1 * D * (2 * vn - λ1 - λ3)) / (d2 * D)
+        r_inv32 = (-n2 * (vn - λ1) * (vn - λ2) + n1 * D * (2 * vn - λ2 - λ1)) / (d3 * D)
+
+        # third column
+        r_inv13 = (n1 * (vn - λ2) * (vn - λ3) + n2 * D * (2 * vn - λ2 - λ3)) / (d1 * D)
+        r_inv23 = (n1 * (vn - λ1) * (vn - λ3) + n2 * D * (2 * vn - λ1 - λ3)) / (d2 * D)
+        r_inv33 = (n1 * (vn - λ1) * (vn - λ2) + n2 * D * (2 * vn - λ2 - λ1)) / (d3 * D)
+
+        R_inv = [r_inv11 r_inv12 r_inv13 c2/d1;
+                 r_inv21 r_inv22 r_inv23 c2/d2;
+                 r_inv31 r_inv32 r_inv33 c2/d3;
+                 vt/D n2/D -n1/D 0]
+
+        # Eigenvalue value matrix
         Λ = [λ1 0 0 0; 0 λ2 0 0; 0 0 λ3 0; 0 0 0 λ4]
 
         @test R * R_inv ≈ [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]

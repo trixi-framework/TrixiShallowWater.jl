@@ -82,6 +82,44 @@ Trixi.varnames(::typeof(cons2prim), ::ShallowWaterExnerEquations2D) = ("H", "v1"
                                                                        "h_b")
 
 """
+    boundary_condition_slip_wall(u_inner, normal_direction, x, t, surface_flux_function,
+                                 equations::ShallowWaterEquations2D)
+Create a boundary state by reflecting the normal velocity component and keep
+the tangential velocity component unchanged. The boundary water height is taken from
+the internal value.
+For details see Section 9.2.5 of the book:
+- Eleuterio F. Toro (2001)
+  Shock-Capturing Methods for Free-Surface Shallow Flows
+  1st edition
+  ISBN 0471987662
+"""
+@inline function Trixi.boundary_condition_slip_wall(u_inner,
+                                                    normal_direction::AbstractVector,
+                                                    x, t,
+                                                    surface_flux_functions,
+                                                    equations::ShallowWaterExnerEquations2D)
+    surface_flux_function, nonconservative_flux_function = surface_flux_functions
+
+    # normalize the outward pointing direction
+    normal = normal_direction / Trixi.norm(normal_direction)
+
+    # compute the normal velocity
+    u_normal = normal[1] * u_inner[2] + normal[2] * u_inner[3]
+
+    # create the "external" boundary solution state
+    u_boundary = SVector(u_inner[1],
+                         u_inner[2] - 2 * u_normal * normal[1],
+                         u_inner[3] - 2 * u_normal * normal[2],
+                         u_inner[4])
+
+    # calculate the boundary flux
+    flux = surface_flux_function(u_inner, u_boundary, normal_direction, equations)
+    noncons_flux = nonconservative_flux_function(u_inner, u_boundary, normal_direction,
+                                                 equations)
+    return flux, noncons_flux
+end
+
+"""
     boundary_condition_slip_wall(u_inner, orientation, direction, x, t,
                                  surface_flux_function, equations::ShallowWaterExnerEquations2D)
 
@@ -114,6 +152,46 @@ Should be used together with [`Trixi.TreeMesh`](@extref).
     return flux, noncons_flux
 end
 
+@inline function Trixi.rotate_to_x(u, normal_vector,
+                                   equations::ShallowWaterExnerEquations2D)
+    # cos and sin of the angle between the x-axis and the normalized normal_vector are
+    # the normalized vector's x and y coordinates respectively (see unit circle).
+    c = normal_vector[1]
+    s = normal_vector[2]
+
+    # Apply the 2D rotation matrix with normal and tangent directions of the form
+    # [ 1    0    0   0;
+    #   0   n_1  n_2  0;
+    #   0   t_1  t_2  0;
+    #   0    0    0   1 ]
+    # where t_1 = -n_2 and t_2 = n_1
+
+    return SVector(u[1],
+                   c * u[2] + s * u[3],
+                   -s * u[2] + c * u[3],
+                   u[4])
+end
+
+@inline function Trixi.rotate_from_x(u, normal_vector,
+                                     equations::ShallowWaterExnerEquations2D)
+    # cos and sin of the angle between the x-axis and the normalized normal_vector are
+    # the normalized vector's x and y coordinates respectively (see unit circle).
+    c = normal_vector[1]
+    s = normal_vector[2]
+
+    # Apply the 2D back-rotation matrix with normal and tangent directions of the form
+    # [ 1    0    0   0;
+    #   0   n_1  t_1  0;
+    #   0   n_2  t_2  0;
+    #   0    0    0   1 ]
+    # where t_1 = -n_2 and t_2 = n_1
+
+    return SVector(u[1],
+                   c * u[2] - s * u[3],
+                   s * u[2] + c * u[3],
+                   u[4])
+end
+
 """
     source_term_bottom_friction(u, x, t, equations::ShallowWaterExnerEquations2D)
 
@@ -129,7 +207,7 @@ The actual friction law is determined through the friction model in `equations.f
                    zero(eltype(u)))
 end
 
-# Calculate 1D flux for a single point
+# Calculate 2D flux for a single point.
 @inline function Trixi.flux(u, orientation::Integer,
                             equations::ShallowWaterExnerEquations2D)
     _, hv1, hv2, _ = u
@@ -151,8 +229,31 @@ end
     return SVector(f1, f2, f3, f4)
 end
 
+# Calculate 2D flux for a single point in the normal direction.
+# Note, this directional vector is not normalized.
+@inline function Trixi.flux(u, normal_direction::AbstractVector,
+                            equations::ShallowWaterExnerEquations2D)
+    h, hv1, hv2, _ = u
+    v1, v2 = velocity(u, equations)
+    q_s1, q_s2 = sediment_discharge(u, equations)
+
+    v_normal = v1 * normal_direction[1] + v2 * normal_direction[2]
+    q_s_normal = q_s1 * normal_direction[1] + q_s2 * normal_direction[2]
+    h_v_normal = h * v_normal
+
+    f1 = h_v_normal
+    f2 = h_v_normal * v1
+    f3 = h_v_normal * v2
+    f4 = q_s_normal
+
+    return SVector(f1, f2, f3, f4)
+end
+
 """
-    flux_nonconservative_ersing_etal(u_ll, u_rr, orientation, equations::ShallowWaterExnerEquations2D)
+    flux_nonconservative_ersing_etal(u_ll, u_rr, orientation::Integer,
+                                     equations::ShallowWaterExnerEquations2D)
+    flux_nonconservative_ersing_etal(u_ll, u_rr, normal_direction::AbstractVector,
+                                     equations::ShallowWaterExnerEquations2D)
 
 Non-symmetric path-conservative two-point flux discretizing the nonconservative terms of the
 [`ShallowWaterExnerEquations2D`](@ref) which consists of the hydrostatic pressure of the fluid
@@ -190,8 +291,34 @@ scheme that is entropy conservative and well-balanced.
     end
 end
 
+@inline function flux_nonconservative_ersing_etal(u_ll, u_rr,
+                                                  normal_direction::AbstractVector,
+                                                  equations::ShallowWaterExnerEquations2D)
+    # Pull the necessary left and right state information
+    h_ll, _, _, h_b_ll = u_ll
+    h_rr, _, _, h_b_rr = u_rr
+
+    # Calculate jumps
+    h_jump = h_rr - h_ll
+    h_b_jump = h_b_rr - h_b_ll
+
+    # Compute the effective sediment height
+    h_s_ll = effective_sediment_height(u_ll, equations)
+
+    z = zero(eltype(u_ll))
+
+    f = equations.gravity * h_ll * (h_jump + h_b_jump)
+    # Additional nonconservative term to obtain entropy conservative formulation
+    f += (equations.gravity / equations.r * h_s_ll *
+          (equations.r * h_jump + h_b_jump))
+
+    return SVector(z, f * normal_direction[1], f * normal_direction[2], z)
+end
+
 """
     flux_ersing_etal(u_ll, u_rr, orientation::Integer,
+                                     equations::ShallowWaterExnerEquations2D)
+    flux_ersing_etal(u_ll, u_rr, normal_direction::AbstractVector,
                                      equations::ShallowWaterExnerEquations2D)
 
 Entropy conservative split form, without the hydrostatic pressure. This flux should be used
@@ -203,7 +330,7 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
 """
 @inline function flux_ersing_etal(u_ll, u_rr, orientation::Integer,
                                   equations::ShallowWaterExnerEquations2D)
-    # Unpack left and right state
+    # Unpack left and right momenta
     _, h_v1_ll, h_v2_ll, _ = u_ll
     _, h_v1_rr, h_v2_rr, _ = u_rr
 
@@ -239,9 +366,43 @@ To obtain an entropy stable formulation the `surface_flux` can be set as
     return SVector(f1, f2, f3, f4)
 end
 
+@inline function flux_ersing_etal(u_ll, u_rr, normal_direction::AbstractVector,
+                                  equations::ShallowWaterExnerEquations2D)
+    # Unpack left and right momenta
+    _, h_v1_ll, h_v2_ll, _ = u_ll
+    _, h_v1_rr, h_v2_rr, _ = u_rr
+
+    # Get the velocities on either side
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    # Get the sediment discharge on either side
+    q_s1_ll, q_s2_ll = sediment_discharge(u_ll, equations)
+    q_s1_rr, q_s2_rr = sediment_discharge(u_rr, equations)
+
+    # Average each factor of products in flux
+    h_v1_avg = 0.5f0 * (h_v1_ll + h_v1_rr)
+    h_v2_avg = 0.5f0 * (h_v2_ll + h_v2_rr)
+    v1_avg = 0.5f0 * (v1_ll + v1_rr)
+    v2_avg = 0.5f0 * (v2_ll + v2_rr)
+    q_s1_avg = 0.5f0 * (q_s1_ll + q_s1_rr)
+    q_s2_avg = 0.5f0 * (q_s2_ll + q_s2_rr)
+
+    # Calculate flux components in the normal direction
+    f1 = h_v1_avg * normal_direction[1] + h_v2_avg * normal_direction[2]
+    f2 = f1 * v1_avg
+    f3 = f1 * v2_avg
+    f4 = q_s1_avg * normal_direction[1] + q_s2_avg * normal_direction[2]
+
+    return SVector(f1, f2, f3, f4)
+end
+
 """
     dissipation_roe(u_ll, u_rr, orientation::Integer,
                     equations::ShallowWaterExnerEquations2D)
+    dissipation_roe(u_ll, u_rr, normal_direction::AbstractVector,
+                    equations::ShallowWaterExnerEquations2D)
+
 Roe-type dissipation term for the [`ShallowWaterExnerEquations2D`](@ref) with an approximate Roe average
 for the sediment discharge `q_s`.
 """
@@ -266,14 +427,14 @@ for the sediment discharge `q_s`.
              (sqrt(u_ll[1]) + sqrt(u_rr[1]))
     h_b_avg = 0.5f0 * (u_ll[4] + u_rr[4])
 
+    # State vector at the approximate Roe average
+    u_avg = SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg)
+
     # Compute the nontrivial eigenvalues using Cardano's formula
     # The known eigenvalue of `v1` or `v2` associated with the contact wave is returned last.
-    λ1, λ2, λ3, λ4 = eigvals_cardano(SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg,
-                                             h_b_avg),
-                                     orientation, equations)
+    λ1, λ2, λ3, λ4 = eigvals_cardano(u_avg, orientation, equations)
 
     # Compute the effective sediment height at the averaged solution state
-    u_avg = SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg)
     h_s_avg = effective_sediment_height(u_avg, equations)
 
     # Build the right eigenvector matrix and its inverse in the appropriate direction
@@ -384,7 +545,7 @@ for the sediment discharge `q_s`.
             R_inv = @SMatrix [r_inv11 -(v2_avg - λ2) * (v2_avg - λ3)/(D * d1) (2 * v2_avg - λ2 - λ3)/d1 c2/d1;
                               r_inv21 -(v2_avg - λ1) * (v2_avg - λ3)/(D * d2) (2 * v2_avg - λ1 - λ3)/d2 c2/d2;
                               r_inv31 -(v2_avg - λ1) * (v2_avg - λ2)/(D * d3) (2 * v2_avg - λ2 - λ1)/d3 c2/d3;
-                              -v1_avg/D 1/D 0 0]
+                              -v1_avg/D 1/D z z]
         else # dq_s_dhv1 ≈ 0
             R_inv = @SMatrix [(c1 - v2_avg^2 + λ2 * λ3)/d1 z (2 * v2_avg - λ2 - λ3)/d1 c2/d1;
                               (c1 - v2_avg^2 + λ1 * λ3)/d2 z (2 * v2_avg - λ1 - λ3)/d2 c2/d2;
@@ -402,10 +563,161 @@ for the sediment discharge `q_s`.
     return SVector(diss[1], diss[2], diss[3], diss[4])
 end
 
+@inline function dissipation_roe(u_ll, u_rr, normal_direction::AbstractVector,
+                                 equations::ShallowWaterExnerEquations2D)
+    r = equations.r
+    g = equations.gravity
+    z = zero(eltype(u_ll))
+
+    norm_ = Trixi.norm(normal_direction)
+    normal = normal_direction / norm_
+    n1, n2 = normal
+
+    # Get the velocities
+    v1_ll, v2_ll = velocity(u_ll, equations)
+    v1_rr, v2_rr = velocity(u_rr, equations)
+
+    # Compute approximate Roe averages.
+    # The actual Roe average for the sediment height `h_b` depends on the sediment and
+    # friction model and an explicit formula is not always available.
+    # Therefore we only use an approximation here.
+    h_avg = 0.5f0 * (u_ll[1] + u_rr[1])
+    v1_avg = (sqrt(u_ll[1]) * v1_ll + sqrt(u_rr[1]) * v1_rr) /
+             (sqrt(u_ll[1]) + sqrt(u_rr[1]))
+    v2_avg = (sqrt(u_ll[1]) * v2_ll + sqrt(u_rr[1]) * v2_rr) /
+             (sqrt(u_ll[1]) + sqrt(u_rr[1]))
+    h_b_avg = 0.5f0 * (u_ll[4] + u_rr[4])
+
+    # State vector at the approximate Roe average
+    u_avg = SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg)
+
+    # Compute the nontrivial eigenvalues using Cardano's formula
+    # The known eigenvalue of `vn` associated with the contact wave is returned last.
+    λ1, λ2, λ3, λ4 = eigvals_cardano(u_avg, normal_direction, equations)
+
+    # Compute the effective sediment height at the averaged solution state
+    h_s_avg = effective_sediment_height(u_avg, equations)
+
+    # Compute gradients of q_s1_avg and q_s2_avg using automatic differentiation.
+    # Introduces a closure to make them a function of u_avg only. This is necessary since the
+    # gradient function only accepts functions of one variable.
+    dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
+                                                                                             equations)[1],
+                                                                     u_avg)
+    dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
+                                                                                             equations)[2],
+                                                                     u_avg)
+
+    # Compute normal and tangential velocity and normal gradients
+    vn_avg = n1 * v1_avg + n2 * v2_avg
+    vt_avg = -n2 * v1_avg + n1 * v2_avg
+    dq_sn_dh_avg = n1 * dq_s1_dh + n2 * dq_s2_dh
+    dq_sn_dhv1_avg = n1 * dq_s1_dhv1 + n2 * dq_s2_dhv1
+    dq_sn_dhv2_avg = n1 * dq_s1_dhv2 + n2 * dq_s2_dhv2
+
+    # Precompute some common expressions
+    c1 = g * (h_avg + h_s_avg)
+    c2 = g * (h_avg + h_s_avg / r)
+
+    # Eigenvector matrix
+
+    # second row
+    r21 = λ1 * n1 - n2 * vt_avg
+    r22 = λ2 * n1 - n2 * vt_avg
+    r23 = λ3 * n1 - n2 * vt_avg
+
+    # third row
+    r31 = λ1 * n2 + n1 * vt_avg
+    r32 = λ2 * n2 + n1 * vt_avg
+    r33 = λ3 * n2 + n1 * vt_avg
+
+    # fourth row
+    r41 = ((vn_avg - λ1)^2 - c1) / c2
+    r42 = ((vn_avg - λ2)^2 - c1) / c2
+    r43 = ((vn_avg - λ3)^2 - c1) / c2
+
+    # Build the right eigenvector matrix and its inverse in the normal direction
+
+    # Workaround to avoid division by zero if `n1 dq_sn_dhv2 - n2 dq_sn_dhv1` is close to zero.
+    if abs(n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg) > eps(eltype(u_ll))
+        kappa = (dq_sn_dh_avg +
+                 vn_avg * (n1 * dq_sn_dhv1_avg + n2 * dq_sn_dhv2_avg + c1 / c2)) /
+                (n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg)
+        R = @SMatrix [[1 1 1 1];
+                      [r21 r22 r23 (n1 * vn_avg + n2 * kappa)]
+                      [r31 r32 r33 (n2 * vn_avg - n1 * kappa)]
+                      [r41 r42 r43 -c1 / c2]]
+    else # n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg ≈ 0
+        R = @SMatrix [[1 1 1 z];
+                      [r21 r22 r23 -n2]
+                      [r31 r32 r33 n1]
+                      [r41 r42 r43 z]]
+    end
+
+    # Inverse eigenvector matrix
+    d1 = (λ1 - λ2) * (λ1 - λ3)
+    d2 = (λ2 - λ1) * (λ2 - λ3)
+    d3 = (λ3 - λ2) * (λ3 - λ1)
+
+    # Workaround to avoid division by zero if `n1 dq_sn_dhv2 - n2 dq_sn_dhv1` is close to zero.
+    if abs(n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg) > eps(eltype(u_ll))
+        D = vt_avg + kappa
+
+        # first column
+        r_inv11 = -(vt_avg * (vn_avg - λ2) * (vn_avg - λ3) +
+                    D * (vn_avg^2 - λ2 * λ3 - c1)) / (d1 * D)
+        r_inv21 = -(vt_avg * (vn_avg - λ1) * (vn_avg - λ3) +
+                    D * (vn_avg^2 - λ1 * λ3 - c1)) / (d2 * D)
+        r_inv31 = -(vt_avg * (vn_avg - λ1) * (vn_avg - λ2) +
+                    D * (vn_avg^2 - λ1 * λ2 - c1)) / (d3 * D)
+
+        # second column
+        r_inv12 = (-n2 * (vn_avg - λ2) * (vn_avg - λ3) +
+                   n1 * D * (2 * vn_avg - λ2 - λ3)) / (d1 * D)
+        r_inv22 = (-n2 * (vn_avg - λ1) * (vn_avg - λ3) +
+                   n1 * D * (2 * vn_avg - λ1 - λ3)) / (d2 * D)
+        r_inv32 = (-n2 * (vn_avg - λ1) * (vn_avg - λ2) +
+                   n1 * D * (2 * vn_avg - λ2 - λ1)) / (d3 * D)
+
+        # third column
+        r_inv13 = (n1 * (vn_avg - λ2) * (vn_avg - λ3) + n2 * D * (2 * vn_avg - λ2 - λ3)) /
+                  (d1 * D)
+        r_inv23 = (n1 * (vn_avg - λ1) * (vn_avg - λ3) + n2 * D * (2 * vn_avg - λ1 - λ3)) /
+                  (d2 * D)
+        r_inv33 = (n1 * (vn_avg - λ1) * (vn_avg - λ2) + n2 * D * (2 * vn_avg - λ2 - λ1)) /
+                  (d3 * D)
+
+        R_inv = @SMatrix [r_inv11 r_inv12 r_inv13 c2/d1;
+                          r_inv21 r_inv22 r_inv23 c2/d2;
+                          r_inv31 r_inv32 r_inv33 c2/d3;
+                          vt_avg/D n2/D -n1/D z]
+    else # n1 * dq_sn_dhv2_avg - n2 * dq_sn_dhv1_avg ≈ 0
+        R_inv = @SMatrix [((c1 - vn_avg^2 + λ2 * λ3)/d1) (n1 * (2 * vn_avg - λ2 - λ3)/d1) (n2 * (2 * vn_avg - λ2 - λ3)/d1) (c2/d1);
+                          ((c1 - vn_avg^2 + λ1 * λ3)/d2) (n1 * (2 * vn_avg - λ1 - λ3)/d2) (n2 * (2 * vn_avg - λ1 - λ3)/d2) (c2/d2);
+                          ((c1 - vn_avg^2 + λ1 * λ2)/d3) (n1 * (2 * vn_avg - λ2 - λ1)/d3) (n2 * (2 * vn_avg - λ2 - λ1)/d3) (c2/d3);
+                          -vt_avg -n2 n1 z]
+    end
+
+    # Eigenvalue absolute value matrix
+    Λ_abs = @SMatrix [abs(λ1) z z z; z abs(λ2) z z; z z abs(λ3) z; z z z abs(λ4)]
+
+    # Compute dissipation
+    diss = SVector(-0.5f0 * R * Λ_abs * R_inv * (u_rr - u_ll))
+
+    return SVector(diss[1], diss[2], diss[3], diss[4]) * norm_
+end
+
 @inline function Trixi.max_abs_speed_naive(u_ll, u_rr, orientation::Integer,
                                            equations::ShallowWaterExnerEquations2D)
     return max(maximum(abs, eigvals_cardano(u_rr, orientation, equations)),
                maximum(abs, eigvals_cardano(u_ll, orientation, equations)))
+end
+
+@inline function Trixi.max_abs_speed_naive(u_ll, u_rr, normal_direction::AbstractVector,
+                                           equations::ShallowWaterExnerEquations2D)
+    return max(maximum(abs, eigvals_cardano(u_rr, normal_direction, equations)),
+               maximum(abs, eigvals_cardano(u_ll, normal_direction, equations))) *
+           Trixi.norm(normal_direction)
 end
 
 @inline function Trixi.max_abs_speeds(u, equations::ShallowWaterExnerEquations2D)
@@ -444,8 +756,12 @@ Note, the inverse porosity scaling is put onto this quantity as a design decisio
     (; A_g, m_g) = equations.sediment_model
     v1, v2 = velocity(u, equations)
     v_norm = sqrt(v1^2 + v2^2)
+    h_s = zero(eltype(u))
+    if v_norm > eps(eltype(u))
+        h_s = equations.porosity_inv * A_g * v_norm^(m_g - 1)
+    end
 
-    return equations.porosity_inv * A_g * v_norm^(m_g - 1)
+    return h_s
 end
 
 """
@@ -622,6 +938,81 @@ end
         # Set the known eigenvalue
         λ4 = v2
     end
+
+    # Once coefficients are computed we apply the trigonometric Cardano method
+
+    # Create the coefficients of the depressed cubic equation t^3 + pt + q = 0
+    p = c - b^2 / 3
+    q = 2 * b^3 / 27 - b * c / 3 + d
+
+    # Check if only real roots are present
+    discriminant = -4 * p^3 - 27 * q^2
+    if discriminant <= 0
+        throw(DomainError("Negative discriminant in Cardano's formula. Would give complex roots."))
+    end
+
+    # Save common (but expensive) terms in the cubic root formula
+    theta = 3 * q / (2 * p) * sqrt(-3 / p)
+    phi = acos(theta) / 3
+    coeff = 2 * sqrt(-p / 3)
+    shift = -b / 3
+
+    # Use trigonometric form of Cardano to compute the three roots
+    # Note, the fourth eigenvalue λ4 is set above in the if statement
+    λ1 = shift + coeff * cos(phi)
+    λ2 = shift + coeff * cos(phi - 2 * π / 3)
+    λ3 = shift + coeff * cos(phi - 4 * π / 3)
+
+    return SVector(λ1, λ2, λ3, λ4)
+end
+
+# Trigonometric version of Cardano's method to compute the nontrivial roots of a cubic polynomial
+#   (x - vn)(x^3 + bx^2 + cx + d) = 0
+# where vn = v1 n1 + v2 n2 for the eigenvalues of the [`ShallowWaterExnerEquations2D`[(@ref)]
+# flux Jacobian in the normal direction.
+# This exploits that we know `vn` is an eigenvalue associated with the contact wave
+# in the Riemann fan. It is returned as the last entry of the eigenvalue vector
+# as expected by `dissipation_roe`.
+# Note, this routine needs the normalized `normal_direction` to be valid.
+@inline function eigvals_cardano(u, normal_direction::AbstractVector,
+                                 equations::ShallowWaterExnerEquations2D)
+    # Normalized normal vector
+    normal = normal_direction / Trixi.norm(normal_direction)
+
+    h = waterheight(u, equations)
+    v1, v2 = velocity(u, equations)
+    g = equations.gravity
+    r = equations.r
+
+    # Compute the effective sediment height
+    h_s = effective_sediment_height(u, equations)
+
+    # Compute gradients of q_s1 and q_s2 using automatic differentiation.
+    # Introduces a closure to make them a function of u only. This is necessary since the
+    # gradient function only accepts functions of one variable.
+    dq_s1_dh, dq_s1_dhv1, dq_s1_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
+                                                                                             equations)[1],
+                                                                     u)
+    dq_s2_dh, dq_s2_dhv1, dq_s2_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
+                                                                                             equations)[2],
+                                                                     u)
+
+    # Compute normal and tangential velocity and normal gradients
+    vn = normal[1] * v1 + normal[2] * v2
+    vt = -normal[2] * v1 + normal[1] * v2
+    dq_sn_dh = normal[1] * dq_s1_dh + normal[2] * dq_s2_dh
+    dq_sn_dhv1 = normal[1] * dq_s1_dhv1 + normal[2] * dq_s2_dhv1
+    dq_sn_dhv2 = normal[1] * dq_s1_dhv2 + normal[2] * dq_s2_dhv2
+
+    # Set the coefficients for the original cubic equation x^3 + bx^2 + cx + dx = 0
+    b = -2 * vn
+    c = vn^2 - g * (h + h_s) -
+        g * (h + h_s / r) * (normal[1] * dq_sn_dhv1 + normal[2] * dq_sn_dhv2)
+    d = -g * (h + h_s / r) *
+        (dq_sn_dh + vt * (-normal[2] * dq_sn_dhv1 + normal[1] * dq_sn_dhv2))
+
+    # Set the known eigenvalue
+    λ4 = vn
 
     # Once coefficients are computed we apply the trigonometric Cardano method
 
