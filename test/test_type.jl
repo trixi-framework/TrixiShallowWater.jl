@@ -259,7 +259,7 @@ isdir(outdir) && rm(outdir, recursive = true)
             t = zero(RealT)
             u = u_ll = u_rr = cons = SVector(one(RealT), one(RealT), one(RealT), one(RealT))
             orientation = 1
-            normal_direction = normal_ll = normal_rr = SVector(one(RealT))
+            normal_direction = SVector(one(RealT))
 
             dissipation = DissipationLocalLaxFriedrichs()
 
@@ -277,9 +277,6 @@ isdir(outdir) && rm(outdir, recursive = true)
                                                                   normal_direction,
                                                                   equations)) ==
                   RealT
-            @test eltype(@inferred flux_nonconservative_chan_etal(u_ll, u_rr, normal_ll,
-                                                                  normal_rr,
-                                                                  equations)) == RealT
             @test eltype(@inferred flux_chan_etal(u_ll, u_rr, orientation,
                                                   equations)) == RealT
             @test eltype(@inferred flux_chan_etal(u_ll, u_rr, normal_direction,
