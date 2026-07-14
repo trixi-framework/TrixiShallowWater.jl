@@ -92,7 +92,7 @@ coordinates_min = 0.0
 coordinates_max = 8.0
 
 mesh = TreeMesh(coordinates_min, coordinates_max,
-                initial_refinement_level = 7,
+                initial_refinement_level = 5,
                 n_cells_max = 10_000,
                 periodicity = false)
 
@@ -108,7 +108,7 @@ ode = semidiscretize(semi, tspan)
 
 summary_callback = SummaryCallback()
 
-analysis_interval = 1000
+analysis_interval = 10000
 analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
                                      save_analysis = false,
                                      extra_analysis_integrals = (energy_kinetic,
@@ -120,11 +120,11 @@ save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-amr_indicator = IndicatorLoehner(semi, variable = waterheight_pressure)
+amr_indicator = IndicatorLoehner(semi, variable = entropy)
 
 amr_controller = ControllerThreeLevel(semi, amr_indicator,
                                       base_level = 5,
-                                      max_level = 8, max_threshold = 0.05)
+                                      max_level = 8, max_threshold = 0.25)
 
 # positivity limiter necessary for this example with wetting and drying and AMR
 positivity_limiter = PositivityPreservingLimiterShallowWater(variables = (waterheight,))

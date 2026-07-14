@@ -917,16 +917,16 @@ end # 2LSWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_beach_amr.jl"),
                             l2=[
-                                0.17996513221136373,
-                                1.2405243366861927,
-                                6.760918237808445e-6
+                                1.22570505187571,
+                                4.9581241184022735,
+                                1.161315654378121e-5
                             ],
                             linf=[
-                                0.809798061281449,
-                                3.3967013076883963,
-                                0.00011674161724251064
+                                2.4550283772713746,
+                                9.75692621468066,
+                                0.00010020743187588721
                             ],
-                            tspan=(0.0, 0.05))
+                            tspan=(0.0, 0.85)) # longer time for the positivity in coarsening to fire
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
         @test_allocations(Trixi.rhs!, semi, sol, 1000)
