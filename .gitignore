@@ -31,8 +31,11 @@ coverage_report/
 **/solution_*.txt
 **/restart_*.txt
 .vscode/
-
 .DS_Store
+plan*/
+*.code-workspace
 
-run
-run/*
+run*/
+run*/*
+
+LocalPreferences.toml

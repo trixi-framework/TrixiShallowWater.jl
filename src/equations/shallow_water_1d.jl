@@ -431,6 +431,9 @@ end
 """
     flux_nonconservative_wintermeyer_etal(u_ll, u_rr, orientation::Integer,
                                           equations::ShallowWaterEquations1D)
+    flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
+                                          normal_direction::AbstractVector,
+                                          equations::ShallowWaterEquations1D)
 
 Non-symmetric two-point volume flux discretizing the nonconservative (source) term
 that contains the gradient of the bottom topography [`ShallowWaterEquations1D`](@ref).
@@ -461,8 +464,23 @@ Further details are available in the papers:
     return f
 end
 
+# While `normal_direction` isn't strictly necessary in 1D, certain solvers assume that
+# the normal component is incorporated into the numerical flux.
+#
+# See `Trixi.flux(u, normal_direction::AbstractVector, equations::AbstractEquations{1})` for a
+# similar implementation.
+@inline function Trixi.flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
+                                                             normal_direction::AbstractVector,
+                                                             equations::ShallowWaterEquations1D)
+    return normal_direction[1] *
+           flux_nonconservative_wintermeyer_etal(u_ll, u_rr, 1, equations)
+end
+
 """
     flux_nonconservative_fjordholm_etal(u_ll, u_rr, orientation::Integer,
+                                        equations::ShallowWaterEquations1D)
+    flux_nonconservative_fjordholm_etal(u_ll, u_rr,
+                                        normal_direction::AbstractVector,
                                         equations::ShallowWaterEquations1D)
 
 Non-symmetric two-point surface flux discretizing the nonconservative (source) term of
@@ -497,6 +515,18 @@ and for curvilinear 2D case in the paper:
                 0)
 
     return f
+end
+
+# While `normal_direction` isn't strictly necessary in 1D, certain solvers assume that
+# the normal component is incorporated into the numerical flux.
+#
+# See `Trixi.flux(u, normal_direction::AbstractVector, equations::AbstractEquations{1})` for a
+# similar implementation.
+@inline function Trixi.flux_nonconservative_fjordholm_etal(u_ll, u_rr,
+                                                           normal_direction::AbstractVector,
+                                                           equations::ShallowWaterEquations1D)
+    return normal_direction[1] *
+           flux_nonconservative_fjordholm_etal(u_ll, u_rr, 1, equations)
 end
 
 """
@@ -578,7 +608,9 @@ Further details on the hydrostatic reconstruction and its motivation can be foun
 end
 
 """
-    flux_fjordholm_etal(u_ll, u_rr, orientation,
+    flux_fjordholm_etal(u_ll, u_rr, orientation::Integer,
+                        equations::ShallowWaterEquations1D)
+    flux_fjordholm_etal(u_ll, u_rr, normal_direction::AbstractVector,
                         equations::ShallowWaterEquations1D)
 
 Total energy conservative (mathematical entropy for shallow water equations). When the bottom topography
@@ -610,8 +642,20 @@ Details are available in Eq. (4.1) in the paper:
     return SVector(f1, f2, 0)
 end
 
+# While `normal_direction` isn't strictly necessary in 1D, certain solvers assume that
+# the normal component is incorporated into the numerical flux.
+#
+# See `Trixi.flux(u, normal_direction::AbstractVector, equations::AbstractEquations{1})` for a
+# similar implementation.
+@inline function Trixi.flux_fjordholm_etal(u_ll, u_rr, normal_direction::AbstractVector,
+                                           equations::ShallowWaterEquations1D)
+    return normal_direction[1] * flux_fjordholm_etal(u_ll, u_rr, 1, equations)
+end
+
 """
-    flux_wintermeyer_etal(u_ll, u_rr, orientation,
+    flux_wintermeyer_etal(u_ll, u_rr, orientation::Integer,
+                          equations::ShallowWaterEquations1D)
+    flux_wintermeyer_etal(u_ll, u_rr, normal_direction::AbstractVector,
                           equations::ShallowWaterEquations1D)
 
 Total energy conservative (mathematical entropy for shallow water equations) split form.
@@ -644,6 +688,17 @@ Further details are available in Theorem 1 of the paper:
     f2 = f1 * v_avg + p_avg
 
     return SVector(f1, f2, 0)
+end
+
+# While `normal_direction` isn't strictly necessary in 1D, certain solvers assume that
+# the normal component is incorporated into the numerical flux.
+#
+# See `Trixi.flux(u, normal_direction::AbstractVector, equations::AbstractEquations{1})` for a
+# similar implementation.
+@inline function Trixi.flux_wintermeyer_etal(u_ll, u_rr,
+                                             normal_direction::AbstractVector,
+                                             equations::ShallowWaterEquations1D)
+    return normal_direction[1] * flux_wintermeyer_etal(u_ll, u_rr, 1, equations)
 end
 
 """

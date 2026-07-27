@@ -20,7 +20,6 @@ include("solvers/subcell_limiters.jl")
 include("solvers/dgsem_p4est/containers.jl")
 include("solvers/dgsem_p4est/dg_2d.jl")
 include("callbacks_stage/callbacks_stage.jl")
-include("callbacks_step/callbacks_step.jl")
 
 # Export types/functions that define the public API of TrixiShallowWater.jl
 export ShallowWaterEquations1D, ShallowWaterEquations2D,

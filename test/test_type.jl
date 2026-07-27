@@ -55,15 +55,26 @@ isdir(outdir) && rm(outdir, recursive = true)
                                                                          orientation,
                                                                          equations)) ==
                   RealT
+            @test eltype(@inferred flux_nonconservative_wintermeyer_etal(u_ll, u_rr,
+                                                                         normal_direction,
+                                                                         equations)) ==
+                  RealT
             @test eltype(@inferred flux_nonconservative_fjordholm_etal(u_ll, u_rr,
                                                                        orientation,
+                                                                       equations)) == RealT
+            @test eltype(@inferred flux_nonconservative_fjordholm_etal(u_ll, u_rr,
+                                                                       normal_direction,
                                                                        equations)) == RealT
             @test eltype(@inferred flux_nonconservative_audusse_etal(u_ll, u_rr,
                                                                      orientation,
                                                                      equations)) == RealT
             @test eltype(@inferred flux_fjordholm_etal(u_ll, u_rr, orientation,
                                                        equations)) == RealT
+            @test eltype(@inferred flux_fjordholm_etal(u_ll, u_rr, normal_direction,
+                                                       equations)) == RealT
             @test eltype(@inferred flux_wintermeyer_etal(u_ll, u_rr, orientation,
+                                                         equations)) == RealT
+            @test eltype(@inferred flux_wintermeyer_etal(u_ll, u_rr, normal_direction,
                                                          equations)) == RealT
 
             @test eltype(eltype(@inferred hydrostatic_reconstruction_audusse_etal(u_ll,

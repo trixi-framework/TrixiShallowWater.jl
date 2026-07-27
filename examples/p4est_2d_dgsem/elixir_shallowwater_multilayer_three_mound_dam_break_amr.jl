@@ -165,10 +165,14 @@ amr_controller = ControllerThreeLevel(semi, amr_indicator,
                                       med_level = 1, med_threshold = 0.1,
                                       max_level = 3, max_threshold = 0.25)
 
+# positivity limiter necessary for this example with wetting and drying and AMR
+positivity_limiter = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
+
 amr_callback = AMRCallback(semi, amr_controller,
                            interval = 5,
                            adapt_initial_condition = false,
-                           adapt_initial_condition_only_refine = false)
+                           adapt_initial_condition_only_refine = false,
+                           limiter! = positivity_limiter)
 
 callbacks = CallbackSet(summary_callback,
                         analysis_callback,
@@ -179,10 +183,7 @@ callbacks = CallbackSet(summary_callback,
 
 ###############################################################################
 # run the simulation
-
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
-
-sol = solve(ode, SSPRK43(; stage_limiter!);
+sol = solve(ode, SSPRK43(; stage_limiter! = positivity_limiter);
             ode_default_options()...,
             callback = callbacks,
             dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
