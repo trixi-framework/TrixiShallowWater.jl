@@ -19,7 +19,7 @@ differs from the reference below.
 The water height and speed functions used here, are adapted from the initial condition
 found in section 5.2 of the paper:
   - Andreas Bollermann, Sebastian Noelle, Maria Lukáčová-Medvid’ová (2011)
-    Finite volume evolution Galerkin methods for the shallow water equations with dry beds\n
+    Finite volume evolution Galerkin methods for the shallow water equations with dry beds
     [DOI: 10.4208/cicp.220210.020710a](https://dx.doi.org/10.4208/cicp.220210.020710a)
 """
 function initial_condition_beach(x, t, equations::ShallowWaterEquations1D)
@@ -134,6 +134,6 @@ callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, sav
 # run the simulation
 
 sol = solve(ode, SSPRK43(; stage_limiter! = positivity_limiter);
-            dt = 1.0, # solve needs some value here but it will be overwritten by the stepsize_callback
+            dt = 1, # solve needs some value here but it will be overwritten by the stepsize_callback
             adaptive = false,
             ode_default_options()..., callback = callbacks);
