@@ -11,7 +11,7 @@ equations = ShallowWaterEquations1D(gravity = 9.812)
 """
     initial_condition_beach(x, t, equations:: ShallowWaterEquations1D)
 
-Initial condition to simulate a wave running towards a beach and crashing. Difficult test
+Initial condition to simulate a wave propagating toward a beach and breaking. Difficult test
 including both wetting and drying in the domain using slip wall boundary conditions.
 The bottom topography is altered to be differentiable on the domain [0,8] and
 differs from the reference below.
