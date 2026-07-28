@@ -20,7 +20,7 @@ differs from the reference below.
 The water height and speed functions used here, are adapted from the initial condition
 found in section 5.2 of the paper:
   - Andreas Bollermann, Sebastian Noelle, Maria Lukáčová-Medvidová (2011)
-    Finite volume evolution Galerkin methods for the shallow water equations with dry beds\n
+    Finite volume evolution Galerkin methods for the shallow water equations with dry beds
     [DOI: 10.4208/cicp.220210.020710a](https://dx.doi.org/10.4208/cicp.220210.020710a)
 """
 function initial_condition_beach(x, t, equations::ShallowWaterMultiLayerEquations1D)
@@ -92,7 +92,7 @@ coordinates_min = 0.0
 coordinates_max = 8.0
 
 mesh = TreeMesh(coordinates_min, coordinates_max,
-                initial_refinement_level = 7,
+                initial_refinement_level = 5,
                 n_cells_max = 10_000,
                 periodicity = false)
 
@@ -108,7 +108,7 @@ ode = semidiscretize(semi, tspan)
 
 summary_callback = SummaryCallback()
 
-analysis_interval = 1000
+analysis_interval = 10000
 analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
                                      save_analysis = false,
                                      extra_analysis_integrals = (energy_kinetic,
@@ -120,12 +120,30 @@ save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution)
+amr_indicator = IndicatorLoehner(semi, variable = entropy)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
+amr_controller = ControllerThreeLevel(semi, amr_indicator,
+                                      base_level = 5,
+                                      max_level = 8, max_threshold = 0.25)
+
+# positivity limiter necessary for this example with wetting and drying and AMR
+positivity_limiter = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
+
+amr_callback = AMRCallback(semi, amr_controller,
+                           interval = 5,
+                           adapt_initial_condition = true,
+                           adapt_initial_condition_only_refine = true,
+                           limiter! = positivity_limiter)
+
+stepsize_callback = StepsizeCallback(cfl = 1.0)
+
+callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
+                        amr_callback, stepsize_callback)
 
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, SSPRK43(; stage_limiter!);
+sol = solve(ode, SSPRK43(; stage_limiter! = positivity_limiter);
+            dt = 1, # solve needs some value here but it will be overwritten by the stepsize_callback
+            adaptive = false,
             ode_default_options()..., callback = callbacks);
