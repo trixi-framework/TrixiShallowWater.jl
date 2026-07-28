@@ -20,7 +20,7 @@ differs from the reference below.
 The water height and speed functions used here, are adapted from the initial condition
 found in section 5.2 of the paper:
   - Andreas Bollermann, Sebastian Noelle, Maria Lukáčová-Medvidová (2011)
-    Finite volume evolution Galerkin methods for the shallow water equations with dry beds\n
+    Finite volume evolution Galerkin methods for the shallow water equations with dry beds
     [DOI: 10.4208/cicp.220210.020710a](https://dx.doi.org/10.4208/cicp.220210.020710a)
 """
 function initial_condition_beach(x, t, equations::ShallowWaterMultiLayerEquations1D)
