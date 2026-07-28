@@ -6,11 +6,10 @@ using TrixiShallowWater
 ###############################################################################
 # Semidiscretization of the shallow water equations
 
-# By passing only a single value for rhos, the system recovers the standard shallow water equations
-equations = ShallowWaterMultiLayerEquations1D(gravity = 9.812, rhos = 1.0)
+equations = ShallowWaterEquations1D(gravity = 9.812)
 
 """
-    initial_condition_beach(x, t, equations:: ShallowWaterMultiLayerEquations1D)
+    initial_condition_beach(x, t, equations:: ShallowWaterEquations1D)
 
 Initial condition to simulate a wave propagating toward a beach and breaking. Difficult test
 including both wetting and drying in the domain using slip wall boundary conditions.
@@ -19,11 +18,11 @@ differs from the reference below.
 
 The water height and speed functions used here, are adapted from the initial condition
 found in section 5.2 of the paper:
-  - Andreas Bollermann, Sebastian Noelle, Maria Lukáčová-Medvidová (2011)
-    Finite volume evolution Galerkin methods for the shallow water equations with dry beds\n
+  - Andreas Bollermann, Sebastian Noelle, Maria Lukáčová-Medvid’ová (2011)
+    Finite volume evolution Galerkin methods for the shallow water equations with dry beds
     [DOI: 10.4208/cicp.220210.020710a](https://dx.doi.org/10.4208/cicp.220210.020710a)
 """
-function initial_condition_beach(x, t, equations::ShallowWaterMultiLayerEquations1D)
+function initial_condition_beach(x, t, equations::ShallowWaterEquations1D)
     D = 1
     delta = 0.02
     gamma = sqrt((3 * delta) / (4 * D))
@@ -45,8 +44,8 @@ function initial_condition_beach(x, t, equations::ShallowWaterMultiLayerEquation
     # It is mandatory to shift the water level at dry areas to make sure the water height h
     # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
     # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
-    # with a default value of 5*eps() ≈ 1e-15 in double precision, is set in the constructor above
-    # for the ShallowWaterMultiLayerEquations1D and added to the initial condition if h = 0.
+    # with a default value of 500*eps() ≈ 1e-13 in double precision, is set in the constructor above
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
     # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v, b), equations)
@@ -58,19 +57,10 @@ boundary_condition = boundary_condition_slip_wall
 ###############################################################################
 # Get the DG approximation space
 
-volume_flux = (flux_ersing_etal, flux_nonconservative_ersing_etal)
-# Up to Trixi.jl version 0.13.0, `max_abs_speed_naive` was used as the default wave speed estimate of
-# `DissipationLocalLaxFriedrichs(), i.e., `DissipationLocalLaxFriedrichs(max_abs_speed = max_abs_speed_naive)`.
-# In the `StepsizeCallback`, though, the less diffusive `max_abs_speeds` is employed which is consistent with `max_abs_speed`.
-# Thus, we exchanged in PR#2458 of Trixi.jl the default wave speed used in the LLF flux and dissipation operator to `max_abs_speed`.
-# To ensure that every example still runs we specify explicitly `DissipationLocalLaxFriedrichs(max_abs_speed_naive)`.
-# We remark, however, that the now default `max_abs_speed` is in general recommended due to compliance with the
-# `StepsizeCallback` (CFL-Condition) and less diffusion.
-surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_etal,
-                                                                  DissipationLocalLaxFriedrichs(max_abs_speed_naive)),
-                                              hydrostatic_reconstruction_ersing_etal),
-                FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
-                                              hydrostatic_reconstruction_ersing_etal))
+volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
+surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle,
+                                              hydrostatic_reconstruction_chen_noelle),
+                flux_nonconservative_chen_noelle)
 
 basis = LobattoLegendreBasis(3)
 
@@ -92,7 +82,7 @@ coordinates_min = 0.0
 coordinates_max = 8.0
 
 mesh = TreeMesh(coordinates_min, coordinates_max,
-                initial_refinement_level = 7,
+                initial_refinement_level = 6,
                 n_cells_max = 10_000,
                 periodicity = false)
 
@@ -108,7 +98,7 @@ ode = semidiscretize(semi, tspan)
 
 summary_callback = SummaryCallback()
 
-analysis_interval = 1000
+analysis_interval = 10000
 analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
                                      save_analysis = false,
                                      extra_analysis_integrals = (energy_kinetic,
@@ -120,12 +110,30 @@ save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution)
+amr_indicator = IndicatorLoehner(semi, variable = waterheight)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
+amr_controller = ControllerThreeLevel(semi, amr_indicator,
+                                      base_level = 5,
+                                      max_level = 8, max_threshold = 0.05)
+
+# positivity limiter necessary for this example with wetting and drying and AMR
+positivity_limiter = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
+
+amr_callback = AMRCallback(semi, amr_controller,
+                           interval = 5,
+                           adapt_initial_condition = true,
+                           adapt_initial_condition_only_refine = true,
+                           limiter! = positivity_limiter)
+
+stepsize_callback = StepsizeCallback(cfl = 1.0)
+
+callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
+                        amr_callback, stepsize_callback)
 
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, SSPRK43(; stage_limiter!);
+sol = solve(ode, SSPRK43(; stage_limiter! = positivity_limiter);
+            dt = 1, # solve needs some value here but it will be overwritten by the stepsize_callback
+            adaptive = false,
             ode_default_options()..., callback = callbacks);
