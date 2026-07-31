@@ -7,53 +7,53 @@ using TrixiShallowWater
 # Semidiscretization of the shallow water equations
 
 # By passing only a single value for rhos, the system recovers the standard shallow water equations
-equations = ShallowWaterMultiLayerEquations1D(gravity = 9.81, rhos = 1.0)
+equations = ShallowWaterMultiLayerEquations1D(gravity = 9.812, rhos = 1.0)
 
 """
-    initial_condition_parabolic_bowl(x, t, equations:: ShallowWaterMultiLayerEquations1D)
+    initial_condition_beach(x, t, equations:: ShallowWaterMultiLayerEquations1D)
 
-Well-known initial condition to test the [`hydrostatic_reconstruction_ersing_etal`](@ref) and its
-wet-dry mechanics. This test has analytical solutions. The initial condition is defined by the
-analytical solution at time t=0. The bottom topography defines a bowl and the water level is given
-by an oscillating lake.
+Initial condition to simulate a wave propagating toward a beach and breaking. Difficult test
+including both wetting and drying in the domain using slip wall boundary conditions.
+The bottom topography is altered to be differentiable on the domain [0,8] and
+differs from the reference below.
 
-The original test and its analytical solution in two dimensions were first presented in
-- William C. Thacker (1981)
-  Some exact solutions to the nonlinear shallow-water wave equations
-  [DOI: 10.1017/S0022112081001882](https://doi.org/10.1017/S0022112081001882).
-
-The particular setup below is taken from Section 6.2 of
-- Niklas Wintermeyer, Andrew R. Winters, Gregor J. Gassner and Timothy Warburton (2018)
-  An entropy stable discontinuous Galerkin method for the shallow water equations on
-  curvilinear meshes with wet/dry fronts accelerated by GPUs
-  [DOI: 10.1016/j.jcp.2018.08.038](https://doi.org/10.1016/j.jcp.2018.08.038).
+The water height and speed functions used here, are adapted from the initial condition
+found in section 5.2 of the paper:
+  - Andreas Bollermann, Sebastian Noelle, Maria Lukáčová-Medvidová (2011)
+    Finite volume evolution Galerkin methods for the shallow water equations with dry beds
+    [DOI: 10.4208/cicp.220210.020710a](https://dx.doi.org/10.4208/cicp.220210.020710a)
 """
-function initial_condition_parabolic_bowl(x, t,
-                                          equations::ShallowWaterMultiLayerEquations1D)
-    a = 1
-    h_0 = 0.1
-    sigma = 0.5
-    ω = sqrt(2 * equations.gravity * h_0) / a
+function initial_condition_beach(x, t, equations::ShallowWaterMultiLayerEquations1D)
+    D = 1
+    delta = 0.02
+    gamma = sqrt((3 * delta) / (4 * D))
+    x_a = sqrt((4 * D) / (3 * delta)) * acosh(sqrt(20))
 
-    v = -sigma * ω * sin(ω * t)
+    f = D + 40 * delta * sech(gamma * (8 * x[1] - x_a))^2
 
-    b = h_0 * x[1]^2 / a^2
+    # steep curved beach
+    b = 0.01 + 99 / 409600 * 4^x[1]
 
-    H = sigma * h_0 / a^2 * (2 * x[1] * cos(ω * t) - sigma) + h_0
+    if x[1] >= 6
+        H = b
+        v = 0.0
+    else
+        H = f
+        v = sqrt(equations.gravity / D) * H
+    end
 
-    #=
-    It is mandatory to shift the water level at dry areas to make sure the water height h
-    stays positive. The system would not be stable for h set to a hard 0 due to division by h in
-    the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
-    with a default value of 5*eps() ≈ 1e-15 in double precision, is set in the constructor above
-    for the ShallowWaterMultiLayerEquations1D and added to the initial condition if h = 0.
-    This default value can be changed within the constructor call depending on the simulation setup.
-    =#
+    # It is mandatory to shift the water level at dry areas to make sure the water height h
+    # stays positive. The system would not be stable for h set to a hard 0 due to division by h in
+    # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
+    # with a default value of 5*eps() ≈ 1e-15 in double precision, is set in the constructor above
+    # for the ShallowWaterMultiLayerEquations1D and added to the initial condition if h = 0.
+    # This default value can be changed within the constructor call depending on the simulation setup.
     H = max(H, b + equations.threshold_limiter)
     return prim2cons(SVector(H, v, b), equations)
 end
 
-initial_condition = initial_condition_parabolic_bowl
+initial_condition = initial_condition_beach
+boundary_condition = boundary_condition_slip_wall
 
 ###############################################################################
 # Get the DG approximation space
@@ -72,7 +72,7 @@ surface_flux = (FluxHydrostaticReconstruction(FluxPlusDissipation(flux_ersing_et
                 FluxHydrostaticReconstruction(flux_nonconservative_ersing_etal,
                                               hydrostatic_reconstruction_ersing_etal))
 
-basis = LobattoLegendreBasis(5)
+basis = LobattoLegendreBasis(3)
 
 indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
                                                      alpha_max = 0.5,
@@ -86,18 +86,18 @@ volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
 solver = DGSEM(basis, surface_flux, volume_integral)
 
 ###############################################################################
-# Create the TreeMesh for the domain [-2, 2]
+# Create the TreeMesh for the domain [0, 8]
 
-coordinates_min = -2.0
-coordinates_max = 2.0
+coordinates_min = 0.0
+coordinates_max = 8.0
 
 mesh = TreeMesh(coordinates_min, coordinates_max,
-                initial_refinement_level = 6,
-                periodicity = true)
+                initial_refinement_level = 5,
+                periodicity = false)
 
 # create the semi discretization object
 semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
-                                    boundary_conditions = boundary_condition_periodic)
+                                    boundary_conditions = boundary_condition)
 
 ###############################################################################
 # ODE solvers, callbacks etc.
@@ -107,7 +107,7 @@ ode = semidiscretize(semi, tspan)
 
 summary_callback = SummaryCallback()
 
-analysis_interval = 1000
+analysis_interval = 10000
 analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
                                      save_analysis = false,
                                      extra_analysis_integrals = (energy_kinetic,
@@ -115,16 +115,34 @@ analysis_callback = AnalysisCallback(semi, interval = analysis_interval,
 
 alive_callback = AliveCallback(analysis_interval = analysis_interval)
 
-save_solution = SaveSolutionCallback(interval = 1000,
+save_solution = SaveSolutionCallback(dt = 0.5,
                                      save_initial_solution = true,
                                      save_final_solution = true)
 
-callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution)
+amr_indicator = IndicatorLoehner(semi, variable = entropy)
 
-stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
+amr_controller = ControllerThreeLevel(semi, amr_indicator,
+                                      base_level = 5,
+                                      max_level = 8, max_threshold = 0.25)
+
+# positivity limiter necessary for this example with wetting and drying and AMR
+positivity_limiter = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
+
+amr_callback = AMRCallback(semi, amr_controller,
+                           interval = 5,
+                           adapt_initial_condition = true,
+                           adapt_initial_condition_only_refine = true,
+                           limiter! = positivity_limiter)
+
+stepsize_callback = StepsizeCallback(cfl = 1.0)
+
+callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
+                        amr_callback, stepsize_callback)
 
 ###############################################################################
 # run the simulation
 
-sol = solve(ode, SSPRK43(; stage_limiter!);
+sol = solve(ode, SSPRK43(; stage_limiter! = positivity_limiter);
+            dt = 1, # solve needs some value here but it will be overwritten by the stepsize_callback
+            adaptive = false,
             ode_default_options()..., callback = callbacks);

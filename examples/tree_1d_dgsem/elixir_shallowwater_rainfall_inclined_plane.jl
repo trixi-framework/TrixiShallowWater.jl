@@ -78,7 +78,6 @@ coordinates_min = 0.0
 coordinates_max = 2000.0
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 7,
-                n_cells_max = 10_000,
                 periodicity = false)
 
 boundary_conditions = (; x_neg = boundary_condition_slip_wall,

@@ -237,6 +237,8 @@ function limiter_shallow_water!(u, threshold::Real, variable,
             end
 
             # detect if limiting is necessary
+            # TODO: Determine default thresholds for Float32
+            # (Currently default thresholds are only provided for Float64)
             value_min < threshold - eps() || continue
 
             u_mean = Trixi.compute_u_mean(u, element, mesh, equations, dg, cache)
@@ -309,6 +311,8 @@ function limiter_shallow_water!(u, threshold::Real, variable,
                     u_node = get_node_vars(u, equations, dg, i, j, new_element_id)
                     value_min = min(value_min, variable(u_node, equations)[m])
                 end
+                # TODO: Determine default thresholds for Float32
+                # (Currently default thresholds are only provided for Float64)
                 value_min < threshold - eps() || continue # Detect if limiting is necessary
 
                 theta = min(theta, (value_mean - threshold) / (value_mean - value_min))
@@ -362,6 +366,8 @@ function limiter_shallow_water!(u, threshold::Real, variable,
                 u_node = get_node_vars(u, equations, dg, i, j, element)
                 value_min = min(value_min, variable(u_node, equations)[m])
             end
+            # TODO: Determine default thresholds for Float32
+            # (Currently default thresholds are only provided for Float64)
             value_min < threshold - eps() || continue # Detect if limiting is necessary
 
             u_mean = Trixi.compute_u_mean(u, element, mesh, equations, dg, cache)
