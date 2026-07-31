@@ -117,7 +117,6 @@ coordinates_max = 38.0
 
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 8,
-                n_cells_max = 10_000,
                 periodicity = false)
 
 # The semi-discretization object combines the mesh, equations, initial condition,

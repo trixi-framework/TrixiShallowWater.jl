@@ -113,7 +113,6 @@ coordinates_min = 0.0
 coordinates_max = 32.0  # This needs to be a multiple of 2 to match the corners of the bottom topography
 mesh = TreeMesh(coordinates_min, coordinates_max,
                 initial_refinement_level = 7,
-                n_cells_max = 10_000,
                 periodicity = false)
 
 # Create the semi discretization object
