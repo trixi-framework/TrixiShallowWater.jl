@@ -134,10 +134,7 @@ end
     flux_nonconservative_chan_etal(u_ll, u_rr, orientation::Integer,
                                    equations::ShallowWaterEquationsQuasi1D)
     flux_nonconservative_chan_etal(u_ll, u_rr, normal_direction::AbstractVector,
-                                   equations::ShallowWaterEquationsQuasi1D)    
-    flux_nonconservative_chan_etal(u_ll, u_rr, 
-                                   normal_ll::AbstractVector, normal_rr::AbstractVector,
-                                   equations::ShallowWaterEquationsQuasi1D)    
+                                   equations::ShallowWaterEquationsQuasi1D)
 
 Non-symmetric two-point volume flux discretizing the nonconservative (source) term
 that contains the gradient of the bottom topography [`ShallowWaterEquationsQuasi1D`](@ref) 
@@ -170,14 +167,6 @@ end
                                                       equations::ShallowWaterEquationsQuasi1D)
     return normal_direction[1] *
            flux_nonconservative_chan_etal(u_ll, u_rr, 1, equations)
-end
-
-@inline function Trixi.flux_nonconservative_chan_etal(u_ll, u_rr,
-                                                      normal_ll::AbstractVector,
-                                                      normal_rr::AbstractVector,
-                                                      equations::ShallowWaterEquationsQuasi1D)
-    # normal_ll should be equal to normal_rr                                                
-    return flux_nonconservative_chan_etal(u_ll, u_rr, normal_ll, equations)
 end
 
 """
