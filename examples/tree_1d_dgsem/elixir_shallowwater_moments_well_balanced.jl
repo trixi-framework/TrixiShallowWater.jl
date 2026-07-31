@@ -47,7 +47,6 @@ coordinates_max = 4.0
 mesh = TreeMesh(coordinates_min,
                 coordinates_max,
                 initial_refinement_level = 5, # 2^refinement_level
-                n_cells_max = 10_000,
                 periodicity = false)
 
 # create the semi discretization object

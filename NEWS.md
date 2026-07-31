@@ -5,6 +5,20 @@ TrixiShallowWater.jl follows the interpretation of
 used in the Julia ecosystem. Notable changes will be documented in this file
 for human readability.
 
+
+## Changes when updating to v0.3 from v0.2.x
+
+#### Added
+
+#### Changed
+- Trixi.jl v0.17.0 is now required, resulting in changes to the signature of `NoNConservative` jump terms ([#160]).
+  Moreover, the method of `flux_nonconservative_chan_etal` accepting two normals was removed ([#164]).
+
+#### Deprecated
+
+#### Removed
+
+
 ## Changes in the v0.2 lifecycle
 
 #### Added
@@ -22,6 +36,7 @@ for human readability.
 
 #### Removed
 
+
 ## Changes when updating to v0.2 from v0.1.x
 
 #### Added
@@ -36,6 +51,7 @@ for human readability.
 #### Deprecated
 
 #### Removed
+
 
 ## Changes in the v0.1 lifecycle
 
