@@ -31,7 +31,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_ec.jl with initial_condition_weak_blast_wave" begin
@@ -50,7 +50,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced.jl" begin
@@ -65,7 +65,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced.jl with FluxHydrostaticReconstruction" begin
@@ -90,7 +90,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced.jl with flux_nonconservative_wintermeyer_etal" begin
@@ -107,7 +107,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced_wet_dry.jl with FluxHydrostaticReconstruction" begin
@@ -128,7 +128,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             atol=2000 * eps())
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms.jl" begin
@@ -147,7 +147,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.025))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms.jl with flux_hll" begin
@@ -168,7 +168,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                           flux_nonconservative_fjordholm_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms.jl with flux_nonconservative_wintermeyer_etal" begin
@@ -189,7 +189,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.025))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms.jl with dissipation_roe" begin
@@ -211,7 +211,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.025))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms_dirichlet.jl" begin
@@ -230,7 +230,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.025))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_source_terms_dirichlet.jl with FluxHydrostaticReconstruction" begin
@@ -252,7 +252,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.025))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced_nonperiodic.jl with Dirichlet boundary" begin
@@ -273,7 +273,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                                           flux_nonconservative_fjordholm_etal),)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced_nonperiodic.jl with wall boundary" begin
@@ -295,7 +295,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             boundary_condition=boundary_condition_slip_wall)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_moving_water_subsonic" begin
@@ -314,7 +314,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_moving_water_subsonic (pressure inflow / momentum outflow)" begin
@@ -335,7 +335,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_moving_water_transonic" begin
@@ -354,7 +354,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_moving_water_shock" begin
@@ -373,7 +373,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_shock_capturing.jl" begin
@@ -392,7 +392,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.05))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_beach.jl" begin
@@ -411,7 +411,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             atol=1e-7) # see https://github.com/trixi-framework/Trixi.jl/issues/1617
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_parabolic_bowl.jl" begin
@@ -430,7 +430,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.05))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_rainfall_inclined_plane.jl" begin
@@ -450,7 +450,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 1.0))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_rainfall_inclined_plane.jl with GreenAmptModel" begin
@@ -471,7 +471,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 1.0))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_beach_amr.jl" begin
@@ -489,7 +489,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.05))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 end # SWE
 
@@ -512,7 +512,7 @@ end # SWE
                             tspan=(0.0, 0.05))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_quasi_1d_well_balanced.jl" begin
@@ -534,7 +534,7 @@ end # SWE
                             atol=1e-12)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_quasi_1d_discontinuous.jl" begin
@@ -554,7 +554,7 @@ end # SWE
                             ],)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 end
 
@@ -571,7 +571,7 @@ end
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_twolayer_well_balanced.jl" begin
@@ -586,7 +586,7 @@ end
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_twolayer_dam_break.jl with FluxLaxFriedrichs(max_abs_speed)" begin
@@ -603,7 +603,7 @@ end
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 end # 2LSWE
 
@@ -632,7 +632,7 @@ end # 2LSWE
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_convergence.jl with FluxLaxFriedrichs(max_abs_speed_naive)" begin
@@ -668,7 +668,7 @@ end # 2LSWE
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_convergence.jl with hydrostatic_reconstruction_ersing_etal" begin
@@ -707,7 +707,7 @@ end # 2LSWE
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced.jl" begin
@@ -734,7 +734,7 @@ end # 2LSWE
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry.jl" begin
@@ -757,7 +757,7 @@ end # 2LSWE
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_well_balanced_wet_dry.jl with perturbation" begin
@@ -781,7 +781,7 @@ end # 2LSWE
                             perturbation=true)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_dam_break_ec.jl" begin
@@ -808,7 +808,7 @@ end # 2LSWE
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_dam_break_es.jl" begin
@@ -835,7 +835,7 @@ end # 2LSWE
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_dam_break_es_dry.jl" begin
@@ -870,7 +870,7 @@ end # 2LSWE
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_beach.jl" begin
@@ -890,7 +890,7 @@ end # 2LSWE
                             atol=1e-5)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_parabolic_bowl.jl" begin
@@ -910,7 +910,7 @@ end # 2LSWE
                             atol=1e-9)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_multilayer_beach_amr.jl" begin
@@ -931,7 +931,7 @@ end # 2LSWE
                             atol=1e-2) # see https://github.com/trixi-framework/Trixi.jl/issues/1617
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 end # MLSWE
 
@@ -951,7 +951,7 @@ end # MLSWE
                             ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_convergence_mpm.jl with Roe dissipation" begin
@@ -972,7 +972,7 @@ end # MLSWE
                                           flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_convergence_mpm.jl with LLF dissipation" begin
@@ -1000,7 +1000,7 @@ end # MLSWE
                                           flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_well_balanced.jl" begin
@@ -1018,7 +1018,7 @@ end # MLSWE
                             ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_well_balanced.jl with Roe dissipation" begin
@@ -1039,7 +1039,7 @@ end # MLSWE
                                           flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_channel.jl" begin
@@ -1057,7 +1057,7 @@ end # MLSWE
                             ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_channel.jl with EC fluxes" begin
@@ -1077,7 +1077,7 @@ end # MLSWE
                                           flux_nonconservative_ersing_etal))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_exner_dam_break_symmetric.jl" begin
@@ -1095,7 +1095,7 @@ end # MLSWE
                             ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 end # SWE-Exner
 
@@ -1161,7 +1161,7 @@ end # SWE-Exner
                             ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_moments_smooth_wave.jl with slip friction" begin
@@ -1184,7 +1184,7 @@ end # SWE-Exner
                             source_terms=source_term_newtonian_slip_friction)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_moments_well_balanced.jl" begin
@@ -1206,7 +1206,7 @@ end # SWE-Exner
                             ])
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_linearized_moments_well_balanced.jl" begin
@@ -1231,7 +1231,7 @@ end # SWE-Exner
                                                                               n_moments = 2))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 end # SWME
 end # TreeMesh1D

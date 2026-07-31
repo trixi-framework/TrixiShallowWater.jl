@@ -34,7 +34,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.05))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced.jl" begin
@@ -55,7 +55,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.25))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_well_balanced_wet_dry.jl" begin
@@ -77,7 +77,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             atol=1e-12)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_conical_island.jl" begin
@@ -98,7 +98,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.025))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_shallowwater_parabolic_bowl.jl" begin
@@ -119,7 +119,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                             tspan=(0.0, 0.025), cells_per_dimension=(40, 40))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 end # SWE
 end # StructuredMesh2D

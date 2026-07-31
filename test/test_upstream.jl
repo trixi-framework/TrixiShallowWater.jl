@@ -33,7 +33,7 @@ isdir(outdir) && rm(outdir, recursive = true)
                         tspan=(0.0, 0.25))
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
-    @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
 end
 
 @trixi_testset "TreeMesh1D: elixir_shallowwater_well_balanced_nonperiodic.jl with wall boundary" begin
@@ -53,7 +53,7 @@ end
                         boundary_condition=boundary_condition_slip_wall)
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
-    @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
 end
 
 # Shallow water wet/dry 2D
@@ -76,7 +76,7 @@ end
                         tspan=(0.0, 0.025))
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
-    @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
 end
 # Unstructured2D
 @trixi_testset "Unstructured2D: elixir_shallowwater_wall_bc_shockcapturing.jl" begin
@@ -100,7 +100,7 @@ end
                                       flux_nonconservative_audusse_etal))
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
-    @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
 end
 # Structured2D
 @trixi_testset "Structured2D: elixir_shallowwater_conical_island.jl" begin
@@ -121,7 +121,7 @@ end
                         tspan=(0.0, 0.025))
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
-    @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
 end
 # P4estMesh2D - AMR
 @trixi_testset "P4estMesh2D: elixir_shallowwater_perturbation_amr.jl" begin
@@ -142,7 +142,7 @@ end
                         tspan=(0.0, 0.025))
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
-    @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
 end
 # P4estMesh2D - AMR with positivity limiter
 @trixi_testset "P4estMesh2D: elixir_shallowwater_multilayer_perturbation_wet_dry_amr.jl" begin
@@ -162,7 +162,7 @@ end
 
     # Ensure that we do not have excessive memory allocations
     # (e.g., from type instabilities)
-    @test_allocations(Trixi.rhs!, semi, sol, 1000)
+    @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
 end
 # P4estMesh2D - Subcell limiting
 @trixi_testset "P4estMesh2D: elixir_shallowwater_multilayer_blast_wet_dry_sc_subcell.jl" begin
@@ -191,7 +191,7 @@ end
     # integrator which are not *recorded* for the methods from
     # OrdinaryDiffEq.jl
     # Corresponding issue: https://github.com/trixi-framework/Trixi.jl/issues/1877
-    @test_allocations(Trixi.rhs!, semi, sol, 15000)
+    @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 15000)
 end
 
 # Clean up afterwards: delete output directory
