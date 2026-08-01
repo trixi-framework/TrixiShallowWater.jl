@@ -1281,7 +1281,7 @@ end # SWME
                             abstol=1e-13, reltol=1e-13)
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 end # HYPSM
 end # TreeMesh1D
