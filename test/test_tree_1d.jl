@@ -1257,7 +1257,7 @@ end # SWME
                             abstol=1e-13, reltol=1e-13, tspan=(0.0, 0.01))
         # Ensure that we do not have excessive memory allocations
         # (e.g., from type instabilities)
-        @test_allocations(Trixi.rhs!, semi, sol, 1000)
+        @test_allocations(Trixi.rhs_hyperbolic!, semi, sol, 1000)
     end
 
     @trixi_testset "elixir_hyperbolic_sainte_marie_manufactured.jl" begin
