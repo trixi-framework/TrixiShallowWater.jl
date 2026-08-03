@@ -80,6 +80,21 @@ function Trixi.varnames(::typeof(cons2prim), ::HyperbolicSainteMarieEquations1D)
     ("H", "v", "w", "p", "b")
 end
 
+# Calculate 1D flux for a single point
+# Note, the bottom topography has no flux
+@inline function Trixi.flux(u, orientation::Integer,
+                            equations::HyperbolicSainteMarieEquations1D)
+    h, h_v, h_w, h_p, _ = u
+    v = velocity(u, equations)
+
+    f1 = h_v
+    f2 = h_v * v + 0.5f0 * equations.gravity * h^2 + h_p
+    f3 = h_w * v
+    f4 = h_p * v
+
+    return SVector(f1, f2, f3, f4, zero(eltype(u)))
+end
+
 """
     boundary_condition_slip_wall(u_inner, orientation_or_normal, x, t, surface_flux_function,
                                   equations::HyperbolicSainteMarieEquations1D)

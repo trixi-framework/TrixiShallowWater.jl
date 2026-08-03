@@ -239,6 +239,12 @@ end
             entropy_vars = cons2entropy(cons_vars, equations)
             @test entropy_vars[1:(end - 1)] ≈
                   Trixi.ForwardDiff.gradient(u -> entropy(u, equations), cons_vars)[1:(end - 1)]
+
+            # Test flux consistencies
+            alpha_coefficients = (1 / 2, 1.0, 2 / 3)
+            surface_flux = FluxArtianoEtal(alpha_coefficients...)
+            @test Trixi.flux(cons_vars, 1, equations) ≈
+                  surface_flux(cons_vars, cons_vars, 1, equations)
         end
     end
 end
