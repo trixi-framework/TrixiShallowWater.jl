@@ -315,6 +315,8 @@ isdir(outdir) && rm(outdir, recursive = true)
             surface_flux_functions = (FluxArtianoEtal(alpha_coefficients...),
                                       FluxNonConservativeArtianoEtal(alpha_coefficients...))
 
+            dissipation = DissipationLocalLaxFriedrichs()
+
             for direction in directions
                 @test eltype(@inferred boundary_condition_slip_wall(u_inner,
                                                                     orientation,
@@ -334,6 +336,7 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test eltype(@inferred Trixi.max_abs_speeds(u, equations)) == RealT
             @test eltype(@inferred Trixi.max_abs_speed(u_ll, u_rr, orientation, equations)) ==
                   RealT
+            @test eltype(@inferred dissipation(u_ll, u_rr, orientation, equations)) == RealT
             @test typeof(@inferred velocity(u, equations)) == RealT
             @test eltype(@inferred cons2prim(u, equations)) == RealT
             @test eltype(@inferred prim2cons(u, equations)) == RealT

@@ -65,7 +65,7 @@ function HyperbolicSainteMarieEquations1D(; gravity, h_0 = zero(gravity),
     T = promote_type(typeof(gravity), typeof(h_0), typeof(celerity_square))
 
     HyperbolicSainteMarieEquations1D(convert(T, gravity),
-                                     convert(T, h_0), 
+                                     convert(T, h_0),
                                      convert(T, celerity_square))
 end
 
@@ -367,6 +367,16 @@ end
     p = u[4] / h
     c = sqrt(equations.gravity * h + p + equations.celerity_square)
     return (abs(v) + c,)
+end
+
+# Specialized `DissipationLocalLaxFriedrichs` to avoid spurious dissipation in the bottom topography 
+@inline function (dissipation::DissipationLocalLaxFriedrichs)(u_ll, u_rr,
+                                                              orientation_or_normal_direction,
+                                                              equations::HyperbolicSainteMarieEquations1D)
+    λ = dissipation.max_abs_speed(u_ll, u_rr, orientation_or_normal_direction,
+                                  equations)
+    diss = -0.5f0 * λ * (u_rr - u_ll)
+    return SVector(diss[1], diss[2], diss[3], diss[4], zero(eltype(u_ll)))
 end
 
 # Helper function to extract the velocity vector from the conservative variables
