@@ -9,10 +9,11 @@ for human readability.
 ## Changes when updating to v0.3 from v0.2.x
 
 #### Added
-- New equation type `HyperbolicSainteMarieEquations1D` has been added. ([#135])
+- `ShallowWaterExner` extended to 2D curvilinear meshes ([#159]).
+- New equation type `HyperbolicSainteMarieEquations1D` has been added ([#135]).
 
 #### Changed
-- Trixi.jl v0.17.0 is now required, resulting in changes to the signature of `NoNConservative` jump terms ([#160]).
+- Trixi.jl v0.17.0 is now required, resulting in changes to the signature of `NonConservative` jump terms ([#160]).
   Moreover, the method of `flux_nonconservative_chan_etal` accepting two normals was removed ([#164]).
 
 #### Deprecated
@@ -25,7 +26,7 @@ for human readability.
 #### Added
 - Introduce node-wise limiting functionality for the `ShallowWaterMultiLayerEquations2D`. ([#111])
 - New equation types `ShallowWaterMomentEquations1D` and `ShallowWaterLinearizedMomentEquations1D` have been added. ([#128])
-- `ShallowWaterExner` extended to 2D on `TreeMesh`. ([#150])
+- `ShallowWaterExner` extended to 2D on `TreeMesh` ([#150]).
 - Experimental support for rainfall & soil infiltration source terms for `ShallowWaterEquations1D` and `ShallowWaterEquations2D`. ([#158])
 - New variants of `limiter_shallow_water!` needed to ensure positivity preservation after coarsening and refinement steps in AMR via the keyword argument `limiter!` in `AMRCallback` ([#164] and [#167]). For details on this callback see ([#2396](https://github.com/trixi-framework/Trixi.jl/pull/2396)) in Trixi.jl. This made the specialized `refine!` and `coarsen!` introduced in [#97] obsolete, which is why they were removed ([#164]).
 
