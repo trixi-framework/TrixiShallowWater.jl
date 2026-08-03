@@ -3,7 +3,7 @@
 
 @doc raw"""
     HyperbolicSainteMarieEquations1D(; gravity, h_0 = zero(gravity),
-					  h_ref = one(gravity), alpha = 3)
+					                 h_ref = one(gravity), alpha = 3)
 
 Hyperbolic approximation of the Sainte-Marie system in one spatial dimension
 (with parameter ``\gamma = 2`` compared to the original literature)
@@ -25,7 +25,7 @@ The gravitational acceleration `gravity` is denoted by ``g`` and the (possibly) 
 (bathymetry) ``b(x)``. Conservative variable water height ``h`` is measured from the bottom topography ``b``, therefore one
 also defines the total water height as ``H = h + b``.
 There are two auxiliary variables:``w \approx -h v_x / 2 + v b_x`` and the non-hydrostatic pressure ``p``.
-In the formal limit ``c_ref^2 \to \infty``, the hyperbolic approximation recovers the original Sainte-Marie system.
+In the formal limit ``c^2 \to \infty``, the hyperbolic approximation recovers the original Sainte-Marie system.
 The additional quantity ``h_0`` is also available to store a reference value for the total water height that
 is useful to set initial conditions or test the "lake-at-rest" well-balancedness.
 Escalante, Dumbser and Castro (2019) choose the hyperbolization parameter as ``c_ref = \alpha \sqrt{g h_{ref}}`` for some background water height ``h_{ref}``.
@@ -61,11 +61,12 @@ end
 
 function HyperbolicSainteMarieEquations1D(; gravity, h_0 = zero(gravity),
                                           h_ref = one(gravity), alpha = 3)
-    T = promote_type(typeof(gravity), typeof(h_0), typeof(h_ref), typeof(alpha))
-
     celerity_square = alpha^2 * gravity * h_ref
+    T = promote_type(typeof(gravity), typeof(h_0), typeof(celerity_square))
 
-    HyperbolicSainteMarieEquations1D(gravity, h_0, celerity_square)
+    HyperbolicSainteMarieEquations1D(convert(T, gravity),
+                                     convert(T, h_0), 
+                                     convert(T, celerity_square))
 end
 
 Trixi.have_nonconservative_terms(::HyperbolicSainteMarieEquations1D) = Trixi.True()
@@ -223,7 +224,9 @@ Source terms used for convergence tests in combination with
 end
 
 """
-	FluxArtianoEtal(alpha_1, alpha_2, alpha_3)(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
+	FluxArtianoEtal(alpha_1, alpha_2, alpha_3)(u_ll, u_rr,
+	                                           orientation::Integer,
+	                                           equations::HyperbolicSainteMarieEquations1D)
 
 Total energy conserving and well-balanced two-point flux by
 -  Marco Artiano, Hendrik Ranocha (2026)
@@ -279,9 +282,11 @@ end
 end
 
 """
-	FluxNonConservativeArtianoEtal(alpha_1, alpha_2, alpha_3)(u_ll, u_rr, normal_direction::AbstractVector, equations::HyperbolicSainteMarieEquations1D)
+	FluxNonConservativeArtianoEtal(alpha_1, alpha_2, alpha_3)(u_ll, u_rr,
+	                                                          orientation::Integer,
+equations::HyperbolicSainteMarieEquations1D)
 
-Total energy conserving and well-balanced two-point flux by
+Non-conservative part of the total energy conserving and well-balanced two-point flux by
 -  Marco Artiano, Hendrik Ranocha (2026)
    On Affordable High-Order Entropy-Conservative/Stable and 
    Well-Balanced Methods for Nonconservative Hyperbolic Systems
