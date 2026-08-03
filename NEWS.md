@@ -9,11 +9,11 @@ for human readability.
 ## Changes when updating to v0.3 from v0.2.x
 
 #### Added
+- `ShallowWaterExner` extended to 2D curvilinear meshes ([#159]).
 
 #### Changed
 - Trixi.jl v0.17.0 is now required, resulting in changes to the signature of `NonConservative` jump terms ([#160]).
   Moreover, the method of `flux_nonconservative_chan_etal` accepting two normals was removed ([#164]).
-- `ShallowWaterExner` extended to 2D curvilinear meshes ([#159]).
 
 #### Deprecated
 
