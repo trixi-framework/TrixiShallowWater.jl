@@ -1,5 +1,6 @@
 using TrixiShallowWater
 using Documenter
+using DocumenterCodeBlocks: CodeBlocks
 using DocumenterInterLinks
 using Literate
 using Changelog: Changelog
@@ -93,6 +94,8 @@ makedocs(;
                                   canonical = "https://trixi-framework.github.io/TrixiShallowWater.jl",
                                   edit_link = "main",
                                   size_threshold_ignore = ["reference.md"],),
+         # Improve code blocks in the documentation by using DocumenterCodeBlocks.jl
+         plugins = [CodeBlocks()],
          # Explicitly specify documentation structure
          pages = ["Home" => "index.md",
              "Installation" => "installation.md",
