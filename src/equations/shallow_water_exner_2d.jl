@@ -408,159 +408,14 @@ for the sediment discharge `q_s`.
 """
 @inline function dissipation_roe(u_ll, u_rr, orientation::Integer,
                                  equations::ShallowWaterExnerEquations2D)
-    r = equations.r
-    g = equations.gravity
-    z = zero(eltype(u_ll))
-
-    # Get the velocities
-    v1_ll, v2_ll = velocity(u_ll, equations)
-    v1_rr, v2_rr = velocity(u_rr, equations)
-
-    # Compute approximate Roe averages.
-    # The actual Roe average for the sediment height `h_b` depends on the sediment and
-    # friction model and an explicit formula is not always available.
-    # Therefore we only use an approximation here.
-    h_avg = 0.5f0 * (u_ll[1] + u_rr[1])
-    v1_avg = (sqrt(u_ll[1]) * v1_ll + sqrt(u_rr[1]) * v1_rr) /
-             (sqrt(u_ll[1]) + sqrt(u_rr[1]))
-    v2_avg = (sqrt(u_ll[1]) * v2_ll + sqrt(u_rr[1]) * v2_rr) /
-             (sqrt(u_ll[1]) + sqrt(u_rr[1]))
-    h_b_avg = 0.5f0 * (u_ll[4] + u_rr[4])
-
-    # State vector at the approximate Roe average
-    u_avg = SVector(h_avg, h_avg * v1_avg, h_avg * v2_avg, h_b_avg)
-
-    # Compute the nontrivial eigenvalues using Cardano's formula
-    # The known eigenvalue of `v1` or `v2` associated with the contact wave is returned last.
-    λ1, λ2, λ3, λ4 = eigvals_cardano(u_avg, orientation, equations)
-
-    # Compute the effective sediment height at the averaged solution state
-    h_s_avg = effective_sediment_height(u_avg, equations)
-
-    # Build the right eigenvector matrix and its inverse in the appropriate direction
     if orientation == 1
-        # Compute gradients of q_s1_avg using automatic differentiation.
-        # Introduces a closure to make q_s2_avg a function of u only. This is necessary since the
-        # gradient function only accepts functions of one variable.
-        dq_s_dh, dq_s_dhv1, dq_s_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
-                                                                                              equations)[1],
-                                                                      u_avg)
-
-        # Precompute some common expressions
-        c1 = g * (h_avg + h_s_avg)
-        c2 = g * (h_avg + h_s_avg / r)
-
-        # Eigenvector matrix
-        r41 = ((v1_avg - λ1)^2 - c1) / c2
-        r42 = ((v1_avg - λ2)^2 - c1) / c2
-        r43 = ((v1_avg - λ3)^2 - c1) / c2
-
-        # Workaround to avoid division by zero if `dq_s_dhv2` is close to zero.
-        if abs(dq_s_dhv2) > eps(eltype(u_ll))
-            r34 = -(dq_s_dh + λ4 * (dq_s_dhv1 + c1 / c2)) / dq_s_dhv2
-            R = @SMatrix [[1 1 1 1]; [λ1 λ2 λ3 λ4]; [v2_avg v2_avg v2_avg r34];
-                          [r41 r42 r43 -c1 / c2]]
-        else # dq_s_dhv2 ≈ 0
-            R = @SMatrix [[1 1 1 z]; [λ1 λ2 λ3 z]; [v2_avg v2_avg v2_avg 1];
-                          [r41 r42 r43 z]]
-        end
-
-        # Inverse eigenvector matrix
-        d1 = (λ1 - λ2) * (λ1 - λ3)
-        d2 = (λ2 - λ1) * (λ2 - λ3)
-        d3 = (λ3 - λ2) * (λ3 - λ1)
-
-        # Workaround to avoid division by zero if `dq_s_dhv2` is close to zero.
-        if abs(dq_s_dhv2) > eps(eltype(u_ll))
-            D = r34 - v2_avg
-            r_inv11 = (v2_avg * dq_s_dhv2 * (v1_avg - λ2) * (v1_avg - λ3) +
-                       (v1_avg^2 - λ2 * λ3 - c1) *
-                       (v2_avg * dq_s_dhv2 + dq_s_dh + (dq_s_dhv1 + c1 / c2) * v1_avg)) /
-                      (D * d1 * dq_s_dhv2)
-            r_inv21 = (v2_avg * dq_s_dhv2 * (v1_avg - λ1) * (v1_avg - λ3) +
-                       (v1_avg^2 - λ1 * λ3 - c1) *
-                       (v2_avg * dq_s_dhv2 + dq_s_dh + (dq_s_dhv1 + c1 / c2) * v1_avg)) /
-                      (D * d2 * dq_s_dhv2)
-            r_inv31 = (v2_avg * dq_s_dhv2 * (v1_avg - λ1) * (v1_avg - λ2) +
-                       (v1_avg^2 - λ1 * λ2 - c1) *
-                       (v2_avg * dq_s_dhv2 + dq_s_dh + (dq_s_dhv1 + c1 / c2) * v1_avg)) /
-                      (D * d3 * dq_s_dhv2)
-            R_inv = @SMatrix [r_inv11 (2 * v1_avg - λ2 - λ3)/d1 -(v1_avg - λ2) * (v1_avg - λ3)/(D * d1) c2/d1;
-                              r_inv21 (2 * v1_avg - λ1 - λ3)/d2 -(v1_avg - λ1) * (v1_avg - λ3)/(D * d2) c2/d2;
-                              r_inv31 (2 * v1_avg - λ2 - λ1)/d3 -(v1_avg - λ1) * (v1_avg - λ2)/(D * d3) c2/d3;
-                              -v2_avg/D 0 1/D 0]
-        else # dq_s_dhv2 ≈ 0
-            R_inv = @SMatrix [(c1 - v1_avg^2 + λ2 * λ3)/d1 (2 * v1_avg - λ2 - λ3)/d1 z c2/d1;
-                              (c1 - v1_avg^2 + λ1 * λ3)/d2 (2 * v1_avg - λ1 - λ3)/d2 z c2/d2;
-                              (c1 - v1_avg^2 + λ1 * λ2)/d3 (2 * v1_avg - λ2 - λ1)/d3 z c2/d3;
-                              -v2_avg z 1 z]
-        end
+        normal_direction = SVector(one(eltype(u)), zero(eltype(u)))
     else # orientation == 2
-        # Compute gradients of q_s2_avg using automatic differentiation.
-        # Introduces a closure to make q_s2_avg a function of u only. This is necessary since the
-        # gradient function only accepts functions of one variable.
-        dq_s_dh, dq_s_dhv1, dq_s_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
-                                                                                              equations)[2],
-                                                                      u_avg)
-
-        # Precompute some common expressions
-        c1 = g * (h_avg + h_s_avg)
-        c2 = g * (h_avg + h_s_avg / r)
-
-        # Eigenvector matrix
-        r41 = ((v2_avg - λ1)^2 - c1) / c2
-        r42 = ((v2_avg - λ2)^2 - c1) / c2
-        r43 = ((v2_avg - λ3)^2 - c1) / c2
-
-        # Workaround to avoid division by zero if `dq_s_dhv1` is close to zero.
-        if abs(dq_s_dhv1) > eps(eltype(u_ll))
-            r24 = -(dq_s_dh + λ4 * (dq_s_dhv2 + c1 / c2)) / dq_s_dhv1
-            R = @SMatrix [[1 1 1 1]; [v1_avg v1_avg v1_avg r24]; [λ1 λ2 λ3 λ4];
-                          [r41 r42 r43 -c1 / c2]]
-        else # dq_s_dhv1 ≈ 0
-            R = @SMatrix [[1 1 1 z]; [v1_avg v1_avg v1_avg 1]; [λ1 λ2 λ3 z];
-                          [r41 r42 r43 z]]
-        end
-
-        # Inverse eigenvector matrix
-        d1 = (λ1 - λ2) * (λ1 - λ3)
-        d2 = (λ2 - λ1) * (λ2 - λ3)
-        d3 = (λ3 - λ2) * (λ3 - λ1)
-
-        # Workaround to avoid division by zero if `dq_s_dhv1` is close to zero.
-        if abs(dq_s_dhv1) > eps(eltype(u_ll))
-            D = r24 - v1_avg
-            r_inv11 = (v1_avg * dq_s_dhv1 * (v2_avg - λ2) * (v2_avg - λ3) +
-                       (v2_avg^2 - λ2 * λ3 - c1) *
-                       (v1_avg * dq_s_dhv1 + dq_s_dh + (dq_s_dhv2 + c1 / c2) * v2_avg)) /
-                      (D * d1 * dq_s_dhv1)
-            r_inv21 = (v1_avg * dq_s_dhv1 * (v2_avg - λ1) * (v2_avg - λ3) +
-                       (v2_avg^2 - λ1 * λ3 - c1) *
-                       (v1_avg * dq_s_dhv1 + dq_s_dh + (dq_s_dhv2 + c1 / c2) * v2_avg)) /
-                      (D * d2 * dq_s_dhv1)
-            r_inv31 = (v1_avg * dq_s_dhv1 * (v2_avg - λ1) * (v2_avg - λ2) +
-                       (v2_avg^2 - λ1 * λ2 - c1) *
-                       (v1_avg * dq_s_dhv1 + dq_s_dh + (dq_s_dhv2 + c1 / c2) * v2_avg)) /
-                      (D * d3 * dq_s_dhv1)
-            R_inv = @SMatrix [r_inv11 -(v2_avg - λ2) * (v2_avg - λ3)/(D * d1) (2 * v2_avg - λ2 - λ3)/d1 c2/d1;
-                              r_inv21 -(v2_avg - λ1) * (v2_avg - λ3)/(D * d2) (2 * v2_avg - λ1 - λ3)/d2 c2/d2;
-                              r_inv31 -(v2_avg - λ1) * (v2_avg - λ2)/(D * d3) (2 * v2_avg - λ2 - λ1)/d3 c2/d3;
-                              -v1_avg/D 1/D z z]
-        else # dq_s_dhv1 ≈ 0
-            R_inv = @SMatrix [(c1 - v2_avg^2 + λ2 * λ3)/d1 z (2 * v2_avg - λ2 - λ3)/d1 c2/d1;
-                              (c1 - v2_avg^2 + λ1 * λ3)/d2 z (2 * v2_avg - λ1 - λ3)/d2 c2/d2;
-                              (c1 - v2_avg^2 + λ1 * λ2)/d3 z (2 * v2_avg - λ2 - λ1)/d3 c2/d3;
-                              -v1_avg 1 z z]
-        end
+        normal_direction = SVector(zero(eltype(u)), one(eltype(u)))
     end
 
-    # Eigenvalue absolute value matrix
-    Λ_abs = @SMatrix [abs(λ1) z z z; z abs(λ2) z z; z z abs(λ3) z; z z z abs(λ4)]
-
-    # Compute dissipation
-    diss = SVector(-0.5f0 * R * Λ_abs * R_inv * (u_rr - u_ll))
-
-    return SVector(diss[1], diss[2], diss[3], diss[4])
+    # Reuse the generic version of `dissipation_roe` in the `normal_direction`.
+    return dissipation_roe(u_ll, u_rr, normal_direction, equations)
 end
 
 @inline function dissipation_roe(u_ll, u_rr, normal_direction::AbstractVector,
@@ -892,78 +747,16 @@ end
     return abs(equations.H0 - (h + h_b))
 end
 
-# Trigonometric version of Cardano's method to compute the nontrivial roots of a cubic polynomial
-#   (x - v1,2)(x^3 + bx^2 + cx + d) = 0
-# for the eigenvalues of the [`ShallowWaterExnerEquations2D`[(@ref)] flux Jacobian.
-# This exploits that we know that either `v1` or `v2` is an eigenvalue (depending on the orientation)
-# The eigenvalue that is equal to the velocity is associated with the contact wave
-# in the Riemann fan and is returned as the last entry of the eigenvalue vector
-# as expected by the `dissipation_roe`.
+# Reuse the generic version of `eigvals_cardano` in the `normal_direction` described below.
 @inline function eigvals_cardano(u, orientation::Integer,
                                  equations::ShallowWaterExnerEquations2D)
-    h = waterheight(u, equations)
-    v1, v2 = velocity(u, equations)
-    g = equations.gravity
-    r = equations.r
-
-    # Compute the effective sediment height
-    h_s = effective_sediment_height(u, equations)
-
-    # Set the coefficients for the original cubic equation x^3 + bx^2 + cx + dx = 0
-    # Note, some values change depending on orientation.
     if orientation == 1
-        # Compute gradients of q_s1 using automatic differentiation.
-        # Introduces a closure to make q_s1 a function of u only. This is necessary since the
-        # gradient function only accepts functions of one variable.
-        dq_s_dh, dq_s_dhv1, dq_s_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
-                                                                                              equations)[1],
-                                                                      u)
-
-        b = -2 * v1
-        c = v1^2 - g * (h + h_s) - g * dq_s_dhv1 * (h + h_s / r)
-        d = -g * dq_s_dh * (h + h_s / r) - g * v2 * dq_s_dhv2 * (h + h_s / r)
-        # Set the known eigenvalue
-        λ4 = v1
+        normal_direction = SVector(one(eltype(u)), zero(eltype(u)))
     else # orientation == 2
-        # Compute gradients of q_s2 using automatic differentiation.
-        # Introduces a closure to make q_s2 a function of u only. This is necessary since the
-        # gradient function only accepts functions of one variable.
-        dq_s_dh, dq_s_dhv1, dq_s_dhv2, _ = Trixi.ForwardDiff.gradient(u -> sediment_discharge(u,
-                                                                                              equations)[2],
-                                                                      u)
-
-        b = -2 * v2
-        c = v2^2 - g * (h + h_s) - g * dq_s_dhv2 * (h + h_s / r)
-        d = -g * dq_s_dh * (h + h_s / r) - g * v1 * dq_s_dhv1 * (h + h_s / r)
-        # Set the known eigenvalue
-        λ4 = v2
+        normal_direction = SVector(zero(eltype(u)), one(eltype(u)))
     end
 
-    # Once coefficients are computed we apply the trigonometric Cardano method
-
-    # Create the coefficients of the depressed cubic equation t^3 + pt + q = 0
-    p = c - b^2 / 3
-    q = 2 * b^3 / 27 - b * c / 3 + d
-
-    # Check if only real roots are present
-    discriminant = -4 * p^3 - 27 * q^2
-    if discriminant <= 0
-        throw(DomainError("Negative discriminant in Cardano's formula. Would give complex roots."))
-    end
-
-    # Save common (but expensive) terms in the cubic root formula
-    theta = 3 * q / (2 * p) * sqrt(-3 / p)
-    phi = acos(theta) / 3
-    coeff = 2 * sqrt(-p / 3)
-    shift = -b / 3
-
-    # Use trigonometric form of Cardano to compute the three roots
-    # Note, the fourth eigenvalue λ4 is set above in the if statement
-    λ1 = shift + coeff * cos(phi)
-    λ2 = shift + coeff * cos(phi - 2 * π / 3)
-    λ3 = shift + coeff * cos(phi - 4 * π / 3)
-
-    return SVector(λ1, λ2, λ3, λ4)
+    return eigvals_cardano(u, normal_direction, equations)
 end
 
 # Trigonometric version of Cardano's method to compute the nontrivial roots of a cubic polynomial
