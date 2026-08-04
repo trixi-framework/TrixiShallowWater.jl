@@ -409,9 +409,9 @@ for the sediment discharge `q_s`.
 @inline function dissipation_roe(u_ll, u_rr, orientation::Integer,
                                  equations::ShallowWaterExnerEquations2D)
     if orientation == 1
-        normal_direction = SVector(one(eltype(u)), zero(eltype(u)))
+        normal_direction = SVector(one(eltype(u_ll)), zero(eltype(u_ll)))
     else # orientation == 2
-        normal_direction = SVector(zero(eltype(u)), one(eltype(u)))
+        normal_direction = SVector(zero(eltype(u_ll)), one(eltype(u_ll)))
     end
 
     # Reuse the generic version of `dissipation_roe` in the `normal_direction`.
