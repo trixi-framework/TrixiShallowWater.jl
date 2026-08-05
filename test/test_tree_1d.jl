@@ -917,14 +917,14 @@ end # 2LSWE
         @test_trixi_include(joinpath(EXAMPLES_DIR,
                                      "elixir_shallowwater_multilayer_beach_amr.jl"),
                             l2=[
-                                1.22570505187571,
-                                4.9581241184022735,
-                                1.161315654378121e-5
+                                1.2279477255799136,
+                                4.956544639816718,
+                                7.1665061086485795e-6
                             ],
                             linf=[
-                                2.4550283772713746,
-                                9.75692621468066,
-                                0.00010020743187588721
+                                2.443603067275829,
+                                9.77064103923972,
+                                0.000116781021658241
                             ],
                             # longer time for the positivity in coarsening to fire
                             tspan=(0.0, 0.85),
