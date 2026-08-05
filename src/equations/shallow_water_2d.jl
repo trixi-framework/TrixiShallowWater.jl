@@ -428,8 +428,8 @@ end
 """
     BoundaryConditionMomentum(hv1_boundary, hv2_boundary, equations::ShallowWaterEquations2D)
 
-Create a boundary condition that sets a fixed momentum in x- and y- directions, `hv1_boundary`
-and `hv2_boundary`, at the boundary and extrapolates the water height `h_boundary` from the incoming
+Create a boundary condition that sets a fixed momentum in x- and y- directions. Prescribe `hv1_boundary`
+and `hv2_boundary` at the boundary and extrapolate the water height `h_boundary` from the incoming
 Riemann invariant.
 
 The external momentum can be specified as a constant value or as a function of time, e.g.
