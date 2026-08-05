@@ -66,6 +66,9 @@ function (limiter!::PositivityPreservingLimiterShallowWater)(u_ode, integrator,
 end
 
 # Version used by the AMR callback
+#
+# !!! warning "Experimental code"
+#     This is an experimental feature and may change in future releases.
 function (limiter!::PositivityPreservingLimiterShallowWater)(u, mesh, equations, solver,
                                                              cache, args...)
     limiter_shallow_water!(u, limiter!.variables, mesh, equations,

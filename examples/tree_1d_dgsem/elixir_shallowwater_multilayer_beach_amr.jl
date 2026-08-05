@@ -92,7 +92,7 @@ coordinates_min = 0.0
 coordinates_max = 8.0
 
 mesh = TreeMesh(coordinates_min, coordinates_max,
-                initial_refinement_level = 5,
+                initial_refinement_level = 8,
                 periodicity = false)
 
 # create the semi discretization object
@@ -134,7 +134,7 @@ amr_callback = AMRCallback(semi, amr_controller,
                            adapt_initial_condition_only_refine = true,
                            limiter! = positivity_limiter)
 
-stepsize_callback = StepsizeCallback(cfl = 1.0)
+stepsize_callback = StepsizeCallback(cfl = 0.9)
 
 callbacks = CallbackSet(summary_callback, analysis_callback, alive_callback, save_solution,
                         amr_callback, stepsize_callback)
