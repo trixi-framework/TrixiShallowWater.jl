@@ -42,7 +42,7 @@ This fully-discrete positivity-preserving limiter is based on the work of
   Maximum-principle-satisfying and positivity-preserving high-order schemes
   for conservation laws: survey and new developments
   [doi: 10.1098/rspa.2011.0153](https://doi.org/10.1098/rspa.2011.0153)
-The specific implementation for the [`ShallowWaterMultiLayerEquations1D](@ref) is based on the work of
+The specific implementation for the [`ShallowWaterMultiLayerEquations1D`](@ref) is based on the work of
 - Y. Xing, X. Zhang (2013)
   Positivity-preserving well-balanced discontinuous Galerkin methods for the shallow water equations
   on unstructured triangular meshes
