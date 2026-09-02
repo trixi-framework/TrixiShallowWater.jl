@@ -41,7 +41,8 @@ end
 # It modifies the shock-capturing indicator to use full FV method in dry elements
 # or partially dry elements containing a wet/dry transition.
 function IndicatorHennemannGassnerShallowWater(equations::Union{Trixi.AbstractShallowWaterEquations,
-                                                                AbstractShallowWaterMultiLayerEquations},
+                                                                AbstractShallowWaterMultiLayerEquations,
+                                                                ShallowWaterExnerEquations1D},
                                                basis;
                                                alpha_max = 0.5,
                                                alpha_min = 0.001,
