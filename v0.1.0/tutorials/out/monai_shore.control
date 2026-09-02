@@ -1,0 +1,55 @@
+\begin{MODEL}
+\end{MODEL}
+\begin{CONTROL_INPUT}
+   \begin{REFINEMENT_REGIONS}
+      \begin{REFINEMENT_CENTER}
+         name = island
+         w = 0.15
+         x0 = [3.36,1.68,0.0]
+         type = smooth
+         h = 0.1
+      \end{REFINEMENT_CENTER}
+      \begin{REFINEMENT_LINE}
+         name = wake
+         x1 = [4.75,1.7,0.0]
+         w = 0.2
+         x0 = [3.75,1.7,0.0]
+         type = smooth
+         h = 0.15
+      \end{REFINEMENT_LINE}
+      \begin{REFINEMENT_LINE}
+         name = shoreline
+         x1 = [4.83,2.366,0.0]
+         w = 0.168
+         x0 = [4.816,3.374,0.0]
+         type = smooth
+         h = 0.15
+      \end{REFINEMENT_LINE}
+      \begin{REFINEMENT_LINE}
+         name = shoreline
+         x1 = [5.32,1.4,0.0]
+         w = 0.22
+         x0 = [4.97,2.3,0.0]
+         type = smooth
+         h = 0.075
+      \end{REFINEMENT_LINE}
+   \end{REFINEMENT_REGIONS}
+   \begin{SPRING_SMOOTHER}
+      smoothing type = LinearAndCrossbarSpring
+      smoothing = ON
+   \end{SPRING_SMOOTHER}
+   \begin{BACKGROUND_GRID}
+      x0 = [0.0,0.0,0.0]
+      N = [8,4,0]
+      dx = [0.686,0.8505,0.0]
+   \end{BACKGROUND_GRID}
+   \begin{RUN_PARAMETERS}
+      mesh file name = out/monai_shore.mesh
+      plot file format = skeleton
+      plot file name = out/monai_shore.tec
+      stats file name = out/monai_shore.txt
+      mesh file format = ISM-V2
+      polynomial order = 1
+   \end{RUN_PARAMETERS}
+\end{CONTROL_INPUT}
+\end{FILE}
