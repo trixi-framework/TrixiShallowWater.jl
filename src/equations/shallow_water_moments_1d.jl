@@ -20,7 +20,7 @@ Shallow water moment equations in one spatial dimensions. The equations are give
 ```
 
 The unknown quantities are the water and sediment height ``h``, the velocity ``v`` and the moments
-``\alpha_i`` for ``i = 1, ..., n_moments``. The terms ``A_{ijk}`` and ``B_{ijk}`` are moment tensors that
+``\alpha_i`` for ``i = 1, ..., n_{moments}``. The terms ``A_{ijk}`` and ``B_{ijk}`` are moment tensors that
 are precomputed using shifted Legendre polynomials and ``g`` is the gravitational acceleration.
 
 The conservative variable water height ``h`` is measured from the bottom topography ``b``, therefore

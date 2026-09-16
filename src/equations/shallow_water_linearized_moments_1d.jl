@@ -19,7 +19,7 @@ Shallow water linearized moment equations in one spatial dimensions. The equatio
 ```
 
 The unknown quantities are the water and sediment height ``h``, the velocity ``v`` and the moments
-``\alpha_i`` for ``i = 1, ..., n_moments`` and ``g`` is the gravitational acceleration.
+``\alpha_i`` for ``i = 1, ..., n_{moments}`` and ``g`` is the gravitational acceleration.
 
 The conservative variable water height ``h`` is measured from the bottom topography ``b``, therefore
 one also defines the total water height as ``H = h + b``.
