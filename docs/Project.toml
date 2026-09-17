@@ -15,7 +15,7 @@ Trixi2Vtk = "bc1476a1-1ca6-4cc3-950b-c312b255ff95"
 TrixiBottomTopography = "86af9953-43df-404b-8eaa-d20d82623a82"
 
 [compat]
-CSV = "0.10"
+CSV = "0.10, 1.0"
 CairoMakie = "0.13, 0.14, 0.15"
 Changelog = "1.1"
 DataFrames = "1.7"
