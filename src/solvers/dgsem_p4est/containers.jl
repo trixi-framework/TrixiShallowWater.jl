@@ -27,7 +27,7 @@
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
 mutable struct P4estShallowWaterMortarContainer{NDIMS, uEltype <: Real, NDIMSP1,
-                                                NDIMSP3} <: Trixi.AbstractContainer
+                                                NDIMSP3} <: Trixi.AbstractMortarContainer
     u::Array{uEltype, NDIMSP3} # [small/large side, variable, position, i, mortar]
     neighbor_ids::Matrix{Int} # [position, mortar]
     node_indices::Matrix{NTuple{NDIMS, Symbol}} # [small/large, mortar]
