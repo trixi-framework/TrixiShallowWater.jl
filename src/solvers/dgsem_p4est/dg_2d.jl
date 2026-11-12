@@ -362,10 +362,11 @@ function Trixi.calc_mortar_flux!(surface_flux_values,
                                                               i_small, j_small, element)
 
                 # Compute the numerical flux in the normal direction on the small elements
+                # (`()`: no auxiliary variables)
                 Trixi.calc_mortar_flux!(fstar_primary, fstar_secondary,
                                         mesh, nonconservative_terms, equations,
                                         surface_integral, dg, cache,
-                                        mortar, position, normal_direction,
+                                        mortar, position, normal_direction, (),
                                         node)
 
                 # The projected solution from the large element is always stored in `u_rr`
