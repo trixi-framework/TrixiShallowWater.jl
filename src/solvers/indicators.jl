@@ -48,7 +48,7 @@ function IndicatorHennemannGassnerShallowWater(equations::Union{Trixi.AbstractSh
                                                alpha_smooth = true,
                                                variable)
     alpha_max, alpha_min = promote(alpha_max, alpha_min)
-    cache = Trixi.create_cache(IndicatorHennemannGassner, equations, basis)
+    cache = Trixi.create_cache_indicator(IndicatorHennemannGassner, equations, basis)
     IndicatorHennemannGassnerShallowWater{typeof(alpha_max), typeof(variable),
                                           typeof(cache)}(alpha_max, alpha_min,
                                                          alpha_smooth, variable, cache)
