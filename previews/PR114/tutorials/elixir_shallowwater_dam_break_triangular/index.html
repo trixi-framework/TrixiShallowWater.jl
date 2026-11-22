@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Dam break over triangular bottom topograhy · TrixiShallowWater.jl</title><meta name="title" content="Dam break over triangular bottom topograhy · TrixiShallowWater.jl"/><meta property="og:title" content="Dam break over triangular bottom topograhy · TrixiShallowWater.jl"/><meta property="twitter:title" content="Dam break over triangular bottom topograhy · TrixiShallowWater.jl"/><meta name="description" content="Documentation for TrixiShallowWater.jl."/><meta property="og:description" content="Documentation for TrixiShallowWater.jl."/><meta property="twitter:description" content="Documentation for TrixiShallowWater.jl."/><meta property="og:url" content="https://trixi-framework.github.io/TrixiShallowWater.jl/tutorials/elixir_shallowwater_dam_break_triangular/"/><meta property="twitter:url" content="https://trixi-framework.github.io/TrixiShallowWater.jl/tutorials/elixir_shallowwater_dam_break_triangular/"/><link rel="canonical" href="https://trixi-framework.github.io/TrixiShallowWater.jl/tutorials/elixir_shallowwater_dam_break_triangular/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">TrixiShallowWater.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../installation/">Installation</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../introduction/">Introduction</a></li><li class="is-active"><a class="tocitem" href>Dam break over triangular bottom topograhy</a><ul class="internal"><li><a class="tocitem" href="#Load-required-packages"><span>Load required packages</span></a></li><li><a class="tocitem" href="#Prepare-and-run-the-problem-setup"><span>Prepare and run the problem setup</span></a></li><li><a class="tocitem" href="#Visualization"><span>Visualization</span></a></li></ul></li><li><a class="tocitem" href="../elixir_shallowwater_monai_tsunami/">Okushiri tsunami</a></li></ul></li><li><span class="tocitem">Advanced topics &amp; developers</span><ul><li><a class="tocitem" href="../../development/">Development</a></li><li><a class="tocitem" href="../../styleguide/">Style guide</a></li><li><a class="tocitem" href="../../testing/">Testing</a></li></ul></li><li><a class="tocitem" href="../../changelog/">Changelog</a></li><li><a class="tocitem" href="../../authors/">Authors</a></li><li><a class="tocitem" href="../../contributing/">Contributing</a></li><li><a class="tocitem" href="../../code_of_conduct/">Code of Conduct</a></li><li><a class="tocitem" href="../../license/">License</a></li><li><a class="tocitem" href="../../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Dam break over triangular bottom topograhy</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Dam break over triangular bottom topograhy</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/trixi-framework/TrixiShallowWater.jl/blob/main/docs/src/tutorials/elixir_shallowwater_dam_break_triangular.jl#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Dam-break-over-triangular-bottom-topography"><a class="docs-heading-anchor" href="#Dam-break-over-triangular-bottom-topography">Dam break over triangular bottom topography</a><a id="Dam-break-over-triangular-bottom-topography-1"></a><a class="docs-heading-anchor-permalink" href="#Dam-break-over-triangular-bottom-topography" title="Permalink"></a></h1><p>In this tutorial we will use the shallow water equations to simulate a dam break over triangular bottom topography with wetting and drying and compare the results to experimental data. The test case is based on a dam break experiment and has been discussed in:</p><ul><li>S. Gu et al. (2017) SWE-SPHysics Simulation of Dam Break Flows at South-Gate Gorges Reservoir <a href="https://doi.org/10.3390/w9060387">DOI: 10.3390/w9060387</a></li><li>J.G. Zhou, D.M. Causon, C.G. Mingham and D.M. Ingram (2004) Numerical Prediction of Dam-Break Flows in General Geometries with Complex Bed Topography <a href="https://doi.org/10.1061/(ASCE)0733-9429(2004)130:4(332)">DOI: 10.1061/(ASCE)0733-9429(2004)130:4(332)</a></li></ul><p>The tutorial will cover:</p><ul><li>Set up a SWE solver for wet/dry transitions</li><li>Create custom initial conditions and source terms</li><li>Save solution data at gauge points</li><li>Visualization with <a href="https://docs.makie.org/dev/">Makie.jl</a></li></ul><h2 id="Load-required-packages"><a class="docs-heading-anchor" href="#Load-required-packages">Load required packages</a><a id="Load-required-packages-1"></a><a class="docs-heading-anchor-permalink" href="#Load-required-packages" title="Permalink"></a></h2><p>Before we start, we need to load the required packages. Besides TrixiShallowWater.jl, we require <a href="https://trixi-framework.github.io/TrixiDocumentation/stable/#Trixi.jl">Trixi.jl</a> for the spatial discretization and <a href="https://docs.sciml.ai/OrdinaryDiffEq/stable/">OrdinaryDiffEqSSPRK.jl</a> for time integration. In addition to that <a href="https://docs.makie.org/dev/">CairoMakie.jl</a> is used for visualization and <a href="https://csv.juliadata.org/stable/">CSV.jl</a> and <a href="https://dataframes.juliadata.org/stable/">DataFrames.jl</a> will be used to load the experimental data.</p><p>Standard packages</p><pre><code class="language-julia hljs">using OrdinaryDiffEqSSPRK
+using Trixi
+using TrixiShallowWater</code></pre><p>Packages for visualization</p><pre><code class="language-julia hljs">using CairoMakie
+using DataFrames
+using CSV</code></pre><h2 id="Prepare-and-run-the-problem-setup"><a class="docs-heading-anchor" href="#Prepare-and-run-the-problem-setup">Prepare and run the problem setup</a><a id="Prepare-and-run-the-problem-setup-1"></a><a class="docs-heading-anchor-permalink" href="#Prepare-and-run-the-problem-setup" title="Permalink"></a></h2><p>In the first step we will set up the equation system. In this example we want to solve the one-dimensional shallow water equations, so we will use the <a href="../../reference/#TrixiShallowWater.ShallowWaterEquations1D"><code>ShallowWaterEquations1D</code></a> and specify the gravitational acceleration to <code>gravity = 9.812</code>. In contrast to the <a href="../../reference/#TrixiShallowWater.ShallowWaterEquations1D"><code>ShallowWaterEquations1D</code></a> type, this equation type contains additional parameters and methods that are needed to handle wetting and drying.</p><pre><code class="language-julia hljs">equations = ShallowWaterEquations1D(gravity = 9.812)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ShallowWaterEquations1D                                                                          │
+│ ═══════════════════════                                                                          │
+│ #variables: ………………………………………………… 3                                                                │
+│ │ variable 1: …………………………………………… h                                                                │
+│ │ variable 2: …………………………………………… h_v                                                              │
+│ │ variable 3: …………………………………………… b                                                                │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘</code></pre><p>We then create a function to supply the initial condition for the simulation. Note, in the last step of this function the water height needs to be shifted by a small value to avoid division by zero.</p><pre><code class="language-julia hljs">function initial_condition_dam_break_triangular(x, t,
+                                                equations::ShallowWaterEquations1D)
+    b = 0.0  # Bottom topography
+    h = 0.0  # Water height
+    v = 0.0  # Velocity
+
+    if x[1] &lt;= 15.5
+        h = 0.75  # Water height in the left reservoir
+    elseif 25.5 &lt; x[1] &amp;&amp; x[1] &lt;= 28.5
+        b = (x[1] - 25.5) * 0.4 / 3.0  # Rising slope of the triangular bottom
+    elseif x[1] &gt; 28.5 &amp;&amp; x[1] &lt; 31.5
+        b = 0.4 - (x[1] - 28.5) * 0.4 / 3.0  # Falling slope of the triangular bottom
+    end
+
+    H = h + b  # Total water height
+    if x[1] &gt; 28.5
+        H = max(H, 0.15)  # Water height in the right reservoir
+    end
+
+    # It is mandatory to shift the water level at dry areas to make sure the water height h
+    # stays positive. The system would not be stable for h set to a hard zero due to division by h in
+    # the computation of velocity, e.g., (h v) / h. Therefore, a small dry state threshold
+    # with a default value of 5*eps() ≈ 1e-13 in double precision, is set in the constructor above
+    # for the ShallowWaterEquations and added to the initial condition if h = 0.
+    # This default value can be changed within the constructor call depending on the simulation setup.
+    H = max(H, b + equations.threshold_limiter)
+    return prim2cons(SVector(H, v, b), equations)
+end
+
+initial_condition = initial_condition_dam_break_triangular;</code></pre><p>As we want to compare the results to experimental data, we also need to account for bottom friction. For this we create a new source term, which adds a Manning friction term to the momentum equation.</p><pre><code class="language-julia hljs">@inline function source_term_manning_friction(u, x, t,
+                                              equations::ShallowWaterEquations1D)
+    h, hv, _ = u
+
+    n = 0.0125  # friction coefficient
+    h = (h^2 + max(h^2, 1e-8)) / (2 * h) # desingularization procedure
+
+    return SVector(0.0, -equations.gravity * n^2 * h^(-7 / 3) * abs(hv) * hv, 0.0)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">source_term_manning_friction (generic function with 1 method)</code></pre><p>Now we can set up the DG approximation space. We use the discontinuous Galerkin spectral element method (<a href="https://trixi-framework.github.io/TrixiDocumentation/stable/reference-trixi/#Trixi.DGSEM"><code>DGSEM</code></a>), with a volume integral in flux differencing formulation. For this, we first need to specify fluxes for both volume and surface integrals. Since the system contains nonconservative terms the fluxes are provided in form of a tuple <code>flux = (conservative flux, nonconservative_flux)</code>. To ensure well-balancedness and positivity a reconstruction procedure is applied for the surface fluxes and a shock-capturing scheme with modified indicator function is used to compute the volume integrals.</p><pre><code class="language-julia hljs">volume_flux = (flux_wintermeyer_etal, flux_nonconservative_wintermeyer_etal)
+surface_flux = (FluxHydrostaticReconstruction(flux_hll_chen_noelle,
+                                              hydrostatic_reconstruction_chen_noelle),
+                flux_nonconservative_chen_noelle)
+
+basis = LobattoLegendreBasis(4)
+
+indicator_sc = IndicatorHennemannGassnerShallowWater(equations, basis,
+                                                     alpha_max = 0.5,
+                                                     alpha_min = 0.001,
+                                                     alpha_smooth = true,
+                                                     variable = waterheight)
+volume_integral = VolumeIntegralShockCapturingHG(indicator_sc;
+                                                 volume_flux_dg = volume_flux,
+                                                 volume_flux_fv = surface_flux)
+
+solver = DGSEM(basis, surface_flux, volume_integral)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ DG{Float64}                                                                                      │
+│ ═══════════                                                                                      │
+│ basis: ……………………………………………………………… LobattoLegendreBasis{Float64}(polydeg=4)                         │
+│ mortar: …………………………………………………………… LobattoLegendreMortarL2{Float64}(polydeg=4)                      │
+│ surface integral: ………………………………… SurfaceIntegralWeakForm                                          │
+│ │ surface flux: ……………………………………… (FluxHydrostaticReconstruction{T…ux_nonconservative_chen_noelle) │
+│ volume integral: …………………………………… VolumeIntegralShockCapturingHG                                   │
+│ │ volume flux DG: ………………………………… (Trixi.flux_wintermeyer_etal, Tr…nconservative_wintermeyer_etal) │
+│ │ volume flux FV: ………………………………… (FluxHydrostaticReconstruction{T…ux_nonconservative_chen_noelle) │
+│ │ indicator: ……………………………………………… IndicatorHennemannGassnerShallowWater                            │
+│ │ │ indicator variable: ………………… waterheight                                                      │
+│ │ │ max. α: ………………………………………………… 0.5                                                              │
+│ │ │ min. α: ………………………………………………… 0.001                                                            │
+│ │ │ smooth α: …………………………………………… yes                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘</code></pre><p>Then the mesh is created using the <a href="https://trixi-framework.github.io/TrixiDocumentation/stable/reference-trixi/#Trixi.TreeMesh"><code>TreeMesh</code></a> type. The computational domain spans from <code>coordinates_min</code> to <code>coordinates_max</code> and is initialized with 2^8 = 256 elements on a non-periodic domain.</p><pre><code class="language-julia hljs">coordinates_min = 0.0
+coordinates_max = 38.0
+
+mesh = TreeMesh(coordinates_min, coordinates_max,
+                initial_refinement_level = 8,
+                n_cells_max = 10_000,
+                periodicity = false)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ TreeMesh{1, Trixi.SerialTree{1, Float64}}                                                        │
+│ ═════════════════════════════════════════                                                        │
+│ center: …………………………………………………………… [19.0]                                                           │
+│ length: …………………………………………………………… 38.0                                                             │
+│ periodicity: ……………………………………………… (false,)                                                         │
+│ current #cells: ……………………………………… 511                                                              │
+│ #leaf-cells: ……………………………………………… 256                                                              │
+│ maximum #cells: ……………………………………… 10000                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘</code></pre><p>The semi-discretization object combines the mesh, equations, initial condition, solver, boundary conditions, and source terms into a single object. This object represents the spatial discretization of the problem and is complemented with the required time interval to define an ODE problem for time integration.</p><pre><code class="language-julia hljs">semi = SemidiscretizationHyperbolic(mesh, equations, initial_condition, solver,
+                                    boundary_conditions = boundary_condition_slip_wall,
+                                    source_terms = source_term_manning_friction)
+tspan = (0.0, 40.0)
+ode = semidiscretize(semi, tspan);</code></pre><p>Callbacks are used to monitor the simulation, save results, and control the time step. Below, we define several callbacks for different purposes.</p><h3 id="AnalysisCallback"><a class="docs-heading-anchor" href="#AnalysisCallback">AnalysisCallback</a><a id="AnalysisCallback-1"></a><a class="docs-heading-anchor-permalink" href="#AnalysisCallback" title="Permalink"></a></h3><p>The <a href="https://trixi-framework.github.io/TrixiDocumentation/stable/reference-trixi/#Trixi.AnalysisCallback"><code>AnalysisCallback</code></a> is used to analyze the solution at regular intervals. Extra analysis quantities such as conservation errors can be added to the callback.</p><pre><code class="language-julia hljs">analysis_callback = AnalysisCallback(semi, interval = 5000,
+                                     extra_analysis_errors = (:conservation_error,))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ AnalysisCallback                                                                                 │
+│ ════════════════                                                                                 │
+│ interval: ……………………………………………………… 5000                                                             │
+│ analyzer: ……………………………………………………… LobattoLegendreAnalyzer{Float64}(polydeg=8)                      │
+│ │ error 1: …………………………………………………… l2_error                                                         │
+│ │ error 2: …………………………………………………… linf_error                                                       │
+│ │ error 3: …………………………………………………… conservation_error                                               │
+│ │ integral 1: …………………………………………… entropy_timederivative                                           │
+│ save analysis to file: …………………… no                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘</code></pre><h3 id="Time-Series-Callback"><a class="docs-heading-anchor" href="#Time-Series-Callback">Time Series Callback</a><a id="Time-Series-Callback-1"></a><a class="docs-heading-anchor-permalink" href="#Time-Series-Callback" title="Permalink"></a></h3><p>The <a href="https://trixi-framework.github.io/TrixiDocumentation/stable/reference-trixi/#Trixi.TimeSeriesCallback"><code>TimeSeriesCallback</code></a> is used to extract time series data at a specific gauge location.</p><pre><code class="language-julia hljs">time_series = TimeSeriesCallback(semi, [(19.5)])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ TimeSeriesCallback                                                                               │
+│ ══════════════════                                                                               │
+│ #points: ………………………………………………………… 1                                                                │
+│ interval: ……………………………………………………… 1                                                                │
+│ solution_variables: …………………………… cons2cons                                                        │
+│ output_directory: ………………………………… out                                                              │
+│ filename: ……………………………………………………… time_series.h5                                                   │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘</code></pre><h3 id="Stepsize-Callback"><a class="docs-heading-anchor" href="#Stepsize-Callback">Stepsize Callback</a><a id="Stepsize-Callback-1"></a><a class="docs-heading-anchor-permalink" href="#Stepsize-Callback" title="Permalink"></a></h3><p>The <a href="https://trixi-framework.github.io/TrixiDocumentation/stable/reference-trixi/#Trixi.StepsizeCallback"><code>StepsizeCallback</code></a> calculates the time step based on a CFL condition.</p><pre><code class="language-julia hljs">stepsize_callback = StepsizeCallback(cfl = 0.5)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ StepsizeCallback                                                                                 │
+│ ════════════════                                                                                 │
+│ CFL Advective: ………………………………………… Returns{Float64}(0.5)                                            │
+│ CFL Diffusive: ………………………………………… Returns{Float64}(0.0)                                            │
+│ Interval: ……………………………………………………… 1                                                                │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘</code></pre><p>All the defined callbacks are then combined into a single <code>CallbackSet</code>.</p><pre><code class="language-julia hljs">callbacks = CallbackSet(analysis_callback,
+                        time_series,
+                        stepsize_callback);</code></pre><p>Finally, we can go ahead an solve the ODE problem using a strong stability-preserving Runge-Kutta (SSPRK) method. The <a href="../../reference/#TrixiShallowWater.PositivityPreservingLimiterShallowWater"><code>PositivityPreservingLimiterShallowWater</code></a> is used as a stage limiter to ensure positivity of the water height during the simulation. The <a href="https://docs.sciml.ai/OrdinaryDiffEq/stable/explicit/SSPRK/#OrdinaryDiffEqSSPRK.SSPRK43"><code>SSPRK43</code></a> integrator supports adaptive timestepping, but since we use a CFL-based time step we set (<code>adaptive = false</code>). For visualization purposes, we also use the <code>saveat</code> option to the solution at specific times.</p><pre><code class="language-julia hljs">stage_limiter! = PositivityPreservingLimiterShallowWater(variables = (waterheight,))
+
+sol = solve(ode, SSPRK43(stage_limiter!); dt = 1.0,
+            ode_default_options()..., callback = callbacks, adaptive = false,
+            saveat = (0, 3.5, 40));</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+────────────────────────────────────────────────────────────────────────────────────────────────────
+ Simulation running &#39;ShallowWaterEquations1D&#39; with DGSEM(polydeg=4)
+────────────────────────────────────────────────────────────────────────────────────────────────────
+ #timesteps:                  0                run time:       9.01000000e-07 s
+ Δt:             1.00000000e+00                └── GC time:    0.00000000e+00 s (0.000%)
+ sim. time:      0.00000000e+00 (0.000%)       time/DOF/rhs!:         NaN s
+                                               PID:                   Inf s
+ #DOFs per field:          1280                alloc&#39;d memory:        203.768 MiB
+ #elements:                 256
+
+ Variable:       h                h_v              b
+ L2 error:       9.73019569e-03   0.00000000e+00   1.15014447e-05
+ Linf error:     3.55093396e-01   0.00000000e+00   3.92987526e-04
+ |∑U - ∑U₀|:     0.00000000e+00   0.00000000e+00   0.00000000e+00
+ ∑∂S/∂U ⋅ Uₜ :  -1.97004377e-01
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+ Simulation running &#39;ShallowWaterEquations1D&#39; with DGSEM(polydeg=4)
+────────────────────────────────────────────────────────────────────────────────────────────────────
+ #timesteps:               5000                run time:       2.11163331e+00 s
+ Δt:             5.36347773e-03                └── GC time:    0.00000000e+00 s (0.000%)
+ sim. time:      1.96595521e+01 (49.149%)      time/DOF/rhs!:  6.28668478e-08 s
+                                               PID:            7.41794681e-08 s
+ #DOFs per field:          1280                alloc&#39;d memory:        219.527 MiB
+ #elements:                 256
+
+ Variable:       h                h_v              b
+ L2 error:       4.19039722e-01   1.44949071e-01   1.15014447e-05
+ Linf error:     5.78359913e-01   3.15368463e-01   3.92987526e-04
+ |∑U - ∑U₀|:     7.57172103e-14   7.29677093e-02   1.59594560e-16
+ ∑∂S/∂U ⋅ Uₜ :  -6.96048486e-03
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+ Simulation running &#39;ShallowWaterEquations1D&#39; with DGSEM(polydeg=4)
+────────────────────────────────────────────────────────────────────────────────────────────────────
+ #timesteps:               8691                run time:       3.50607817e+00 s
+ Δt:             5.00910517e-03                └── GC time:    0.00000000e+00 s (0.000%)
+ sim. time:      4.00000000e+01 (100.000%)     time/DOF/rhs!:  6.23607812e-08 s
+                                               PID:            7.36860134e-08 s
+ #DOFs per field:          1280                alloc&#39;d memory:        224.428 MiB
+ #elements:                 256
+
+ Variable:       h                h_v              b
+ L2 error:       3.33916579e-01   1.33582677e-01   1.15014447e-05
+ Linf error:     4.17378531e-01   2.35879494e-01   3.92987526e-04
+ |∑U - ∑U₀|:     1.49047441e-13   1.07619576e-01   1.59594560e-16
+ ∑∂S/∂U ⋅ Uₜ :  -6.87112004e-04
+────────────────────────────────────────────────────────────────────────────────────────────────────</code></pre><h2 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h2><p>After solving the ODE problem, we want to visualize the results. The first plot shows the water height over the spatial domain at different times. The second plot compares the simulation results to experimental data at a gauge point <strong>G4</strong> located at <span>$x=19.5\,\text{m}$</span>.</p><h3 id="Spatial-plot"><a class="docs-heading-anchor" href="#Spatial-plot">Spatial plot</a><a id="Spatial-plot-1"></a><a class="docs-heading-anchor-permalink" href="#Spatial-plot" title="Permalink"></a></h3><p>We first extract the solution data for each saved time using <a href="https://trixi-framework.github.io/TrixiDocumentation/stable/reference-trixi/#Trixi.PlotData1D"><code>PlotData1D</code></a>. This allows us to reformat the solution for visualization purposes.</p><pre><code class="language-julia hljs">pd_list = [PlotData1D(sol.u[i], semi, reinterpolate = false) for i in 1:length(sol.u)];</code></pre><p>Create a figure and axis for the spatial plot</p><pre><code class="language-julia hljs">f = Figure(size = (550, 550 / 2.5))
+ax = Axis(f[1, 1], xlabel = &quot;x / m&quot;, ylabel = &quot;waterheight / m&quot;, limits = (0, 38, 0.0, 1.2));</code></pre><p>Plot the water height at different time points</p><pre><code class="language-julia hljs">for (i, pd) in enumerate(pd_list)
+    lines!(ax, pd.x, pd.data[:, 1], label = &quot;t = $(sol.t[i])s&quot;)
+end</code></pre><p>Add the bottom topography to the plot</p><pre><code class="language-julia hljs">lines!(ax, pd_list[1].x, pd_list[1].data[:, 3], color = :black, linestyle = :solid)
+band!(ax, pd_list[1].x, 0.0, pd_list[1].data[:, 3], color = :gray95);  # Set color for bottom topography</code></pre><p>Add a legend to the plot</p><pre><code class="language-julia hljs">axislegend(ax, orientation = :horizontal)
+f</code></pre><img src="0d019446.png" alt="Example block output"/><h3 id="Time-series-plot"><a class="docs-heading-anchor" href="#Time-series-plot">Time series plot</a><a id="Time-series-plot-1"></a><a class="docs-heading-anchor-permalink" href="#Time-series-plot" title="Permalink"></a></h3><p>To validate the simulation, we now want to compare the results to experimental data. Therefore, We first download the experimental data for the first gauge location <strong>G4</strong> from an external source and load it into a <code>DataFrame</code> format.</p><pre><code class="language-julia hljs">G4_data = Trixi.download(&quot;https://raw.githubusercontent.com/patrickersing/paper-2024-es_hydrostatic_reconstruction/refs/heads/main/code/DamBreakTriangularBottom/Reference/G4_Experimental.csv&quot;,
+                         joinpath(@__DIR__, &quot;G4_Experimental.csv&quot;))
+pd_G4 = CSV.read(G4_data, DataFrame);</code></pre><p>The simulation data at the gauge location has been saved to the <code>time_series</code> variable. To reformat the data for visualization, we use the <a href="https://trixi-framework.github.io/TrixiDocumentation/stable/reference-trixi/#Trixi.PlotData1D"><code>PlotData1D</code></a> function.</p><pre><code class="language-julia hljs">pd = PlotData1D(time_series, 1);</code></pre><p>Create a figure and axis for the comparison plot</p><pre><code class="language-julia hljs">f = Figure(size = (550, 550 / 2.5))
+ax = Axis(f[1, 1], xlabel = &quot;time / s&quot;, ylabel = &quot;waterheight / m&quot;,
+          limits = (0, 40, 0.0, 0.8));</code></pre><p>Add experimental and simulation data to the plot</p><pre><code class="language-julia hljs">scatter!(ax, pd_G4.X, pd_G4.Y, color = :orange, strokewidth = 1,
+         strokecolor = (:black, 0.5), label = &quot;Experiment&quot;)
+lines!(ax, pd.x, pd.data[:, 1], label = &quot;Simulation&quot;);</code></pre><p>Add a legend to the plot</p><pre><code class="language-julia hljs">axislegend(ax, orientation = :horizontal)
+f</code></pre><img src="6934c2c3.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../introduction/">« Introduction</a><a class="docs-footer-nextpage" href="../elixir_shallowwater_monai_tsunami/">Okushiri tsunami »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Thursday 2 October 2025 06:51">Thursday 2 October 2025</span>. Using Julia version 1.10.10.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
