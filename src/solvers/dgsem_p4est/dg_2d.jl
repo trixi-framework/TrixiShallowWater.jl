@@ -13,9 +13,9 @@
 #
 # !!! warning "Experimental code"
 #     This is an experimental feature and may change in future releases.
-function Trixi.create_cache(mesh::P4estMesh{2},
-                            equations::ShallowWaterEquations2D,
-                            mortar_l2::Trixi.LobattoLegendreMortarL2, uEltype)
+function Trixi.create_cache_mortar(mesh::P4estMesh{2},
+                                   equations::ShallowWaterEquations2D,
+                                   mortar_l2::Trixi.LobattoLegendreMortarL2, uEltype)
     # TODO: Taal performance using different types
     MA2d = Trixi.MArray{Tuple{nvariables(equations), nnodes(mortar_l2)},
                         uEltype, 2,
@@ -362,10 +362,11 @@ function Trixi.calc_mortar_flux!(surface_flux_values,
                                                               i_small, j_small, element)
 
                 # Compute the numerical flux in the normal direction on the small elements
+                # (`()`: no auxiliary variables)
                 Trixi.calc_mortar_flux!(fstar_primary, fstar_secondary,
                                         mesh, nonconservative_terms, equations,
                                         surface_integral, dg, cache,
-                                        mortar, position, normal_direction,
+                                        mortar, position, normal_direction, (),
                                         node)
 
                 # The projected solution from the large element is always stored in `u_rr`
@@ -513,7 +514,7 @@ end
     # that must be removed to ensure consistency. This is done via the values precomputed
     # and stored above in the `flux_buffer` which is the physical flux and nonconservative
     # term evaluated at the unprojected large element solution and `normal_direction`.
-    if :i_backward in large_indices
+    if Trixi.NodeIndex.IBackward in large_indices
         for i in eachnode(dg)
             for v in eachvariable(equations)
                 surface_flux_values[v, end + 1 - i, large_direction, large_element] = u_buffer[v,
