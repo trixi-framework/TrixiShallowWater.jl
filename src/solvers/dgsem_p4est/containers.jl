@@ -31,13 +31,13 @@ mutable struct P4estShallowWaterMortarContainer{NDIMS, uEltype <: Real, NDIMSP1,
                Trixi.AbstractMortarContainer
     u::Array{uEltype, NDIMSP3} # [small/large side, variable, position, i, mortar]
     neighbor_ids::Matrix{Int} # [position, mortar]
-    node_indices::Matrix{NTuple{NDIMS, Symbol}} # [small/large, mortar]
+    node_indices::Matrix{NTuple{NDIMS, Trixi.NodeIndex.T}} # [small/large, mortar]
     u_parent::Array{uEltype, NDIMSP1} # [variable, i, mortar]
 
     # internal `resize!`able storage
     _u::Vector{uEltype}
     _neighbor_ids::Vector{Int}
-    _node_indices::Vector{NTuple{NDIMS, Symbol}}
+    _node_indices::Vector{NTuple{NDIMS, Trixi.NodeIndex.T}}
     _u_parent::Vector{uEltype}
 end
 
@@ -96,7 +96,7 @@ function Trixi.init_mortars(mesh::P4estMesh,
     neighbor_ids = Trixi.unsafe_wrap(Array, pointer(_neighbor_ids),
                                      (2^(NDIMS - 1) + 1, n_mortars))
 
-    _node_indices = Vector{NTuple{NDIMS, Symbol}}(undef, 2 * n_mortars)
+    _node_indices = Vector{NTuple{NDIMS, Trixi.NodeIndex.T}}(undef, 2 * n_mortars)
     node_indices = Trixi.unsafe_wrap(Array, pointer(_node_indices), (2, n_mortars))
 
     _u_parent = Vector{uEltype}(undef,
