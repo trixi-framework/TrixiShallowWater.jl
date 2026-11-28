@@ -87,6 +87,16 @@ isdir(outdir) && rm(outdir, recursive = true)
             @test eltype(@inferred dissipation(u_ll, u_rr, orientation, equations)) == RealT
             @test eltype(@inferred dissipation(u_ll, u_rr, normal_direction, equations)) ==
                   RealT
+            dissipation_glf = DissipationGlobalLaxFriedrichs(one(RealT))
+            splitting_glf = SplittingGlobalLaxFriedrichs(one(RealT))
+            @test eltype(@inferred dissipation_glf(u_ll, u_rr, orientation, equations)) ==
+                  RealT
+            @test eltype(eltype(@inferred splitting_glf(u, orientation, equations))) ==
+                  RealT
+            @test eltype(@inferred dissipation_glf(u_ll, u_rr, normal_direction, equations)) ==
+                  RealT
+            @test eltype(eltype(@inferred splitting_glf(u, normal_direction, equations))) ==
+                  RealT
             @test eltype(@inferred numflux(u_ll, u_rr, orientation, equations)) == RealT
             # no matching method
             # @test eltype(@inferred numflux(u_ll, u_rr, normal_direction, equations)) == RealT
@@ -169,6 +179,12 @@ isdir(outdir) && rm(outdir, recursive = true)
                   RealT
             @test eltype(@inferred dissipation(u_ll, u_rr, normal_direction, equations)) ==
                   RealT
+            dissipation_glf = DissipationGlobalLaxFriedrichs(one(RealT))
+            splitting_glf = SplittingGlobalLaxFriedrichs(one(RealT))
+            @test eltype(@inferred dissipation_glf(u_ll, u_rr, normal_direction, equations)) ==
+                  RealT
+            @test eltype(eltype(@inferred splitting_glf(u, normal_direction, equations))) ==
+                  RealT
             @test eltype(@inferred numflux(u_ll, u_rr, normal_direction, equations)) ==
                   RealT
             @test eltype(@inferred min_max_speed_naive(u_ll, u_rr, normal_direction,
@@ -214,6 +230,12 @@ isdir(outdir) && rm(outdir, recursive = true)
                                                            equations)) ==
                       RealT
                 @test eltype(@inferred dissipation(u_ll, u_rr, orientation, equations)) ==
+                      RealT
+                dissipation_glf = DissipationGlobalLaxFriedrichs(one(RealT))
+                splitting_glf = SplittingGlobalLaxFriedrichs(one(RealT))
+                @test eltype(@inferred dissipation_glf(u_ll, u_rr, orientation, equations)) ==
+                      RealT
+                @test eltype(eltype(@inferred splitting_glf(u, orientation, equations))) ==
                       RealT
                 @test eltype(@inferred numflux(u_ll, u_rr, orientation, equations)) == RealT
                 @test eltype(@inferred min_max_speed_naive(u_ll, u_rr, orientation,
@@ -286,6 +308,16 @@ isdir(outdir) && rm(outdir, recursive = true)
                   RealT
             @test eltype(@inferred dissipation(u_ll, u_rr, orientation, equations)) == RealT
             @test eltype(@inferred dissipation(u_ll, u_rr, normal_direction, equations)) ==
+                  RealT
+            dissipation_glf = DissipationGlobalLaxFriedrichs(one(RealT))
+            splitting_glf = SplittingGlobalLaxFriedrichs(one(RealT))
+            @test eltype(@inferred dissipation_glf(u_ll, u_rr, orientation, equations)) ==
+                  RealT
+            @test eltype(eltype(@inferred splitting_glf(u, orientation, equations))) ==
+                  RealT
+            @test eltype(@inferred dissipation_glf(u_ll, u_rr, normal_direction, equations)) ==
+                  RealT
+            @test eltype(eltype(@inferred splitting_glf(u, normal_direction, equations))) ==
                   RealT
             @test eltype(@inferred Trixi.max_abs_speeds(u, equations)) == RealT
             @test typeof(@inferred velocity(u, equations)) == RealT

@@ -15,6 +15,8 @@ for human readability.
 #### Changed
 - Trixi.jl v0.17.0 is now required, resulting in changes to the signature of `NonConservative` jump terms ([#160]).
   Moreover, the method of `flux_nonconservative_chan_etal` accepting two normals was removed ([#164]).
+- Trixi.jl v0.18.4 is now required. `DissipationGlobalLaxFriedrichs` and `SplittingGlobalLaxFriedrichs`
+  do not add dissipation to the bottom topography and other variables that are constant in time ([#190]).
 
 #### Deprecated
 

@@ -28,7 +28,6 @@ For complete details see Section 2.4 of the following reference
   [DOI: 10.1137/15M1053074](https://doi.org/10.1137/15M1053074)
 """
 const flux_hll_chen_noelle = FluxHLL(min_max_speed_chen_noelle)
-end
 
 """
     FluxHydrostaticReconstruction(numerical_flux, hydrostatic_reconstruction)
@@ -71,3 +70,81 @@ end
     return numerical_flux(u_ll_star, u_rr_star, orientation_or_normal_direction,
                           equations)
 end
+
+# Equations that store quantities that are constant in time, e.g., the bottom topography, in the
+# state vector. Analogously to the specializations of `DissipationLocalLaxFriedrichs`, the
+# global Lax-Friedrichs dissipation and flux splitting are specialized for these equations to
+# avoid spurious dissipation in these quantities.
+const EquationsWithStaticVariables = Union{ShallowWaterEquations1D,
+                                           ShallowWaterEquations2D,
+                                           ShallowWaterEquationsQuasi1D,
+                                           ShallowWaterTwoLayerEquations1D,
+                                           ShallowWaterTwoLayerEquations2D,
+                                           ShallowWaterMultiLayerEquations1D,
+                                           ShallowWaterMultiLayerEquations2D,
+                                           ShallowWaterMomentEquations1D,
+                                           ShallowWaterLinearizedMomentEquations1D,
+                                           HyperbolicSainteMarieEquations1D}
+
+# Number of variables that are constant in time. These must be stored as the last entries
+# of the state vector.
+@inline nstaticvariables(::EquationsWithStaticVariables) = 1
+# The bottom topography and the channel width
+@inline nstaticvariables(::ShallowWaterEquationsQuasi1D) = 2
+
+# Set the variables that are constant in time to zero
+@inline function zero_static_variables(u, equations::EquationsWithStaticVariables)
+    n_evolved = nvariables(equations) - nstaticvariables(equations)
+    return SVector(ntuple(i -> i <= n_evolved ? u[i] : zero(eltype(u)),
+                          Val(nvariables(equations))))
+end
+
+@inline function (dissipation::DissipationGlobalLaxFriedrichs)(u_ll, u_rr,
+                                                               orientation::Integer,
+                                                               equations::EquationsWithStaticVariables)
+    @unpack λ = dissipation
+    return -0.5f0 * λ * zero_static_variables(u_rr - u_ll, equations)
+end
+
+@inline function (dissipation::DissipationGlobalLaxFriedrichs)(u_ll, u_rr,
+                                                               normal_direction::AbstractVector,
+                                                               equations::EquationsWithStaticVariables)
+    @unpack λ = dissipation
+    return -0.5f0 * λ * norm(normal_direction) *
+           zero_static_variables(u_rr - u_ll, equations)
+end
+
+# The flux vanishes in the variables that are constant in time, such that it suffices to set
+# these variables to zero in the dissipative part of the splitting
+@inline function (splitting::SplittingGlobalLaxFriedrichs)(u, ::Val{:plus},
+                                                           orientation::Integer,
+                                                           equations::EquationsWithStaticVariables)
+    @unpack λ = splitting
+    return 0.5f0 * (flux(u, orientation, equations) +
+            λ * zero_static_variables(u, equations))
+end
+
+@inline function (splitting::SplittingGlobalLaxFriedrichs)(u, ::Val{:minus},
+                                                           orientation::Integer,
+                                                           equations::EquationsWithStaticVariables)
+    @unpack λ = splitting
+    return 0.5f0 * (flux(u, orientation, equations) -
+            λ * zero_static_variables(u, equations))
+end
+
+@inline function (splitting::SplittingGlobalLaxFriedrichs)(u, ::Val{:plus},
+                                                           normal_direction::AbstractVector,
+                                                           equations::EquationsWithStaticVariables)
+    @unpack λ = splitting
+    return 0.5f0 * (flux(u, normal_direction, equations) +
+            λ * norm(normal_direction) * zero_static_variables(u, equations))
+end
+
+@inline function (splitting::SplittingGlobalLaxFriedrichs)(u, ::Val{:minus},
+                                                           normal_direction::AbstractVector,
+                                                           equations::EquationsWithStaticVariables)
+    @unpack λ = splitting
+    return 0.5f0 * (flux(u, normal_direction, equations) -
+            λ * norm(normal_direction) * zero_static_variables(u, equations))
+end
+end # @muladd
