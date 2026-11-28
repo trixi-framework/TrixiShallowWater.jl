@@ -86,7 +86,8 @@ const EquationsWithStaticVariables = Union{ShallowWaterEquations1D,
                                            ShallowWaterLinearizedMomentEquations1D,
                                            HyperbolicSainteMarieEquations1D}
 
-# Number of trailing variables in the state vector that are constant in time
+# Number of variables that are constant in time. These must be stored as the last entries
+# of the state vector.
 @inline nstaticvariables(::EquationsWithStaticVariables) = 1
 # The bottom topography and the channel width
 @inline nstaticvariables(::ShallowWaterEquationsQuasi1D) = 2
