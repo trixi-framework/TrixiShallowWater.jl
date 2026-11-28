@@ -1047,6 +1047,72 @@ end
               diss_ec(u_ll, u_rr, 1, equations_lin)
     end
 end
+
+@timed_testset "Global Lax-Friedrichs dissipation and splitting" begin
+    λ = 2.5
+    dissipation = DissipationGlobalLaxFriedrichs(λ)
+    splitting = SplittingGlobalLaxFriedrichs(λ)
+    flux_upwind = FluxUpwind(splitting)
+    flux_dissipation = FluxPlusDissipation(flux_central, dissipation)
+
+    directions_1d = (1, SVector(-1.5))
+    directions_2d = (1, 2, SVector(0.6, -0.8), SVector(1.5, 2.0))
+    # Equations together with the number of trailing variables that are constant in time
+    # and the orientations / normal directions to test
+    equations_list = [(ShallowWaterEquations1D(gravity = 9.81), 1, directions_1d),
+        (ShallowWaterEquations2D(gravity = 9.81), 1, directions_2d),
+        (ShallowWaterEquationsQuasi1D(gravity = 9.81), 2, directions_1d),
+        (ShallowWaterTwoLayerEquations1D(gravity = 9.81, rho_upper = 0.9,
+                                         rho_lower = 1.0), 1, directions_1d),
+        (ShallowWaterTwoLayerEquations2D(gravity = 9.81, rho_upper = 0.9,
+                                         rho_lower = 1.0), 1, directions_2d),
+        (ShallowWaterMultiLayerEquations1D(gravity = 9.81, rhos = (0.8, 0.9, 1.0)), 1,
+         directions_1d),
+        (ShallowWaterMultiLayerEquations2D(gravity = 9.81, rhos = (0.9, 1.0)), 1,
+         directions_2d),
+        (ShallowWaterMomentEquations1D(gravity = 9.81, n_moments = 2), 1,
+         directions_1d),
+        (ShallowWaterLinearizedMomentEquations1D(gravity = 9.81, n_moments = 2), 1,
+         directions_1d),
+        (HyperbolicSainteMarieEquations1D(gravity = 9.81), 1, directions_1d)]
+
+    for (equations, n_static, directions) in equations_list
+        n = nvariables(equations)
+        u_ll = SVector(ntuple(i -> 0.5 + 0.1 * i, n))
+        u_rr = SVector(ntuple(i -> 0.7 + 0.2 * i^2 / n, n))
+        evolved = 1:(n - n_static)
+        static = (n - n_static + 1):n
+        for orientation_or_normal_direction in directions
+            if orientation_or_normal_direction isa Integer
+                scaling = 1
+            else
+                scaling = sqrt(sum(abs2, orientation_or_normal_direction))
+            end
+
+            # No dissipation is added to the variables that are constant in time
+            diss = dissipation(u_ll, u_rr, orientation_or_normal_direction, equations)
+            @test iszero(diss[static])
+            @test diss[evolved] ≈ -0.5 * λ * scaling * (u_rr - u_ll)[evolved]
+
+            fm, fp = splitting(u_ll, orientation_or_normal_direction, equations)
+            f = flux(u_ll, orientation_or_normal_direction, equations)
+            @test iszero(fm[static])
+            @test iszero(fp[static])
+            @test fm[evolved] ≈ 0.5 * (f - λ * scaling * u_ll)[evolved]
+            @test fp[evolved] ≈ 0.5 * (f + λ * scaling * u_ll)[evolved]
+            @test fm + fp ≈ f
+
+            # `FluxUpwind` is not implemented for `normal_direction`s in 1D
+            if orientation_or_normal_direction isa Integer ||
+               Trixi.ndims(equations) == 2
+                @test flux_upwind(u_ll, u_rr, orientation_or_normal_direction,
+                                  equations) ≈
+                      flux_dissipation(u_ll, u_rr, orientation_or_normal_direction,
+                                       equations)
+            end
+        end
+    end
+end
 end # Unit tests
 
 end # module
